@@ -1,0 +1,36 @@
+@font-face {
+    font-family: 'Geist-regular';
+    src: url('/public/font/Geist-Regular.otf');
+}
+@font-face {
+    font-family: 'Geist-medium';
+    src: url('/public/font/Geist-Medium.otf');
+}
+@font-face {
+    font-family: 'Geist-medium';
+    src: url('/public/font/Geist-SemiBold.otf');
+}
+@font-face {
+    font-family: 'Geist-bold';
+    src: url('/public/font/Geist-Bold.otf');
+}
+
+$fuentes : (
+    "regular" : 'Geist-regular',
+    "medium" : 'Geist-medium',
+    "semibold" :  'Geist-semibold',
+    "bold" :  'Geist-bold'
+
+);
+
+h1{
+    font-family: map-get($fuentes , "regular" );
+}
+
+h2, h3, h4, h5, h6 {
+    font-family: map-get($fuentes , "bold" );
+}
+
+* {
+    font-family: map-get($fuentes , "regular" );
+}
