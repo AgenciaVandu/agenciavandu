@@ -1,0 +1,34 @@
+$fuentes : (
+    "regular" : 'Geist-regular',
+    "medium" : 'Geist-medium',
+    "semibold" :  'Geist-semibold',
+    "bold" :  'Geist-bold'
+
+);
+
+@use 'colores';
+@use 'fuentes';
+
+.footer {
+    min-height: 300px;
+    border-top: 1px colores.$green solid;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    h6 {
+
+        span {
+            color: colores.$green;
+            font-family: map-get($fuentes , "bold" );
+        }
+    }
+    .copy {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        min-height: 50px;
+        align-items: center;
+    }
+    
+}

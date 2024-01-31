@@ -528,13 +528,24 @@ padding: 2em 0;
 }
 
 .clientes {
-    min-height: 330px;
+    min-height: 300px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 5.5em ;
+
     
     .titular {
         width: 44%;
-
+        h1 {
+            .marcas {
+                color: colores.$medium-black !important;
+            }
+        }
         .contato {
             display: flex;
+            gap: 10px;
             .correo {
                 width: auto ;
                 background-color: colores.$gray;
@@ -542,12 +553,24 @@ padding: 2em 0;
                 color: colores.$medium-black !important;
                 border-radius: 10px;
             }
-            
+            button {
+                border-radius: 50%;
+                height: 40px;
+                width: 40px;
+                border: none;
+            }
         }
     } @media (max-width: 1199px) {
         .titular {
             width: auto;
             text-align: center;
+            .contato {
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                
+            }
+            
         }
         .ocultar {
             display: none;
@@ -569,7 +592,7 @@ padding: 2em 0;
         }
     } @media (max-width: 991px) {
         .logos_clientes {
-            padding-top: 2em;
+            padding-top: 4em;
         }
     }
 }

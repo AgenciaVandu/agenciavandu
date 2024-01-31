@@ -12,6 +12,7 @@
     <main>
     {{$slot}}
     </main>
+    <x-footer/>
 </body>
 @stack('js')
 </html>

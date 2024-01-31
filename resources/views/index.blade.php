@@ -118,7 +118,7 @@
     <section class="aliados">
         <div class="container">
             <div class="titular">
-                <h1 class="text-center">Somos una agencia validada <br><span>por las mejores marcas</span></h4>
+                <h1 class="text-center">Somos una agencia validada <br><span style="color: #13161D;">por las mejores marcas</span></h1>
                     <div class="row logos">
                         <div class="col">
                             <img src="{{asset('img/mercadopago.svg')}}" alt="Logotipo mercadopago">
@@ -145,7 +145,7 @@
                     <div class="contato darktxt">
                         <p class="correo darktxt">team@agenciavandu.com</p>
                         <button>
-                            <img src="{{asset('/img/copy.svg')}}" width="30" alt="icono copiar">
+                            <img src="{{asset('/img/copy.svg')}}" width="20" alt="icono copiar">
                         </button>
                     </div>
                 </div>
