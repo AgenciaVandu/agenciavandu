@@ -7,7 +7,18 @@ $fuentes : (
 );
 @use 'colores';
 @use 'fuentes';
-
+.body {
+    background-color: colores.$gray;
+    transition: .5s ease;
+}
+.txtdark {
+    color: #000;
+}
+.bgdark {
+    background-color: colores.$black;
+    transition: .5s ease;
+    color: #fff;
+}
 .header {
     min-height: 400px;
     display: flex;
@@ -15,7 +26,7 @@ $fuentes : (
     justify-content: center;
     align-items: center;
     width: 100%;
-    background-color: colores.$gray;
+    
     .container {
         width: 50%;
         text-align: center;
@@ -23,18 +34,25 @@ $fuentes : (
         .container {
             width: 80%;
         }
+    }@media (max-width:741px) {
+        .container {
+            width: auto;
+        }
+    }
+} @media (max-width:834px) {
+    .header {
+        min-height: 350px;
     }
 }
 .intro {
-    background-color: colores.$gray;
-    min-height: 200px;
+    min-height: 380px;
     display: flex;
     flex-direction: row;
     width: 100%;
-    padding: 3em 0;
+    transition: 1s;
     .contenido {
-        width: 60%;
-        padding: 0 4em ;
+        width: 55%;
+        padding: 0 ;
     }@media (max-width:991px) {
         .contenido {
             width: 80%;
@@ -61,6 +79,7 @@ $fuentes : (
         display: flex;
         flex-direction: row;
         gap: 15px;
+        
         .btn-primary {
             padding: .6em 1.9em .6em 1.6em;
             border-radius: 2em;
@@ -102,9 +121,13 @@ $fuentes : (
         }    
     }
     
-} 
+} @media (max-width:834px) {
+    .intro {
+        min-height: 100px;
+        padding: 0 0 3em 0;
+    }
+}
 .servicios {
-background-color: colores.$gray;
 padding: 2em 0;
     .grid-contenido {
         display: grid;
@@ -121,11 +144,12 @@ padding: 2em 0;
             grid-row: 1/2;
             height: 400px;
             position: relative;
+            transition: 1s;
             .web__contenido {
                 border: none;
                 width: 60%;
                 position: absolute;
-                left: 50px;
+                left: 40px;
                 bottom: 45px;
                 a {
                     color: colores.$black;
@@ -148,18 +172,19 @@ padding: 2em 0;
             .web {
                 grid-column: 1/7;
                 grid-row: 1/2;
-                height: 300px;
+                height: 350px;
             }
         }
         .fotografia {
             grid-column: 5/7;
             grid-row: 1/2;
             position: relative;
+            transition: 1s;
             .foto__contenido {
                 border: none;
                 width: 80%;
                 position: absolute;
-                left: 50px;
+                left: 40px;
                 bottom: 45px;
                 a {
                     color: colores.$black;
@@ -189,11 +214,12 @@ padding: 2em 0;
             grid-row: 2/4;
             height: 500px;
             position: relative;
+            transition: 1s;
             .digital__contenido {
                 border: none;
                 width: 80%;
                 position: absolute;
-                left: 50px;
+                left: 40px;
                 bottom: 45px;
                 a {
                     color: colores.$black;
@@ -215,7 +241,7 @@ padding: 2em 0;
             .digital {
                 grid-column: 1/7;
                 grid-row: 3/3;
-                height: 250px;
+                height: 350px;
             }
         }
         .impresos {
@@ -223,11 +249,12 @@ padding: 2em 0;
             grid-row: 2/3;
             height: 350px;
             position: relative;
+            transition: 1s;
             .impresos__contenido {
                 border: none;
                 width: 80%;
                 position: absolute;
-                left: 50px;
+                left: 40px;
                 bottom: 45px;
                 a {
                     color: colores.$black;
@@ -250,6 +277,7 @@ padding: 2em 0;
             .impresos {
                 grid-column: 1/7;
                 grid-row: 4/4;
+                height: 350px;
             }
         }
         .contacto {
@@ -262,6 +290,7 @@ padding: 2em 0;
             justify-content: center;
             align-items: center;
             gap: 40px;
+            transition: 1s;
 
             a {
                 padding: .6em 1.9em .6em 1.6em;
@@ -292,7 +321,8 @@ padding: 2em 0;
 }
 
 .herramientas {
-    background-color: colores.$gray;
+    overflow: hidden;
+    transition: ease;
     h1 {
         padding-bottom: .4em;
         span {
@@ -316,9 +346,13 @@ padding: 2em 0;
             transition: 500ms;
         }
     }
+    .titular {
+        padding-left: 3.5em;
+    }
     .contenido {
         position: relative;
         min-height: 400px;
+        transition: ease;
         .mensaje1 {
             background-color: #fff;
             width: 330px;
@@ -356,6 +390,7 @@ padding: 2em 0;
             position: absolute;
             top: 30%;
             left: 50%;
+            transition: 1s;
             .contenido_nacho {
                 max-height: 10px;
                 position: relative;
@@ -370,6 +405,22 @@ padding: 2em 0;
                     border-radius: 10px;
                     color: #fff;
                 }
+            }
+        }  @media (max-width: 1199px) {
+            .nacho {
+                left: 15%;
+            }
+        }@media (max-width: 991px) {
+            .nacho {
+                left: 45%;
+            }
+        }@media (max-width: 768px) {
+            .nacho {
+                left: 25%;
+            }
+        }@media (max-width: 423px) {
+            .nacho {
+                left: 17%;
             }
         }
         @keyframes movimiento {
@@ -387,10 +438,12 @@ padding: 2em 0;
             position: absolute;
             bottom: 35%;
             right: 40%;
-            animation: movimiento 2s ease-in-out infinite;
+            transition: 1s;
+           
             .contenido_lucia {
                 max-height: 10px;
                 position: relative;
+                animation: movimiento 2s ease-in-out infinite;
                 small {
                     position: absolute;
                     top: 30px;
@@ -401,7 +454,122 @@ padding: 2em 0;
                     color: colores.$black;
                 }
             }
+        } @media (max-width: 1199px) {
+            .lucia {
+                right: 20%;
+            }
+        }@media (max-width: 991px) {
+            .lucia {
+                right: 40%;
+            }
+        }@media (max-width: 768px) {
+            .lucia {
+                right: 20%;
+            }
+        }@media (max-width: 423px) {
+            .lucia {
+                bottom: 45%;
+                right: 22%;
+            }
         }
+        
+    }
+    .detalles {
+        margin-top: 2em;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        div {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+        }
+        p {
+            width: 90%;
+        }
+        span {
+            font-family: map-get($fuentes , "bold" );
+        }
+        }
+    }
+
+.aliados {
+    min-height: 480px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .titular {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+       h1 {
+        font-family: map-get($fuentes , "bold" );
+        z-index: 1;
+        span {
+            font-family: map-get($fuentes , "bold" );
+            background-color: colores.$green;
+            padding: 3px .5em;
+            z-index: -1;
+            border-radius: .2em;
+        }
+       }
+       .logos {
+        margin-top: 3em;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 60px;
+        text-align: center;
+       }
     }
 }
 
+.clientes {
+    min-height: 330px;
+    
+    .titular {
+        width: 44%;
+
+        .contato {
+            display: flex;
+            .correo {
+                width: auto ;
+                background-color: colores.$gray;
+                padding: .5em .8em;
+                color: colores.$medium-black !important;
+                border-radius: 10px;
+            }
+            
+        }
+    } @media (max-width: 1199px) {
+        .titular {
+            width: auto;
+            text-align: center;
+        }
+        .ocultar {
+            display: none;
+        }
+    }
+    .logos_clientes {
+        
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 40px;
+        .primera-fila, .segunda-fila {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            gap: 60px;
+        }
+    } @media (max-width: 991px) {
+        .logos_clientes {
+            padding-top: 2em;
+        }
+    }
+}

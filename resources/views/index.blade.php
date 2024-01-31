@@ -1,5 +1,5 @@
 @push ('estilos')
-@vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/index.scss', 'resources/js/app.js' ])
+@vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/index.scss', 'resources/js/app.js', 'resources/js/bg.js' ])
 @endpush
 <x-layouts.guest titulo="Construimos el futuro de tu empresa en el mundo digital" meta-description="Somos una agencia de diseño y desarrollo web estratégico que ayuda a las empresas en momentos clave, nos enfocamos en lo esencial para desbloquear oportunidades significativas. Nuestras soluciones eficientes generan resultados tangibles.">
 
@@ -9,7 +9,7 @@
         </div>
     </header>
     <section class="intro">
-        <div class="container-fluid">
+        <div class="container">
             <div class="contenido">
                 <p>Somos una agencia de diseño y desarrollo web estratégico que ayuda a las empresas en momentos clave, nos enfocamos en lo esencial para desbloquear oportunidades significativas. Nuestras soluciones eficientes generan resultados tangibles.</p>
                 <p>¿Quieres ver un poco de nuestro trabajo?</p>
@@ -65,11 +65,11 @@
     <section class="herramientas">
         <div class="container">
             <div class="row">
-                <div class="col-lg-6 col-md-12 col-sm-12 m-auto">
+                <div class="col-lg-6 col-md-12 col-sm-12 m-auto titular">
                     <h1>Creamos tus siguientes <span>herramientas favoritas</span></h1>
                     <a href="">Ver productos</a>
                 </div>
-                <div class="col-lg-6 col-md-12 col-sm-12 contenido">
+                <div class="col-lg-6 col-md-12 col-sm-12 contenido darktxt">
                     <div class="mensaje1">
                         <small>Reyna agendó una nueva cita para el 14 de noviembre en tu calendario.</small>
                     </div>
@@ -85,11 +85,83 @@
                             <small>Lucia</small>
                         </div>
                     </div>
-                    <div>
-                        <small class="mensaje2">Recibiste un pago de GM.</small>
+                    <div class="mensaje2">
+                        <small>Recibiste un pago de GM.</small>
                     </div>
-                    <div>
-                        <small class="mensaje3">¡Hamburguesa con queso cargada con éxito! ¿Quieres cargar alguna promoción?</small>
+                    <div class="mensaje3">
+                        <small>¡Hamburguesa con queso cargada con éxito! ¿Quieres cargar alguna promoción?</small>
+                    </div>
+                </div>
+            </div>
+            <div class="row detalles">
+                <div class="col-lg-4  col">
+                    <p>
+                        <span>Fáciles de usar.</span>
+                        Nuestras herramientas son útiles e intuitivas para que cualquier persona pueda usarlas.
+                    </p>
+                </div>
+                <div class="col-lg-4  col">
+                    <p>
+                        <span>Optimizamos recursos. </span>
+                        Ayudamos a que tu negocio use sus recursos de manera efectiva, transparente, ágil y contundente.
+                    </p>
+                </div>
+                <div class="col-lg-4 col-12">
+                    <p>
+                        <span>Operación segura. </span>
+                        Priorizamos la seguridad de tus movimientos, tu paso por el mundo digital será totalmente placentero.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="aliados">
+        <div class="container">
+            <div class="titular">
+                <h1 class="text-center">Somos una agencia validada <br><span>por las mejores marcas</span></h4>
+                    <div class="row logos">
+                        <div class="col">
+                            <img src="{{asset('img/mercadopago.svg')}}" alt="Logotipo mercadopago">
+                        </div>
+                        <div class="col">
+                            <img src="{{asset('img/hostgator.svg')}}" alt="Logotipo mercadopago">
+                        </div>
+                        <div class="col">
+                            <img src="{{asset('img/paypal.svg')}}" alt="Logotipo mercadopago">
+                        </div>
+                        <div class="col">
+                            <img src="{{asset('img/stripe.svg')}}" alt="Logotipo mercadopago">
+                        </div>
+                    </div>
+            </div>
+        </div>
+    </section>
+    <section class="clientes">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 col-md-12 col-sm-12 titular m-auto">
+                    <h1>¿Platicamos sobre <br class="ocultar" /> tu proyecto?</h1>
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Reiciendis soluta tempora officiis totam eaque, commodi impedit enim quidem esse dolores ipsam provident sapiente sunt magni, ab aut minima beatae distinctio!</p>
+                    <div class="contato darktxt">
+                        <p class="correo darktxt">team@agenciavandu.com</p>
+                        <button>
+                            <img src="{{asset('/img/copy.svg')}}" width="30" alt="icono copiar">
+                        </button>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-12 col-sm-12">
+                    <div class="logos_clientes">
+                        <div class="primera-fila">
+                            <img src="{{asset('img/burger.svg')}}" width="100" alt="">
+                            <img src="{{asset('img/kfc.svg')}}" width="100" alt="">
+                            <img src="{{asset('img/ph.svg')}}" width="100" alt="">
+                        </div>
+                        <div class="segunda-fila">
+                            <img src="{{asset('img/kanan.svg')}}" width="180" alt="">
+                            <img src="{{asset('img/turismaya.svg')}}" width="180" alt="">
+                        </div>
+                        <img src="{{asset('img/nicxa.svg')}}" width="200" alt="">
+
                     </div>
                 </div>
             </div>

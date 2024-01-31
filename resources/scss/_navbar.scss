@@ -1,5 +1,11 @@
 .navbar {
     background: transparent;
+    transition: 1s;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    min-height: 40px;
     .navbar-nav {
         
         gap: 20px;
@@ -7,13 +13,19 @@
     .redes {
         display: flex;
         flex-direction: row;
-        padding: 0;
+        justify-content: center;
+        align-items: center;
         li {
             list-style: none;
-            display: flex;
+            
             &:first-child, &:nth-child(2) {
                  padding-right: 1em;
             }
         }
     }
+}
+.dark {
+    background-color: #F9FAFC;
+    transition: 150ms ease;
+    border-bottom: 2px #00F385 solid;
 }

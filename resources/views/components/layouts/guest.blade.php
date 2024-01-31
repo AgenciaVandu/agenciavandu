@@ -7,7 +7,7 @@
     <meta name="description" content="{{$metaDescription ?? 'sin meta'}}">
     @stack('estilos')
 </head>
-<body>
+<body class="body">
     <x-nav/>
     <main>
     {{$slot}}

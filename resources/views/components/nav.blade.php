@@ -24,13 +24,13 @@
           <a class="nav-link" href="#">Alianzas</a>
         </li>
       </ul>
-      <ul class="redes">
+      <div class="redes">
         <li>
-            <img src="{{asset ('img/facebook.svg') }}" width="20" alt="Logotipo Facebook">
+            <img src="{{asset ('img/facebook.svg') }}" width="20"  alt="Logotipo Facebook">
         </li>
         <li> <img src="{{asset ('img/instagram.svg') }}" width="20" alt="Logotipo Facebook"></li>
         <li> <img src="{{asset ('img/whatsapp.svg') }}" width="20" alt="Logotipo Facebook"></li>
-      </ul>
+      </div>
     </div>
   </div>
 </nav>
