@@ -8,27 +8,44 @@ $fuentes : (
 
 @use 'colores';
 @use 'fuentes';
+@use 'form';
 
 .footer {
+    .container-fluid {
+        padding: 0 3em;
+    }
     min-height: 300px;
     border-top: 1px colores.$green solid;
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    h6 {
-
-        span {
-            color: colores.$green;
-            font-family: map-get($fuentes , "bold" );
+    padding: 3em 0 ;
+    .copy_complet {
+        margin-top: 1.5em;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        h6 {
+            text-align: center;
+            width: 54%;
+            span {
+                color: colores.$green;
+                font-family: map-get($fuentes , "bold" );
+            }
         }
     }
+   
     .copy {
         display: flex;
         flex-direction: row;
         gap: 10px;
         min-height: 50px;
         align-items: center;
+       justify-content: center;
+       
     }
     
 }
