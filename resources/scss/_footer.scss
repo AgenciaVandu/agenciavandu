@@ -11,18 +11,35 @@ $fuentes : (
 @use 'form';
 
 .footer {
-    .container-fluid {
-        padding: 0 3em;
-    }
-    min-height: 300px;
+
+    
+    min-height: 200px;
     border-top: 1px colores.$green solid;
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
     padding: 3em 0 ;
+    .hablemos {
+        li {
+            list-style: none;
+            a {
+                text-decoration: none;
+                color: #fff;
+            }
+        }
+    }
+    .redes {
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        li {
+            list-style: none;
+            filter: invert(100%) sepia(100%) saturate(0%) hue-rotate(280deg) brightness(107%) contrast(102%);
+        }
+    }
     .copy_complet {
-        margin-top: 1.5em;
+        margin-top: 3em;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -35,6 +52,10 @@ $fuentes : (
                 color: colores.$green;
                 font-family: map-get($fuentes , "bold" );
             }
+        } @media (max-width: 991px) {
+            h6 {
+                width: 100%;
+            }
         }
     }
    
@@ -46,6 +67,18 @@ $fuentes : (
         align-items: center;
        justify-content: center;
        
+    }
+    .form-control {
+        border-radius: 0;
+    }
+    .btn-send {
+        width: 100%;
+        border-radius: 0;
+        margin-top: 1em;
+        background-color: colores.$black;
+        border:  1px colores.$green solid;
+
+        font-family: map-get($fuentes, "semibold" );
     }
     
 }
