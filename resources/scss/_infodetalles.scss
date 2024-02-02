@@ -1,0 +1,27 @@
+@keyframes movimientoimg {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    50%{
+        transform: rotate(20deg);
+        opacity: 0;
+    } 
+
+    100% {
+        transform: rotate(0deg);
+    }
+}
+
+.detalles {
+    min-height: 450px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    .muestra {
+        position: relative;
+        img {
+            animation: movimientoimg ease;
+        }
+    }
+}

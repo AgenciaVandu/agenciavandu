@@ -1,0 +1,10 @@
+.portafolio {
+    padding: 2em 0;
+    overflow-x: hidden;
+    .carrusel {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 20px;
+    }
+}

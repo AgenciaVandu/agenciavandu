@@ -1,7 +1,7 @@
 <footer class="footer">
     <div class="container">
         <div class="row">
-            <div class="col-lg-5 col-md-12 col-sm-12 pe-5">
+            <div class="col-lg-5 col-md-12 col-sm-12">
                 <x-form></x-form>
             </div>
             <div class="col-lg-4 col-md-12 col-sm-12 hablemos">

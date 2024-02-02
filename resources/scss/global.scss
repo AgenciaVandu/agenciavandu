@@ -1,6 +1,119 @@
+$fuentes : (
+    "regular" : 'Geist-regular',
+    "medium" : 'Geist-medium',
+    "semibold" :  'Geist-semibold',
+    "bold" :  'Geist-bold'
+
+);
 
 @use 'navbar';
 @use 'fuentes';
 @use 'colores';
 @use 'footer';
 @use 'form';
+
+body {
+    cursor: url(/public/img/cursor.svg), auto;
+}
+.body {
+    background-color: colores.$gray;
+    transition: .5s ease;
+}
+a {
+    cursor: url(/public/img/cursor2.svg), auto;
+}
+
+@keyframes notificacion {
+    0% {
+        scale: (1);
+    }
+    50% {
+        scale: (1.2);
+    }
+    100% {
+        scale: (1);
+    }
+}
+.flotante {
+    .mensaje {
+        z-index: 4;
+        position: fixed;
+        bottom: 50px;
+        right: 150px;
+
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+
+        padding: .5em .9em;
+        border-radius: 1em;
+        transition: .5s;
+    } @media (max-width:700px) {
+        .mensaje {
+            right: 100px;
+        }
+    }
+    .notificacion {
+        position: fixed;
+        bottom: 95px;
+        right: 60px;
+        z-index: 4;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: red;
+        border: 1px colores.$gray solid;
+        animation: notificacion .7s ease-in infinite;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: .5s;
+        .imagen {
+            height: 12px;
+            width: auto;
+        }
+    }@media (max-width: 700px) {
+        .notificacion {
+            right: 20px;
+        }
+    }
+    .btn-contacto {
+        z-index: 3;
+        position: fixed;
+        width: auto;
+        height: auto;
+        bottom: 30px;
+        right: 60px;
+        padding: 1em 1em ;
+        justify-content: center;
+    
+        color: #fff;
+        background-color: colores.$black;
+        border-radius: 10px;
+        font-family: map-get($fuentes , "bold" );
+    
+        text-decoration: none;
+        transition: .5s ease;
+        
+        
+        &:hover {
+            background-color: colores.$green;
+            transition: .5s;
+            color: colores.$black;
+        }
+        img {
+            filter: invert(100%) sepia(100%) saturate(0%) hue-rotate(280deg) brightness(107%) contrast(102%);
+            &:hover {
+                filter: invert(10%) sepia(17%) saturate(700%) hue-rotate(186deg) brightness(99%) contrast(95%);
+                transition: .5s;
+            }
+        }
+    } @media (max-width: 700px) {
+        .btn-contacto {
+            right: 20px;
+        }
+    }
+}

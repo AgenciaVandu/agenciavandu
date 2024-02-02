@@ -9,10 +9,15 @@
     <div class="collapse navbar-collapse" id="navbarTogglerDemo03">
       <ul class="navbar-nav m-auto mb-2 mb-lg-0">
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">Inicio</a>
+          <a class="nav-link active" aria-current="page" href="{{route ('home')}}">Inicio</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Servicios</a>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">Servicios</a>
+          <ul class="dropdown-menu">
+            <li>
+              <a href="{{route ('servicios')}}" class="dropdown-item">Diseño web</a>
+            </li>
+          </ul>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#">Productos</a>

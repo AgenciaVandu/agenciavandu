@@ -3,23 +3,24 @@
 @endpush
 <x-layouts.guest titulo="Construimos el futuro de tu empresa en el mundo digital" meta-description="Somos una agencia de diseño y desarrollo web estratégico que ayuda a las empresas en momentos clave, nos enfocamos en lo esencial para desbloquear oportunidades significativas. Nuestras soluciones eficientes generan resultados tangibles.">
 
-    <header class="header">
-        <div class="container">
+    <x-header>
+        <x-slot name="header">
             <h1>Diseñamos y construimos el futuro de tu empresa en el mundo digital</h1>
-        </div>
-    </header>
+        </x-slot>
+       
+    </x-header>
     <section class="intro">
         <div class="container">
             <div class="contenido">
                 <p>Somos una agencia de diseño y desarrollo web estratégico que ayuda a las empresas en momentos clave, nos enfocamos en lo esencial para desbloquear oportunidades significativas. Nuestras soluciones eficientes generan resultados tangibles.</p>
                 <p>¿Quieres ver un poco de nuestro trabajo?</p>
                 <div class="botones">
-                    <a href="#" class="btn btn-primary">Diseño web <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></span></a>
-                    <a href="#" class="btn btn-primary">Diseño gráfico <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
-                    <a href="#" class="btn btn-primary">Fotografía <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
+                    <a href="#" >Diseño web <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></span></a>
+                    <a href="#" >Diseño gráfico <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
+                    <a href="#">Fotografía <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
                 </div>
                 <div class="cta">
-                    <a href="" class="btn btn-secondary">Contáctanos <span><img src="{{asset('img/arrow-3.svg')}}" class="arrow1" width="10" alt=""></a>
+                    <a href="#">Contáctanos <span><img src="{{asset('img/arrow-3.svg')}}" class="arrow1" width="10" alt=""></a>
                 </div>
             </div>
         </div>
@@ -115,57 +116,38 @@
             </div>
         </div>
     </section>
-    <section class="aliados">
-        <div class="container">
-            <div class="titular">
-                <h1 class="text-center">Somos una agencia validada <br><span style="color: #13161D;">por las mejores marcas</span></h1>
-                    <div class="row logos">
-                        <div class="col">
-                            <img src="{{asset('img/mercadopago.svg')}}" alt="Logotipo mercadopago">
-                        </div>
-                        <div class="col">
-                            <img src="{{asset('img/hostgator.svg')}}" alt="Logotipo mercadopago">
-                        </div>
-                        <div class="col">
-                            <img src="{{asset('img/paypal.svg')}}" alt="Logotipo mercadopago">
-                        </div>
-                        <div class="col">
-                            <img src="{{asset('img/stripe.svg')}}" alt="Logotipo mercadopago">
-                        </div>
-                    </div>
-            </div>
-        </div>
-    </section>
-    <section class="clientes">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-6 col-md-12 col-sm-12 titular m-auto">
-                    <h1>¿Platicamos sobre <br class="ocultar" /> tu proyecto?</h1>
-                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Reiciendis soluta tempora officiis totam eaque, commodi impedit enim quidem esse dolores ipsam provident sapiente sunt magni, ab aut minima beatae distinctio!</p>
-                    <div class="contato darktxt">
-                        <p class="correo darktxt">team@agenciavandu.com</p>
-                        <button>
-                            <img src="{{asset('/img/copy.svg')}}" width="20" alt="icono copiar">
-                        </button>
-                    </div>
+    <x-validacion>
+        <x-slot name="logos">
+            <div class="row logos">
+                <div class="col">
+                    <img src="{{asset('img/mercadopago.svg')}}" alt="Logotipo mercadopago">
                 </div>
-                <div class="col-lg-6 col-md-12 col-sm-12">
-                    <div class="logos_clientes">
-                        <div class="primera-fila">
-                            <img src="{{asset('img/burger.svg')}}" width="100" alt="">
-                            <img src="{{asset('img/kfc.svg')}}" width="100" alt="">
-                            <img src="{{asset('img/ph.svg')}}" width="100" alt="">
-                        </div>
-                        <div class="segunda-fila">
-                            <img src="{{asset('img/kanan.svg')}}" width="180" alt="">
-                            <img src="{{asset('img/turismaya.svg')}}" width="180" alt="">
-                        </div>
-                        <img src="{{asset('img/nicxa.svg')}}" width="200" alt="">
+                <div class="col">
+                    <img src="{{asset('img/hostgator.svg')}}" alt="Logotipo mercadopago">
+                </div>
+                <div class="col">
+                    <img src="{{asset('img/paypal.svg')}}" alt="Logotipo mercadopago">
+                </div>
+                <div class="col">
+                    <img src="{{asset('img/stripe.svg')}}" alt="Logotipo mercadopago">
+                </div>
+            </div>
+        </x-slot>
+        <x-slot name="clientes">
+            <div class="logos_clientes">
+                <div class="primera-fila">
+                    <img src="{{asset('img/burger.svg')}}" width="80" alt="">
+                    <img src="{{asset('img/kfc.svg')}}" width="80" alt="">
+                    <img src="{{asset('img/ph.svg')}}" width="80" alt="">
+                </div>
+                <div class="segunda-fila">
+                    <img src="{{asset('img/kanan.svg')}}" width="150" alt="">
+                    <img src="{{asset('img/turismaya.svg')}}" width="150" alt="">
+                </div>
+                <img src="{{asset('img/nicxa.svg')}}" width="200" alt="">
 
-                    </div>
-                </div>
             </div>
-        </div>
-    </section>
+        </x-slot>
+    </x-validacion>
 
 </x-layouts.guest>

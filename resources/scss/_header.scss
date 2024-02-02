@@ -1,0 +1,25 @@
+.header {
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content:center;
+    align-items: center;
+    width: 100%;
+    
+    .container {
+        width: 50%;
+        text-align: center;
+    } @media (max-width:991px) {
+        .container {
+            width: 80%;
+        }
+    }@media (max-width:741px) {
+        .container {
+            width: auto;
+        }
+    }
+} @media (max-width:834px) {
+    .header {
+        min-height: 350px;
+    }
+}

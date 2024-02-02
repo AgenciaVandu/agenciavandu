@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,12 +8,23 @@
     <meta name="description" content="{{$metaDescription ?? 'sin meta'}}">
     @stack('estilos')
 </head>
+
 <body class="body">
-    <x-nav/>
+    <div class="flotante">
+        <div class="mensaje">Bienvenido a Vandú 😊</div>
+        <div class="notificacion">
+            <img src="{{asset('/img/bell-solid.svg')}}" class="imagen" alt="">
+        </div>
+        <a href="" class="btn-contacto">
+            <img src="{{asset('/img/message-solid.svg')}}" width="40" alt="mensaje">
+        </a>
+    </div>
+    <x-nav />
     <main>
-    {{$slot}}
+        {{$slot}}
     </main>
-    <x-footer/>
+    <x-footer />
 </body>
 @stack('js')
+
 </html>

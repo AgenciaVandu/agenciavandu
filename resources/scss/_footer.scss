@@ -11,8 +11,8 @@ $fuentes : (
 @use 'form';
 
 .footer {
-
-    
+    background-color: colores.$black;
+    color: #fff;
     min-height: 200px;
     border-top: 1px colores.$green solid;
     display: flex;
@@ -46,6 +46,7 @@ $fuentes : (
         align-items: center;
         width: 100%;
         h6 {
+            color: #fff;
             text-align: center;
             width: 54%;
             span {
