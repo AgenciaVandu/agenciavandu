@@ -1,27 +1,60 @@
-@keyframes movimientoimg {
-    0% {
-        transform: rotate(0deg);
-    }
+@use 'colores';
 
-    50%{
-        transform: rotate(20deg);
-        opacity: 0;
-    } 
-
-    100% {
-        transform: rotate(0deg);
-    }
+.hidden {
+    opacity: 0;
 }
-
+/* .mostrar {
+    opacity: 1;
+} */
 .detalles {
-    min-height: 450px;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
+    min-height: 400px;
+    padding: 4em 0 0 0;
     .muestra {
         position: relative;
-        img {
-            animation: movimientoimg ease;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        .base {
+            position: absolute;
+            top: 30px;
+
+            transform: rotate(0);
+            animation: all ease-out 1s;
+            opacity: 1;
+            transition: 1s;
+            &.active {
+                transform: rotate(20deg);
+            }
         }
+        .middle {
+            position: absolute;
+            top: 30px;
+            transform: rotate(0);
+            animation: all ease-out 1s;
+            transition: 1s;
+            &.active {
+                transform: rotate(-20deg);
+            }
+        }
+        .up {
+            position: absolute;
+            top: 30px;
+            transform: rotate(0);
+            animation: all ease-out 1s;
+            transition: 1s;
+            transition-delay: .5s;
+            &.active {
+                transform: rotate(-5deg);
+            }
+        }
+    }
+    .btn-servicios {
+        background-color: colores.$black;
+        border: 1px colores.$green solid;
+        color: #fff;
+        border-radius: 1em;
+        text-decoration: none;
+        padding: 10px 1em;
     }
 }

@@ -1,5 +1,5 @@
 @push ('estilos')
-@vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/servicios.scss', 'resources/js/app.js', 'resources/js/bg.js' ])
+@vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/servicios.scss', 'resources/js/app.js' ])
 @endpush
 <x-layouts.guest>
     <x-header>
@@ -26,8 +26,20 @@
     <x-detalle>
         <x-slot name="portafolioImg">
             <div class="muestra">
-                <img src="{{asset('/img/port.svg')}}" class="base" alt="portafolio de diseño web">
+                <img src="{{asset('/img/port.svg')}}" class="base mostrar" alt="portafolio de diseño web">
+                <img src="{{asset('/img/port.svg')}}" class="middle" alt="portafolio de diseño web">
+                <img src="{{asset('/img/port.svg')}}" class="up" alt="portafolio de diseño web">
+
             </div>
+            <x-slot name="titularServicios">
+                Diseñamos y desarrollamos páginas web que atrapan
+            </x-slot>
+            <x-slot name="parrafoServicios">
+                El contenido, tiempo de retención y de carga son aspectos clave para el posicionamiento de tu empresa. Nos encargamos de usar las mejores prácticas para que puedas lograr tus objetivos mensuales.
+            </x-slot>
+            <x-slot name="botonServicios">
+                <a href="" class="btn-servicios">Cotizar proyecto</a>
+            </x-slot>
         </x-slot>
     </x-detalle>
     <x-validacion>
