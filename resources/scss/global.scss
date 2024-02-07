@@ -40,9 +40,12 @@ a {
         position: fixed;
         bottom: 50px;
         right: 150px;
-
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
-        backdrop-filter: blur(10px);
+        background: rgb(0,243,133);
+        background: -moz-linear-gradient(97deg, rgba(0,243,133,0.3295693277310925) 45%, rgba(0,201,110,0.3435749299719888) 100%);
+        background: -webkit-linear-gradient(97deg, rgba(0,243,133,0.3295693277310925) 45%, rgba(0,201,110,0.3435749299719888) 100%);
+        background: linear-gradient(97deg, rgba(0,243,133,0.3295693277310925) 45%, rgba(0,201,110,0.3435749299719888) 100%);
+        filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#00f385",endColorstr="#00c96e",GradientType=1);
+        backdrop-filter: blur(40px);
         -webkit-backdrop-filter: blur(10px);
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 

@@ -37,7 +37,7 @@
                 </div>
                 <div class="fotografia">
                     <div class="foto__contenido">
-                        <h2>Fotografia</h2>
+                        <h2>Fotografía</h2>
                         <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Expedita recusandae iste officia libero </p>
                         <a href="">Ver más información <span><img src="{{asset ('img/arrow-3.svg') }}" class="arrow" width="10" alt=""></span></a>
                     </div>
@@ -136,15 +136,15 @@
         <x-slot name="clientes">
             <div class="logos_clientes">
                 <div class="primera-fila">
-                    <img src="{{asset('img/burger.svg')}}" width="80" alt="">
-                    <img src="{{asset('img/kfc.svg')}}" width="80" alt="">
-                    <img src="{{asset('img/ph.svg')}}" width="80" alt="">
+                    <img src="{{asset('img/burger.svg')}}" width="80" alt="Logo burger king">
+                    <img src="{{asset('img/kfc.svg')}}" width="80" alt="Logo KFC">
+                    <img src="{{asset('img/ph.svg')}}" width="80" alt="Logo Pizza hut">
                 </div>
                 <div class="segunda-fila">
-                    <img src="{{asset('img/kanan.svg')}}" width="150" alt="">
-                    <img src="{{asset('img/turismaya.svg')}}" width="150" alt="">
+                    <img src="{{asset('img/kanan.svg')}}" width="150" alt="Logo Kananfleet">
+                    <img src="{{asset('img/turismaya.svg')}}" width="150" alt="Logo turismaya">
                 </div>
-                <img src="{{asset('img/nicxa.svg')}}" width="200" alt="">
+                <img src="{{asset('img/nicxa.svg')}}" width="200" alt="Logo grupo nicxa">
 
             </div>
         </x-slot>

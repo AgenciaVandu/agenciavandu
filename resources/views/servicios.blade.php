@@ -1,5 +1,5 @@
 @push ('estilos')
-@vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/servicios.scss', 'resources/js/app.js' ])
+@vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/servicios.scss', 'resources/js/app.js', 'resources/js/bg.js', 'resources/js/observer.js', 'resources/js/portafolio.js' ])
 @endpush
 <x-layouts.guest>
     <x-header>
@@ -25,12 +25,11 @@
     </x-portafolio>
     <x-detalle>
         <x-slot name="portafolioImg">
-            <div class="muestra">
-                <img src="{{asset('/img/port.svg')}}" class="base mostrar" alt="portafolio de diseño web">
-                <img src="{{asset('/img/port.svg')}}" class="middle" alt="portafolio de diseño web">
-                <img src="{{asset('/img/port.svg')}}" class="up" alt="portafolio de diseño web">
-
-            </div>
+            <img src="{{asset('/img/port.svg')}}" class="base mostrar" alt="portafolio de diseño web">
+            <img src="{{asset('/img/port.svg')}}" class="middle mostrar" alt="portafolio de diseño web">
+            <img src="{{asset('/img/port.svg')}}" class="up mostrar" alt="portafolio de diseño web">
+        </x-slot>
+        <div class="contenido_espacio">
             <x-slot name="titularServicios">
                 Diseñamos y desarrollamos páginas web que atrapan
             </x-slot>
@@ -40,8 +39,22 @@
             <x-slot name="botonServicios">
                 <a href="" class="btn-servicios">Cotizar proyecto</a>
             </x-slot>
-        </x-slot>
+        </div>
     </x-detalle>
+    <x-quehacemos>
+        <x-slot name="listaUno">
+            <li>
+                <span>Research & Análisis</span>
+            </li>
+            <li><span>Estrategia web</span></li>
+            <li><span>Search Optimization (SEO)</span></li>
+            <li><span>Desarrollo Front-end</span></li>
+            <li><span>Desarrollo Back-end</span></li>
+        </x-slot>
+    </x-quehacemos>
+    <x-cta>
+
+    </x-cta>
     <x-validacion>
         <x-slot name="logos">
             <div class="row logos">

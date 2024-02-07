@@ -8,47 +8,96 @@
 } */
 .detalles {
     min-height: 400px;
+    width: 100%;
     padding: 4em 0 0 0;
-    .muestra {
-        position: relative;
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        .base {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    .contenido {
+        .contenido_portafolio {
+           width: 40%;
+           height: 380px;
+           position: relative;
+           
+           .base {
             position: absolute;
-            top: 30px;
-
-            transform: rotate(0);
-            animation: all ease-out 1s;
-            opacity: 1;
-            transition: 1s;
-            &.active {
-                transform: rotate(20deg);
+            left: 160px;
+            rotate: 0;
+           }
+           .middle {
+            position: absolute;
+            left: 160px;
+            rotate: -20deg;
+           }
+           .up {
+            position: absolute;
+            left: 160px;
+           }@media (max-width: 991px) {
+            .up, .middle, .base {
+                left: 260px;
+            }
+            }@media (max-width: 767px) {
+                .up, .middle, .base {
+                    left: 140px;
+                }
+            }@media (max-width: 509px) {
+                .up, .middle, .base {
+                    left: 110px;
+                }
+               
+            }@media (max-width: 402px) {
+                .up, .middle, .base {
+                    left: 80px;
+                }
+               
+            }@media (max-width: 384px) {
+                .up, .middle, .base {
+                    left: 68px;
+                    overflow: hidden;
+                }
+               
+            }@media (max-width: 324px) {
+                .up, .middle, .base {
+                    left: 28px;
+                    overflow: hidden;
+                }
+               
+            }
+            
+          
+        }@media (max-width: 991px) {
+            .contenido_portafolio {
+                width: 100%;
+                height: 400px;
             }
         }
-        .middle {
-            position: absolute;
-            top: 30px;
-            transform: rotate(0);
-            animation: all ease-out 1s;
-            transition: 1s;
-            &.active {
-                transform: rotate(-20deg);
+        .contenido_texto {
+            width: 60%;
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            h1, p {
+                width: 80%;
+            }
+        } @media (max-width: 991px) {
+            .contenido_texto {
+                width: 100%;
+            }
+            h1, p {
+                width: 100%;
+                padding-bottom: 3em;
             }
         }
-        .up {
-            position: absolute;
-            top: 30px;
-            transform: rotate(0);
-            animation: all ease-out 1s;
-            transition: 1s;
-            transition-delay: .5s;
-            &.active {
-                transform: rotate(-5deg);
-            }
+        
+       
+    }@media (max-width: 991px) {
+        .contenido {
+            display: block;
         }
     }
+   
     .btn-servicios {
         background-color: colores.$black;
         border: 1px colores.$green solid;
@@ -56,5 +105,11 @@
         border-radius: 1em;
         text-decoration: none;
         padding: 10px 1em;
+        width: 160px;
     }
 }
+
+.activo {
+    rotate: 15deg;
+    transition: 1s;
+   }

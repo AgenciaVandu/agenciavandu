@@ -1,0 +1,44 @@
+$fuentes : (
+    "regular" : 'Geist-regular',
+    "medium" : 'Geist-medium',
+    "semibold" :  'Geist-semibold',
+    "bold" :  'Geist-bold'
+
+);
+.quehacemos {
+    min-height: 200px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-end;
+    .titular {
+        padding: 0 5em;
+        h1 {
+            font-family: map-get($fuentes , "semibold" );
+        }
+    } @media (max-width:600px) {
+        .titular {
+            padding: 0;
+        } 
+    }
+    .lista {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        li {
+            list-style: none;
+            span {
+                &::before {
+                    content: url(/public/img/check.svg);
+                    padding-right: 1em;
+                }
+            }
+        }
+    }
+} @media (max-width:991px) {
+    .quehacemos {
+        padding: 3em 1em;
+        .titular {padding: 1em 0;}
+    }
+}
+

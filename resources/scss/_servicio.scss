@@ -9,10 +9,11 @@ $fuentes : (
 @use 'colores';
 
 .aliados {
-    min-height: 480px;
+    min-height: 350px;
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow: hidden;
     .titular {
         display: flex;
         flex-direction: column;
@@ -37,9 +38,13 @@ $fuentes : (
         align-items: center;
         gap: 60px;
         text-align: center;
-       }
+       } 
     }
-}
+}@media (max-width:991px) {
+    .aliados {
+        margin-top: 3em;
+    }
+   }
 
 .clientes {
     
