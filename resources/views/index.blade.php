@@ -7,7 +7,7 @@
         <x-slot name="header">
             <h1>Diseñamos y construimos el futuro de tu empresa en el mundo digital</h1>
         </x-slot>
-       
+
     </x-header>
     <section class="intro">
         <div class="container">
@@ -15,9 +15,10 @@
                 <p>Somos una agencia de diseño y desarrollo web estratégico que ayuda a las empresas en momentos clave, nos enfocamos en lo esencial para desbloquear oportunidades significativas. Nuestras soluciones eficientes generan resultados tangibles.</p>
                 <p>¿Quieres ver un poco de nuestro trabajo?</p>
                 <div class="botones">
-                    <a href="#" >Diseño web <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></span></a>
-                    <a href="#" >Diseño gráfico <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
+                    <a href="#">Diseño web <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></span></a>
+                    <a href="#">Diseño digital e impreso <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
                     <a href="#">Fotografía <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
+                    <a href="#">Marcas<span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
                 </div>
                 <div class="cta">
                     <a href="#">Contáctanos <span><img src="{{asset('img/arrow-3.svg')}}" class="arrow1" width="10" alt=""></a>
@@ -29,30 +30,50 @@
         <div class="container">
             <div class="grid-contenido">
                 <div class="web">
+                    <div class="lista_contenido">
+                        <li>CRM</li>
+                        <li>Ventas</li>
+                        <li>Desarrollo web</li>
+                        <li>Agencia de viajes</li>
+                    </div>
                     <div class="web__contenido">
                         <h3>Diseño web</h3>
-                        <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Expedita recusandae iste officia libero minus quaerat saepe quasi praesentium hic et!</p>
                         <a href="">Ver más información <span><img src="{{asset ('img/arrow-3.svg') }}" class="arrow" width="10" alt=""></span></a>
                     </div>
                 </div>
                 <div class="fotografia">
+                    <div class="lista_contenido">
+                        <li>Alimentos</li>
+                        <li>Restaurantes</li>
+                        <li>Arquitectura</li>
+                        <li>Eventos</li>
+                    </div>
                     <div class="foto__contenido">
                         <h2>Fotografía</h2>
-                        <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Expedita recusandae iste officia libero </p>
                         <a href="">Ver más información <span><img src="{{asset ('img/arrow-3.svg') }}" class="arrow" width="10" alt=""></span></a>
                     </div>
                 </div>
                 <div class="digital">
+                    <div class="lista_contenido">
+                        <li>Redes sociales</li>
+                        <li>Marketing</li>
+                        <li>Restaurantes</li>
+                        <li>Inmobiliarias</li>
+                    </div>
                     <div class="digital__contenido">
-                        <h3>Diseño digital</h3>
-                        <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Expedita recusandae iste officia libero minus quaerat saepe quasi praesentium hic et!</p>
+                        <h3>Diseño digital e impreso</h3>
+
                         <a href="">Ver más información <span><img src="{{asset ('img/arrow-3.svg') }}" class="arrow" width="10" alt=""></span></a>
                     </div>
                 </div>
                 <div class="impresos">
+                    <div class="lista_contenido">
+                        <li>Logotipo</li>
+                        <li>Comunicación</li>
+                        <li>Conceptualización</li>
+                    </div>
                     <div class="impresos__contenido">
-                        <h3>Diseño de impresos y empaque</h3>
-                        <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Expedita recusandae iste officia libero minus quaerat saepe quasi praesentium hic et!</p>
+                        <h3>Identidad de marca</h3>
                         <a href="">Ver más información <span><img src="{{asset ('img/arrow-3.svg') }}" class="arrow" width="10" alt=""></span></a>
                     </div>
                 </div>

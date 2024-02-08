@@ -27,7 +27,7 @@ $fuentes : (
         justify-content: center;
         li {
             list-style: none;
-            span {
+            span{
                 &::before {
                     content: url(/public/img/check.svg);
                     padding-right: 1em;

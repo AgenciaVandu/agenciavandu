@@ -19,6 +19,12 @@ body {
     background-color: colores.$gray;
     transition: .5s ease;
 }
+.nav-item {
+    a {
+        cursor: url(/public/img/cursor2.svg), auto;
+    }
+}
+
 a {
     cursor: url(/public/img/cursor2.svg), auto;
 }
@@ -67,7 +73,7 @@ a {
         border-radius: 50%;
         background-color: red;
         border: 1px colores.$gray solid;
-        animation: notificacion .7s ease-in infinite;
+        animation: notificacion .7s ease-in 1s;
 
         display: flex;
         flex-direction: column;

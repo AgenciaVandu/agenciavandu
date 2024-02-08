@@ -7,27 +7,78 @@
     justify-content: center;
     align-items: center;
     min-height: 40px;
-    .navbar-nav {
-        
-        gap: 20px;
-    }
-    .redes {
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        li {
-            list-style: none;
-            
-            &:first-child, &:nth-child(2) {
-                 padding-right: 1em;
+
+    width: 100%;
+    .container {
+        position: fixed;
+        top: 5%;
+        left: 50%;
+        transform: translate(-50%, -14.5% );
+        width: 80%;
+        background: colores.$black;
+        padding: .5em 1em;
+        z-index: 3;
+
+        border-radius: 1em;
+
+        .navbar-toggler {
+            .navbar-toggler-icon {
+                filter: invert(70%) sepia(17%) saturate(5953%) hue-rotate(103deg) brightness(105%) contrast(101%);
             }
         }
-    }
-    .dropdown-menu{
-        border-radius: 0;
-        border: 1px colores.$green solid;
-    }
+        .navbar-brand {
+            filter: invert(100%) sepia(5%) saturate(0%) hue-rotate(19deg) brightness(105%) contrast(100%);
+        }
+        .navbar-nav {
+        
+            gap: 20px;
+        }
+        li {
+            .dropdown-menu {
+              background: colores.$black;
+              border: none;
+              border-radius: 1em;
+              a {
+                color: #fff;
+                transition: .3s ease;
+                &:hover {
+                    background: colores.$green;
+                    color: colores.$black;
+                    transition: .3s ease;
+                }
+              }
+            }
+        }
+        .nav-link {
+            color: #F9FAFC;
+            transition: .3s;
+            &:active {
+                color: colores.$green;
+            }
+            &.show {
+                color: colores.$green;
+                transition: .3s;
+            }
+        }
+        .redes {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            li {
+                list-style: none;
+                filter: invert(100%) sepia(5%) saturate(0%) hue-rotate(19deg) brightness(105%) contrast(100%);
+                
+                &:first-child, &:nth-child(2) {
+                     padding-right: 1em;
+                }
+            }
+        }
+        .dropdown-menu{
+            border-radius: 0;
+            border: 1px colores.$green solid;
+        }
+    } 
 }
 .dark {
     background-color: #F9FAFC;
