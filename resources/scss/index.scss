@@ -27,25 +27,34 @@ $fuentes : (
     width: 100%;
     transition: 1s;
     .contenido {
-        width: 55%;
+        width: 100%;
         padding: 0 ;
+        p {
+            width:55%;
+            transition: 1s;
+        }
+       
     }@media (max-width:991px) {
-        .contenido {
-            width: 80%;
+        .contenido{
+            width: 100%;
+            p {
+                width: 100%;
+                transition: 1s;
+            }
         }
     } @media (max-width:771px) {
         .contenido {
-            width: 90%;
+            width: auto;
         }
     }
     @media (max-width:688px) {
-        .contenido {
+        .contenido{
             width: auto;
             padding:0 2em;
         }
     }
     @media (max-width:384px) {
-        .contenido {
+        .contenido, p {
             width: auto;
             padding:0;
         }
@@ -55,7 +64,7 @@ $fuentes : (
         display: flex;
         flex-direction: row;
         gap: 15px;
-        
+        transition: 1s;
         a {
             width: auto;
             height: 45px;
@@ -83,6 +92,7 @@ $fuentes : (
     } @media (max-width:767px) {
         .botones {
             flex-direction: column;
+            transition: 1s;
         }    
     }
     .cta {

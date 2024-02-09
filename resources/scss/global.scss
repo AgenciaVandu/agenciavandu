@@ -29,6 +29,18 @@ a {
     cursor: url(/public/img/cursor2.svg), auto;
 }
 
+section {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: .8s ease-in-out;
+    
+}
+section.show {
+    opacity: 1;
+    transition: 0.8s;
+    transform: translateY(0px);
+}
+
 @keyframes notificacion {
     0% {
         scale: (1);

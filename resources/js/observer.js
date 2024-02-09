@@ -8,6 +8,7 @@ function visibilidad (entries){
          // el elemento es visible
         console.log("visible")
         portafolio.classList.add("activo");
+        observer.unobserve(entry.target)
     } else {
         // el elemento no es visible
         console.log("no es visible")

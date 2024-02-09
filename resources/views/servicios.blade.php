@@ -1,5 +1,5 @@
 @push ('estilos')
-@vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/servicios.scss', 'resources/js/app.js', 'resources/js/bg.js', 'resources/js/observer.js', 'resources/js/portafolio.js' ])
+@vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/servicios.scss', 'resources/js/app.js', 'resources/js/bg.js', 'resources/js/observer.js', 'resources/js/portafolio.js', 'resources/js/diseno.js' ])
 @endpush
 <x-layouts.guest>
     <x-header>
@@ -12,7 +12,9 @@
     </x-header>
     <section class="intro">
         <div class="container text-center">
-            <img src="{{asset('img/fondo.svg')}}" class="w-100" alt="">
+            <div class="intro_contenido">
+
+            </div>
         </div>
     </section>
     <section class="extracto">

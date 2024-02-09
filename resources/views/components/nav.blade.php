@@ -31,7 +31,7 @@
       </ul>
       <div class="redes">
         <li>
-          <a href="https://www.facebook.com/vandumx"">
+          <a href="https://www.facebook.com/vandumx">
             <img src="{{asset ('img/facebook.svg') }}" width="20" alt="Logotipo Facebook">
           </a>
         </li>

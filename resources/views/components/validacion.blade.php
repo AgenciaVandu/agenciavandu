@@ -13,13 +13,14 @@
                     <h1>¿Platicamos sobre <br class="ocultar" /> tu proyecto?</h1>
                     <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Reiciendis soluta tempora officiis totam eaque, commodi impedit enim quidem esse dolores ipsam provident sapiente sunt magni, ab aut minima beatae distinctio!</p>
                     <div class="contato darktxt">
-                        <p class="correo darktxt">team@agenciavandu.com</p>
-                        <button>
-                            <img src="{{asset('/img/copy.svg')}}" width="20" alt="icono copiar">
+                        <input type="text" id="url" class="correo darktxt" value="team@agenciavandu.com"></input>
+                        <button >
+                            <img src="{{asset('/img/copy.svg')}}" class="copiado" width="20" alt="icono copiar">
                         </button>
+                        <span id="message" </span>
                     </div>
                 </div>
-                <div class="col-lg-6 col-md-12 col-sm-12">
+                <div class="col-lg-6 col-md-12 col-sm-12 mt-2">
                     {{$clientes ?? ''}}
                 </div>
             </div>

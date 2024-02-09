@@ -66,6 +66,7 @@ $fuentes : (
         }
         .contato {
             display: flex;
+            align-items: center;
             gap: 10px;
             .correo {
                 width: auto ;
@@ -73,12 +74,33 @@ $fuentes : (
                 padding: .5em .8em;
                 color: colores.$medium-black !important;
                 border-radius: 10px;
+                border:  1px colores.$gray solid;
+                box-shadow: 0px 0px 5px 1px rgb(0 0 0 / 10%);
+
+                &:focus {
+                    outline: none;
+                }
+                &::-moz-selection {
+                    background-color: transparent;
+                }
+                &::selection {
+                    background-color: transparent;
+                }
             }
             button {
                 border-radius: 50%;
                 height: 40px;
                 width: 40px;
                 border: none;
+            }
+            span {
+                background-color: colores.$gray;
+                border: colores.$gray;
+                border-radius: 1em;
+                font-size: .8em;
+                font-family: map-get($fuentes, "regular" );
+                min-height: 20px;
+                width: auto;
             }
         }
     } @media (max-width: 1199px) {

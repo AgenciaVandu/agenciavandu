@@ -118,7 +118,7 @@
             <div class="row detalles">
                 <div class="col-lg-4  col">
                     <p>
-                        <span>Fáciles de usar.</span>
+                        <span>Fáciles  de usar.</span><br class="d-block d-sm-block d-md-block d-lg-none">
                         Nuestras herramientas son útiles e intuitivas para que cualquier persona pueda usarlas.
                     </p>
                 </div>

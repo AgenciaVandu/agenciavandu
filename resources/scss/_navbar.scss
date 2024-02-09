@@ -79,6 +79,10 @@
             border: 1px colores.$green solid;
         }
     } 
+} @media (max-width:360px) {
+    .navbar {
+        width: auto;
+    }
 }
 .dark {
     background-color: #F9FAFC;
