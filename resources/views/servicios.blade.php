@@ -12,9 +12,7 @@
     </x-header>
     <section class="intro">
         <div class="container text-center">
-            <div class="intro_contenido">
-
-            </div>
+            <div class="intro_contenido"></div>
         </div>
     </section>
     <section class="extracto">
@@ -27,8 +25,8 @@
     </x-portafolio>
     <x-detalle>
         <x-slot name="portafolioImg">
-            <img src="{{asset('/img/port.svg')}}" class="base mostrar" alt="portafolio de diseño web">
-            <img src="{{asset('/img/port.svg')}}" class="middle mostrar" alt="portafolio de diseño web">
+            <img src="{{asset('/img/3.svg')}}" class="base mostrar" alt="portafolio de diseño web">
+            <img src="{{asset('/img/2.svg')}}" class="middle mostrar" alt="portafolio de diseño web">
             <img src="{{asset('/img/port.svg')}}" class="up mostrar" alt="portafolio de diseño web">
         </x-slot>
         <div class="contenido_espacio">

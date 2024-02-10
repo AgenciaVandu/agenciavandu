@@ -24,6 +24,7 @@ sections.forEach(section => {
     observador.observe(section)
 });
 
+//////// copy mail
 const button = document.querySelector('img.copiado');
 
 const input = document.querySelector('.correo');

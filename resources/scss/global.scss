@@ -41,6 +41,14 @@ section.show {
     transform: translateY(0px);
 }
 
+h1, h2, h3, h4, h5, h6, li, p, span {
+   &::selection {
+    background-color: colores.$green;
+    color: colores.$black;
+    border-radius: .8em;
+   }
+}
+
 @keyframes notificacion {
     0% {
         scale: (1);

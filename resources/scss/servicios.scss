@@ -25,6 +25,7 @@ $fuentes : (
         background-repeat: no-repeat;
         background-size: cover;
         border-radius: 2em;
+        object-fit: cover;
 
         transition: .5s ease-in;
     }
