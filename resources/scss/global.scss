@@ -13,17 +13,13 @@ $fuentes : (
 @use 'form';
 
 body {
-    cursor: url(/public/img/cursor.svg), auto;
+    cursor: url(/public/img/cursor1.svg), auto;
 }
 .body {
     background-color: colores.$gray;
     transition: .5s ease;
 }
-.nav-item {
-    a {
-        cursor: url(/public/img/cursor2.svg), auto;
-    }
-}
+
 
 a {
     cursor: url(/public/img/cursor2.svg), auto;
@@ -41,12 +37,29 @@ section.show {
     transform: translateY(0px);
 }
 
-h1, h2, h3, h4, h5, h6, li, p, span {
+h1, h2, h3, h4, h5, h6, li, p, span, a {
    &::selection {
     background-color: colores.$green;
     color: colores.$black;
     border-radius: .8em;
    }
+}
+
+.cursor {
+    z-index: 10;
+    position: fixed;
+    background-color: #00f38676;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    pointer-events: none;
+    box-shadow: 0 0 20px colores.$green,
+                0 0 60px colores.$green,
+                0 0 100px colores.$green;
+   transform: translate(-50%, -50%);
+   transition: .1s;
+
+   
 }
 
 @keyframes notificacion {

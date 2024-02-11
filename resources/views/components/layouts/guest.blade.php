@@ -11,6 +11,7 @@
 </head>
 
 <body class="body">
+    <div class="cursor"></div>
     <div class="flotante">
         <div class="mensaje">Bienvenido a Vandú 😊</div>
         <div class="notificacion">
