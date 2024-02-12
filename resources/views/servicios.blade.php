@@ -1,5 +1,5 @@
 @push ('estilos')
-@vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/servicios.scss', 'resources/js/app.js', 'resources/js/bg.js', 'resources/js/observer.js', 'resources/js/portafolio.js', 'resources/js/diseno.js' ])
+@vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/servicios.scss', 'resources/js/app.js', 'resources/js/observer.js', 'resources/js/portafolio.js', 'resources/js/diseno.js' ])
 @endpush
 <x-layouts.guest>
     <x-header>
@@ -7,7 +7,7 @@
             <h1>Conectamos tecnología y estrategia para generar leads de alto impacto</h1>
         </x-slot>
         <x-slot name="parrafo">
-            <p>Somos una agencia de marketing digital que utiliza la tecnología a tu favor para elevar la experiencia de atención a clientes y obtener leads de manera sostenida y eficiente</p>
+            <p class="darktxt">Somos una agencia de marketing digital que utiliza la tecnología a tu favor para elevar la experiencia de atención a clientes y obtener leads de manera sostenida y eficiente</p>
         </x-slot>
     </x-header>
     <section class="intro">
@@ -17,7 +17,7 @@
     </section>
     <section class="extracto">
         <div class="container">
-            <p>Un sitio web debería ser más que un elemento estático, debe ser una entidad dinámica en constante evolución, perfectamente alineada a la identidad y los objetivos de tu marca. Creamos potentes sistemas diseñados para adaptarse y crecer.</p>
+            <p class="darktxt">Un sitio web debería ser más que un elemento estático, debe ser una entidad dinámica en constante evolución, perfectamente alineada a la identidad y los objetivos de tu marca. Creamos potentes sistemas diseñados para adaptarse y crecer.</p>
         </div>
     </section>
     <x-portafolio>
@@ -31,7 +31,7 @@
         </x-slot>
         <div class="contenido_espacio">
             <x-slot name="titularServicios">
-                Diseñamos y desarrollamos páginas web que atrapan
+               <span class="darktxt"> Diseñamos y desarrollamos páginas web que atrapan</span>
             </x-slot>
             <x-slot name="parrafoServicios">
                 El contenido, tiempo de retención y de carga son aspectos clave para el posicionamiento de tu empresa. Nos encargamos de usar las mejores prácticas para que puedas lograr tus objetivos mensuales.

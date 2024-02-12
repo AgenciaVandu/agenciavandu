@@ -1,14 +1,54 @@
+@keyframes slide {
+    from {
+    transform: translateX(0);
+    }
+    to {
+    transform: translateX(-100%);
+    }
+}
 .portafolio {
-    padding: 2em 0;
-    overflow-x: hidden;
+    padding: 3em 0;
+    white-space: nowrap;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: row;
     .carrusel {
         display: flex;
         flex-direction: row;
         align-items: center;
+        justify-content: center;
         gap: 20px;
         
     }
 
+    &::before, 
+    &::after {
+        position: absolute;
+        top: 0;
+    
+        width: 100px;
+        height: 100%;
+        content: "";
+        z-index: 1;
+    }
+
+    &::before {
+        left: 0;
+        background: linear-gradient(90deg, white, rgba(255, 255, 255, 0));
+    }
+    &::after {
+        right: 0;
+        background: linear-gradient(-90deg, white, rgba(255, 255, 255, 0));
+    }
+
+    &:hover 
+        .carrusel {
+            animation-play-state: paused;
+        }
+        .carrusel {
+            animation: 15s slide infinite linear;
+        }
+
     
 }
-

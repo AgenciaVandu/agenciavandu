@@ -9,7 +9,7 @@
         </x-slot>
 
     </x-header>
-    <section class="intro">
+    <section class="intro ">
         <div class="container">
             <div class="contenido">
                 <p>Somos una agencia de diseño y desarrollo web estratégico que ayuda a las empresas en momentos clave, nos enfocamos en lo esencial para desbloquear oportunidades significativas. Nuestras soluciones eficientes generan resultados tangibles.</p>
