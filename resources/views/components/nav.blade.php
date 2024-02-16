@@ -15,13 +15,10 @@
           <a class="nav-link" href="{{route ('servicios')}}">Web</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{{route ('branding')}}">Branding</a>
+          <a class="nav-link" href="{{route ('marketing')}}">Marketing</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">Marketing</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Multimedia</a>
+          <a class="nav-link" href="{{route ('multimedia')}}">Multimedia</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#">Alianzas</a>

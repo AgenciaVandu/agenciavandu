@@ -20,9 +20,12 @@ Route::get('/', function () {
 Route::get('/servicios', function () {
     return view('servicios');
 })->name("servicios");
-Route::get('/branding', function () {
-    return view('branding');
-})->name("branding");
+Route::get('/marketing-digital', function () {
+    return view('marketing');
+})->name("marketing");
+Route::get('/multimedia', function () {
+    return view('multimedia');
+})->name("multimedia");
 
 Route::get('/cotizar-servicios', function () {
     return view('contacto');

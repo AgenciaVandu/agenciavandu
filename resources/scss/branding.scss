@@ -10,4 +10,19 @@ $fuentes : (
 @use 'servicio';
 @use 'header';
 
+.intro {
+    padding: 0 0 3em 0;
+    transition: .5s;
+    .intro_contenido1 {
+        background: url(/public/img/carrusel/cabecera.jpg);
+        width: 100%;
+        height: 680px;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        border-radius: 2em;
+        object-fit: cover;
 
+        transition: .5s ease-in;
+    }
+}
