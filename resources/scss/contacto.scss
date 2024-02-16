@@ -1,0 +1,16 @@
+$fuentes : (
+    "regular" : 'Geist-regular',
+    "medium" : 'Geist-medium',
+    "semibold" :  'Geist-semibold',
+    "bold" :  'Geist-bold'
+
+);
+
+@use 'colores';
+@use 'fuentes';
+@use 'header';
+
+h1 {
+    font-family: map-get($fuentes, "medium" );
+    font-size: 1.5em;
+}

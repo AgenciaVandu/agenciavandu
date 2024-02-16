@@ -11,22 +11,23 @@
         <li class="nav-item">
           <a class="nav-link" aria-current="page" href="{{route ('home')}}">Inicio</a>
         </li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">Servicios</a>
-          <ul class="dropdown-menu">
-            <li>
-              <a href="{{route ('servicios')}}" class="dropdown-item">Diseño web</a>
-            </li>
-          </ul>
+        <li class="nav-item">
+          <a class="nav-link" href="{{route ('servicios')}}">Web</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">Productos</a>
+          <a class="nav-link" href="#">Branding</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">Empresas</a>
+          <a class="nav-link" href="#">Marketing</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Multimedia</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#">Alianzas</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{route ('cotizar')}}">Contacto</a>
         </li>
       </ul>
       <div class="redes">

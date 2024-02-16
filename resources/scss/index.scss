@@ -309,7 +309,7 @@ padding: 2em 0;
             }
         }
         .impresos {
-            grid-column: 3/7;
+            grid-column: 3/5;
             grid-row: 2/3;
             height: 350px;
             position: relative;
@@ -359,6 +359,38 @@ padding: 2em 0;
                         
                     }
                 }
+            }
+        }@media (max-width:1199px) {
+            .impresos {
+                grid-column: 1/7;
+                grid-row: 4/4;
+                height: 350px;
+            }
+        }
+        .frase {
+            grid-column: 5/7;
+            grid-row: 2/3;
+            height: 350px;
+
+            transition: 1s;
+            background: colores.$black;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #fff;
+
+            image-rendering: smooth;
+            .impresos__contenido {
+                border: none;
+                width: 100%;
+                padding: 2em;
+
             }
         }@media (max-width:1199px) {
             .impresos {

@@ -18,7 +18,9 @@
                     <a href="#">Diseño web <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></span></a>
                     <a href="#">Diseño digital e impreso <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
                     <a href="#">Fotografía <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
-                    <a href="#">Marcas<span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
+                    <a href="#">Marcas
+                        <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt="">
+                    </a>
                 </div>
                 <div class="cta">
                     <a href="#">Contáctanos <span><img src="{{asset('img/arrow-3.svg')}}" class="arrow1" width="10" alt=""></a>
@@ -77,6 +79,13 @@
                         <a href="">Ver más información <span><img src="{{asset ('img/arrow-3.svg') }}" class="arrow" width="10" alt=""></span></a>
                     </div>
                 </div>
+                <div class="frase">
+                    <div class="impresos__contenido">
+                        <h6>¡Es un equipo maravilloso! Hemos trabajado juntos desde hace más de 4 años y siempre terminamos satisfechos. 100% recomendados.</h6>
+                        <small>Alejandro Canto <br> Director Grupo Osorio</small>
+
+                    </div>
+                </div>
                 <div class="contacto">
                     <h3>¿Podemos hacer algo por ti?</h3>
                     <a href="">Contáctanos</a>
@@ -118,7 +127,7 @@
             <div class="row detalles">
                 <div class="col-lg-4  col">
                     <p>
-                        <span>Fáciles  de usar.</span><br class="d-block d-sm-block d-md-block d-lg-none">
+                        <span>Fáciles de usar.</span><br class="d-block d-sm-block d-md-block d-lg-none">
                         Nuestras herramientas son útiles e intuitivas para que cualquier persona pueda usarlas.
                     </p>
                 </div>

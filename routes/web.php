@@ -20,3 +20,7 @@ Route::get('/', function () {
 Route::get('/servicios', function () {
     return view('servicios');
 })->name("servicios");
+
+Route::get('/cotizar-servicios', function () {
+    return view('contacto');
+})->name("cotizar");

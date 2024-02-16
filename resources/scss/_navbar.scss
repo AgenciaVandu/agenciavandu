@@ -14,7 +14,7 @@
         top: 5%;
         left: 50%;
         transform: translate(-50%, -14.5% );
-        width: 80%;
+        width: 90%;
         background: colores.$black;
         padding: .5em 1em;
         z-index: 3;
@@ -50,16 +50,27 @@
             }
         }
         .nav-link {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 15px;
             color: #F9FAFC;
             transition: .3s;
+            box-sizing: border-box;
+            transition: .3s ease;
             &:active {
                 color: colores.$green;
             }
             &.show {
                 color: colores.$green;
-                transition: .3s;
+                transition: .8s ease;
             }
-        }
+            &:hover {
+                color: colores.$green;
+            }
+            
+        } 
         .redes {
             display: flex;
             flex-direction: row;
