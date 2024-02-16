@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{$titulo ?? 'Diseño y desarrollo web a medida'}} - Agencia Vandu</title>
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/favi.svg" type="image/svg+xml">
     <meta name="description" content="{{$metaDescription ?? 'sin meta'}}">
     @stack('estilos')
 </head>

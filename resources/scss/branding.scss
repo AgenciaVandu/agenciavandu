@@ -1,0 +1,13 @@
+$fuentes : (
+    "regular" : 'Geist-regular',
+    "medium" : 'Geist-medium',
+    "semibold" :  'Geist-semibold',
+    "bold" :  'Geist-bold'
+
+);
+@use 'colores';
+@use 'fuentes';
+@use 'servicio';
+@use 'header';
+
+

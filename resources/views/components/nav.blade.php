@@ -15,7 +15,7 @@
           <a class="nav-link" href="{{route ('servicios')}}">Web</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">Branding</a>
+          <a class="nav-link" href="{{route ('branding')}}">Branding</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#">Marketing</a>
