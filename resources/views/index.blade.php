@@ -40,7 +40,7 @@
                     </div>
                     <div class="web__contenido">
                         <h3>Diseño web</h3>
-                        <a href="">Ver más información <span><img src="{{asset ('img/arrow-3.svg') }}" class="arrow" width="10" alt=""></span></a>
+                        <a href="{{ route('servicios') }}">Ver más información <span><img src="{{asset ('img/arrow-3.svg') }}" class="arrow" width="10" alt=""></span></a>
                     </div>
                 </div>
                 <div class="fotografia">

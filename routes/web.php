@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,20 +14,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('index');
-})->name("home");
+Route::get ('/', [PageController::class, 'index'])->name("home");
 
-Route::get('/servicios', function () {
-    return view('servicios');
-})->name("servicios");
-Route::get('/marketing-digital', function () {
-    return view('marketing');
-})->name("marketing");
-Route::get('/multimedia', function () {
-    return view('multimedia');
-})->name("multimedia");
+Route::get('/servicios', [Pagecontroller::class, 'servicios'])->name('servicios');
 
-Route::get('/cotizar-servicios', function () {
-    return view('contacto');
-})->name("cotizar");
+Route::get('/marketing-digital', [PageController::class, 'marketing'])->name('marketing');
+
+Route::get('/multimedia', [PageController::class, 'multimedia'])->name('multimedia');
+
+Route::get('/cotizar', [PageController::class, 'cotizar'])->name('cotizar');
+

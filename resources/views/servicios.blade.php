@@ -31,7 +31,7 @@
         </x-slot>
         <div class="contenido_espacio">
             <x-slot name="titularServicios">
-               <span class="darktxt"> Diseñamos y desarrollamos páginas web que atrapan</span>
+                <span class="darktxt"> Diseñamos y desarrollamos páginas web que atrapan</span>
             </x-slot>
             <x-slot name="parrafoServicios">
                 El contenido, tiempo de retención y de carga son aspectos clave para el posicionamiento de tu empresa. Nos encargamos de usar las mejores prácticas para que puedas lograr tus objetivos mensuales.
@@ -53,7 +53,9 @@
         </x-slot>
     </x-quehacemos>
     <x-cta>
-
+        <x-slot name="titulocta">
+            <h5>¿Quieres potenciar tu marca en internet?</h2>
+        </x-slot>
     </x-cta>
     <x-validacion>
         <x-slot name="logos">
