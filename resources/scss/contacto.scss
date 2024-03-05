@@ -14,3 +14,28 @@ h1 {
     font-family: map-get($fuentes, "medium" );
     font-size: 1.5em;
 }
+
+.formulario {
+    .container {
+        padding: 0 10em 0 10em ;
+        form {
+            .boton {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                margin-top: 2em;
+                
+                .btn-primary {
+                    background-color: colores.$black;
+                    color: colores.$green;
+                    border: none;
+                    &:hover {
+                        background-color: colores.$green;
+                        color: colores.$black;
+                    }
+                }
+            }
+        }
+    }
+}

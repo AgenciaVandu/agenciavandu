@@ -7,7 +7,13 @@
             <h1>Nos encantaría llevar tu marca al siguiente nivel</h1>
             <p>Hagamos que tu </p>
         </x-slot>
-
     </x-header>
+    <section class="formulario">
+        <div class="container">
+            <x-form>
+
+            </x-form>
+        </div>
+    </section>
 
 </x-layouts.guest>
