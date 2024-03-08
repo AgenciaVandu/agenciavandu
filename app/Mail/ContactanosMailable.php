@@ -14,12 +14,14 @@ class ContactanosMailable extends Mailable
 {
     use Queueable, SerializesModels;
 
+    public $dataform;
+
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct($dataform)
     {
-        //
+        $this->dataform = $dataform;
     }
 
     /**

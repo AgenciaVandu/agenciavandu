@@ -9,6 +9,7 @@ $fuentes : (
 @use 'colores';
 @use 'fuentes';
 @use 'header';
+@use 'servicio';
 
 h1 {
     font-family: map-get($fuentes, "medium" );
@@ -17,7 +18,7 @@ h1 {
 
 .formulario {
     .container {
-        padding: 0 10em 0 10em ;
+        padding: 0 10em 4em 10em ;
         form {
             .boton {
                 display: flex;
