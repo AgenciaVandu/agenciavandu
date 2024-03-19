@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial -scale=1.0">
     <title>¡Nuevo Mail!</title>
 </head>
 <body>
@@ -21,10 +21,10 @@
         {{$dataform ['email']}}
     </p>
     <p><strong>Servicio:</strong>
-        {{$dataform ['web', 'photo', 'digital', 'impresos']}}
+       
     </p>
     <p><strong>Presupuesto:</strong>
-        {{$dataform ['30k', '50k', '100k']}}
+        
     </p>
 </body>
 </html>

@@ -30,7 +30,7 @@ class ContactanosMailable extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: new Address('web@agenciavandu.com', 'Equipo de agencia Vandu'),
+            from: new Address('web@agenciavandu.com', 'Sitio web de agencia Vandu'),
             subject: '¡Nuevo solicitud de contacto!',
         );
     }

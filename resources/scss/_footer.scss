@@ -39,23 +39,23 @@ $fuentes : (
         }
     }
     .copy_complet {
-        margin-top: 3em;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
         width: 100%;
+        position: relative;
         h6 {
             color: #fff;
-            text-align: center;
-            width: 54%;
+            text-align: left;
+           padding-right: 2.4em;
             span {
                 color: colores.$green;
                 font-family: map-get($fuentes , "bold" );
             }
         } @media (max-width: 991px) {
             h6 {
-                width: 100%;
+                padding-right: .5em;
             }
         }
     }
@@ -67,6 +67,7 @@ $fuentes : (
         min-height: 50px;
         align-items: center;
        justify-content: center;
+       margin-top: 3em;
        
     }
     .form-control {

@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\Controllers\ContactanosController;
-use App\Http\Controllers\PageController;
 use App\Mail\ContactanosMailable;
+use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
@@ -24,15 +24,8 @@ Route::get('/servicios', [Pagecontroller::class, 'servicios'])->name('servicios'
 Route::get('/marketing-digital', [PageController::class, 'marketing'])->name('marketing');
 
 Route::get('/multimedia', [PageController::class, 'multimedia'])->name('multimedia');
-
-/* Route::get('/contactanos', function(){
-
-    Mail::to('ab@agenciavandu.com')
-    ->send(new ContactanosMailable);
-
-    return ('mensaje enviado');
-
-})->name('contactanos'); */
+Route::get('/sitio-en-construccion', [PageController::class, 'construccion'])->name('construccion');
+Route::get('/sitio-en-construccion', [PageController::class, 'alianzas'])->name('alianzas');
 
 Route::get('/cotizar', [ContactanosController::class, 'index'])->name('cotizar');
 Route::post('/mensaje-enviado', [ContactanosController::class, 'store'])->name('cotizar.store');

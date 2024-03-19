@@ -15,6 +15,15 @@ class PageController extends Controller
     }
 
     public function marketing() {
-        return view('marketing');
+        return view('construccion');
+    }
+    public function multimedia() {
+        return view('construccion');
+    }
+    public function alianzas() {
+        return view('construccion');
+    }
+    public function construccion() {
+        return view('construccion');
     }
 }

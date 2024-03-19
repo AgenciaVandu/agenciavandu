@@ -21,7 +21,7 @@
           <a class="nav-link" href="{{route ('multimedia')}}">Multimedia</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">Alianzas</a>
+          <a class="nav-link" href="{{route ('alianzas')}}">Alianzas</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="{{route ('cotizar')}}">Contacto</a>

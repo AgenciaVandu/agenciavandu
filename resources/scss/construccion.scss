@@ -1,0 +1,24 @@
+@use 'colores';
+.header {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    text-align: center;
+   .cta {
+    display: flex;
+    gap: 20px;
+    a {
+        background-color: colores.$black;
+        padding: .5em 1.5em .5em 1.5em;
+        border-radius: 1em;
+        color: colores.$green;
+        text-decoration: none;
+        &:hover {
+            background-color: colores.$green;
+            color: colores.$black;
+        }
+    }
+   }
+}
