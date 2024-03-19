@@ -17,6 +17,12 @@ class PageController extends Controller
     public function marketing() {
         return view('construccion');
     }
+    public function impresos() {
+        return view('construccion');
+    }
+    public function foto() {
+        return view('construccion');
+    }
     public function multimedia() {
         return view('construccion');
     }

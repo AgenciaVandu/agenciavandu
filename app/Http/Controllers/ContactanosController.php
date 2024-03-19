@@ -13,9 +13,19 @@ class ContactanosController extends Controller
     }
 
     public function store(Request $request) {
+
+        $request->validate([
+            'name' => 'required',
+            'lastname' => 'required',
+            'tel' => 'required',
+            'email' => 'required'
+
+        ]);
+
         Mail::to('ab@agenciavandu.com')
          ->send(new ContactanosMailable($request->all()));
-
-         return ('mensaje enviado');
+         
+         return redirect()->route('home')
+                ->with('info', 'Mensaje enviado');
     }
 }

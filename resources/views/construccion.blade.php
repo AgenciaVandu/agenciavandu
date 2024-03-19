@@ -7,8 +7,8 @@
             <h1>Estamos construyendo un Vandú mejor</h1>
             <p>Te invitamos a visitar nuestras secciones disponibles por el momento</p>
             <div class="cta">
-                <a href="" class="btn-cta"> Inicio </a>
-                <a href="" class="btn-cta"> Desarrollo web </a>
+                <a href="{{route('home')}}" class="btn-cta"> Inicio </a>
+                <a href="{{route('servicios')}}" class="btn-cta"> Desarrollo web </a>
             </div>
         </header>
 

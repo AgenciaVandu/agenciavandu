@@ -17,24 +17,36 @@
                         <div class="form-group">
                             <label class="pb-2">Nombre</label>
                             <input type="text" class="form-control" placeholder="Escribe tu nombre" name="name">
+                            @error('name')
+                            <strong>{{$message}}</strong>
+                            @enderror
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="form-group">
                             <label class="pb-2">Apellido</label>
                             <input type="text" class="form-control" placeholder="Escribe tu apellido" name="lastname">
+                            @error('lastname')
+                            <strong>{{$message}}</strong>
+                            @enderror
                         </div>
                     </div>
                     <div class="col-6 pt-2">
                         <div class="form-group">
                             <label class="pb-2">Teléfono</label>
                             <input type="tel" class="form-control" placeholder="¿Cuál es tu teléfono?" name="phone">
+                            @error('tel')
+                            <strong>{{$message}}</strong>
+                            @enderror
                         </div>
                     </div>
                     <div class="col-6 pt-2">
                         <div class="form-group ">
                             <label for="" class="pb-2">Correo</label>
                             <input type="email" class="form-control" placeholder="ejemplo: hola@correo.com" name="email">
+                            @error('email')
+                            <strong>{{$message}}</strong>
+                            @enderror
                         </div>
                     </div>
                     <div class="col-6">

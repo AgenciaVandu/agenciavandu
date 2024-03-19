@@ -15,10 +15,10 @@
                 <p>Somos una agencia de diseño y desarrollo web estratégico que ayuda a las empresas en momentos clave, nos enfocamos en lo esencial para desbloquear oportunidades significativas. Nuestras soluciones eficientes generan resultados tangibles.</p>
                 <p>¿Quieres ver un poco de nuestro trabajo?</p>
                 <div class="botones">
-                    <a href="#">Diseño web <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></span></a>
-                    <a href="#">Diseño digital e impreso <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
-                    <a href="#">Fotografía <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
-                    <a href="#">Marcas
+                    <a href="{{route('servicios')}}">Diseño web <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></span></a>
+                    <a href="{{route('impresos')}}">Diseño digital e impreso <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
+                    <a href="{{route('foto')}}">Fotografía <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
+                    <a href="{{route('alianzas')}}">Marcas
                         <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt="">
                     </a>
                 </div>
