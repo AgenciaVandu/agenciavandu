@@ -88,7 +88,7 @@
                 </div>
                 <div class="contacto">
                     <h3>¿Podemos hacer algo por ti?</h3>
-                    <a href="">Contáctanos</a>
+                    <a href="{{route('cotizar')}}">Contáctanos</a>
                 </div>
             </div>
         </div>
