@@ -5,7 +5,7 @@
     <x-header>
         <x-slot name="header">
             <h2>Nos encantaría llevar tu marca al siguiente nivel</h2>
-            <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Velit, aspernatur at tenetur ullam quae odio necessitatibus consectetur quibusdam ad iste sint obcaecati dolor porro? Blanditiis ex ducimus deleniti dolores molestiae.</p>
+            <p>Cada proyecto sin importar el tamaño tiene requerimientos diferentes, acércate a nuestros expertos que te guiarán en el proceso de saber que es lo mejor para ti y para tus objetivos finales.</p>
         </x-slot>
     </x-header>
     <section id="formulario" class="formulario">
