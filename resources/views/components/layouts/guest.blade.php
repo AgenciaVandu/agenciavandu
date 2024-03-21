@@ -17,7 +17,7 @@
         <div class="notificacion">
             <img src="{{asset('/img/bell-solid.svg')}}" class="imagen" alt="">
         </div>
-        <a href="" class="btn-contacto">
+        <a href="wa.me/+529991460310" class="btn-contacto">
             <img src="{{asset('/img/message-solid.svg')}}" width="40" alt="mensaje">
         </a>
     </div>
