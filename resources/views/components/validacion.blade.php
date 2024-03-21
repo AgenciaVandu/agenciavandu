@@ -11,7 +11,7 @@
         <div class="row">
             <div class="col-lg-6 col-md-12 col-sm-12 titular m-auto">
                 <h1>¿Platicamos sobre <br class="ocultar" /> tu proyecto?</h1>
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Reiciendis soluta tempora officiis totam eaque, commodi impedit enim quidem esse dolores ipsam provident sapiente sunt magni, ab aut minima beatae distinctio!</p>
+                <p>Cada proyecto sin importar el tamaño tiene requerimientos diferentes, acércate a nuestros expertos que te guiarán en el proceso de saber que es lo mejor para ti y para tus objetivos finales. </p>
                 <div class="contato darktxt">
                     <input type="text" id="url" class="correo darktxt" value="team@agenciavandu.com"></input>
                     <button>
