@@ -80,7 +80,7 @@
                     </div>
                 </div>
                 <div class="frase">
-                    <div class="impresos__contenido">
+                    <div class="frase__contenido">
                         <h6>¡Es un equipo maravilloso! Hemos trabajado juntos desde hace más de 4 años y siempre terminamos satisfechos. 100% recomendados.</h6>
                         <small>Alejandro Canto <br> Director Grupo Osorio</small>
 
@@ -166,15 +166,15 @@
         <x-slot name="clientes">
             <div class="logos_clientes">
                 <div class="primera-fila">
-                    <img src="{{asset('img/burger.svg')}}" width="80" alt="Logo burger king">
-                    <img src="{{asset('img/kfc.svg')}}" width="80" alt="Logo KFC">
-                    <img src="{{asset('img/ph.svg')}}" width="80" alt="Logo Pizza hut">
+                    <img src="{{asset('img/burger.svg')}}" width="60" alt="Logo burger king">
+                    <img src="{{asset('img/kfc.svg')}}" width="60" alt="Logo KFC">
+                    <img src="{{asset('img/ph.svg')}}" width="60" alt="Logo Pizza hut">
                 </div>
                 <div class="segunda-fila">
-                    <img src="{{asset('img/kanan.svg')}}" width="150" alt="Logo Kananfleet">
-                    <img src="{{asset('img/turismaya.svg')}}" width="150" alt="Logo turismaya">
+                    <img src="{{asset('img/kanan.svg')}}" width="120" alt="Logo Kananfleet">
+                    <img src="{{asset('img/turismaya.svg')}}" width="120" alt="Logo turismaya">
                 </div>
-                <img src="{{asset('img/nicxa.svg')}}" width="200" alt="Logo grupo nicxa">
+                <img src="{{asset('img/nicxa.svg')}}" width="120" alt="Logo grupo nicxa">
 
             </div>
         </x-slot>
