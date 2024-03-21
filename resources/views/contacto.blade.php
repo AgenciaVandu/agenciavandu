@@ -49,7 +49,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-6">
+                    <div class="col-lg-6 col-md-6 col-sm-12">
                         <label class="pb-2 pt-2">Selecciona tu servicio de interés</label>
                         <select class="form-control">
 
@@ -59,7 +59,7 @@
                             <option name="impresos">Diseño de impresos o empaque </option>
                         </select>
                     </div>
-                    <div class="col-6">
+                    <div class="col-lg-6 col-md-6 col-sm-12">
                         <label class="pb-2 pt-2">Selecciona tu presupuesto</label>
                         <select class="form-control">
 
