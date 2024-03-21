@@ -52,7 +52,7 @@
                     </div>
                     <div class="foto__contenido">
                         <h2>Fotografía</h2>
-                        <a href="">Ver más información <span><img src="{{asset ('img/arrow-3.svg') }}" class="arrow" width="10" alt=""></span></a>
+                        <a href="{{route('foto')}}">Ver más información <span><img src="{{asset ('img/arrow-3.svg') }}" class="arrow" width="10" alt=""></span></a>
                     </div>
                 </div>
                 <div class="digital">
@@ -65,7 +65,7 @@
                     <div class="digital__contenido">
                         <h3>Diseño digital e impreso</h3>
 
-                        <a href="">Ver más información <span><img src="{{asset ('img/arrow-3.svg') }}" class="arrow" width="10" alt=""></span></a>
+                        <a href="{{route('multimedia')}}">Ver más información <span><img src="{{asset ('img/arrow-3.svg') }}" class="arrow" width="10" alt=""></span></a>
                     </div>
                 </div>
                 <div class="impresos">
@@ -76,7 +76,7 @@
                     </div>
                     <div class="impresos__contenido">
                         <h3>Identidad de marca</h3>
-                        <a href="">Ver más información <span><img src="{{asset ('img/arrow-3.svg') }}" class="arrow" width="10" alt=""></span></a>
+                        <a href="{{route('construccion')}}">Ver más información <span><img src="{{asset ('img/arrow-3.svg') }}" class="arrow" width="10" alt=""></span></a>
                     </div>
                 </div>
                 <div class="frase">
