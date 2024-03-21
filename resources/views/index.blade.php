@@ -23,7 +23,7 @@
                     </a>
                 </div>
                 <div class="cta">
-                    <a href="#">Contáctanos <span><img src="{{asset('img/arrow-3.svg')}}" class="arrow1" width="10" alt=""></a>
+                    <a href="{{route('cotizar')}}">Contáctanos <span><img src="{{asset('img/arrow-3.svg')}}" class="arrow1" width="10" alt=""></a>
                 </div>
             </div>
         </div>
