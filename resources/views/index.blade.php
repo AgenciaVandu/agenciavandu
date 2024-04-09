@@ -33,10 +33,12 @@
             <div class="grid-contenido">
                 <div class="web">
                     <div class="lista_contenido">
-                        <li>CRM</li>
-                        <li>Ventas</li>
-                        <li>Desarrollo web</li>
-                        <li>Agencia de viajes</li>
+                        <ul>
+                            <li>CRM</li>
+                            <li>Ventas</li>
+                            <li>Desarrollo web</li>
+                            <li>Agencia de viajes</li>
+                        </ul>
                     </div>
                     <div class="web__contenido">
                         <h3>Diseño web</h3>
@@ -45,10 +47,12 @@
                 </div>
                 <div class="fotografia">
                     <div class="lista_contenido">
+                        <ul>
                         <li>Alimentos</li>
                         <li>Restaurantes</li>
                         <li>Arquitectura</li>
                         <li>Eventos</li>
+                        </ul>
                     </div>
                     <div class="foto__contenido">
                         <h2>Fotografía</h2>
@@ -57,10 +61,12 @@
                 </div>
                 <div class="digital">
                     <div class="lista_contenido">
+                        <ul>
                         <li>Redes sociales</li>
                         <li>Marketing</li>
                         <li>Restaurantes</li>
                         <li>Inmobiliarias</li>
+                        </ul>
                     </div>
                     <div class="digital__contenido">
                         <h3>Diseño digital e impreso</h3>
@@ -70,9 +76,11 @@
                 </div>
                 <div class="impresos">
                     <div class="lista_contenido">
+                        <ul>
                         <li>Logotipo</li>
                         <li>Comunicación</li>
                         <li>Conceptualización</li>
+                        </ul>
                     </div>
                     <div class="impresos__contenido">
                         <h3>Identidad de marca</h3>

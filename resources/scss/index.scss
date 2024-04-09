@@ -156,9 +156,13 @@ padding: 2em 0;
                 top: 30px;
                 left: 40px;
                 border: none;
-                li {
-                    list-style: none;
+                ul {
+                    padding: 0;
+                    li {
+                        list-style: none;
+                    }
                 }
+                
             }
             .web__contenido {
                 border: none;
@@ -213,8 +217,11 @@ padding: 2em 0;
                 top: 30px;
                 left: 40px;
                 border: none;
-                li {
-                    list-style: none;
+                ul {
+                    padding: 0;
+                    li {
+                        list-style: none;
+                    }
                 }
             }
             .foto__contenido {
@@ -272,8 +279,11 @@ padding: 2em 0;
                 top: 30px;
                 left: 40px;
                 border: none;
-                li {
-                    list-style: none;
+                ul {
+                    padding: 0;
+                    li {
+                        list-style: none;
+                    }
                 }
             }
             .digital__contenido {
@@ -328,8 +338,11 @@ padding: 2em 0;
                 top: 30px;
                 left: 40px;
                 border: none;
-                li {
-                    list-style: none;
+                ul {
+                    padding: 0;
+                    li {
+                        list-style: none;
+                    }
                 }
             }
             .impresos__contenido {

@@ -25,12 +25,16 @@ $fuentes : (
 
 h1{
     font-family: map-get($fuentes , "regular" );
+    font-display: swap;
 }
 
 h2, h3, h4, h5, h6 {
     font-family: map-get($fuentes , "bold" );
+    font-display: swap;
+
 }
 
 * {
     font-family: map-get($fuentes , "regular" );
+    font-display: swap;
 }
