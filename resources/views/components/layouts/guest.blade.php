@@ -11,7 +11,7 @@
 </head>
 
 <body class="body">
-   
+
     <div class="flotante">
         <div class="mensaje">Bienvenido a Vandú 😊</div>
         <div class="notificacion">
@@ -25,7 +25,11 @@
     <main>
         {{$slot}}
     </main>
+
+    <x-valla />
     <x-footer />
+
+
 </body>
 @stack('js')
 

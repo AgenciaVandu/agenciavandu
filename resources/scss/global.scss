@@ -9,6 +9,7 @@ $fuentes : (
 @use 'navbar';
 @use 'fuentes';
 @use 'colores';
+@use 'valla';
 @use 'footer';
 @use 'form';
 
@@ -29,7 +30,7 @@ section {
     opacity: 0;
     transform: translateY(30px);
     transition: .8s ease-in-out;
-    
+
 }
 section.show {
     opacity: 1;
@@ -115,16 +116,16 @@ h1, h2, h3, h4, h5, h6, li, p, span, a {
         right: 60px;
         padding: 1em 1em ;
         justify-content: center;
-    
+
         color: #fff;
         background-color: colores.$black;
         border-radius: 10px;
         font-family: map-get($fuentes , "bold" );
-    
+
         text-decoration: none;
         transition: .5s ease;
-        
-        
+
+
         &:hover {
             background-color: colores.$green;
             transition: .5s;
