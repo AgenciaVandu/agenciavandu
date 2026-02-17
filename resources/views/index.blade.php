@@ -16,7 +16,7 @@
                 <p>¿Quieres ver un poco de nuestro trabajo?</p>
                 <div class="botones">
                     <a href="{{route('servicios')}}">Diseño web <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></span></a>
-                    <a href="{{route('impresos')}}">Diseño digital e impreso <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
+                    <a href="{{route('impresos')}}">Diseño digital<span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
                     <a href="{{route('foto')}}">Fotografía <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
                     <a href="{{route('alianzas')}}">Marcas
                         <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt="">
@@ -69,7 +69,7 @@
                         </ul>
                     </div>
                     <div class="digital__contenido">
-                        <h3>Diseño digital e impreso</h3>
+                        <h3>Diseño digital</h3>
 
                         <a href="{{route('multimedia')}}">Ver más información <span><img src="{{asset ('img/arrow-3.svg') }}" class="arrow" width="10" alt=""></span></a>
                     </div>

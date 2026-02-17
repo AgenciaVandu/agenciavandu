@@ -9,16 +9,16 @@
     <h1>Nuevo correo</h1>
     <p>Este es el primer correo</p>
     <p><strong>Nombre:</strong>
-        {{$dataform ['name']}}
+        {{$dataform['name']}}
     </p>
     <p><strong>Apellido:</strong>
-        {{$dataform ['lastname']}}
+        {{$dataform['lastname']}}
     </p>
     <p><strong>Teléfono:</strong>
-        {{$dataform ['phone']}}
+        {{$dataform['phone']}}
     </p>
     <p><strong>email:</strong>
-        {{$dataform ['email']}}
+        {{$dataform['email']}}
     </p>
     <p><strong>Servicio:</strong>
        
