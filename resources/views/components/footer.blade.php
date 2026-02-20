@@ -9,7 +9,7 @@
             <div class="col-lg-4 col-md-12 col-sm-12 hablemos">
                 <h5 class="pb-2">Hablemos</h5>
                 <li><a href="mailto:team@agenciavandu.com">team@agenciavandu.com</a></li>
-                <li class="pt-2"><a href="tel:529991460310">+52 (999) 146 0310</a></li>
+               {{--  <li class="pt-2"><a href="tel:529991460310">+52 (999) 146 0310</a></li> --}}
             </div>
             <div class="col-lg-3 col-md-12 col-sm-12">
                 <h5 class="pb-2">Encuéntranos</h5>
@@ -19,16 +19,16 @@
                             <img src="{{asset('/img/facebook.svg')}}" width="28" alt="Facebook">
                         </a>
                     </li>
-                    <li>
+                   {{--  <li>
                         <a href="https://www.instagram.com/vandumx/">
                             <img src="{{asset('/img/instagram.svg')}}" width="28" alt="Instagram">
                         </a>
-                    </li>
-                    <li>
+                    </li> --}}
+                   {{--  <li>
                         <a href="https://www.behance.net/vandumx">
                             <img src="{{asset('/img/behance.svg')}}" width="30" alt="Behance">
                         </a>
-                    </li>
+                    </li> --}}
                 </div>
             </div>
         </div>
