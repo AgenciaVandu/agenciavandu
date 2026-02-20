@@ -73,7 +73,7 @@
                     <img loading="lazy" src="{{ asset('/img/webp/2026/Samma-18-Alberto-1.webp') }}" alt="">
                 </div>
                 <div class="foto10">
-                    <img loading="lazy" src="{{ asset('/img/webp/2026/Sesión-Tokyo-Tyger-Mayo-1-6.webp') }}" alt="">
+                    <img loading="lazy" src="{{ asset('/img/webp/2026/Sesion-Tokyo-Tyger-Mayo-1-6.webp') }}" alt="">
                 </div>
                 <div class="foto11">
                     <video preload="metadata" src="{{ asset('/video/IMG_7614.webm') }}" autoplay muted loop alt="">
