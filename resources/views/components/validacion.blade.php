@@ -17,7 +17,7 @@
                     <button>
                         <img src="{{asset('/img/copy.svg')}}" class="copiado" width="20" alt="icono copiar">
                     </button>
-                    <span id="message" </span>
+                    <span id="message"></span> 
                 </div>
             </div>
             <div class="col-lg-6 col-md-12 col-sm-12 mt-2">
