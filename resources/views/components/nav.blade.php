@@ -28,21 +28,21 @@
         </li>
       </ul>
       <div class="redes">
-        <li>
+        {{-- <li>
           <a href="https://www.facebook.com/vandumx">
             <img src="{{asset ('img/facebook.svg') }}" width="20" alt="Logotipo Facebook">
           </a>
-        </li>
-        <li>
+        </li> --}}
+       {{--  <li>
           <a href="https://www.instagram.com/vandumx">
           <img src="{{asset ('img/instagram.svg') }}" width="20" alt="Logotipo Facebook">
           </a>
-        </li>
-        <li>
+        </li> --}}
+        {{-- <li>
           <a href="https://www.behance.net/vandumx">
           <img src="{{asset ('img/whatsapp.svg') }}" width="20" alt="Logotipo Facebook">
           </a>
-        </li>
+        </li> --}}
       </div>
     </div>
   </div>
