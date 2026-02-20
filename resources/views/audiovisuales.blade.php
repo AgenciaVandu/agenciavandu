@@ -1,7 +1,7 @@
 @push('estilos')
     @vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/multimedia.scss', 'resources/js/app.js', 'resources/js/bguno.js', 'resources/js/observer.js'])
 @endpush
-<x-layouts.guest titulo="Diseñamos y desarrollamos sitios web y aplicaciones"
+<x-layouts.guest titulo="Vídeo y Fotografía para Marcas: Optimización Visual para Google y AI"
     meta-description="Agencia de marketing digital especializada en optimización y estrategias de IA en 2026 para sitios web, fotografía empresarial, fotografía de alimentos y desarrollo web.">
     <x-header>
         <x-slot name="header">
