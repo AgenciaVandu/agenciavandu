@@ -16,6 +16,7 @@ $fuentes : (
     align-items: center;
     margin-top: 3em;
     
+    
     .cta_contenedor {
         min-height: 130px;
         display: flex;
@@ -24,6 +25,7 @@ $fuentes : (
         justify-content: center;
         background-color: colores.$black;
         gap: 40px;
+        border: 1px solid colores.$green;
 
         border-radius: 1.5em;
         padding: 2em;

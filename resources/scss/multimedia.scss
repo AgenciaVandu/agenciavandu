@@ -12,3 +12,14 @@ $fuentes : (
 @use 'infodetalles';
 @use 'lista';
 @use 'cta';
+@use 'grid-audiovisuales';
+
+
+.txtdark {
+    color: #000;
+}
+.bgdark {
+    background: colores.$medium-black;
+    transition: .5s ease;
+    color: #fff;
+}

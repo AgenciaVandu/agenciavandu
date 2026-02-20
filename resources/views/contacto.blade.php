@@ -11,8 +11,9 @@
     </x-header>
     <section id="formulario" class="formulario">
         <div class="container">
-           <script src="https://js.hsforms.net/forms/embed/51078765.js" defer></script>
-<div class="hs-form-frame" data-region="na1" data-form-id="016947aa-4806-4b0e-87e5-921f88476d97" data-portal-id="51078765"></div>
+            <script src="https://js.hsforms.net/forms/embed/51078765.js" defer></script>
+            <div class="hs-form-frame" data-region="na1" data-form-id="016947aa-4806-4b0e-87e5-921f88476d97"
+                data-portal-id="51078765"></div>
         </div>
     </section>
 

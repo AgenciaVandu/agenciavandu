@@ -30,6 +30,40 @@
             left: 160px;
             rotate: -20deg;
            }
+           .up-a {
+            position: absolute;
+            left: 180px;
+           }@media (max-width: 991px) {
+            .up-a{
+                left: 260px;
+            }
+            }@media (max-width: 767px) {
+                .up-a{
+                    left: 140px;
+                }
+            }@media (max-width: 509px) {
+                .up-a{
+                    left: 110px;
+                }
+               
+            }@media (max-width: 402px) {
+                .up-a{
+                    left: 80px;
+                }
+               
+            }@media (max-width: 384px) {
+                .up-a{
+                    left: 68px;
+                    overflow: hidden;
+                }
+               
+            }@media (max-width: 324px) {
+                .up-a{
+                    left: 28px;
+                    overflow: hidden;
+                }
+               
+            }
            .up {
             position: absolute;
             left: 160px;

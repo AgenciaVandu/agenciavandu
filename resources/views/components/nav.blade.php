@@ -15,11 +15,11 @@
           <a class="nav-link" href="{{route ('servicios')}}">Web</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{{route ('multimedia')}}">Multimedia</a>
+          <a class="nav-link" href="{{route ('audiovisuales')}}">Audiovisuales</a>
         </li>
-        {{-- <li class="nav-item">
-          <a class="nav-link" href="{{route ('impresos')}}">Impresos</a>
-        </li> --}}
+        <li class="nav-item">
+          <a class="nav-link" href="{{route ('productos')}}">Productos</a>
+        </li>
         <li class="nav-item">
           <a class="nav-link" href="{{route ('alianzas')}}">Alianzas</a>
         </li>

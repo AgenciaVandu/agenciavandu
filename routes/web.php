@@ -22,10 +22,10 @@ Route::get ('/', [PageController::class, 'index'])->name("home");
 Route::get('/servicios', [Pagecontroller::class, 'servicios'])->name('servicios');
 
 Route::get('/marketing-digital', [PageController::class, 'marketing'])->name('marketing');
-Route::get('servicios-de-diseno-impresos', [PageController::class, 'impresos'])->name('impresos');
+Route::get('/productos-digitales', [PageController::class, 'productos'])->name('productos');
 
 Route::get('/multimedia', [PageController::class, 'multimedia'])->name('multimedia');
-Route::get('/fotografia-empresarial', [PageController::class, 'foto'])->name('foto');
+Route::get('/video-y-fotografia', [PageController::class, 'audiovisuales'])->name('audiovisuales');
 
 Route::get('/sitio-en-construccion', [PageController::class, 'construccion'])->name('construccion');
 Route::get('/alianzas-de-diseno', [PageController::class, 'alianzas'])->name('alianzas');

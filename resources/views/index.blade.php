@@ -1,7 +1,7 @@
 @push ('estilos')
 @vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/index.scss', 'resources/js/app.js', 'resources/js/bg.js' ])
 @endpush
-<x-layouts.guest titulo="Video, fotografía profesional y desarrollo web en mérida" meta-description="Video, fotografía, diseño web y marketing digital para negocios que buscan más clientes y mejor presencia online.">
+<x-layouts.guest titulo="Agencia de SEO y GEO: Posicionamos tu Marca en Google y ChatGPT" meta-description="Agencia de marketing digital especializada en SEO, optimización y estrategias de IA en 2026, fotografía empresarial, fotografía de alimentos y desarrollo web">
 
     <x-header>
         <x-slot name="header">
@@ -16,8 +16,8 @@
                 <p>¿Quieres ver un poco de nuestro trabajo?</p>
                 <div class="botones">
                     <a href="{{route('servicios')}}">Diseño web <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></span></a>
-                    <a href="{{route('impresos')}}">Diseño digital<span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
-                    <a href="{{route('foto')}}">Fotografía <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
+                    <a href="{{route('productos')}}">Productos<span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
+                    <a href="{{route('audiovisuales')}}">Audiovisuales<span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt=""></a>
                     <a href="{{route('alianzas')}}">Marcas
                         <span><img src="{{asset('img/arrow-2.svg')}}" class="arrow1" width="10" alt="">
                     </a>
@@ -56,7 +56,7 @@
                     </div>
                     <div class="foto__contenido">
                         <h2>Fotografía</h2>
-                        <a href="{{route('foto')}}">Ver más información <span><img src="{{asset ('img/arrow-3.svg') }}" class="arrow" width="10" alt=""></span></a>
+                        <a href="{{route('audiovisuales')}}">Ver más información <span><img src="{{asset ('img/arrow-3.svg') }}" class="arrow" width="10" alt=""></span></a>
                     </div>
                 </div>
                 <div class="digital">
