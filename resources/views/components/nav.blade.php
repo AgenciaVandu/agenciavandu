@@ -17,12 +17,12 @@
         <li class="nav-item">
           <a class="nav-link" href="{{route ('audiovisuales')}}">Audiovisuales</a>
         </li>
-        <li class="nav-item">
+        {{-- <li class="nav-item">
           <a class="nav-link" href="{{route ('productos')}}">Productos</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="{{route ('alianzas')}}">Alianzas</a>
-        </li>
+        </li> --}}
         <li class="nav-item">
           <a class="nav-link" href="{{route ('cotizar')}}">Contacto</a>
         </li>
