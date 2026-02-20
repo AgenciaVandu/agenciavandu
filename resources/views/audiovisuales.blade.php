@@ -46,7 +46,7 @@
         <div class="container">
             <div class="grid-contenido">
                 <div class="foto1">
-                    <img loading="lazy" src="{{ asset('/img/webp/2026/Sesión-Tokyo-Tyger-Mayo-37-1.webp') }}" alt="">
+                    <img loading="lazy" src="{{ asset('/img/webp/2026/Sesion-Tokyo-Tyger-Mayo-37-1.webp') }}" alt="">
                 </div>
                 <div class="foto2">
                     <img loading="lazy" src="{{ asset('/img/webp/2026/Samma-25-Alberto-1.webp') }}" alt="">
