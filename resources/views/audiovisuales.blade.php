@@ -52,13 +52,13 @@
                     <img loading="lazy" src="{{ asset('/img/webp/2026/Samma-25-Alberto-1.webp') }}" alt="">
                 </div>
                 <div class="foto3">
-                    <video preload="metadata" src="{{ asset('/video/croc.webm') }}" muted autoplay loop alt="">
+                    <video playsinline loop webkit-playsinline preload="metadata" src="{{ asset('/video/croc.webm') }}" muted autoplay loop alt="">
                 </div>
                 <div class="foto4">
-                    <video preload="metadata" src="{{ asset('/video/ronqueo-kurouma.webm') }}" muted autoplay loop alt="">
+                    <video playsinline loop webkit-playsinline preload="metadata" src="{{ asset('/video/ronqueo-kurouma.webm') }}" muted autoplay loop alt="">
                 </div>
                 <div class="foto5">
-                    <video preload="metadata" src="{{ asset('/video/vuelo-drone.webm') }}" muted autoplay loop alt="">
+                    <video playsinline loop webkit-playsinline preload="metadata" src="{{ asset('/video/vuelo-drone.webm') }}" muted autoplay loop alt="">
                 </div>
                 <div class="foto6">
                     <img loading="lazy" src="{{ asset('/img/webp/2026/kuro-23.webp') }}" alt="">
@@ -76,10 +76,10 @@
                     <img loading="lazy" src="{{ asset('/img/webp/2026/Sesion-Tokyo-Tyger-Mayo-1-6.webp') }}" alt="">
                 </div>
                 <div class="foto11">
-                    <video preload="metadata" src="{{ asset('/video/IMG_7614.webm') }}" autoplay muted loop alt="">
+                    <video playsinline loop webkit-playsinline preload="metadata" src="{{ asset('/video/IMG_7614.webm') }}" autoplay muted loop alt="">
                 </div>
                 <div class="foto12">
-                    <video preload="metadata" src="{{ asset('/video/Foto_Comida.webm') }}" autoplay muted loop alt="">
+                    <video playsinline loop webkit-playsinline preload="metadata" src="{{ asset('/video/Foto_Comida.webm') }}" autoplay muted loop alt="">
                 </div>
                 <div class="contacto">
                     <h3>¿Podemos hacer algo por ti?</h3>
@@ -93,7 +93,7 @@
         <x-slot name="portafolioImg">
             <img loading="lazy" src="{{ asset('/img/3.svg') }}" class="base mostrar" alt="Demo reel agencia Vandu">
             <img loading="lazy" src="{{ asset('/img/2.svg') }}" class="middle mostrar" alt="Demo reel agencia Vandu">
-            <video preload="metadata" src="{{ asset('/video/demo-reel.webm') }}" height="350" class="up-a mostrar" autoplay muted
+            <video playsinline loop webkit-playsinline preload="metadata" src="{{ asset('/video/demo-reel.webm') }}" height="350" class="up-a mostrar" autoplay muted
                 loop alt="Demo reel agencia Vandu"
                 title="Video demostrativo de beneficios de producción audiovisual para empresas" type="video/webm">
         </x-slot>
