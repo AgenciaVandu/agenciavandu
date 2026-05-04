@@ -21,7 +21,7 @@
         <div class="col-6">
             <div class="form-group">
                 <label class="pb-2">Teléfono</label>
-                <input type="phone" class="form-control" placeholder="¿Cuál es tu teléfono?" name="phone" value="{{ old('phone') }}">
+                <input type="tel" class="form-control" placeholder="¿Cuál es tu teléfono?" name="phone" value="{{ old('phone') }}">
             </div>
         </div>
         <div class="col-6">

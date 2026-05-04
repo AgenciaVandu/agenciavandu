@@ -14,7 +14,7 @@ class CotizarController extends Controller
         $request->validate([
             'name'     => 'required|max:100',
             'lastname' => 'required|max:100',
-            'phone'    => 'required',
+            'tel'    => 'required',
             'email'    => 'required|email',
             'service'  => 'required',
             'g-recaptcha-response' => 'required'
