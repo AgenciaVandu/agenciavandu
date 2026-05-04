@@ -14,12 +14,18 @@ class CotizarController extends Controller
         $request->validate([
             'name'     => 'required|max:100',
             'lastname' => 'required|max:100',
-            'tel'    => 'required',
+            'phone'    => 'required', // DEBE decir phone porque así dice el name en tu HTML
             'email'    => 'required|email',
             'service'  => 'required',
             'g-recaptcha-response' => 'required'
+        ], [
+            // Mensajes para que salgan en español
+            'phone.required' => 'El teléfono es obligatorio.',
+            'name.required'  => 'El nombre es obligatorio.',
+            'email.required' => 'Tu correo es importante',
+            'service.required' => 'Selecciona el servicio para que sepamos que necesitas',
+            // ... el resto de tus mensajes
         ]);
-
         // 2. Verificar reCAPTCHA v3
         $response = \Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
             'secret'   => env('RECAPTCHA_SECRET_KEY'),
