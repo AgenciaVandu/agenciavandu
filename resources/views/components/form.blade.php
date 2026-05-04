@@ -61,7 +61,7 @@
 <script src="https://www.google.com/recaptcha/api.js?render={{ env('RECAPTCHA_SITE_KEY') }}"></script>
 <script>
 document.getElementById('form-cotizar').addEventListener('submit', function(e) {
-    e.preventDefault(); // Evita que la página se recargue
+    e.preventDefault();
 
     const form = e.target;
     const btn = document.getElementById('btn-submit');
@@ -70,9 +70,11 @@ document.getElementById('form-cotizar').addEventListener('submit', function(e) {
     const successDiv = document.getElementById('mensaje-exito');
     const errorDiv = document.getElementById('mensaje-error');
 
-    // Reset de avisos y activación de loader
+    // Limpiar estados previos
     successDiv.classList.add('d-none');
     errorDiv.classList.add('d-none');
+    errorDiv.innerText = ''; 
+    
     btn.disabled = true;
     loader.classList.remove('d-none');
     btnText.innerText = ' Procesando...';
@@ -81,7 +83,6 @@ document.getElementById('form-cotizar').addEventListener('submit', function(e) {
         grecaptcha.execute("{{ env('RECAPTCHA_SITE_KEY') }}", {action: 'submit'}).then(function(token) {
             document.getElementById('g-recaptcha-response').value = token;
 
-            // Enviamos los datos vía Fetch (AJAX)
             const formData = new FormData(form);
 
             fetch("{{ route('cotizar.store') }}", {
@@ -90,30 +91,44 @@ document.getElementById('form-cotizar').addEventListener('submit', function(e) {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json'
+                    // IMPORTANTE: No pongas Content-Type, el navegador lo hace solo con FormData
                 }
             })
-            .then(response => response.json())
+            .then(async response => {
+                const data = await response.json();
+                
+                // Si el status no es 200-299, lanzamos el objeto de error
+                if (!response.ok) {
+                    return Promise.reject(data);
+                }
+                return data;
+            })
             .then(data => {
                 loader.classList.add('d-none');
                 
                 if (data.success) {
-                    // Éxito: Ocultamos el form y mostramos mensaje
                     form.classList.add('d-none');
                     successDiv.innerText = data.message;
                     successDiv.classList.remove('d-none');
-                } else {
-                    // Error de validación o bot
-                    btn.disabled = false;
-                    btnText.innerText = 'Reintentar';
-                    errorDiv.innerText = data.message || 'Ocurrió un error. Revisa los datos.';
-                    errorDiv.classList.remove('d-none');
+                    // Scroll suave hacia arriba para ver el éxito
+                    window.scrollTo({ top: form.offsetTop - 100, behavior: 'smooth' });
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                btn.disabled = false;
                 loader.classList.add('d-none');
-                btnText.innerText = 'Error al enviar';
+                btn.disabled = false;
+                btnText.innerText = 'Reintentar';
+                errorDiv.classList.remove('d-none');
+
+                // Si hay errores de validación (Laravel 422)
+                if (error.errors) {
+                    // Unimos todos los errores en un solo texto
+                    const messages = Object.values(error.errors).flat().join(' ');
+                    errorDiv.innerText = messages;
+                } else {
+                    // Si es un error de bot o de servidor
+                    errorDiv.innerText = error.message || 'Error de conexión. Inténtalo de nuevo.';
+                }
             });
         });
     });
