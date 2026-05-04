@@ -56,8 +56,6 @@
     </div>
 </form>
 
-
-<!-- Scripts: Google API + Lógica del Loader -->
 <script src="https://www.google.com/recaptcha/api.js?render={{ env('RECAPTCHA_SITE_KEY') }}"></script>
 <script>
 document.getElementById('form-cotizar').addEventListener('submit', function(e) {
@@ -70,7 +68,6 @@ document.getElementById('form-cotizar').addEventListener('submit', function(e) {
     const successDiv = document.getElementById('mensaje-exito');
     const errorDiv = document.getElementById('mensaje-error');
 
-    // Limpiar estados previos
     successDiv.classList.add('d-none');
     errorDiv.classList.add('d-none');
     errorDiv.innerText = ''; 
@@ -90,14 +87,13 @@ document.getElementById('form-cotizar').addEventListener('submit', function(e) {
                 body: formData,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                    // IMPORTANTE: No pongas Content-Type, el navegador lo hace solo con FormData
+                    'Accept': 'application/json',
+                    // Agregamos el token CSRF manualmente para evitar fallos de seguridad
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
                 }
             })
             .then(async response => {
                 const data = await response.json();
-                
-                // Si el status no es 200-299, lanzamos el objeto de error
                 if (!response.ok) {
                     return Promise.reject(data);
                 }
@@ -105,13 +101,11 @@ document.getElementById('form-cotizar').addEventListener('submit', function(e) {
             })
             .then(data => {
                 loader.classList.add('d-none');
-                
                 if (data.success) {
                     form.classList.add('d-none');
                     successDiv.innerText = data.message;
                     successDiv.classList.remove('d-none');
-                    // Scroll suave hacia arriba para ver el éxito
-                    window.scrollTo({ top: form.offsetTop - 100, behavior: 'smooth' });
+                    window.scrollTo({ top: successDiv.offsetTop - 100, behavior: 'smooth' });
                 }
             })
             .catch(error => {
@@ -120,13 +114,10 @@ document.getElementById('form-cotizar').addEventListener('submit', function(e) {
                 btnText.innerText = 'Reintentar';
                 errorDiv.classList.remove('d-none');
 
-                // Si hay errores de validación (Laravel 422)
                 if (error.errors) {
-                    // Unimos todos los errores en un solo texto
                     const messages = Object.values(error.errors).flat().join(' ');
                     errorDiv.innerText = messages;
                 } else {
-                    // Si es un error de bot o de servidor
                     errorDiv.innerText = error.message || 'Error de conexión. Inténtalo de nuevo.';
                 }
             });
