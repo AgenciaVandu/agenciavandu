@@ -32,8 +32,7 @@ Route::get('/sitio-en-construccion', [PageController::class, 'construccion'])->n
 Route::get('/alianzas-de-diseno', [PageController::class, 'alianzas'])->name('alianzas');
 
 Route::get('/cotizar', [ContactanosController::class, 'index'])->name('cotizar');
-Route::post('/enviar-cotizacion', [CotizarController::class, 'store'])->name('cotizar.store');
-Route::post('/mensaje-enviado', [ContactanosController::class, 'store'])->name('cotizar.store');
+Route::post('/mensaje-enviado', [CotizarController::class, 'store'])->name('cotizar.store');
 
 Route::get('/admin/cotizaciones', [CotizarController::class, 'index'])
     ->middleware('admin.vandu') 
