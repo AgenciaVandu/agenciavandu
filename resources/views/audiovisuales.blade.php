@@ -17,69 +17,78 @@
         <div class="logos-container">
             <div class="logos-slide">
                 <img src="{{ asset('/img/logos-marcas/burger-king.svg') }}" width="40" alt="">
-               <img src="{{ asset('/img/logos-marcas/KFC.svg') }}" width="40" alt="">
+                <img src="{{ asset('/img/logos-marcas/KFC.svg') }}" width="40" alt="">
                 <img src="{{ asset('/img/logos-marcas/pizza-hut.svg') }}" width="40" alt="">
-                 <img src="{{ asset('/img/logos-marcas/saama-gray.svg') }}" width="60" alt="">
+                <img src="{{ asset('/img/logos-marcas/saama-gray.svg') }}" width="60" alt="">
                 <img src="{{ asset('/img/logos-marcas/gran-calzada.svg') }}" width="100" alt="">
                 <img src="{{ asset('/img/logos-marcas/tokio07.svg') }}" width="40" alt="">
-                 <img src="{{ asset('/img/logos-marcas/amavita.svg') }}" width="100" alt="">
-                 <img src="{{ asset('/img/logos-marcas/osroca.svg') }}" width="100" alt="">
+                <img src="{{ asset('/img/logos-marcas/amavita.svg') }}" width="100" alt="">
+                <img src="{{ asset('/img/logos-marcas/osroca.svg') }}" width="100" alt="">
                 <img src="{{ asset('/img/logos-marcas/turismaya.svg') }}" width="100" alt="">
-                 <img src="{{ asset('/img/logos-marcas/casitas 1.svg') }}" width="50" alt="">
+                <img src="{{ asset('/img/logos-marcas/casitas 1.svg') }}" width="50" alt="">
             </div>
 
             <div class="logos-slide">
                 <img src="{{ asset('/img/logos-marcas/burger-king.svg') }}" width="40" alt="">
-               <img src="{{ asset('/img/logos-marcas/KFC.svg') }}" width="40" alt="">
+                <img src="{{ asset('/img/logos-marcas/KFC.svg') }}" width="40" alt="">
                 <img src="{{ asset('/img/logos-marcas/pizza-hut.svg') }}" width="40" alt="">
-                 <img src="{{ asset('/img/logos-marcas/saama-gray.svg') }}" width="60" alt="">
+                <img src="{{ asset('/img/logos-marcas/saama-gray.svg') }}" width="60" alt="">
                 <img src="{{ asset('/img/logos-marcas/gran-calzada.svg') }}" width="100" alt="">
                 <img src="{{ asset('/img/logos-marcas/tokio07.svg') }}" width="40" alt="">
-                 <img src="{{ asset('/img/logos-marcas/amavita.svg') }}" width="100" alt="">
-                 <img src="{{ asset('/img/logos-marcas/osroca.svg') }}" width="100" alt="">
+                <img src="{{ asset('/img/logos-marcas/amavita.svg') }}" width="100" alt="">
+                <img src="{{ asset('/img/logos-marcas/osroca.svg') }}" width="100" alt="">
                 <img src="{{ asset('/img/logos-marcas/turismaya.svg') }}" width="100" alt="">
-                 <img src="{{ asset('/img/logos-marcas/casitas 1.svg') }}" width="50" alt="">
+                <img src="{{ asset('/img/logos-marcas/casitas 1.svg') }}" width="50" alt="">
             </div>
         </div>
     </div>
     <section class="portafolio-visual">
         <div class="container">
             <div class="grid-contenido">
+                <!-- FOTOS 1 y 2 (Imágenes OK) -->
                 <div class="foto1">
-                    <img loading="lazy" src="{{ asset('/img/webp/2026/Sesion-Tokyo-Tyger-Mayo-37-1.webp') }}" alt="">
+                    <img loading="lazy" src="{{ asset('/img/webp/2026/Sesion-Tokyo-Tyger-Mayo-37-1.webp') }}"
+                        alt="Sesion Tokyo Tyger">
                 </div>
                 <div class="foto2">
-                    <img loading="lazy" src="{{ asset('/img/webp/2026/Samma-25-Alberto-1.webp') }}" alt="">
+                    <img loading="lazy" src="{{ asset('/img/webp/2026/Samma-25-Alberto-1.webp') }}"
+                        alt="Samma Alberto">
                 </div>
+
+                <!-- VIDEOS 3, 4 y 5 (Corregidos) -->
                 <div class="foto3">
-                    <video playsinline loop webkit-playsinline preload="metadata" src="{{ asset('/video/croc.webm') }}" muted autoplay loop alt="">
+                    <video class="lazy-video" playsinline loop muted webkit-playsinline preload="none"
+                        data-src="{{ asset('/video/croc.webm') }}"></video>
                 </div>
                 <div class="foto4">
-                    <video playsinline loop webkit-playsinline preload="metadata" src="{{ asset('/video/ronqueo-kurouma.webm') }}" muted autoplay loop alt="">
+                    <video class="lazy-video" playsinline loop muted webkit-playsinline preload="none"
+                        data-src="{{ asset('/video/ronqueo-kurouma.webm') }}"></video>
                 </div>
                 <div class="foto5">
-                    <video playsinline loop webkit-playsinline preload="metadata" src="{{ asset('/video/vuelo-drone.webm') }}" muted autoplay loop alt="">
+                    <video class="lazy-video" playsinline loop muted webkit-playsinline preload="none"
+                        data-src="{{ asset('/video/vuelo-drone.webm') }}"></video>
                 </div>
-                <div class="foto6">
-                    <img loading="lazy" src="{{ asset('/img/webp/2026/kuro-23.webp') }}" alt="">
-                </div>
-                <div class="foto7">
-                    <img loading="lazy" src="{{ asset('/img/webp/2026/antelar-9.webp') }}" alt="">
-                </div>
-                <div class="foto8">
-                    <img loading="lazy" src="{{ asset('/img/webp/2026/antelar-41.webp') }}" alt="">
-                </div>
-                <div class="foto9">
-                    <img loading="lazy" src="{{ asset('/img/webp/2026/Samma-18-Alberto-1.webp') }}" alt="">
-                </div>
-                <div class="foto10">
-                    <img loading="lazy" src="{{ asset('/img/webp/2026/Sesion-Tokyo-Tyger-Mayo-1-6.webp') }}" alt="">
-                </div>
+
+                <!-- FOTOS 6 a 10 (Imágenes OK) -->
+                <div class="foto6"><img loading="lazy" src="{{ asset('/img/webp/2026/kuro-23.webp') }}"
+                        alt=""></div>
+                <div class="foto7"><img loading="lazy" src="{{ asset('/img/webp/2026/antelar-9.webp') }}"
+                        alt=""></div>
+                <div class="foto8"><img loading="lazy" src="{{ asset('/img/webp/2026/antelar-41.webp') }}"
+                        alt=""></div>
+                <div class="foto9"><img loading="lazy" src="{{ asset('/img/webp/2026/Samma-18-Alberto-1.webp') }}"
+                        alt=""></div>
+                <div class="foto10"><img loading="lazy"
+                        src="{{ asset('/img/webp/2026/Sesion-Tokyo-Tyger-Mayo-1-6.webp') }}" alt=""></div>
+
+                <!-- VIDEOS 11 y 12 (Corregidos) -->
                 <div class="foto11">
-                    <video playsinline loop webkit-playsinline preload="metadata" src="{{ asset('/video/IMG_7614.webm') }}" autoplay muted loop alt="">
+                    <video class="lazy-video" playsinline loop muted webkit-playsinline preload="none"
+                        data-src="{{ asset('/video/IMG_7614.webm') }}"></video>
                 </div>
                 <div class="foto12">
-                    <video playsinline loop webkit-playsinline preload="metadata" src="{{ asset('/video/Foto_Comida.webm') }}" autoplay muted loop alt="">
+                    <video class="lazy-video" playsinline loop muted webkit-playsinline preload="none"
+                        data-src="{{ asset('/video/Foto_Comida.webm') }}"></video>
                 </div>
                 <div class="contacto">
                     <h3>¿Podemos hacer algo por ti?</h3>
@@ -92,10 +101,15 @@
     <x-detalle>
         <x-slot name="portafolioImg">
             <img loading="lazy" src="{{ asset('/img/3.svg') }}" class="base mostrar" alt="Demo reel agencia Vandu">
-            <img loading="lazy" src="{{ asset('/img/2.svg') }}" class="middle mostrar" alt="Demo reel agencia Vandu">
-            <video playsinline loop webkit-playsinline preload="metadata" src="{{ asset('/video/demo-reel.webm') }}" height="350" class="up-a mostrar" autoplay muted
-                loop alt="Demo reel agencia Vandu"
-                title="Video demostrativo de beneficios de producción audiovisual para empresas" type="video/webm">
+            <img loading="lazy" src="{{ asset('/img/2.svg') }}" class="middle mostrar"
+                alt="Demo reel agencia Vandu">
+            <video id="lazy-video" playsinline loop muted webkit-playsinline preload="none"
+                data-src="{{ asset('/video/demo-reel.webm') }}" height="350" class="up-a mostrar"
+                alt="Demo reel agencia Vandu"
+                title="Video demostrativo de beneficios de producción audiovisual para empresas">
+                <!-- Es mejor poner el type aquí adentro -->
+                <source type="video/webm">
+            </video>
         </x-slot>
         <div class="contenido_espacio">
             <x-slot name="titularServicios">
@@ -107,7 +121,7 @@
                 comerciales.
             </x-slot>
             <x-slot name="botonServicios">
-                <a href="{{route('cotizar')}}" class="btn-servicios">Cotizar proyecto</a>
+                <a href="{{ route('cotizar') }}" class="btn-servicios">Cotizar proyecto</a>
             </x-slot>
         </div>
     </x-detalle>
@@ -165,13 +179,41 @@
             </div>
         </x-slot>
         <x-slot name="clientes">
-            <section id="formulario" class="formulario">
-        <div class="container text-white" >
-            <script src="https://js.hsforms.net/forms/embed/51078765.js" defer></script>
-            <div class="hs-form-frame" data-region="na1" data-form-id="016947aa-4806-4b0e-87e5-921f88476d97"
-                data-portal-id="51078765"></div>
-        </div>
-    </section>
+            <x-form></x-form>
         </x-slot>
     </x-validacion>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+    // Buscamos el video principal (ID) y los del portafolio (Clase)
+    const lazyVideos = document.querySelectorAll("#lazy-video, .lazy-video");
+
+    const videoObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const video = entry.target;
+                
+                // Como en tu HTML el data-src está en el <video>, 
+                // lo pasamos directamente al src del elemento
+                if (video.dataset.src) {
+                    video.src = video.dataset.src;
+                    video.load();
+                    
+                    // Reproducimos. El .catch evita errores si el usuario 
+                    // tiene bloqueado el autoplay
+                    video.play().catch(e => console.log("Carga en espera:", e));
+                }
+
+                // Una vez que empieza a cargar, dejamos de vigilarlo
+                observer.unobserve(video);
+            }
+        });
+    }, {
+        // Empieza a cargar 200px antes de que el usuario llegue
+        rootMargin: "0px 0px 200px 0px", 
+        threshold: 0.1 
+    });
+
+    lazyVideos.forEach(v => videoObserver.observe(v));
+});
+    </script>
 </x-layouts.guest>

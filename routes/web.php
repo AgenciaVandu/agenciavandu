@@ -3,6 +3,7 @@
 use App\Http\Controllers\ContactanosController;
 use App\Mail\ContactanosMailable;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\CotizarController;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
@@ -31,4 +32,9 @@ Route::get('/sitio-en-construccion', [PageController::class, 'construccion'])->n
 Route::get('/alianzas-de-diseno', [PageController::class, 'alianzas'])->name('alianzas');
 
 Route::get('/cotizar', [ContactanosController::class, 'index'])->name('cotizar');
+Route::post('/enviar-cotizacion', [CotizarController::class, 'store'])->name('cotizar.store');
 Route::post('/mensaje-enviado', [ContactanosController::class, 'store'])->name('cotizar.store');
+
+Route::get('/admin/cotizaciones', [CotizarController::class, 'index'])
+    ->middleware('admin.vandu') 
+    ->name('cotizar.index');
