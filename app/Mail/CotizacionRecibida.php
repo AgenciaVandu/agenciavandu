@@ -30,6 +30,6 @@ class CotizacionRecibida extends Mailable
     {
         // El asunto ahora incluye el nombre para identificar rápido quién escribe
         return $this->subject('🔥 Nueva Cotización: ' . ($this->datos['name'] ?? 'Cliente Nuevo') . ' - Vandu')
-                    ->view('emails.cotizacion');
+                    ->view('emails.contactanos');
     }
 }
