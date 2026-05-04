@@ -1,4 +1,5 @@
 <?php 
+
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
@@ -9,16 +10,26 @@ class CotizacionRecibida extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $datos; // Aquí se guardará la info del form
+    // Esta propiedad pública estará disponible automáticamente en la vista Blade del correo
+    public $datos; 
 
+    /**
+     * Crear una nueva instancia del mensaje.
+     *
+     * @param array $datos Información capturada del formulario
+     */
     public function __construct($datos)
     {
         $this->datos = $datos;
     }
 
+    /**
+     * Construir el mensaje.
+     */
     public function build()
     {
-        return $this->subject('Nueva solicitud de cotización - Vandu')
-                    ->view('emails.cotizacion'); // Crearemos esta vista ahorita
+        // El asunto ahora incluye el nombre para identificar rápido quién escribe
+        return $this->subject('🔥 Nueva Cotización: ' . ($this->datos['name'] ?? 'Cliente Nuevo') . ' - Vandu')
+                    ->view('emails.cotizacion');
     }
 }

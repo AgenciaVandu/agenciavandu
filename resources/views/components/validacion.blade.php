@@ -13,7 +13,7 @@
                 <h1>¿Platicamos sobre <br class="ocultar" /> tu proyecto?</h1>
                 <p>Cada proyecto sin importar el tamaño tiene requerimientos diferentes, acércate a nuestros expertos que te guiarán en el proceso de saber que es lo mejor para ti y para tus objetivos finales. </p>
                 <div class="contato darktxt">
-                    <input type="text" id="url" class="correo darktxt" value="team@agenciavandu.com"></input>
+                    <input type="text" id="url" class="correo darktxt" value="proyectos@agenciavandu.com"></input>
                     <button>
                         <img src="{{asset('/img/copy.svg')}}" class="copiado" width="20" alt="icono copiar">
                     </button>

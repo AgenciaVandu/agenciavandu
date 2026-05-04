@@ -37,7 +37,7 @@ class CotizarController extends Controller
 
         // 3. Envío de correo
         try {
-            Mail::to('hola@agenciavandu.com')->send(new \App\Mail\CotizacionRecibida($request->all()));
+            Mail::to('proyectos@agenciavandu.com')->send(new \App\Mail\CotizacionRecibida($request->all()));
 
             return response()->json([
                 'success' => true,
