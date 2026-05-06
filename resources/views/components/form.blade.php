@@ -30,7 +30,7 @@
                 <input type="email" class="form-control" placeholder="ejemplo: hola@correo.com" name="email" value="{{ old('email') }}">
             </div>
         </div>
-        <div class="col-6">
+        <div class="col-12">
             <label class="pb-2 pt-2">Selecciona tu servicio de interés</label>
             <select class="form-control" name="service">
                 <option value="">Selecciona una opción...</option>
@@ -41,8 +41,8 @@
             </select>
         </div>
     </div>
-   <div class="col-6 mt-3">
-        <button type="submit" class="btn btn-primary btn-send" id="btn-submit">
+   <div class="col-12 mt-3">
+        <button type="submit" class="btn btn-primary btn-send btn-block" id="btn-submit">
             <span class="spinner-border spinner-border-sm d-none" id="loader" role="status"></span>
             <span id="btn-text"style="
         background-color: colores.$black;
@@ -51,7 +51,7 @@
         border-radius: 1em;
         text-decoration: none;
         padding: 10px 1em;
-        width: 160px;">Enviar información</span>
+        ">Enviar información</span>
         </button>
     </div>
 </form>

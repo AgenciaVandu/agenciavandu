@@ -20,13 +20,13 @@
                 <div class="botones">
                     <a href="{{ route('servicios') }}">Diseño web <span><img src="{{ asset('img/arrow-2.svg') }}"
                                 class="arrow1" width="10" alt=""></span></a>
-                    <a href="{{ route('productos') }}">Productos<span><img src="{{ asset('img/arrow-2.svg') }}"
-                                class="arrow1" width="10" alt=""></a>
+                   {{--  <a href="{{ route('productos') }}">Productos<span><img src="{{ asset('img/arrow-2.svg') }}"
+                                class="arrow1" width="10" alt=""></a> --}}
                     <a href="{{ route('audiovisuales') }}">Audiovisuales<span><img src="{{ asset('img/arrow-2.svg') }}"
                                 class="arrow1" width="10" alt=""></a>
-                    <a href="{{ route('alianzas') }}">Marcas
+                    {{-- <a href="{{ route('alianzas') }}">Marcas
                         <span><img src="{{ asset('img/arrow-2.svg') }}" class="arrow1" width="10" alt="">
-                    </a>
+                    </a> --}}
                 </div>
                 <div class="cta">
                     <a href="{{ route('cotizar') }}">Contáctanos <span><img src="{{ asset('img/arrow-3.svg') }}"

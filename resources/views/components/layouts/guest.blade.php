@@ -74,7 +74,7 @@
             <img src="{{ asset('/img/bell-solid.svg') }}" class="imagen" alt="">
         </div>
         <a href="https://wa.me/+529991460310" class="btn-contacto">
-            <img src="{{ asset('/img/message-solid.svg') }}" width="40" alt="mensaje">
+            <img src="{{ asset('/img/whatsapp.svg') }}" width="40" alt="mensaje">
         </a>
     </div>
     <x-nav />
@@ -84,9 +84,6 @@
 
     <x-footer />
 
-    <!-- Start of HubSpot Embed Code -->
-    <script type="text/javascript" id="hs-script-loader" async defer src="//js.hs-scripts.com/47390088.js"></script>
-    <!-- End of HubSpot Embed Code -->
 </body>
 @stack('js')
 
