@@ -69,7 +69,7 @@
 <body class="body">
 
     <div class="flotante">
-        <div class="mensaje">Bienvenido a Vandú 😊</div>
+        <div class="mensaje">Cotizar por whatsapp 👉🏻</div>
         <div class="notificacion">
             <img src="{{ asset('/img/bell-solid.svg') }}" class="imagen" alt="">
         </div>

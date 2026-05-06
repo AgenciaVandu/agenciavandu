@@ -21,7 +21,7 @@
                 </div>
             </div>
             <div class="col-lg-6 col-md-12 col-sm-12 mt-2">
-                {{$clientes ?? ''}}
+                <x-form></x-form>
             </div>
         </div>
     </div>

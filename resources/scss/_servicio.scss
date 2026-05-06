@@ -69,9 +69,14 @@ $fuentes : (
             align-items: center;
             gap: 10px;
             .correo {
-                width: auto ;
+                width: 270px;
+                min-height: 40px;
                 background-color: colores.$gray;
-                padding: .5em .8em;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
                 color: colores.$medium-black !important;
                 border-radius: 10px;
                 border:  1px colores.$gray solid;
@@ -86,6 +91,7 @@ $fuentes : (
                 &::selection {
                     background-color: transparent;
                 }
+                
             }
             button {
                 border-radius: 50%;

@@ -9,79 +9,7 @@ $fuentes : (
 @use 'colores';
 @use 'fuentes';
 
-.marcas {
 
-    /* 1. Definimos variables limpias */
-.logos-container {
-  // Estado inicial (Blanco o Gris claro)
-  --bg-carrusel: colores.$gray; 
-  --fade-color: colores.$gray; 
-
-  overflow: hidden;
-  padding: 20px 0;
-  white-space: nowrap;
-  position: relative;
-  background-color: var(--bg-carrusel);
-  transition: background-color 0.9s ease; 
-
-  /* Estado al hacer Scroll */
-  &.scrolled {
-    --bg-carrusel: colores.$medium-dark; // Nuevo color solicitado
-    --fade-color: colores.$medium-dark;
-
-    .logos-slide img {
-      filter: none; 
-      opacity: 1;
-    }
-  }
-}
-
-/* 2. Los degradados laterales */
-.logos-container::before,
-.logos-container::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  width: 250px;
-  height: 100%;
-  z-index: 2;
-  pointer-events: none;
-  transition: background 0.5s ease; /* Para que el degradado cambie suavemente al nuevo color */
-}
-
-/* Gradientes con el nuevo color hacia transparente */
-.logos-container::before {
-  left: 0;
-  background: linear-gradient(to right, var(--fade-color), transparent);
-}
-
-.logos-container::after {
-  right: 0;
-  background: linear-gradient(to left, var(--fade-color), transparent);
-}
-
-/* 3. Animación y Logos */
-.logos-slide {
-  display: inline-block;
-  animation: 35s slide infinite linear;
-}
-
-.logos-slide img {
-  height: 50px;
-  margin: 0 40px;
-  vertical-align: middle;
-}
-
-@keyframes slide {
-  from { transform: translateX(0); }
-  to { transform: translateX(-100%); }
-}
-
-.logos-container:hover .logos-slide {
-  animation-play-state: paused;
-}
-
-}
 .portafolio-visual {
     margin-top: 3em;
 padding: 2em 0;

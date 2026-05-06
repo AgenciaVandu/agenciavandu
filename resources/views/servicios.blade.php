@@ -10,6 +10,9 @@
             <p class="darktxt">Somos una agencia de desarrollo web que utiliza la tecnología a tu favor para elevar la experiencia de atención a clientes y obtener leads de manera sostenida y eficiente.</p>
         </x-slot>
     </x-header>
+    <section class="mb-5">
+        <x-clientes></x-clientes>
+    </section>
     <section class="intro">
         <div class="container text-center">
             <div class="intro_contenido"></div>
@@ -63,36 +66,6 @@
         </x-slot>
     </x-cta>
     <x-validacion>
-        <x-slot name="logos">
-            <div class="row logos">
-                <div class="col">
-                    <img src="{{asset('img/black/mercadoblack.svg')}}" alt="Logotipo mercadopago">
-                </div>
-                <div class="col">
-                    <img src="{{asset('img/black/hostgatorblack.svg')}}" alt="Logotipo mercadopago">
-                </div>
-                <div class="col">
-                    <img src="{{asset('img/black/paypalblack.svg')}}" alt="Logotipo mercadopago">
-                </div>
-                <div class="col">
-                    <img src="{{asset('img/black/stripeblack.svg')}}" alt="Logotipo mercadopago">
-                </div>
-            </div>
-        </x-slot>
-        <x-slot name="clientes">
-            <div class="logos_clientes">
-                <div class="primera-fila">
-                    <img src="{{asset('img/black/burgerblack.svg')}}" width="80" alt="">
-                    <img src="{{asset('img/black/kfcblack.svg')}}" width="80" alt="">
-                    <img src="{{asset('img/black/phblack.svg')}}" width="80" alt="">
-                </div>
-                <div class="segunda-fila">
-                    <img src="{{asset('img/black/kananfleetblack.svg')}}" width="150" alt="">
-                    <img src="{{asset('img/black/turismayablack.svg')}}" width="150" alt="">
-                </div>
-                <img src="{{asset('img/black/nicxablack.svg')}}" width="200" alt="">
-
-            </div>
-        </x-slot>
+       
     </x-validacion>
 </x-layouts.guest>

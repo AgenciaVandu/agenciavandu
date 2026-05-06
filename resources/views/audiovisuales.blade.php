@@ -13,35 +13,7 @@
                 tus tasas de conversión.</p>
         </x-slot>
     </x-header>
-    <div class="marcas">
-        <div class="logos-container">
-            <div class="logos-slide">
-                <img src="{{ asset('/img/logos-marcas/burger-king.svg') }}" width="40" alt="">
-                <img src="{{ asset('/img/logos-marcas/KFC.svg') }}" width="40" alt="">
-                <img src="{{ asset('/img/logos-marcas/pizza-hut.svg') }}" width="40" alt="">
-                <img src="{{ asset('/img/logos-marcas/saama-gray.svg') }}" width="60" alt="">
-                <img src="{{ asset('/img/logos-marcas/gran-calzada.svg') }}" width="100" alt="">
-                <img src="{{ asset('/img/logos-marcas/tokio07.svg') }}" width="40" alt="">
-                <img src="{{ asset('/img/logos-marcas/amavita.svg') }}" width="100" alt="">
-                <img src="{{ asset('/img/logos-marcas/osroca.svg') }}" width="100" alt="">
-                <img src="{{ asset('/img/logos-marcas/turismaya.svg') }}" width="100" alt="">
-                <img src="{{ asset('/img/logos-marcas/casitas 1.svg') }}" width="50" alt="">
-            </div>
-
-            <div class="logos-slide">
-                <img src="{{ asset('/img/logos-marcas/burger-king.svg') }}" width="40" alt="">
-                <img src="{{ asset('/img/logos-marcas/KFC.svg') }}" width="40" alt="">
-                <img src="{{ asset('/img/logos-marcas/pizza-hut.svg') }}" width="40" alt="">
-                <img src="{{ asset('/img/logos-marcas/saama-gray.svg') }}" width="60" alt="">
-                <img src="{{ asset('/img/logos-marcas/gran-calzada.svg') }}" width="100" alt="">
-                <img src="{{ asset('/img/logos-marcas/tokio07.svg') }}" width="40" alt="">
-                <img src="{{ asset('/img/logos-marcas/amavita.svg') }}" width="100" alt="">
-                <img src="{{ asset('/img/logos-marcas/osroca.svg') }}" width="100" alt="">
-                <img src="{{ asset('/img/logos-marcas/turismaya.svg') }}" width="100" alt="">
-                <img src="{{ asset('/img/logos-marcas/casitas 1.svg') }}" width="50" alt="">
-            </div>
-        </div>
-    </div>
+    <x-clientes></x-clientes>
     <section class="portafolio-visual">
         <div class="container">
             <div class="grid-contenido">
@@ -178,9 +150,7 @@
                 </div>
             </div>
         </x-slot>
-        <x-slot name="clientes">
-            <x-form></x-form>
-        </x-slot>
+       
     </x-validacion>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
