@@ -37,8 +37,8 @@
                         data-src="{{ asset('/video/ronqueo-kurouma.webm') }}"></video>
                 </div>
                 <div class="foto5">
-                    <video class="lazy-video" playsinline loop muted webkit-playsinline preload="none"
-                        data-src="{{ asset('/video/vuelo-drone.webm') }}"></video>
+                     <img loading="lazy" src="{{ asset('/img/webp/2026/behing-the-escenes.webp') }}"
+                        alt="Behind the escenes">
                 </div>
 
                 <!-- FOTOS 6 a 10 (Imágenes OK) -->

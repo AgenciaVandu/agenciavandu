@@ -129,7 +129,8 @@ padding: 2em 0;
             transition: 1s;
             image-rendering: smooth;
              
-            video {
+           
+             img {
         width: 100%; 
         height: 100%; 
         object-fit: cover;
@@ -137,7 +138,6 @@ padding: 2em 0;
         image-rendering: smooth;
         border-radius: 1em;
     }
-          
         }@media (max-width:991px) {
             .foto5 {
                display: none;
