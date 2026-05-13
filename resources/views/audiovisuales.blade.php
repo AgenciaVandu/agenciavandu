@@ -75,7 +75,7 @@
             <img loading="lazy" src="{{ asset('/img/3.svg') }}" class="base mostrar" alt="Demo reel agencia Vandu">
             <img loading="lazy" src="{{ asset('/img/2.svg') }}" class="middle mostrar"
                 alt="Demo reel agencia Vandu">
-            <video id="lazy-video" playsinline loop muted webkit-playsinline preload="none"
+            <video id="lazy-video" controls playsinline loop muted webkit-playsinline preload="none"
                 data-src="{{ asset('/video/demo-reel.webm') }}" height="350" class="up-a mostrar"
                 alt="Demo reel agencia Vandu"
                 title="Video demostrativo de beneficios de producción audiovisual para empresas">
