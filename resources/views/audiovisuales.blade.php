@@ -93,7 +93,7 @@
                 comerciales.
             </x-slot>
             <x-slot name="botonServicios">
-                <a href="{{ route('cotizar') }}" class="btn-servicios">Cotizar proyecto</a>
+                <a href="{{ route('cotizar') }}" class="btn-servicios">Hablar por whatsapp</a>
             </x-slot>
         </div>
     </x-detalle>
