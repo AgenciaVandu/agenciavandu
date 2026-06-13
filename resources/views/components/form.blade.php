@@ -107,15 +107,15 @@ document.getElementById('form-cotizar').addEventListener('submit', function(e) {
                     successDiv.classList.remove('d-none');
                     window.scrollTo({ top: successDiv.offsetTop - 100, behavior: 'smooth' });
 
-                    // ==========================================
-                    //  TRAKEO DE CONVERSIÓN DE GOOGLE ADS
-                    // ==========================================
+                    // =======================================================
+                    //  NUEVO S_ID: TRAKEO AL CONFIRMAR ÉXITO DEL FORMULARIO
+                    // =======================================================
                     gtag('event', 'conversion', {
-                        'send_to': 'AW-18235064782/zeRlCL74tr4cEM6DlPdD',
+                        'send_to': 'AW-18235064782/et8qCISbo74cEM6DlPdD',
                         'value': 1.0,
                         'currency': 'MXN'
                     });
-                    // ==========================================
+                    // =======================================================
                 }
             })
             .catch(error => {
