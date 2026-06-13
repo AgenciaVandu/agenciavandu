@@ -2,7 +2,6 @@
 <html lang="en">
 
 <head>
-    <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-8X4HJZK7C7"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -12,7 +11,11 @@
         }
         gtag('js', new Date());
 
+        // Configuración de Google Analytics 4
         gtag('config', 'G-8X4HJZK7C7');
+
+        // Configuración de Google Ads
+        gtag('config', 'AW-18235064782');
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
