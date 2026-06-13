@@ -112,7 +112,7 @@ document.getElementById('form-cotizar').addEventListener('submit', function(e) {
                     // =======================================================
                     gtag('event', 'conversion', {
                         'send_to': 'AW-18235064782/et8qCISbo74cEM6DlPdD',
-                        'value': 1.0,
+                        'value': 4000.0,
                         'currency': 'MXN'
                     });
                     // =======================================================
