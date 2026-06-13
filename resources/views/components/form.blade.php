@@ -106,6 +106,16 @@ document.getElementById('form-cotizar').addEventListener('submit', function(e) {
                     successDiv.innerText = data.message;
                     successDiv.classList.remove('d-none');
                     window.scrollTo({ top: successDiv.offsetTop - 100, behavior: 'smooth' });
+
+                    // ==========================================
+                    //  TRAKEO DE CONVERSIÓN DE GOOGLE ADS
+                    // ==========================================
+                    gtag('event', 'conversion', {
+                        'send_to': 'AW-18235064782/zeRlCL74tr4cEM6DlPdD',
+                        'value': 1.0,
+                        'currency': 'MXN'
+                    });
+                    // ==========================================
                 }
             })
             .catch(error => {
