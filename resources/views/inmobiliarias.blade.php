@@ -4,7 +4,7 @@
 <x-layouts.guest titulo="Diseño Web para Inmobiliarias y Bienes Raíces" meta-description="Desarrollo de páginas web para inmobiliarias y brokers. Sitios autoadministrables con filtros avanzados, mapas y optimización SEO en Mérida.">
     <x-header>
         <x-slot name="header">
-            <h1>Páginas Web para Inmobiliarias: Diseñadas para Vender y Captar Propiedades</h1>
+            <h1>Páginas Web para Inmobiliarias: <br> Diseñadas para captar leads</h1>
         </x-slot>
         <x-slot name="parrafo">
             <p class="darktxt">Somos una agencia de desarrollo web que utiliza la tecnología a tu favor para elevar la experiencia de atención a clientes y obtener leads de manera sostenida y eficiente.</p>
