@@ -92,4 +92,38 @@
     <x-validacion>
 
     </x-validacion>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+    // Buscamos el video principal (ID) y los del portafolio (Clase)
+    const lazyVideos = document.querySelectorAll("#lazy-video, .lazy-video");
+
+    const videoObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const video = entry.target;
+                
+                // Como en tu HTML el data-src está en el <video>, 
+                // lo pasamos directamente al src del elemento
+                if (video.dataset.src) {
+                    video.src = video.dataset.src;
+                    video.load();
+                    
+                    // Reproducimos. El .catch evita errores si el usuario 
+                    // tiene bloqueado el autoplay
+                    video.play().catch(e => console.log("Carga en espera:", e));
+                }
+
+                // Una vez que empieza a cargar, dejamos de vigilarlo
+                observer.unobserve(video);
+            }
+        });
+    }, {
+        // Empieza a cargar 200px antes de que el usuario llegue
+        rootMargin: "0px 0px 200px 0px", 
+        threshold: 0.1 
+    });
+
+    lazyVideos.forEach(v => videoObserver.observe(v));
+});
+    </script>
 </x-layouts.guest>
