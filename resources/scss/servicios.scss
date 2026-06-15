@@ -51,3 +51,53 @@ $fuentes : (
     }
 }
 
+.contenido-visual {
+    min-height: 400px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+
+    background-color: colores.$medium-black;
+    margin-top: 4em;
+    margin-bottom: 4em;
+    padding-top: 3em;
+    padding-bottom: 3em;
+    
+
+.contenido-visual__txt {
+    h2 {
+        color: colores.$green;
+        span{
+            color: #fff;
+        }
+    }
+    p {
+        color: #fff;
+    }
+    .btn-visuales {
+    background-color: colores.$green;
+    color: colores.$black;
+
+    border: transparent;
+    border-radius: 1em;
+    text-decoration: none;
+
+    padding: 1em 1.5em;
+    &:hover{
+    background-color: #fff;
+    transition: .5s ease;
+   } 
+   transition: .5s ease;
+    
+   } 
+} @media (max-width:800px) {
+     .contenido-visual__txt {
+        text-align: center;
+     }
+   }
+   
+   
+
+}
+

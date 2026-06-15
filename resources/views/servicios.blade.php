@@ -1,43 +1,67 @@
-@push ('estilos')
-@vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/servicios.scss', 'resources/js/app.js', 'resources/js/observer.js', 'resources/js/portafolio.js', 'resources/js/diseno.js' ])
+@push('estilos')
+    @vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/servicios.scss', 'resources/js/app.js', 'resources/js/observer.js', 'resources/js/portafolio.js', 'resources/js/diseno.js'])
 @endpush
-<x-layouts.guest titulo="Diseño Web Profesional y Desarrollo a la Medida" meta-description="Somos una agencia de desarrollo que utiliza la tecnología a tu favor para elevar la experiencia de atención a clientes y obtener leads de manera sostenida y eficiente.">
+<x-layouts.guest titulo="Diseño Web Profesional y Desarrollo a la Medida"
+    meta-description="Somos una agencia de desarrollo que utiliza la tecnología a tu favor para elevar la experiencia de atención a clientes y obtener leads de manera sostenida y eficiente.">
     <x-header>
         <x-slot name="header">
             <h1>Conectamos tecnología y estrategia para generar leads de alto impacto</h1>
         </x-slot>
         <x-slot name="parrafo">
-            <p class="darktxt">Creamos sitios web desde cero, con código limpio y veloces. Nada de plantillas lentas e idénticas que ahuyentan a tus clientes.</p>
+            <p class="darktxt">Creamos sitios web desde cero, con código limpio y veloces. Nada de plantillas lentas e
+                idénticas que ahuyentan a tus clientes.</p>
         </x-slot>
     </x-header>
     <section class="mb-5">
         <x-clientes></x-clientes>
     </section>
-    <section class="intro">
-        <div class="container text-center">
-            <div class="intro_contenido"></div>
-        </div>
-    </section>
     <section class="extracto">
         <div class="container">
-            <p class="darktxt">Un sitio web debería ser más que un elemento estático, debe ser una entidad dinámica en constante evolución, perfectamente alineada a la identidad y los objetivos de tu marca. Creamos potentes sistemas diseñados para adaptarse y crecer.</p>
+            <p class="darktxt">Un sitio web debería ser más que un elemento estático, debe ser una entidad dinámica en
+                constante evolución, perfectamente alineada a la identidad y los objetivos de tu marca. Creamos potentes
+                sistemas diseñados para adaptarse y crecer.</p>
         </div>
     </section>
     <x-portafolio>
 
     </x-portafolio>
+
+    <div class="contenido-visual">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 col-md-12 col-sm-12 m-auto pb-3 contenido-visual__txt">
+                    <h2><span>Contenido visual</span> que enamora</h2>
+                    <p class="pb-3">Tu página no llevará fotos falsas de internet. Incluimos producción de fotografía de marca y
+                        video profesional para que tus clientes vean tu negocio real desde el primer segundo.</p>
+                     <a href="https://wa.me/+529991460310" class="btn-visuales">Cotizar por WhatsApp</a>
+                </div>
+                <div class="col-lg-6 col-md-12 col-sm-12 text-center pt-3 pb-3">
+                    <video id="lazy-video" controls playsinline loop muted webkit-playsinline preload="none"
+                        data-src="{{ asset('/video/demo-reel.webm') }}" height="350" class="up-a mostrar"
+                        alt="Demo reel agencia Vandu"
+                        title="Video demostrativo de beneficios de producción audiovisual para empresas">
+                        <!-- Es mejor poner el type aquí adentro -->
+                        <source type="video/webm">
+                    </video>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <x-detalle>
         <x-slot name="portafolioImg">
-            <img src="{{asset('/img/3.svg')}}" class="base mostrar" alt="portafolio de diseño web">
-            <img src="{{asset('/img/2.svg')}}" class="middle mostrar" alt="portafolio de diseño web">
-            <img src="{{asset('/img/port.svg')}}" class="up mostrar" alt="portafolio de diseño web">
+            <img src="{{ asset('/img/3.svg') }}" class="base mostrar" alt="portafolio de diseño web">
+            <img src="{{ asset('/img/2.svg') }}" class="middle mostrar" alt="portafolio de diseño web">
+            <img src="{{ asset('/img/port.svg') }}" class="up mostrar" alt="portafolio de diseño web">
         </x-slot>
         <div class="contenido_espacio">
             <x-slot name="titularServicios">
                 <span class="darktxt"> Diseñamos y desarrollamos páginas web que atrapan</span>
             </x-slot>
             <x-slot name="parrafoServicios">
-                El contenido, tiempo de retención y de carga son aspectos clave para el posicionamiento de tu empresa. Nos encargamos de usar las mejores prácticas para que puedas lograr tus objetivos mensuales.
+                El contenido, tiempo de retención y de carga son aspectos clave para el posicionamiento de tu empresa.
+                Nos encargamos de usar las mejores prácticas para que puedas lograr tus objetivos mensuales.
             </x-slot>
             <x-slot name="botonServicios">
                 <a href="https://wa.me/+529991460310" class="btn-servicios">Cotizar mi proyecto por WhatsApp</a>
@@ -66,6 +90,6 @@
         </x-slot>
     </x-cta>
     <x-validacion>
-       
+
     </x-validacion>
 </x-layouts.guest>
