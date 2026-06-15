@@ -23,6 +23,10 @@ Route::get ('/', [PageController::class, 'index'])->name("home");
 
 Route::get('/servicios', [Pagecontroller::class, 'servicios'])->name('servicios');
 
+// intencion amplia
+
+Route::get('/servicios/diseno-web-para-inmobiliarias', [Pagecontroller::class, 'inmobiliarias'])->name('inmobiliarias');
+
 Route::get('/marketing-digital', [PageController::class, 'marketing'])->name('marketing');
 Route::get('/productos-digitales', [PageController::class, 'productos'])->name('productos');
 

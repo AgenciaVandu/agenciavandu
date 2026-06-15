@@ -13,6 +13,9 @@ class PageController extends Controller
     public function servicios () {
         return view ('servicios');
     }
+    public function inmobiliarias () {
+        return view ('inmobiliarias');
+    }
 
     public function marketing() {
         return view('construccion');

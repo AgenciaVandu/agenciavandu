@@ -1,10 +1,10 @@
 @push ('estilos')
 @vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/servicios.scss', 'resources/js/app.js', 'resources/js/observer.js', 'resources/js/portafolio.js', 'resources/js/diseno.js' ])
 @endpush
-<x-layouts.guest titulo="Diseño Web Profesional y Desarrollo a la Medida" meta-description="Somos una agencia de desarrollo que utiliza la tecnología a tu favor para elevar la experiencia de atención a clientes y obtener leads de manera sostenida y eficiente.">
+<x-layouts.guest titulo="Diseño Web para Inmobiliarias y Bienes Raíces" meta-description="Desarrollo de páginas web para inmobiliarias y brokers. Sitios autoadministrables con filtros avanzados, mapas y optimización SEO en Mérida.">
     <x-header>
         <x-slot name="header">
-            <h1>Conectamos tecnología y estrategia para generar leads de alto impacto</h1>
+            <h1>Páginas Web para Inmobiliarias: Diseñadas para Vender y Captar Propiedades</h1>
         </x-slot>
         <x-slot name="parrafo">
             <p class="darktxt">Somos una agencia de desarrollo web que utiliza la tecnología a tu favor para elevar la experiencia de atención a clientes y obtener leads de manera sostenida y eficiente.</p>
@@ -13,11 +13,7 @@
     <section class="mb-5">
         <x-clientes></x-clientes>
     </section>
-    <section class="intro">
-        <div class="container text-center">
-            <div class="intro_contenido"></div>
-        </div>
-    </section>
+   
     <section class="extracto">
         <div class="container">
             <p class="darktxt">Un sitio web debería ser más que un elemento estático, debe ser una entidad dinámica en constante evolución, perfectamente alineada a la identidad y los objetivos de tu marca. Creamos potentes sistemas diseñados para adaptarse y crecer.</p>
@@ -46,18 +42,17 @@
     </x-detalle>
     <x-quehacemos>
         <x-slot name="quehacemos">
-            <h1>¿Qué hacemos?</h1>
-            <p>Llevamos tu proyecto de 0 a 100, preparamos todo desde la estrategia inicial hasta el post - lanzamiento
-                y mantenimiento.</p>
+            <h2>¿Qué hacemos por tu negocio de Bienes Raíces?</h2>
+            <p>Llevamos tu plataforma inmobiliaria de 0 a 100. Nos encargamos de preparar absolutamente todo, creamos herramientas intuitivas tanto para los usuarios que buscan su próximo hogar como para tus asesores encargados de gestionar el inventario de preventas, departamentos y terrenos.</p>
         </x-slot>
         <x-slot name="listaUno">
             <li>
-                <span>Research & Análisis</span>
+                <span>Research & Análisis de Mercado</span>
             </li>
-            <li><span>Estrategia web</span></li>
-            <li><span>Search Optimization (SEO)</span></li>
-            <li><span>Desarrollo Front-end</span></li>
-            <li><span>Desarrollo Back-end</span></li>
+            <li><span>Eustructura y Estrategia UX/UI</span></li>
+            <li><span>earch Optimization (SEO Inmobiliario)</span></li>
+            <li><span>Desarrollo Front-end Adaptable</span></li>
+            <li><span>Desarrollo Back-end y Sistemas Dinámicos</span></li>
         </x-slot>
     </x-quehacemos>
     <x-cta>
