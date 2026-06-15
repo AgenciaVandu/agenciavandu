@@ -7,7 +7,7 @@
             <h1>Conectamos tecnología y estrategia para generar leads de alto impacto</h1>
         </x-slot>
         <x-slot name="parrafo">
-            <p class="darktxt">Somos una agencia de desarrollo web que utiliza la tecnología a tu favor para elevar la experiencia de atención a clientes y obtener leads de manera sostenida y eficiente.</p>
+            <p class="darktxt">Creamos sitios web desde cero, con código limpio y veloces. Nada de plantillas lentas e idénticas que ahuyentan a tus clientes.</p>
         </x-slot>
     </x-header>
     <section class="mb-5">
@@ -40,7 +40,7 @@
                 El contenido, tiempo de retención y de carga son aspectos clave para el posicionamiento de tu empresa. Nos encargamos de usar las mejores prácticas para que puedas lograr tus objetivos mensuales.
             </x-slot>
             <x-slot name="botonServicios">
-                <a href="{{route('cotizar')}}" class="btn-servicios">Cotizar proyecto</a>
+                <a href="https://wa.me/+529991460310" class="btn-servicios">Cotizar mi proyecto por WhatsApp</a>
             </x-slot>
         </div>
     </x-detalle>
