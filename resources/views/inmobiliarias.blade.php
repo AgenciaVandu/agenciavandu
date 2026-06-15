@@ -7,7 +7,7 @@
             <h1>Páginas Web para Inmobiliarias: <br> Diseñadas para captar leads</h1>
         </x-slot>
         <x-slot name="parrafo">
-            <p class="darktxt">Somos una agencia de desarrollo web que utiliza la tecnología a tu favor para elevar la experiencia de atención a clientes y obtener leads de manera sostenida y eficiente.</p>
+            <p class="darktxt">Desarrollamos plataformas web de alto rendimiento exclusivas para inmobiliarias, desarrolladores y brokers. Integramos sistemas dinámicos para elevar la experiencia de atención y obtener leads de manera sostenida y eficiente en el mercado de bienes raíces.</p>
         </x-slot>
     </x-header>
     <section class="mb-5">
@@ -49,8 +49,8 @@
             <li>
                 <span>Research & Análisis de Mercado</span>
             </li>
-            <li><span>Eustructura y Estrategia UX/UI</span></li>
-            <li><span>earch Optimization (SEO Inmobiliario)</span></li>
+            <li><span>Estructura y Estrategia UX/UI</span></li>
+            <li><span>Search Optimization (SEO Inmobiliario)</span></li>
             <li><span>Desarrollo Front-end Adaptable</span></li>
             <li><span>Desarrollo Back-end y Sistemas Dinámicos</span></li>
         </x-slot>
