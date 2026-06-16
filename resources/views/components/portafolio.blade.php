@@ -11,8 +11,8 @@
             </video>
         </div>
         <div class="item">
-            <video width="208" height="260" autoplay loop muted alt="Portafolio vandu">
-                <source playsinline loop webkit-playsinline preload="metadata" src="{{asset('/img/portafolio/web/rewear.mov')}}" autoplay type="video/mp4">
+            <video playsinline loop webkit-playsinline preload="metadata" width="208" height="260" autoplay loop muted alt="Portafolio vandu">
+                <source src="{{asset('/img/portafolio/web/rewear.mov')}}"  type="video/mp4">
             </video>
         </div>
         <div class="item">

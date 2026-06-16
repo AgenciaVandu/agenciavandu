@@ -36,7 +36,7 @@
                      <a href="https://wa.me/+529991460310" class="btn-visuales">Cotizar por WhatsApp</a>
                 </div>
                 <div class="col-lg-6 col-md-12 col-sm-12 text-center pt-5 pb-3">
-                    <video id="lazy-video" controls playsinline loop muted webkit-playsinline preload="none"
+                    <video id="lazy-video" playsinline loop muted webkit-playsinline preload="none"
                         data-src="{{ asset('/video/demo-reel1.webm') }}" height="auto" width="100%" class="up-a mostrar"
                         alt="Demo reel agencia Vandu"
                         title="Video demostrativo de beneficios de producción audiovisual para empresas">
