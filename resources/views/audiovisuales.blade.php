@@ -76,7 +76,7 @@
             <img loading="lazy" src="{{ asset('/img/2.svg') }}" class="middle mostrar"
                 alt="Demo reel agencia Vandu">
             <video id="lazy-video" controls playsinline loop muted webkit-playsinline preload="none"
-                data-src="{{ asset('/video/demo-reel.webm') }}" height="350" width="auto" class="up-a mostrar"
+                data-src="{{ asset('/video/demo-reel.webm') }}" height="auto" width="200" class="up-a mostrar"
                 alt="Demo reel agencia Vandu"
                 title="Video demostrativo de beneficios de producción audiovisual para empresas">
                 <!-- Es mejor poner el type aquí adentro -->
