@@ -153,7 +153,7 @@
 
 <main class="doc">
     <header class="hdr">
-        <img src="/img/logo-vandu-blanco.svg" alt="Agencia Vandu" width="112" height="36">
+        <x-logo-vandu width="112" height="36" />
         <div class="emisor">
             @if($p->emisor_nombre)<b>{{ $p->emisor_nombre }}</b><br>@endif
             @if($p->emisor_telefono)<b><a href="tel:{{ preg_replace('/\D/', '', $p->emisor_telefono) }}">{{ $p->emisor_telefono }}</a></b><br>@endif

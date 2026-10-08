@@ -45,7 +45,7 @@
 <nav class="v-nav py-2 mb-4">
     <div class="container d-flex align-items-center gap-3 flex-wrap">
         <a href="{{ route('admin.presupuestos.index') }}" class="me-2 py-1">
-            <img src="/img/logo-vandu-blanco.svg" alt="Vandu" height="28">
+            <x-logo-vandu alt="Vandu" height="28" />
         </a>
         <a class="nav-link {{ request()->routeIs('admin.presupuestos.*') ? 'active' : '' }}" href="{{ route('admin.presupuestos.index') }}">Cotizaciones</a>
         <a class="nav-link {{ request()->routeIs('admin.clientes.*') ? 'active' : '' }}" href="{{ route('admin.clientes.index') }}">Clientes</a>

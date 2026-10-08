@@ -68,13 +68,13 @@
 <body>
 
 <aside class="marca">
-    <img src="/img/logo-vandu-blanco.svg" alt="Agencia Vandu" width="128" height="41">
+    <x-logo-vandu width="128" height="41" />
     <div>
         <h1>Clientes y cotizaciones</h1>
         <p>Da de alta clientes, arma sus cotizaciones y compárteles un enlace con vigencia.</p>
     </div>
     <span class="pie">agenciavandu.com</span>
-    <img class="eco" src="/img/icono-vandu.svg" alt="" aria-hidden="true">
+    <x-logo-vandu archivo="icono-vandu.svg" alt="" class="eco" aria-hidden="true" />
 </aside>
 
 <main class="form">
