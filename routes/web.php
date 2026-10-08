@@ -4,6 +4,8 @@ use App\Http\Controllers\ContactanosController;
 use App\Mail\ContactanosMailable;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\CotizarController;
+use App\Http\Controllers\Admin;
+use App\Http\Controllers\PresupuestoPublicoController;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
@@ -42,3 +44,34 @@ Route::post('/mensaje-enviado', [CotizarController::class, 'store'])->name('coti
 Route::get('/admin/cotizaciones', [CotizarController::class, 'index'])
     ->middleware('admin.vandu') 
     ->name('cotizar.index');
+
+/*
+|--------------------------------------------------------------------------
+| Panel de clientes y cotizaciones (presupuestos)
+|--------------------------------------------------------------------------
+*/
+// Inicio de sesión del panel
+Route::middleware('guest')->group(function () {
+    Route::get('/admin/login', [Admin\LoginController::class, 'show'])->name('login');
+    Route::post('/admin/login', [Admin\LoginController::class, 'login'])->name('login.entrar');
+});
+Route::post('/admin/logout', [Admin\LoginController::class, 'logout'])->middleware('admin.vandu')->name('logout');
+
+Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(function () {
+    Route::get('/', fn () => redirect()->route('admin.presupuestos.index'));
+
+    Route::resource('clientes', Admin\ClienteController::class);
+
+    Route::resource('presupuestos', Admin\PresupuestoController::class)
+        ->except('show')
+        ->parameters(['presupuestos' => 'presupuesto']);
+    Route::post('presupuestos/{presupuesto}/duplicar', [Admin\PresupuestoController::class, 'duplicar'])->name('presupuestos.duplicar');
+    Route::patch('presupuestos/{presupuesto}/rapido', [Admin\PresupuestoController::class, 'rapido'])->name('presupuestos.rapido');
+    Route::get('presupuestos/{presupuesto}/pdf', [Admin\PresupuestoController::class, 'pdf'])->name('presupuestos.pdf');
+});
+
+// Vista pública para el cliente (enlace con token, vigente hasta la fecha de la cotización)
+Route::get('/cotizacion/{token}', [PresupuestoPublicoController::class, 'show'])
+    ->where('token', '[A-Za-z0-9]{32}')->name('presupuesto.publico');
+Route::get('/cotizacion/{token}/descargar', [PresupuestoPublicoController::class, 'descargar'])
+    ->where('token', '[A-Za-z0-9]{32}')->middleware('throttle:30,1')->name('presupuesto.descargar');

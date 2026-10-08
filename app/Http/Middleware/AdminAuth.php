@@ -4,24 +4,19 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Protege el panel: si no hay sesión iniciada, manda a /admin/login
+ * y después regresa a la página que se intentaba abrir.
+ */
 class AdminAuth
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
-    public function handle($request, \Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
-        // Define aquí tu usuario y contraseña
-        $usuario = 'alvarVandu';
-        $password = '22$d9%/:l:O#J*Iiw'; // 
-
-        if ($request->getUser() != $usuario || $request->getPassword() != $password) {
-            $headers = ['WWW-Authenticate' => 'Basic realm="alvarVandu"'];
-            return response('No autorizado.', 401, $headers);
+        if (! Auth::check()) {
+            return redirect()->guest(route('login'));
         }
 
         return $next($request);

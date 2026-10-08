@@ -6,9 +6,18 @@ use Illuminate\Http\Request;
 use App\Mail\CotizacionRecibida;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Http; // <--- ESTA LÍNEA ES LA QUE FALTA
+use App\Models\Cotizacion;
 
 class CotizarController extends Controller
 {
+    /** Listado de prospectos del formulario web (/admin/cotizaciones) */
+    public function index()
+    {
+        $cotizaciones = Cotizacion::latest()->get();
+
+        return view('admin.cotizaciones', compact('cotizaciones'));
+    }
+
     public function store(Request $request)
     {
         // 1. Validación
