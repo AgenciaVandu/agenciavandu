@@ -255,6 +255,11 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    // Menús dentro de tablas con scroll: que se dibujen por encima y no queden recortados
+    document.querySelectorAll('.table-responsive [data-bs-toggle="dropdown"]').forEach((b) => {
+        b.setAttribute('data-bs-popper-config', '{"strategy":"fixed"}');
+    });
+
     // Copiar enlaces al portapapeles: <button data-copiar="texto">
     document.addEventListener('click', async (e) => {
         const b = e.target.closest('[data-copiar]');
