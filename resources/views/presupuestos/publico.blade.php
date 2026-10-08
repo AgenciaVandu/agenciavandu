@@ -17,9 +17,9 @@
     <meta name="robots" content="noindex, nofollow">
     <title>{{ $p->titulo }} para {{ $p->cliente_empresa ?: $p->cliente_nombre }} | Agencia Vandu</title>
     <link rel="icon" href="/favi.svg" type="image/svg+xml">
-    <link rel="preload" href="/font/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{{ route('vandu.fuente') }}" as="font" type="font/woff2" crossorigin>
     <style>
-        @font-face { font-family: 'Geist'; src: url('/font/Geist-Variable.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
+        @font-face { font-family: 'Geist'; src: url('{{ route('vandu.fuente') }}') format('woff2'); font-weight: 100 900; font-display: swap; }
         :root {
             --ink: #13161D; --hdr: #242424; --mist: #F3F3F3; --line: #E3E4E8; --muted: #5d6270;
             --green: #00F385; --amber: #FFB020; --red: #E5484D; --paper: #fff;

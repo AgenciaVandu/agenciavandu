@@ -18,7 +18,7 @@ class Presupuesto extends Model
     ];
 
     public const MODOS_IVA = [
-        'mas_iva'    => 'Precios + IVA (como el formato original)',
+        'mas_iva'    => 'Precios + IVA',
         'desglosado' => 'Desglosar IVA y total',
         'sin_iva'    => 'Sin IVA',
     ];

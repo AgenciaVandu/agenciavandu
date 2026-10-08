@@ -1,3 +1,13 @@
+@php
+    $usuario = auth()->user();
+    $iniciales = collect(explode(' ', trim($usuario?->name ?? 'V')))->filter()->take(2)->map(fn ($p) => mb_substr($p, 0, 1))->join('');
+    $vigentesNav = \App\Models\Presupuesto::where('vigente_hasta', '>', now())->whereNotIn('estado', ['aceptada', 'rechazada'])->count();
+    $nav = [
+        ['ruta' => 'admin.resumen',             'activo' => 'admin.resumen',          'icono' => 'bi-grid-1x2',        'texto' => 'Resumen'],
+        ['ruta' => 'admin.presupuestos.index',  'activo' => 'admin.presupuestos.*',   'icono' => 'bi-file-earmark-text','texto' => 'Cotizaciones', 'cuenta' => $vigentesNav],
+        ['ruta' => 'admin.clientes.index',      'activo' => 'admin.clientes.*',       'icono' => 'bi-people',          'texto' => 'Clientes'],
+    ];
+@endphp
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -6,72 +16,244 @@
     <meta name="robots" content="noindex, nofollow">
     <title>@yield('titulo', 'Panel') · Vandu</title>
     <link rel="icon" href="/favi.svg" type="image/svg+xml">
+    <link rel="preload" href="{{ route('vandu.fuente') }}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
     <style>
-        @font-face { font-family: 'Geist'; src: url('/font/Geist-Variable.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
+        @font-face { font-family: 'Geist'; src: url('{{ route('vandu.fuente') }}') format('woff2'); font-weight: 100 900; font-display: swap; }
+
+        /* ===================== Tokens ===================== */
         :root {
-            --v-ink: #13161D; --v-green: #00F385; --v-green-dark: #00c96e; --v-mist: #F3F3F3; --v-gray: #F9FAFC;
-            --bs-body-font-family: 'Geist', system-ui, sans-serif; --bs-body-color: #13161D;
-            --bs-link-color-rgb: 19,22,29; --bs-border-radius: .5rem;
+            --ink: #13161D;  --ink-2: #1B1F28; --ink-3: #262B36; --ink-line: #2C313D;
+            --canvas: #F4F5F7; --surface: #FFFFFF; --sunken: #F8F9FA;
+            --line: #E5E7EB; --line-strong: #D5D8DE;
+            --text: #13161D; --text-2: #454A57; --muted: #6B7080; --faint: #9AA0AC;
+            --green: #00F385; --green-ink: #047A4B; --green-soft: #E3FBEF;
+            --blue: #2557D6; --blue-soft: #E8EEFC;
+            --amber: #A35A00; --amber-soft: #FFF3DD;
+            --red: #C2322B; --red-soft: #FDECEA;
+            --radius: 12px; --radius-sm: 8px;
+            --side: 252px;
+
+            --bs-body-font-family: 'Geist', system-ui, -apple-system, sans-serif;
+            --bs-body-color: var(--text); --bs-body-bg: var(--canvas); --bs-body-font-size: .9375rem;
+            --bs-border-color: var(--line); --bs-border-radius: var(--radius-sm);
+            --bs-link-color-rgb: 19,22,29; --bs-link-hover-color-rgb: 0,0,0;
+            --bs-emphasis-color: var(--text); --bs-secondary-color: var(--muted);
         }
-        body { background: var(--v-gray); }
+        body { -webkit-font-smoothing: antialiased; }
         .num { font-variant-numeric: tabular-nums; }
-        .v-nav { background: var(--v-ink); }
-        .v-nav .nav-link { color: #c9ccd3; border-radius: .4rem; padding: .4rem .8rem; }
-        .v-nav .nav-link:hover { color: #fff; }
-        .v-nav .nav-link.active { color: var(--v-ink); background: var(--v-green); }
-        .btn-v { background: var(--v-ink); color: #fff; border: 1px solid var(--v-ink); }
-        .btn-v:hover, .btn-v:focus { background: #000; color: var(--v-green); }
-        .btn-verde { background: var(--v-green); color: var(--v-ink); border: 1px solid var(--v-green); font-weight: 600; }
-        .btn-verde:hover { background: var(--v-green-dark); border-color: var(--v-green-dark); }
-        .card { border-color: #e7e8ec; }
-        .card-header { background: #fff; font-weight: 600; }
-        .form-label { font-size: .85rem; color: #4a4f5c; margin-bottom: .25rem; }
-        .form-control:focus, .form-select:focus { border-color: var(--v-ink); box-shadow: 0 0 0 .2rem rgba(0,243,133,.35); }
-        .table > :not(caption) > * > * { padding: .7rem .75rem; }
-        .vig-ok { color: #087a46; } .vig-pronto { color: #a15c00; } .vig-vencida { color: #b42318; }
-        .estado { font-size: .75rem; padding: .25em .6em; border-radius: 99px; font-weight: 600; }
-        .estado-borrador { background: #eceef2; color: #4a4f5c; }
-        .estado-enviada { background: #e5efff; color: #1d4ed8; }
-        .estado-aceptada { background: #d9fbe9; color: #087a46; }
-        .estado-rechazada { background: #fde8e8; color: #b42318; }
+        :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+        /* ===================== Shell ===================== */
+        .side { position: fixed; inset: 0 auto 0 0; width: var(--side); background: var(--ink); color: #C9CDD6;
+                display: flex; flex-direction: column; z-index: 1040; overflow: hidden; }
+        .side-brand { padding: 22px 22px 18px; display: flex; align-items: center; justify-content: space-between; }
+        .side-brand img { height: 26px; width: auto; }
+        .side-cta { margin: 6px 16px 18px; }
+        .side-cta a { display: flex; align-items: center; justify-content: center; gap: 8px; height: 40px; border-radius: 10px;
+                      background: var(--green); color: var(--ink); font-weight: 600; font-size: 14px; text-decoration: none; }
+        .side-cta a:hover { background: #2bffa0; }
+        .side-label { padding: 0 22px 8px; font-size: 12px; color: #727887; }
+        .side nav a { position: relative; display: flex; align-items: center; gap: 12px; margin: 2px 12px; padding: 9px 12px;
+                      border-radius: 8px; color: #C9CDD6; text-decoration: none; font-size: 14.5px; }
+        .side nav a i { font-size: 17px; width: 18px; text-align: center; color: #8D93A1; }
+        .side nav a:hover { background: var(--ink-2); color: #fff; }
+        .side nav a.activo { background: var(--ink-3); color: #fff; }
+        .side nav a.activo i { color: var(--green); }
+        .side nav a.activo::before { content: ''; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--green); }
+        .side nav .cuenta { margin-left: auto; font-size: 12px; padding: 1px 8px; border-radius: 99px; background: var(--ink-line); color: #E4E6EB; }
+        .side-foot { margin-top: auto; padding: 14px 16px; border-top: 1px solid var(--ink-line); display: flex; align-items: center; gap: 10px; position: relative; z-index: 1; }
+        .side-foot .yo { min-width: 0; flex: 1; line-height: 1.25; }
+        .side-foot .yo b { display: block; color: #fff; font-weight: 600; font-size: 14px; }
+        .side-foot .yo span { display: block; font-size: 12.5px; color: #8D93A1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .side-foot button { border: 0; background: transparent; color: #8D93A1; width: 34px; height: 34px; border-radius: 8px; }
+        .side-foot button:hover { background: var(--ink-2); color: #fff; }
+        .side-eco { position: absolute; right: -46px; bottom: 40px; width: 190px; opacity: .05; pointer-events: none; }
+
+        .avatar { flex: none; width: 34px; height: 34px; border-radius: 50%; display: inline-grid; place-items: center;
+                  font-size: 13px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+        .avatar.av-yo { background: var(--green); color: var(--ink); }
+
+        .main { margin-left: var(--side); min-height: 100vh; }
+        .page { max-width: 1240px; margin: 0 auto; padding: 32px 36px 64px; }
+        .page-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+        .page-head h1 { font-size: 26px; font-weight: 600; letter-spacing: -.02em; margin: 0; }
+        .page-head .sub { color: var(--muted); margin: 4px 0 0; }
+        .migas { font-size: 13.5px; color: var(--muted); margin-bottom: 6px; display: flex; gap: 6px; align-items: center; }
+        .migas a { color: var(--muted); text-decoration: none; }
+        .migas a:hover { color: var(--text); }
+
+        .topbar-m { display: none; }
+
+        /* ===================== Componentes ===================== */
+        .btn { font-weight: 500; border-radius: var(--radius-sm); padding: .5rem .95rem; font-size: 14.5px; }
+        .btn-sm { padding: .3rem .65rem; font-size: 13.5px; }
+        .btn-primario { background: var(--ink); color: #fff; border: 1px solid var(--ink); }
+        .btn-primario:hover, .btn-primario:focus { background: #000; color: #fff; border-color: #000; }
+        .btn-acento { background: var(--green); color: var(--ink); border: 1px solid var(--green); font-weight: 600; }
+        .btn-acento:hover { background: #2bffa0; border-color: #2bffa0; color: var(--ink); }
+        .btn-borde { background: var(--surface); color: var(--text); border: 1px solid var(--line-strong); }
+        .btn-borde:hover { background: var(--sunken); border-color: #C3C7CF; color: var(--text); }
+        .btn-fantasma { background: transparent; color: var(--text-2); border: 1px solid transparent; }
+        .btn-fantasma:hover { background: #ECEEF1; color: var(--text); }
+        .btn-icono { width: 34px; height: 34px; padding: 0; display: inline-grid; place-items: center; }
+
+        .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+        .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+        .panel-head h2 { font-size: 15.5px; font-weight: 600; margin: 0; }
+        .panel-head .ayuda { font-size: 13px; color: var(--muted); }
+        .panel-body { padding: 20px; }
+
+        .form-label { font-size: 13.5px; font-weight: 500; color: var(--text-2); margin-bottom: 6px; }
+        .form-control, .form-select { background-color: var(--surface); border-color: var(--line-strong); border-radius: var(--radius-sm); padding: .55rem .8rem; font-size: 14.5px; }
+        .form-control::placeholder { color: var(--faint); }
+        .form-control[readonly] { background-color: var(--sunken); }
+        .form-control:focus, .form-select:focus { border-color: var(--ink); box-shadow: 0 0 0 3px rgba(19,22,29,.12); }
+        .input-group-text { background: var(--sunken); border-color: var(--line-strong); color: var(--muted); }
+        .form-check-input:checked { background-color: var(--ink); border-color: var(--ink); }
+        .form-check-input:focus { box-shadow: 0 0 0 3px rgba(19,22,29,.12); border-color: var(--ink); }
+
+        /* Tablas */
+        .tabla { width: 100%; margin: 0; border-collapse: separate; border-spacing: 0; }
+        .tabla th { font-size: 12.5px; font-weight: 500; color: var(--muted); padding: 11px 16px; background: var(--sunken);
+                    border-bottom: 1px solid var(--line); white-space: nowrap; }
+        .tabla td { padding: 14px 16px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+        .tabla tbody tr:last-child td { border-bottom: 0; }
+        .tabla tbody tr { transition: background .12s; }
+        .tabla tbody tr:hover { background: #FAFBFC; }
+        .tabla .fila-link { color: inherit; text-decoration: none; }
+        .tabla .fila-link:hover .principal { text-decoration: underline; text-underline-offset: 3px; }
+        .principal { font-weight: 600; color: var(--text); }
+        .secundario { font-size: 13.5px; color: var(--muted); }
+        .persona { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .persona > div { min-width: 0; }
+
+        /* Estados y vigencia */
+        .estado { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; padding: 3px 10px 3px 8px; border-radius: 99px; white-space: nowrap; }
+        .estado::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+        .estado-borrador { background: #EEF0F3; color: #4E5463; }
+        .estado-enviada { background: var(--blue-soft); color: var(--blue); }
+        .estado-aceptada { background: var(--green-soft); color: var(--green-ink); }
+        .estado-rechazada { background: var(--red-soft); color: var(--red); }
+        .vig { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; white-space: nowrap; }
+        .vig-ok { color: var(--text-2); } .vig-ok i { color: var(--green-ink); }
+        .vig-pronto { color: var(--amber); }
+        .vig-vencida { color: var(--red); }
+
+        /* Filtros tipo segmento */
+        .segmento { display: inline-flex; background: #E9EBEE; border-radius: 10px; padding: 3px; gap: 2px; flex-wrap: wrap; }
+        .segmento a { padding: 6px 12px; border-radius: 8px; font-size: 14px; color: var(--text-2); text-decoration: none; display: inline-flex; gap: 6px; align-items: center; }
+        .segmento a:hover { color: var(--text); }
+        .segmento a.activo { background: var(--surface); color: var(--text); font-weight: 500; box-shadow: 0 1px 2px rgba(16,24,40,.08); }
+        .segmento .n { font-size: 12px; color: var(--muted); }
+
+        .buscador { position: relative; }
+        .buscador i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--faint); pointer-events: none; }
+        .buscador input { padding-left: 36px; min-width: 260px; background: var(--surface); }
+
+        .vacio { text-align: center; padding: 56px 24px; }
+        .vacio .ico { width: 52px; height: 52px; border-radius: 14px; background: var(--sunken); border: 1px solid var(--line); display: inline-grid; place-items: center; font-size: 22px; color: var(--muted); margin-bottom: 14px; }
+        .vacio h3 { font-size: 16px; font-weight: 600; margin: 0 0 4px; }
+        .vacio p { color: var(--muted); margin: 0 0 18px; }
+
+        .aviso { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 14.5px; }
+        .aviso-ok { background: var(--green-soft); color: var(--green-ink); border: 1px solid #BDF2D6; }
+        .aviso-error { background: var(--red-soft); color: var(--red); border: 1px solid #F6CFCB; }
+        .aviso-error ul { margin: 4px 0 0; padding-left: 18px; }
+
+        .dropdown-menu { border-color: var(--line); border-radius: 10px; box-shadow: 0 12px 32px rgba(16,24,40,.12); padding: 6px; font-size: 14px; }
+        .dropdown-item { border-radius: 6px; padding: 7px 10px; display: flex; align-items: center; gap: 10px; }
+        .dropdown-item i { color: var(--muted); width: 16px; }
+        .dropdown-item:active { background: var(--ink); }
+        .dropdown-item:active i { color: #fff; }
+        .dropdown-divider { margin: 6px 0; border-color: var(--line); }
+
+        .pagination { --bs-pagination-color: var(--text); --bs-pagination-active-bg: var(--ink); --bs-pagination-active-border-color: var(--ink); --bs-pagination-border-color: var(--line); }
         [x-cloak] { display: none !important; }
+        .d-grid { grid-template-columns: minmax(0, 1fr); }
+        .min-w-0 { min-width: 0; }
+
+        /* ===================== Móvil ===================== */
+        @media (max-width: 991.98px) {
+            .side { transform: translateX(-100%); transition: transform .2s ease; box-shadow: 0 0 40px rgba(0,0,0,.3); }
+            .side.abierta { transform: none; }
+            .velo { position: fixed; inset: 0; background: rgba(19,22,29,.45); z-index: 1035; }
+            .main { margin-left: 0; }
+            .topbar-m { display: flex; align-items: center; justify-content: space-between; gap: 12px; position: sticky; top: 0; z-index: 1030;
+                        background: var(--ink); padding: 10px 16px; }
+            .topbar-m img { height: 22px; }
+            .topbar-m button { border: 0; background: transparent; color: #fff; font-size: 22px; width: 40px; height: 40px; }
+            .page { padding: 22px 16px 48px; }
+            .buscador input { min-width: 0; width: 100%; }
+        }
+        @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
     </style>
     @stack('head')
 </head>
-<body>
-<nav class="v-nav py-2 mb-4">
-    <div class="container d-flex align-items-center gap-3 flex-wrap">
-        <a href="{{ route('admin.presupuestos.index') }}" class="me-2 py-1">
-            <x-logo-vandu alt="Vandu" height="28" />
-        </a>
-        <a class="nav-link {{ request()->routeIs('admin.presupuestos.*') ? 'active' : '' }}" href="{{ route('admin.presupuestos.index') }}">Cotizaciones</a>
-        <a class="nav-link {{ request()->routeIs('admin.clientes.*') ? 'active' : '' }}" href="{{ route('admin.clientes.index') }}">Clientes</a>
-        <a class="nav-link {{ request()->routeIs('cotizar.index') ? 'active' : '' }}" href="{{ route('cotizar.index') }}">Prospectos web</a>
-        <a href="{{ route('admin.presupuestos.create') }}" class="btn btn-verde btn-sm ms-auto"><i class="bi bi-plus-lg"></i> Nueva cotización</a>
+<body x-data="{ menu: false }" @keydown.escape="menu = false">
+
+<header class="topbar-m">
+    <button type="button" @click="menu = true" aria-label="Abrir menú"><i class="bi bi-list"></i></button>
+    <a href="{{ route('admin.resumen') }}"><x-logo-vandu alt="Vandu" height="22" /></a>
+    <a href="{{ route('admin.presupuestos.create') }}" class="btn btn-acento btn-sm btn-icono" aria-label="Nueva cotización"><i class="bi bi-plus-lg"></i></a>
+</header>
+<div class="velo" x-show="menu" x-cloak @click="menu = false"></div>
+
+<aside class="side" :class="{ abierta: menu }" aria-label="Navegación del panel">
+    <div class="side-brand">
+        <a href="{{ route('admin.resumen') }}"><x-logo-vandu alt="Vandu" /></a>
+        <button type="button" class="btn btn-sm text-white d-lg-none" @click="menu = false" aria-label="Cerrar menú"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="side-cta">
+        <a href="{{ route('admin.presupuestos.create') }}"><i class="bi bi-plus-lg"></i> Nueva cotización</a>
+    </div>
+    <div class="side-label">Panel</div>
+    <nav>
+        @foreach($nav as $item)
+            <a href="{{ route($item['ruta']) }}" class="{{ request()->routeIs($item['activo']) ? 'activo' : '' }}"
+               @if(request()->routeIs($item['activo'])) aria-current="page" @endif>
+                <i class="bi {{ $item['icono'] }}"></i> {{ $item['texto'] }}
+                @if(! empty($item['cuenta']))<span class="cuenta num" title="Cotizaciones vigentes">{{ $item['cuenta'] }}</span>@endif
+            </a>
+        @endforeach
+    </nav>
+    <div class="side-label mt-4">Sitio</div>
+    <nav>
+        <a href="/" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> agenciavandu.com</a>
+    </nav>
+
+    <x-logo-vandu archivo="icono-vandu.svg" alt="" class="side-eco" aria-hidden="true" />
+
+    <div class="side-foot">
+        <span class="avatar av-yo">{{ $iniciales }}</span>
+        <div class="yo"><b>{{ $usuario?->name }}</b><span>{{ $usuario?->email }}</span></div>
         <form method="post" action="{{ route('logout') }}" class="m-0">
             @csrf
-            <button class="btn btn-sm btn-link nav-link" title="{{ auth()->user()?->email }}"><i class="bi bi-box-arrow-right"></i> Salir</button>
+            <button type="submit" title="Cerrar sesión" aria-label="Cerrar sesión"><i class="bi bi-box-arrow-right"></i></button>
         </form>
     </div>
-</nav>
+</aside>
 
-<main class="container pb-5">
-    @if(session('ok'))
-        <div class="alert alert-success d-flex align-items-center gap-2" role="status"><i class="bi bi-check-circle"></i> {{ session('ok') }}</div>
-    @endif
-    @if($errors->any())
-        <div class="alert alert-danger" role="alert">
-            <strong>Revisa estos campos:</strong>
-            <ul class="mb-0">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
-        </div>
-    @endif
+<div class="main">
+    <main class="page">
+        @if(session('ok'))
+            <div class="aviso aviso-ok" role="status"><i class="bi bi-check-circle-fill"></i> {{ session('ok') }}</div>
+        @endif
+        @if($errors->any())
+            <div class="aviso aviso-error" role="alert">
+                <i class="bi bi-exclamation-circle-fill align-self-start mt-1"></i>
+                <div><strong>Revisa estos campos</strong>
+                    <ul>@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>
+            </div>
+        @endif
 
-    @yield('contenido')
-</main>
+        @yield('contenido')
+    </main>
+</div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // Copiar enlaces al portapapeles: <button data-copiar="texto">
     document.addEventListener('click', async (e) => {

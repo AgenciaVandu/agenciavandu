@@ -6,9 +6,9 @@
     <meta name="robots" content="noindex, nofollow">
     <title>Iniciar sesión · Vandu</title>
     <link rel="icon" href="/favi.svg" type="image/svg+xml">
-    <link rel="preload" href="/font/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{{ route('vandu.fuente') }}" as="font" type="font/woff2" crossorigin>
     <style>
-        @font-face { font-family: 'Geist'; src: url('/font/Geist-Variable.woff2') format('woff2'); font-weight: 100 900; font-display: swap; }
+        @font-face { font-family: 'Geist'; src: url('{{ route('vandu.fuente') }}') format('woff2'); font-weight: 100 900; font-display: swap; }
         :root { --ink: #13161D; --ink-2: #1d212b; --green: #00F385; --line: #E3E4E8; --muted: #5d6270; --red: #b42318; }
         * { box-sizing: border-box; }
         body { margin: 0; min-height: 100vh; font-family: 'Geist', system-ui, sans-serif; color: var(--ink);

@@ -41,15 +41,20 @@ Route::get('/alianzas-de-diseno', [PageController::class, 'alianzas'])->name('al
 Route::get('/cotizar', [ContactanosController::class, 'index'])->name('cotizar');
 Route::post('/mensaje-enviado', [CotizarController::class, 'store'])->name('cotizar.store');
 
-Route::get('/admin/cotizaciones', [CotizarController::class, 'index'])
-    ->middleware('admin.vandu') 
-    ->name('cotizar.index');
+// La antigua lista de prospectos ya no existe: manda al panel
+Route::redirect('/admin/cotizaciones', '/admin');
 
 /*
 |--------------------------------------------------------------------------
 | Panel de clientes y cotizaciones (presupuestos)
 |--------------------------------------------------------------------------
 */
+// Tipografía del panel y de la vista del cliente, servida desde resources/ (no depende de public/)
+Route::get('/vandu-fuente.woff2', fn () => response()->file(resource_path('fonts/Geist-Variable.woff2'), [
+    'Content-Type'  => 'font/woff2',
+    'Cache-Control' => 'public, max-age=31536000, immutable',
+]))->name('vandu.fuente');
+
 // Inicio de sesión del panel
 Route::middleware('guest')->group(function () {
     Route::get('/admin/login', [Admin\LoginController::class, 'show'])->name('login');
@@ -58,7 +63,7 @@ Route::middleware('guest')->group(function () {
 Route::post('/admin/logout', [Admin\LoginController::class, 'logout'])->middleware('admin.vandu')->name('logout');
 
 Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(function () {
-    Route::get('/', fn () => redirect()->route('admin.presupuestos.index'));
+    Route::get('/', [Admin\ResumenController::class, 'index'])->name('resumen');
 
     Route::resource('clientes', Admin\ClienteController::class);
 

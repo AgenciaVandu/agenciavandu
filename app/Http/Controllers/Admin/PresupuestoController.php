@@ -24,14 +24,24 @@ class PresupuestoController extends Controller
                 ->where('folio', 'like', "%$q%")
                 ->orWhere('cliente_nombre', 'like', "%$q%")
                 ->orWhere('cliente_empresa', 'like', "%$q%")))
-            ->when($filtro === 'vigentes', fn ($w) => $w->where('vigente_hasta', '>', now()))
+            ->when($filtro === 'vigentes', fn ($w) => $w->where('vigente_hasta', '>', now())->whereNotIn('estado', ['aceptada', 'rechazada']))
             ->when($filtro === 'vencidas', fn ($w) => $w->where('vigente_hasta', '<=', now()))
+            ->when($filtro === 'por_vencer', fn ($w) => $w->whereBetween('vigente_hasta', [now(), now()->addHours(72)])
+                ->whereNotIn('estado', ['aceptada', 'rechazada']))
             ->when(array_key_exists($filtro, Presupuesto::ESTADOS), fn ($w) => $w->where('estado', $filtro))
             ->latest()
             ->paginate(25)
             ->withQueryString();
 
-        return view('admin.presupuestos.index', compact('presupuestos', 'q', 'filtro'));
+        $conteos = [
+            'vigentes'   => Presupuesto::where('vigente_hasta', '>', now())->whereNotIn('estado', ['aceptada', 'rechazada'])->count(),
+            'por_vencer' => Presupuesto::whereBetween('vigente_hasta', [now(), now()->addHours(72)])->whereNotIn('estado', ['aceptada', 'rechazada'])->count(),
+            'vencidas'   => Presupuesto::where('vigente_hasta', '<=', now())->count(),
+            'aceptada'   => Presupuesto::where('estado', 'aceptada')->count(),
+            'todas'      => Presupuesto::count(),
+        ];
+
+        return view('admin.presupuestos.index', compact('presupuestos', 'q', 'filtro', 'conteos'));
     }
 
     public function create(Request $request)

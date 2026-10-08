@@ -18,10 +18,83 @@
         'clienteNombre'   => old('cliente_nombre', $p->cliente_nombre),
         'clienteEmpresa'  => old('cliente_empresa', $p->cliente_empresa),
         'clientes'        => $clientes->keyBy('id'),
+        'estadoSel'       => old('estado', $p->estado),
     ];
     $wa = $p->cliente?->whatsapp;
 @endphp
 @section('titulo', $nuevo ? 'Nueva cotización' : $p->folio)
+
+@push('head')
+<style>
+    .editor { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start; }
+    .lateral { position: sticky; top: 24px; display: grid; gap: 16px; }
+    .titulo-doc { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+    /* Conceptos como tabla editable */
+    .conceptos-head, .concepto { display: grid; grid-template-columns: 22px minmax(0, 1fr) 76px 136px 104px 34px; gap: 12px; align-items: start; }
+    .conceptos-head { padding: 10px 20px; background: var(--sunken); border-bottom: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
+    .concepto { padding: 14px 20px; border-bottom: 1px solid var(--line); }
+    .concepto .n { padding-top: 9px; color: var(--faint); font-size: 13px; }
+    .concepto .costo { padding-top: 9px; text-align: right; font-weight: 500; }
+    .concepto .ops { display: flex; flex-direction: column; gap: 2px; }
+    .concepto textarea { resize: vertical; min-height: 42px; }
+    .agregar { display: flex; align-items: center; gap: 8px; width: 100%; padding: 12px 20px; border: 0; background: transparent; color: var(--text-2); font-weight: 500; text-align: left; }
+    .agregar:hover { background: var(--sunken); color: var(--text); }
+    .totales { padding: 16px 20px 20px; border-top: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: end; }
+    .totales dl { margin: 0; }
+    .totales dl div { display: flex; justify-content: space-between; padding: 5px 0; }
+    .totales dt { font-weight: 400; color: var(--muted); }
+    .totales dd { margin: 0; }
+    .totales .gran { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 10px; font-size: 18px; font-weight: 600; }
+    .totales .gran dt { color: var(--text); font-weight: 600; }
+
+    /* Consideraciones */
+    .seccion-c { border: 1px solid var(--line); border-radius: 10px; background: var(--sunken); }
+    .seccion-c + .seccion-c { margin-top: 12px; }
+    .seccion-c .top { display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 14px; }
+    .seccion-c .num-s { width: 26px; height: 26px; border-radius: 7px; background: var(--surface); border: 1px solid var(--line); display: grid; place-items: center; font-size: 13px; font-weight: 600; flex: none; }
+    .seccion-c .top input { font-weight: 600; background: var(--surface); }
+    .seccion-c .items { padding: 0 14px 12px 50px; }
+    .seccion-c .item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .seccion-c .item::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--faint); flex: none; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chips button { border: 1px solid var(--line-strong); background: var(--surface); border-radius: 99px; padding: 4px 12px; font-size: 13.5px; color: var(--text-2); }
+    .chips button:hover { border-color: var(--ink); color: var(--text); }
+    .restante { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 10px 12px; border-radius: 8px; font-size: 14px; background: var(--sunken); }
+    .restante.vig-pronto { background: var(--amber-soft); }
+    .restante.vig-vencida { background: var(--red-soft); }
+    .restante.vig-ok { color: var(--green-ink); background: var(--green-soft); }
+
+    .estados { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .estados label { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--line-strong); border-radius: 8px; cursor: pointer; font-size: 14px; }
+    .estados input { position: absolute; opacity: 0; pointer-events: none; }
+    .estados label:has(input:checked) { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+    .estados label:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; }
+    .estados .pt { width: 8px; height: 8px; border-radius: 50%; }
+
+    .enlace { display: flex; gap: 6px; }
+    .enlace input { font-size: 13px; background: var(--sunken); }
+    .total-lateral { font-size: 28px; font-weight: 600; letter-spacing: -.02em; }
+
+    .colapsable summary { list-style: none; cursor: pointer; }
+    .colapsable summary::-webkit-details-marker { display: none; }
+    .colapsable summary .bi-chevron-down { transition: transform .15s; }
+    .colapsable[open] summary .bi-chevron-down { transform: rotate(180deg); }
+    .colapsable:not([open]) .panel-head { border-bottom: 0; }
+
+    @media (max-width: 1199.98px) { .editor { grid-template-columns: 1fr; } .lateral { position: static; } }
+    @media (max-width: 767.98px) {
+        .conceptos-head { display: none; }
+        .concepto { grid-template-columns: 1fr 1fr; }
+        .concepto .n { display: none; }
+        .concepto .desc { grid-column: 1 / -1; }
+        .concepto .costo { grid-column: 1; text-align: left; padding-top: 0; }
+        .concepto .ops { grid-column: 2; flex-direction: row; justify-content: flex-end; }
+        .totales { grid-template-columns: 1fr; }
+    }
+</style>
+@endpush
 
 @section('contenido')
 <form method="post" action="{{ $nuevo ? route('admin.presupuestos.store') : route('admin.presupuestos.update', $p) }}"
@@ -29,40 +102,45 @@
     @csrf
     @unless($nuevo) @method('put') @endunless
 
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div class="migas"><a href="{{ route('admin.presupuestos.index') }}">Cotizaciones</a> <i class="bi bi-chevron-right small"></i> <span>{{ $nuevo ? 'Nueva' : $p->folio }}</span></div>
+    <div class="page-head">
         <div>
-            <a href="{{ route('admin.presupuestos.index') }}" class="small text-muted text-decoration-none"><i class="bi bi-arrow-left"></i> Cotizaciones</a>
-            <h1 class="h3 mb-0">{{ $nuevo ? 'Nueva cotización' : $p->folio }}</h1>
+            <div class="titulo-doc">
+                <h1>{{ $nuevo ? 'Nueva cotización' : $p->folio }}</h1>
+                @unless($nuevo)<span class="estado estado-{{ $p->estado }}">{{ \App\Models\Presupuesto::ESTADOS[$p->estado] }}</span>@endunless
+            </div>
+            <p class="sub">{{ $nuevo ? 'Llena los datos; el folio se asigna al guardar.' : 'Creada el ' . $p->created_at->locale('es')->isoFormat('D [de] MMMM') . ' · Última edición ' . $p->updated_at->locale('es')->diffForHumans() }}</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex flex-wrap gap-2">
             @unless($nuevo)
-                <a href="{{ route('admin.presupuestos.pdf', $p) }}" target="_blank" class="btn btn-outline-dark"><i class="bi bi-file-earmark-pdf"></i> Ver PDF</a>
+                <a href="{{ $p->url_publica }}?vista_previa=1" target="_blank" class="btn btn-borde"><i class="bi bi-eye me-1"></i> Ver como cliente</a>
+                <a href="{{ route('admin.presupuestos.pdf', $p) }}" target="_blank" class="btn btn-borde"><i class="bi bi-file-earmark-pdf me-1"></i> PDF</a>
             @endunless
-            <button class="btn btn-verde px-4">{{ $nuevo ? 'Crear cotización' : 'Guardar cambios' }}</button>
+            <button class="btn btn-primario px-4">{{ $nuevo ? 'Crear cotización' : 'Guardar cambios' }}</button>
         </div>
     </div>
 
-    <div class="row g-4">
-        {{-- ================= Documento ================= --}}
-        <div class="col-lg-8">
+    <div class="editor">
+        <div class="d-grid gap-4">
 
-            <div class="card mb-4">
-                <div class="card-header">Cliente</div>
-                <div class="card-body row g-3">
+            {{-- Cliente --}}
+            <section class="panel">
+                <div class="panel-head"><h2>Cliente y fecha</h2><span class="ayuda">Así aparece en el encabezado</span></div>
+                <div class="panel-body row g-3">
                     <div class="col-12">
                         <label class="form-label" for="cliente_id">Cliente</label>
                         <div class="input-group">
                             <select name="cliente_id" id="cliente_id" class="form-select" x-model="clienteId" @change="elegirCliente()" required>
                                 <option value="">Elige un cliente…</option>
                                 @foreach($clientes as $c)
-                                    <option value="{{ $c->id }}">{{ $c->nombre }}{{ $c->empresa ? ' — ' . $c->empresa : '' }}</option>
+                                    <option value="{{ $c->id }}">{{ $c->empresa ? $c->empresa . ' — ' . $c->nombre : $c->nombre }}</option>
                                 @endforeach
                             </select>
-                            <a href="{{ route('admin.clientes.create') }}" class="btn btn-outline-dark">Nuevo cliente</a>
+                            <a href="{{ route('admin.clientes.create') }}" class="btn btn-borde"><i class="bi bi-person-plus"></i> Nuevo</a>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label" for="cliente_nombre">Nombre que aparece en la cotización</label>
+                        <label class="form-label" for="cliente_nombre">Nombre</label>
                         <input name="cliente_nombre" id="cliente_nombre" class="form-control" x-model="clienteNombre" required>
                     </div>
                     <div class="col-md-6">
@@ -71,105 +149,129 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label" for="fecha">Fecha</label>
-                        <input type="date" name="fecha" id="fecha" class="form-control" value="{{ old('fecha', $p->fecha->format('Y-m-d')) }}" required>
+                        <input type="date" name="fecha" id="fecha" class="form-control num" value="{{ old('fecha', $p->fecha->format('Y-m-d')) }}" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label" for="titulo">Título</label>
+                        <label class="form-label" for="titulo">Título del documento</label>
                         <input name="titulo" id="titulo" class="form-control" value="{{ old('titulo', $p->titulo) }}" required>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <div class="card mb-4">
-                <div class="card-header">Conceptos</div>
-                <div class="card-body">
-                    <template x-for="(c, i) in conceptos" :key="i">
-                        <div class="row g-2 align-items-start pb-3 mb-3 border-bottom">
-                            <div class="col-12 col-md-7">
-                                <label class="form-label" :for="'desc'+i">Concepto</label>
-                                <textarea class="form-control" rows="3" :id="'desc'+i" :name="`conceptos[${i}][descripcion]`" x-model="c.descripcion" required></textarea>
-                            </div>
-                            <div class="col-4 col-md-2">
-                                <label class="form-label" :for="'cant'+i">Cantidad</label>
-                                <input type="number" step="0.01" min="0" class="form-control num" :id="'cant'+i" :name="`conceptos[${i}][cantidad]`" x-model.number="c.cantidad" required>
-                            </div>
-                            <div class="col-8 col-md-3">
-                                <label class="form-label" :for="'precio'+i">Precio unitario</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" step="0.01" min="0" class="form-control num" :id="'precio'+i" :name="`conceptos[${i}][precio]`" x-model.number="c.precio" required>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center mt-2">
-                                    <span class="small text-muted num text-nowrap" x-text="'Costo ' + dinero(importe(c))"></span>
-                                    <span class="btn-group btn-group-sm">
-                                        <button type="button" class="btn btn-light" @click="mover(conceptos, i, -1)" :disabled="i === 0" aria-label="Subir"><i class="bi bi-arrow-up"></i></button>
-                                        <button type="button" class="btn btn-light" @click="mover(conceptos, i, 1)" :disabled="i === conceptos.length - 1" aria-label="Bajar"><i class="bi bi-arrow-down"></i></button>
-                                        <button type="button" class="btn btn-light text-danger" @click="conceptos.splice(i, 1)" :disabled="conceptos.length === 1" aria-label="Quitar concepto"><i class="bi bi-trash"></i></button>
-                                    </span>
-                                </div>
+            {{-- Conceptos --}}
+            <section class="panel">
+                <div class="panel-head"><h2>Conceptos</h2><span class="ayuda" x-text="conceptos.length + (conceptos.length === 1 ? ' concepto' : ' conceptos')"></span></div>
+                <div class="conceptos-head" aria-hidden="true"><span>#</span><span>Descripción</span><span>Cantidad</span><span>Precio unitario</span><span class="text-end">Costo</span><span></span></div>
+                <template x-for="(c, i) in conceptos" :key="i">
+                    <div class="concepto">
+                        <span class="n num" x-text="i + 1"></span>
+                        <div class="desc">
+                            <label class="visually-hidden" :for="'desc'+i">Descripción</label>
+                            <textarea class="form-control" rows="2" :id="'desc'+i" :name="`conceptos[${i}][descripcion]`" x-model="c.descripcion" required placeholder="Describe el producto o servicio"></textarea>
+                        </div>
+                        <div>
+                            <label class="form-label d-md-none" :for="'cant'+i">Cantidad</label>
+                            <input type="number" step="0.01" min="0" class="form-control num" :id="'cant'+i" :name="`conceptos[${i}][cantidad]`" x-model.number="c.cantidad" required>
+                        </div>
+                        <div>
+                            <label class="form-label d-md-none" :for="'precio'+i">Precio unitario</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" step="0.01" min="0" class="form-control num" :id="'precio'+i" :name="`conceptos[${i}][precio]`" x-model.number="c.precio" required placeholder="0.00">
                             </div>
                         </div>
-                    </template>
-                    <button type="button" class="btn btn-outline-dark btn-sm" @click="conceptos.push({descripcion: '', cantidad: 1, precio: ''})"><i class="bi bi-plus-lg"></i> Agregar concepto</button>
+                        <div class="costo num" x-text="dinero(importe(c))"></div>
+                        <div class="ops">
+                            <div class="dropdown">
+                                <button type="button" class="btn btn-fantasma btn-icono" data-bs-toggle="dropdown" :aria-label="'Opciones del concepto ' + (i + 1)"><i class="bi bi-three-dots-vertical"></i></button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><button type="button" class="dropdown-item" @click="mover(conceptos, i, -1)" :disabled="i === 0"><i class="bi bi-arrow-up"></i> Subir</button></li>
+                                    <li><button type="button" class="dropdown-item" @click="mover(conceptos, i, 1)" :disabled="i === conceptos.length - 1"><i class="bi bi-arrow-down"></i> Bajar</button></li>
+                                    <li><button type="button" class="dropdown-item" @click="conceptos.splice(i + 1, 0, {...c})"><i class="bi bi-copy"></i> Duplicar</button></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><button type="button" class="dropdown-item text-danger" @click="conceptos.splice(i, 1)" :disabled="conceptos.length === 1"><i class="bi bi-trash text-danger"></i> Quitar</button></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+                <button type="button" class="agregar" @click="conceptos.push({descripcion: '', cantidad: 1, precio: ''}); $nextTick(() => document.getElementById('desc' + (conceptos.length - 1)).focus())">
+                    <i class="bi bi-plus-circle"></i> Agregar concepto
+                </button>
 
-                    <div class="row g-3 mt-2">
-                        <div class="col-md-8">
-                            <label class="form-label" for="modo_iva">Cómo mostrar el IVA</label>
+                <div class="totales">
+                    <div class="row g-2">
+                        <div class="col-8">
+                            <label class="form-label" for="modo_iva">IVA en el documento</label>
                             <select name="modo_iva" id="modo_iva" class="form-select" x-model="modoIva">
                                 @foreach(\App\Models\Presupuesto::MODOS_IVA as $k => $label)
                                     <option value="{{ $k }}">{{ $label }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label" for="iva_porcentaje">IVA %</label>
-                            <input type="number" step="0.01" min="0" max="100" name="iva_porcentaje" id="iva_porcentaje" class="form-control num" x-model.number="ivaPct">
+                        <div class="col-4">
+                            <label class="form-label" for="iva_porcentaje">Tasa</label>
+                            <div class="input-group">
+                                <input type="number" step="0.01" min="0" max="100" name="iva_porcentaje" id="iva_porcentaje" class="form-control num" x-model.number="ivaPct" :readonly="modoIva === 'sin_iva'">
+                                <span class="input-group-text">%</span>
+                            </div>
                         </div>
                     </div>
+                    <dl class="num">
+                        <div><dt>Subtotal</dt><dd x-text="dinero(subtotal)"></dd></div>
+                        <div x-show="modoIva !== 'sin_iva'"><dt x-text="'IVA ' + ivaPct + '%'"></dt><dd x-text="dinero(iva)"></dd></div>
+                        <div class="gran"><dt>Total</dt><dd x-text="dinero(total)"></dd></div>
+                    </dl>
                 </div>
-            </div>
+            </section>
 
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    Consideraciones
-                    <span class="small text-muted fw-normal">Se numeran solas en el PDF</span>
-                </div>
-                <div class="card-body">
+            {{-- Consideraciones --}}
+            <section class="panel">
+                <div class="panel-head"><h2>Consideraciones</h2><span class="ayuda">Se numeran solas en el documento</span></div>
+                <div class="panel-body">
                     <template x-for="(s, i) in consideraciones" :key="i">
-                        <div class="border rounded p-3 mb-3 bg-light">
-                            <div class="d-flex gap-2 align-items-center mb-2">
-                                <span class="fw-semibold num" x-text="(i + 1) + '.'"></span>
-                                <input class="form-control fw-semibold" :name="`consideraciones[${i}][titulo]`" x-model="s.titulo" placeholder="Título, p. ej. Tiempos de entrega" aria-label="Título de la sección">
-                                <span class="btn-group btn-group-sm">
-                                    <button type="button" class="btn btn-light" @click="mover(consideraciones, i, -1)" :disabled="i === 0" aria-label="Subir"><i class="bi bi-arrow-up"></i></button>
-                                    <button type="button" class="btn btn-light" @click="mover(consideraciones, i, 1)" :disabled="i === consideraciones.length - 1" aria-label="Bajar"><i class="bi bi-arrow-down"></i></button>
-                                    <button type="button" class="btn btn-light text-danger" @click="consideraciones.splice(i, 1)" aria-label="Quitar sección"><i class="bi bi-trash"></i></button>
-                                </span>
-                            </div>
-                            <template x-for="(item, j) in s.items" :key="j">
-                                <div class="d-flex gap-2 align-items-center mb-2 ps-4">
-                                    <span aria-hidden="true">•</span>
-                                    <input class="form-control form-control-sm" :name="`consideraciones[${i}][items][${j}]`" x-model="s.items[j]" placeholder="Viñeta" aria-label="Viñeta">
-                                    <button type="button" class="btn btn-sm btn-light text-danger" @click="s.items.splice(j, 1)" aria-label="Quitar viñeta"><i class="bi bi-x-lg"></i></button>
+                        <div class="seccion-c">
+                            <div class="top">
+                                <span class="num-s num" x-text="i + 1"></span>
+                                <input class="form-control" :name="`consideraciones[${i}][titulo]`" x-model="s.titulo" placeholder="Título, p. ej. Tiempos de entrega" aria-label="Título de la sección">
+                                <div class="dropdown">
+                                    <button type="button" class="btn btn-fantasma btn-icono" data-bs-toggle="dropdown" :aria-label="'Opciones de la sección ' + (i + 1)"><i class="bi bi-three-dots-vertical"></i></button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><button type="button" class="dropdown-item" @click="mover(consideraciones, i, -1)" :disabled="i === 0"><i class="bi bi-arrow-up"></i> Subir</button></li>
+                                        <li><button type="button" class="dropdown-item" @click="mover(consideraciones, i, 1)" :disabled="i === consideraciones.length - 1"><i class="bi bi-arrow-down"></i> Bajar</button></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><button type="button" class="dropdown-item text-danger" @click="consideraciones.splice(i, 1)"><i class="bi bi-trash text-danger"></i> Quitar sección</button></li>
+                                    </ul>
                                 </div>
-                            </template>
-                            <button type="button" class="btn btn-link btn-sm ps-4 text-dark" @click="s.items.push('')"><i class="bi bi-plus"></i> Viñeta</button>
+                            </div>
+                            <div class="items">
+                                <template x-for="(item, j) in s.items" :key="j">
+                                    <div class="item">
+                                        <input class="form-control form-control-sm" :name="`consideraciones[${i}][items][${j}]`" x-model="s.items[j]" placeholder="Escribe un punto" aria-label="Viñeta">
+                                        <button type="button" class="btn btn-fantasma btn-sm" @click="s.items.splice(j, 1)" aria-label="Quitar viñeta"><i class="bi bi-x-lg"></i></button>
+                                    </div>
+                                </template>
+                                <button type="button" class="btn btn-fantasma btn-sm" @click="s.items.push('')"><i class="bi bi-plus"></i> Agregar punto</button>
+                            </div>
                         </div>
                     </template>
-                    <button type="button" class="btn btn-outline-dark btn-sm" @click="consideraciones.push({titulo: '', items: ['']})"><i class="bi bi-plus-lg"></i> Agregar sección</button>
+                    <button type="button" class="btn btn-borde btn-sm mt-3" @click="consideraciones.push({titulo: '', items: ['']})"><i class="bi bi-plus-lg"></i> Agregar sección</button>
                 </div>
-            </div>
+            </section>
 
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span>Confirmación y datos de pago <span class="small text-muted fw-normal" x-show="mostrarPago" x-text="'(sección ' + (consideraciones.length + 1) + ')'"></span></span>
+            {{-- Pago --}}
+            <section class="panel">
+                <div class="panel-head">
+                    <div><h2>Confirmación y datos de pago</h2>
+                        <span class="ayuda" x-show="mostrarPago" x-text="'Aparece como sección ' + (consideraciones.length + 1)"></span>
+                        <span class="ayuda" x-show="!mostrarPago" x-cloak>No aparece en el documento</span></div>
                     <div class="form-check form-switch mb-0">
                         <input type="hidden" name="mostrar_pago" value="0">
                         <input class="form-check-input" type="checkbox" role="switch" id="mostrar_pago" name="mostrar_pago" value="1" x-model="mostrarPago">
-                        <label class="form-check-label small fw-normal" for="mostrar_pago">Mostrar</label>
+                        <label class="form-check-label small" for="mostrar_pago">Mostrar</label>
                     </div>
                 </div>
-                <div class="card-body row g-3" x-show="mostrarPago">
+                <div class="panel-body row g-3" x-show="mostrarPago">
                     <div class="col-12">
                         <label class="form-label" for="pago_intro">Texto antes de los datos bancarios</label>
                         <input name="pago_intro" id="pago_intro" class="form-control" value="{{ old('pago_intro', $p->pago_intro) }}">
@@ -187,7 +289,7 @@
                         <input name="beneficiario" id="beneficiario" class="form-control" value="{{ old('beneficiario', $p->beneficiario) }}">
                     </div>
                     <div class="col-12">
-                        <label class="form-label" for="nota_comprobante">Nota sobre el comprobante (va en negritas)</label>
+                        <label class="form-label" for="nota_comprobante">Nota sobre el comprobante <span class="text-secondary fw-normal">(va en negritas)</span></label>
                         <textarea name="nota_comprobante" id="nota_comprobante" rows="2" class="form-control">{{ old('nota_comprobante', $p->nota_comprobante) }}</textarea>
                     </div>
                     <div class="col-12">
@@ -195,11 +297,15 @@
                         <textarea name="nota_factura" id="nota_factura" rows="2" class="form-control">{{ old('nota_factura', $p->nota_factura) }}</textarea>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <div class="card mb-4">
-                <div class="card-header">Encabezado (tus datos)</div>
-                <div class="card-body row g-3">
+            {{-- Encabezado --}}
+            <details class="panel colapsable" @if($errors->hasAny(['emisor_nombre', 'emisor_telefono', 'emisor_sitio', 'emisor_email'])) open @endif>
+                <summary class="panel-head">
+                    <div><h2>Tus datos en el encabezado</h2><span class="ayuda">{{ $p->emisor_nombre }} · {{ $p->emisor_telefono }}</span></div>
+                    <i class="bi bi-chevron-down text-secondary"></i>
+                </summary>
+                <div class="panel-body row g-3">
                     <div class="col-md-6">
                         <label class="form-label" for="emisor_nombre">Nombre</label>
                         <input name="emisor_nombre" id="emisor_nombre" class="form-control" value="{{ old('emisor_nombre', $p->emisor_nombre) }}" required>
@@ -217,85 +323,90 @@
                         <input name="emisor_email" id="emisor_email" class="form-control" value="{{ old('emisor_email', $p->emisor_email) }}">
                     </div>
                 </div>
-            </div>
+            </details>
+
+            @unless($nuevo)
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="submit" form="duplicar" class="btn btn-fantasma"><i class="bi bi-copy me-1"></i> Duplicar cotización</button>
+                    <button type="submit" form="eliminar" class="btn btn-fantasma text-danger"><i class="bi bi-trash me-1"></i> Eliminar</button>
+                </div>
+            @endunless
         </div>
 
-        {{-- ================= Panel lateral ================= --}}
-        <div class="col-lg-4">
-            <div class="position-sticky" style="top: 1rem">
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between num"><span class="text-muted">Subtotal</span><span x-text="dinero(subtotal)"></span></div>
-                        <div class="d-flex justify-content-between num" x-show="modoIva !== 'sin_iva'"><span class="text-muted" x-text="'IVA ' + ivaPct + '%'"></span><span x-text="dinero(iva)"></span></div>
-                        <hr class="my-2">
-                        <div class="d-flex justify-content-between fs-5 fw-semibold num"><span>Total</span><span x-text="dinero(total)"></span></div>
-                        <p class="small text-muted mb-0 mt-1" x-show="modoIva === 'mas_iva'">El cliente ve los precios como “+ IVA”, igual que tu formato.</p>
+        {{-- ================= Lateral ================= --}}
+        <aside class="lateral">
+            <section class="panel panel-body">
+                <div class="secundario">Total</div>
+                <div class="total-lateral num" x-text="dinero(total)"></div>
+                <div class="secundario num" x-show="modoIva !== 'sin_iva'">
+                    <span x-text="dinero(subtotal)"></span> + IVA <span x-text="dinero(iva)"></span>
+                </div>
+                <div class="secundario mt-2" x-show="modoIva === 'mas_iva'"><i class="bi bi-info-circle me-1"></i>El cliente ve los precios con “+ IVA”.</div>
+                <button class="btn btn-primario w-100 mt-3">{{ $nuevo ? 'Crear cotización' : 'Guardar cambios' }}</button>
+                <div class="secundario text-center mt-2" style="font-size:12.5px">Atajo: Ctrl / ⌘ + S</div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-head"><h2>Vigencia</h2></div>
+                <div class="panel-body">
+                    <label class="form-label" for="vigente_hasta">El enlace funciona hasta</label>
+                    <input type="datetime-local" name="vigente_hasta" id="vigente_hasta" class="form-control num" x-model="vigencia" required>
+                    <div class="chips mt-2" role="group" aria-label="Atajos de vigencia">
+                        @foreach([3, 7, 15, 30] as $d)
+                            <button type="button" @click="sumarDias({{ $d }})">{{ $d }} días</button>
+                        @endforeach
+                    </div>
+                    <div class="restante" :class="restante.clase" x-show="restante.texto">
+                        <i class="bi" :class="restante.clase === 'vig-vencida' ? 'bi-x-circle' : (restante.clase === 'vig-pronto' ? 'bi-hourglass-split' : 'bi-clock')"></i>
+                        <span x-text="restante.texto"></span>
                     </div>
                 </div>
+            </section>
 
-                <div class="card mb-3">
-                    <div class="card-header">Vigencia</div>
-                    <div class="card-body">
-                        <label class="form-label" for="vigente_hasta">El enlace funciona hasta</label>
-                        <input type="datetime-local" name="vigente_hasta" id="vigente_hasta" class="form-control num" x-model="vigencia" required>
-                        <div class="d-flex flex-wrap gap-1 mt-2">
-                            @foreach([3, 7, 15, 30] as $d)
-                                <button type="button" class="btn btn-sm btn-light" @click="sumarDias({{ $d }})">{{ $d }} días</button>
-                            @endforeach
+            <section class="panel">
+                <div class="panel-head"><h2>Estado</h2></div>
+                <div class="panel-body">
+                    <div class="estados" role="radiogroup" aria-label="Estado">
+                        @php $colores = ['borrador' => '#8A90A0', 'enviada' => 'var(--blue)', 'aceptada' => 'var(--green-ink)', 'rechazada' => 'var(--red)']; @endphp
+                        @foreach(\App\Models\Presupuesto::ESTADOS as $k => $label)
+                            <label><input type="radio" name="estado" value="{{ $k }}" x-model="estadoSel"><span class="pt" style="background: {{ $colores[$k] }}"></span> {{ $label }}</label>
+                        @endforeach
+                    </div>
+                    <label class="form-label mt-3" for="notas_internas">Notas internas</label>
+                    <textarea name="notas_internas" id="notas_internas" rows="3" class="form-control" placeholder="El cliente no las ve">{{ old('notas_internas', $p->notas_internas) }}</textarea>
+                </div>
+            </section>
+
+            @unless($nuevo)
+                <section class="panel">
+                    <div class="panel-head"><h2>Enlace del cliente</h2>
+                        <span class="ayuda d-inline-flex align-items-center gap-1"><i class="bi bi-eye"></i> {{ $p->vistas }}</span></div>
+                    <div class="panel-body">
+                        <div class="enlace">
+                            <input class="form-control num" value="{{ $p->url_publica }}" readonly aria-label="Enlace del cliente" onclick="this.select()">
+                            <button type="button" class="btn btn-primario btn-icono flex-none" style="width:40px;height:40px" data-copiar="{{ $p->url_publica }}" title="Copiar" aria-label="Copiar enlace"><i class="bi bi-copy"></i></button>
                         </div>
-                        <p class="small mt-2 mb-0" :class="restante.clase" x-text="restante.texto"></p>
+                        @if($wa)
+                            <a class="btn btn-borde w-100 mt-2" target="_blank"
+                               href="https://wa.me/{{ $wa }}?text={{ rawurlencode("Hola {$p->cliente_nombre}, te comparto la cotización {$p->folio}: {$p->url_publica}") }}"><i class="bi bi-whatsapp me-1"></i> Enviar por WhatsApp</a>
+                        @endif
+                        <p class="secundario mt-3 mb-0">
+                            @if($p->vistas)
+                                Abierta {{ $p->vistas }} {{ $p->vistas === 1 ? 'vez' : 'veces' }}; la última {{ $p->ultima_vista_at->locale('es')->diffForHumans() }}.
+                            @else
+                                El cliente aún no la abre.
+                            @endif
+                        </p>
                     </div>
-                </div>
-
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <label class="form-label" for="estado">Estado</label>
-                        <select name="estado" id="estado" class="form-select mb-3">
-                            @foreach(\App\Models\Presupuesto::ESTADOS as $k => $label)
-                                <option value="{{ $k }}" @selected(old('estado', $p->estado) === $k)>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                        <label class="form-label" for="notas_internas">Notas internas (el cliente no las ve)</label>
-                        <textarea name="notas_internas" id="notas_internas" rows="3" class="form-control">{{ old('notas_internas', $p->notas_internas) }}</textarea>
-                    </div>
-                </div>
-
-                @unless($nuevo)
-                    <div class="card mb-3">
-                        <div class="card-header">Enlace para el cliente</div>
-                        <div class="card-body">
-                            <input class="form-control form-control-sm mb-2" value="{{ $p->url_publica }}" readonly aria-label="Enlace del cliente" onclick="this.select()">
-                            <div class="d-flex flex-wrap gap-2">
-                                <button type="button" class="btn btn-sm btn-v" data-copiar="{{ $p->url_publica }}"><i class="bi bi-link-45deg"></i> Copiar</button>
-                                <a class="btn btn-sm btn-outline-dark" target="_blank" href="{{ $p->url_publica }}?vista_previa=1"><i class="bi bi-eye"></i> Ver como cliente</a>
-                                @if($wa)
-                                    <a class="btn btn-sm btn-outline-success" target="_blank"
-                                       href="https://wa.me/{{ $wa }}?text={{ rawurlencode("Hola {$p->cliente_nombre}, te comparto la cotización {$p->folio}: {$p->url_publica}") }}"><i class="bi bi-whatsapp"></i> WhatsApp</a>
-                                @endif
-                            </div>
-                            <p class="small text-muted mt-2 mb-0">
-                                {{ $p->vistas ? "Abierta {$p->vistas} " . ($p->vistas === 1 ? 'vez' : 'veces') . ', la última ' . $p->ultima_vista_at->locale('es')->diffForHumans() . '.' : 'El cliente aún no la abre.' }}
-                            </p>
-                        </div>
-                    </div>
-                @endunless
-
-                <button class="btn btn-verde w-100 py-2">{{ $nuevo ? 'Crear cotización' : 'Guardar cambios' }}</button>
-                <p class="small text-muted text-center mt-2">Atajo: Ctrl/⌘ + S</p>
-            </div>
-        </div>
+                </section>
+            @endunless
+        </aside>
     </div>
 </form>
 
 @unless($nuevo)
-    <div class="d-flex gap-2 mt-2">
-        <form method="post" action="{{ route('admin.presupuestos.duplicar', $p) }}">@csrf
-            <button class="btn btn-sm btn-outline-dark"><i class="bi bi-copy"></i> Duplicar</button>
-        </form>
-        <form method="post" action="{{ route('admin.presupuestos.destroy', $p) }}" onsubmit="return confirm('¿Eliminar {{ $p->folio }}? El enlace del cliente dejará de funcionar.')">@csrf @method('delete')
-            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Eliminar</button>
-        </form>
-    </div>
+    <form id="duplicar" method="post" action="{{ route('admin.presupuestos.duplicar', $p) }}">@csrf</form>
+    <form id="eliminar" method="post" action="{{ route('admin.presupuestos.destroy', $p) }}" onsubmit="return confirm('¿Eliminar {{ $p->folio }}? El enlace del cliente dejará de funcionar.')">@csrf @method('delete')</form>
 @endunless
 @endsection
 
@@ -317,16 +428,16 @@ function editor(init) {
             if (c) { this.clienteNombre = c.nombre; this.clienteEmpresa = c.empresa || ''; }
         },
         sumarDias(d) {
-            const f = new Date(); f.setDate(f.getDate() + d); f.setHours(23, 59, 0, 0);
+            const f = new Date(); f.setDate(f.getDate() + d);
             const p = (n) => String(n).padStart(2, '0');
             this.vigencia = `${f.getFullYear()}-${p(f.getMonth() + 1)}-${p(f.getDate())}T23:59`;
         },
         get restante() {
             const ms = new Date(this.vigencia).getTime() - this.ahora;
             if (isNaN(ms)) return { texto: '', clase: '' };
-            if (ms <= 0) return { texto: 'Vencida: el cliente verá un aviso y no podrá descargarla.', clase: 'vig-vencida' };
+            if (ms <= 0) return { texto: 'Vencida: el cliente ve un aviso y no puede descargarla.', clase: 'vig-vencida' };
             const h = Math.floor(ms / 36e5), d = Math.floor(h / 24);
-            return { texto: 'Faltan ' + (d ? d + ' d ' : '') + (h % 24) + ' h', clase: h <= 48 ? 'vig-pronto' : 'vig-ok' };
+            return { texto: 'Quedan ' + (d ? d + (d === 1 ? ' día ' : ' días ') : '') + (h % 24) + ' h', clase: h <= 72 ? 'vig-pronto' : 'vig-ok' };
         },
     };
 }

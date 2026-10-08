@@ -13,7 +13,8 @@ class ClienteController extends Controller
         $q = trim((string) $request->query('q'));
 
         $clientes = Cliente::query()
-            ->withCount('presupuestos')
+            ->withCount(['presupuestos', 'presupuestos as vigentes_count' => fn ($w) => $w->where('vigente_hasta', '>', now())])
+            ->withMax('presupuestos', 'fecha')
             ->when($q, fn ($query) => $query->where(fn ($w) => $w
                 ->where('nombre', 'like', "%$q%")
                 ->orWhere('empresa', 'like', "%$q%")

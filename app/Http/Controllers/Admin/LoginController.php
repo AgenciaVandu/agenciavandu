@@ -46,7 +46,7 @@ class LoginController extends Controller
         RateLimiter::clear($llave);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('admin.presupuestos.index'));
+        return redirect()->intended(route('admin.resumen'));
     }
 
     public function logout(Request $request)
