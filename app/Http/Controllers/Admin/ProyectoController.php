@@ -307,7 +307,7 @@ class ProyectoController extends Controller
 
         $data = $request->validate([
             'accion'     => 'nullable|in:pagar,deshacer',
-            'pagado_el'  => 'nullable|date',
+            'pagado_el'  => 'nullable|date|before_or_equal:today',
             'monto'      => 'nullable|numeric|min:0',
             'referencia' => 'nullable|string|max:255',
         ]);
@@ -316,6 +316,8 @@ class ProyectoController extends Controller
             $pago->pagado_el = $data['pagado_el'] ?? now(config('vandu.zona_horaria'))->toDateString();
         } elseif (($data['accion'] ?? null) === 'deshacer') {
             $pago->pagado_el = null;
+        } elseif ($request->boolean('editar_fecha')) {
+            $pago->pagado_el = $data['pagado_el'] ?? null; // vacío = pendiente
         }
         if (isset($data['monto'])) $pago->monto = $data['monto'];
         if ($request->has('referencia')) $pago->referencia = $data['referencia'];

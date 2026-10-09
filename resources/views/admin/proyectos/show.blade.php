@@ -143,7 +143,7 @@
                                         <div class="tl-meta">
                                             <span class="num fw-medium text-body">{{ $pg->monto_texto }}</span>
                                             @if($pg->pagado)
-                                                <span class="vig vig-ok"><i class="bi bi-check-circle"></i> Pagado el {{ $pg->pagado_el->locale('es')->isoFormat('D [de] MMMM') }}</span>
+                                                <button type="button" class="vig vig-ok border-0 bg-transparent p-0" @click="editar = true" title="Cambiar fecha de pago"><i class="bi bi-check-circle"></i> Pagado el {{ $pg->pagado_el->locale('es')->isoFormat('D [de] MMMM') }} <i class="bi bi-pencil small text-secondary"></i></button>
                                             @elseif($pg->antes_de)
                                                 <span class="vig vig-pronto"><i class="bi bi-lock"></i> Requerido antes de {{ $p->etapas->firstWhere('clave', $pg->antes_de)?->nombre }}</span>
                                             @endif
@@ -162,7 +162,7 @@
                                         <div class="dropdown">
                                             <button class="btn btn-fantasma btn-icono" data-bs-toggle="dropdown" aria-label="Opciones de {{ $pg->concepto }}"><i class="bi bi-three-dots"></i></button>
                                             <ul class="dropdown-menu dropdown-menu-end">
-                                                <li><button type="button" class="dropdown-item" @click="editar = !editar"><i class="bi bi-pencil"></i> Editar monto o referencia</button></li>
+                                                <li><button type="button" class="dropdown-item" @click="editar = !editar"><i class="bi bi-pencil"></i> Editar fecha, monto o referencia</button></li>
                                                 @if($pg->pagado)
                                                     <li><form method="post" action="{{ route('admin.proyectos.pago', [$p, $pg]) }}">@csrf @method('patch')
                                                         <input type="hidden" name="accion" value="deshacer"><button class="dropdown-item"><i class="bi bi-arrow-counterclockwise"></i> Marcar como pendiente</button></form></li>
@@ -173,10 +173,14 @@
                                 </div>
                                 <form method="post" action="{{ route('admin.proyectos.pago', [$p, $pg]) }}" class="row g-2 mt-2" x-show="editar" x-cloak>
                                     @csrf @method('patch')
-                                    <div class="col-sm-4"><label class="form-label">Monto</label>
+                                    <input type="hidden" name="editar_fecha" value="1">
+                                    <div class="col-sm-3"><label class="form-label">Pagado el</label>
+                                        <input type="date" name="pagado_el" value="{{ $pg->pagado_el?->toDateString() }}" max="{{ $hoy }}" class="form-control form-control-sm num">
+                                        <div class="secundario" style="font-size:12px">Vacío = pendiente</div></div>
+                                    <div class="col-sm-3"><label class="form-label">Monto</label>
                                         <div class="input-group input-group-sm"><span class="input-group-text">$</span><input type="number" step="0.01" min="0" name="monto" value="{{ $pg->monto }}" class="form-control num"></div></div>
-                                    <div class="col-sm-5"><label class="form-label">Referencia o nota</label><input name="referencia" value="{{ $pg->referencia }}" class="form-control form-control-sm" placeholder="Transferencia, folio…"></div>
-                                    <div class="col-sm-3 d-flex align-items-end"><button class="btn btn-sm btn-primario w-100">Guardar</button></div>
+                                    <div class="col-sm-4"><label class="form-label">Referencia o nota</label><input name="referencia" value="{{ $pg->referencia }}" class="form-control form-control-sm" placeholder="Transferencia, folio…"></div>
+                                    <div class="col-sm-2 d-flex align-items-start" style="padding-top:26px"><button class="btn btn-sm btn-primario w-100">Guardar</button></div>
                                 </form>
                             </div>
                         </li>
