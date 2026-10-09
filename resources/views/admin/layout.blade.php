@@ -16,10 +16,18 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="robots" content="noindex, nofollow">
     <title>@yield('titulo', 'Panel') · Vandu</title>
     <link rel="icon" href="/favi.svg" type="image/svg+xml">
+    <link rel="manifest" href="{{ route('app.manifiesto') }}">
+    <meta name="theme-color" content="#13161D">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Vandu">
+    <link rel="apple-touch-icon" href="{{ route('app.icono', 'apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ route('app.icono', 'favicon-32.png') }}">
     <link rel="preload" href="{{ route('vandu.fuente') }}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -187,6 +195,11 @@
 
         .pagination { --bs-pagination-color: var(--text); --bs-pagination-active-bg: var(--ink); --bs-pagination-active-border-color: var(--ink); --bs-pagination-border-color: var(--line); }
         [x-cloak] { display: none !important; }
+        /* Las tablas ocultas para lectores de pantalla no deben ensanchar la página en el celular */
+        table.visually-hidden { display: block; }
+        body { overflow-x: clip; }
+        .main, .page, .panel { min-width: 0; }
+        .table-responsive { max-width: 100%; position: relative; } /* que lo oculto para lectores no se salga del scroll */
 
         /* ---------- Ventana de correo ---------- */
         .correo-velo { position: fixed; inset: 0; z-index: 1080; background: rgba(15, 18, 25, .55); display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; overflow-y: auto; }
@@ -210,7 +223,7 @@
         @media (max-width: 991.98px) {
             .correo-velo { padding: 0; }
             .correo-ventana { border-radius: 0; min-height: 100%; }
-            .correo-cuerpo { grid-template-columns: 1fr; }
+            .correo-cuerpo { grid-template-columns: minmax(0, 1fr); }
             .correo-previa { border-left: 0; border-top: 1px solid var(--line); }
             .correo-previa iframe { min-height: 480px; }
         }
@@ -227,9 +240,29 @@
                         background: var(--ink); padding: 10px 16px; }
             .topbar-m img { height: 22px; }
             .topbar-m button { border: 0; background: transparent; color: #fff; font-size: 22px; width: 40px; height: 40px; }
-            .page { padding: 22px 16px 48px; }
+            .page { padding: 22px 16px calc(96px + env(safe-area-inset-bottom)); }
             .buscador input { min-width: 0; width: 100%; }
+            .topbar-m { padding-top: calc(10px + env(safe-area-inset-top)); }
+            .side { padding-top: env(safe-area-inset-top); }
+
+            /* Barra inferior tipo app */
+            .tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1030; display: grid; grid-template-columns: repeat(5, 1fr); align-items: end;
+                      background: rgba(255,255,255,.96); backdrop-filter: blur(10px); border-top: 1px solid var(--line);
+                      padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
+            .tabbar a { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0; font-size: 11px; font-weight: 500; color: var(--muted); text-decoration: none; position: relative; }
+            .tabbar a i { font-size: 21px; line-height: 1; }
+            .tabbar a.activo { color: var(--ink); }
+            .tabbar a.activo i { color: var(--ink); }
+            .tabbar a .burbuja { position: absolute; top: 0; left: calc(50% + 6px); min-width: 16px; height: 16px; border-radius: 99px; background: var(--ink); color: #fff; font-size: 10px; display: grid; place-items: center; padding: 0 4px; }
+            .tabbar .mas { align-self: center; }
+            .tabbar .mas span { width: 50px; height: 50px; margin-top: -22px; border-radius: 16px; background: var(--ink); color: var(--green); display: grid; place-items: center;
+                                font-size: 26px; box-shadow: 0 6px 18px rgba(19,22,29,.28); border: 3px solid #fff; }
         }
+        @media (min-width: 992px) { .tabbar { display: none; } }
+        @media (display-mode: standalone) { .solo-navegador { display: none !important; } }
+        .instalar { margin: 0 12px 10px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; border: 1px dashed var(--ink-line, #2C313D); color: #C9CDD6; font-size: 13px; background: transparent; text-align: left; width: calc(100% - 24px); }
+        .instalar:hover { border-color: var(--green); color: #fff; }
+        .instalar i { color: var(--green); font-size: 18px; }
         @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
     </style>
     @stack('head')
@@ -240,7 +273,7 @@
 <header class="topbar-m">
     <button type="button" @click="menu = true" aria-label="Abrir menú"><i class="bi bi-list"></i></button>
     <a href="{{ route('admin.resumen') }}"><x-logo-vandu alt="Vandu" height="22" /></a>
-    <a href="{{ route('admin.presupuestos.create') }}" class="btn btn-acento btn-sm btn-icono" aria-label="Nueva cotización"><i class="bi bi-plus-lg"></i></a>
+    <span style="width:40px"></span>
 </header>
 <div class="velo" x-show="menu" x-cloak @click="menu = false"></div>
 
@@ -274,6 +307,10 @@
 
     <x-logo-vandu archivo="icono-vandu.svg" alt="" class="side-eco" aria-hidden="true" />
 
+    <div x-data="instalarApp()" x-show="visible" x-cloak class="solo-navegador">
+        <button type="button" class="instalar" @click="instalar()"><i class="bi bi-phone"></i> <span><b class="d-block text-white" style="font-weight:600">Instalar la app</b><span x-text="ios ? 'En Safari: Compartir → Agregar a inicio' : 'Abre el panel como app, con su ícono'"></span></span></button>
+    </div>
+
     <div class="side-foot">
         <span class="avatar av-yo">{{ $iniciales }}</span>
         <div class="yo"><b>{{ $usuario?->name }}</b><span>{{ $usuario?->email }}</span></div>
@@ -301,6 +338,15 @@
     </main>
 </div>
 
+<nav class="tabbar" aria-label="Navegación rápida">
+    <a href="{{ route('admin.resumen') }}" class="{{ request()->routeIs('admin.resumen') ? 'activo' : '' }}"><i class="bi {{ request()->routeIs('admin.resumen') ? 'bi-grid-1x2-fill' : 'bi-grid-1x2' }}"></i> Inicio</a>
+    <a href="{{ route('admin.presupuestos.index') }}" class="{{ request()->routeIs('admin.presupuestos.*') ? 'activo' : '' }}"><i class="bi {{ request()->routeIs('admin.presupuestos.*') ? 'bi-file-earmark-text-fill' : 'bi-file-earmark-text' }}"></i> Cotizaciones
+        @if($vigentesNav)<span class="burbuja num">{{ $vigentesNav }}</span>@endif</a>
+    <a href="{{ route('admin.presupuestos.create') }}" class="mas" aria-label="Nueva cotización"><span><i class="bi bi-plus-lg"></i></span></a>
+    <a href="{{ route('admin.proyectos.index') }}" class="{{ request()->routeIs('admin.proyectos.*') ? 'activo' : '' }}"><i class="bi {{ request()->routeIs('admin.proyectos.*') ? 'bi-kanban-fill' : 'bi-kanban' }}"></i> Proyectos</a>
+    <a href="{{ route('admin.finanzas') }}" class="{{ request()->routeIs('admin.finanzas*') ? 'activo' : '' }}"><i class="bi bi-graph-up-arrow"></i> Finanzas</a>
+</nav>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // Menús dentro de tablas con scroll: que se dibujen por encima y no queden recortados
@@ -317,6 +363,26 @@
         if (!b) return;
         try { await navigator.clipboard.writeText(b.dataset.copiar); } catch { prompt('Copia el enlace:', b.dataset.copiar); return; }
         const t = b.innerHTML; b.innerHTML = '<i class="bi bi-check2"></i> Copiado'; setTimeout(() => b.innerHTML = t, 1500);
+    });
+
+    // App instalable: service worker (pantalla sin conexión y carga rápida)
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => navigator.serviceWorker.register(@json(route('app.sw')), { scope: '/admin' }).catch(() => {}));
+    }
+    let promptInstalar = null;
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); promptInstalar = e; window.dispatchEvent(new Event('vandu-instalable')); });
+    window.instalarApp = () => ({
+        ios: /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream,
+        visible: false,
+        init() {
+            const instalada = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+            this.visible = !instalada && (this.ios || !!promptInstalar);
+            window.addEventListener('vandu-instalable', () => { this.visible = !instalada; });
+            window.addEventListener('appinstalled', () => { this.visible = false; });
+        },
+        async instalar() {
+            if (promptInstalar) { promptInstalar.prompt(); await promptInstalar.userChoice; promptInstalar = null; this.visible = false; }
+        },
     });
 
     // Abrir la ventana de correo desde cualquier botón con data-correo="plantilla"

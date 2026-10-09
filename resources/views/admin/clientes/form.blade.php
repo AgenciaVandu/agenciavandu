@@ -10,7 +10,7 @@
     .seccion p { color: var(--muted); font-size: 14px; margin: 0; }
     .barra-acciones { position: sticky; bottom: 0; z-index: 5; margin: 8px -36px -64px; padding: 14px 36px; background: rgba(244,245,247,.92);
                       backdrop-filter: blur(6px); border-top: 1px solid var(--line); display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
-    @media (max-width: 991.98px) { .seccion { grid-template-columns: 1fr; gap: 14px; } .barra-acciones { margin: 8px -16px -48px; padding: 12px 16px; } }
+    @media (max-width: 991.98px) { .seccion { grid-template-columns: minmax(0, 1fr); gap: 14px; } .barra-acciones { margin: 8px -16px -48px; padding: 12px 16px; } }
 </style>
 @endpush
 

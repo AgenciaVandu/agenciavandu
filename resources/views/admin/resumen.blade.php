@@ -65,7 +65,7 @@
     .lista .der { margin-left: auto; text-align: right; flex: none; }
     .lista .vacia { padding: 22px 20px; color: var(--muted); font-size: 14px; display: flex; gap: 10px; align-items: center; }
 
-    @media (max-width: 1199.98px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rejilla { grid-template-columns: 1fr; } }
+    @media (max-width: 1199.98px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rejilla { grid-template-columns: minmax(0, 1fr); } }
     @media (max-width: 575.98px) { .kpis { gap: 10px; } .kpi { padding: 14px; } .kpi .v { font-size: 24px; } .graf .barra { width: 11px; } }
 </style>
 @endpush

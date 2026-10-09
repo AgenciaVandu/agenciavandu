@@ -108,8 +108,8 @@
     .dbx-pie { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 14px 20px; }
     .g-item .marca-oculto { position: absolute; left: 6px; bottom: 6px; font-size: 12px; background: rgba(19,22,29,.8); color: #fff; border-radius: 6px; padding: 2px 8px; }
 
-    @media (max-width: 1199.98px) { .ficha-p { grid-template-columns: 1fr; } .lateral { position: static; } }
-    @media (max-width: 767.98px) { .resumen-p { grid-template-columns: 1fr; } .resumen-p > div + div { border-left: 0; border-top: 1px solid var(--line); } .g-acc { opacity: 1; } }
+    @media (max-width: 1199.98px) { .ficha-p { grid-template-columns: minmax(0, 1fr); } .lateral { position: static; } }
+    @media (max-width: 767.98px) { .resumen-p { grid-template-columns: minmax(0, 1fr); } .resumen-p > div + div { border-left: 0; border-top: 1px solid var(--line); } .g-acc { opacity: 1; } }
 </style>
 @endpush
 
@@ -175,9 +175,9 @@
                                             @if($pg->referencia)<span>Ref. {{ $pg->referencia }}</span>@endif
                                         </div>
                                     </div>
-                                    <div class="d-flex gap-2 align-items-center">
+                                    <div class="d-flex gap-2 align-items-center flex-wrap">
                                         @unless($pg->pagado)
-                                            <form method="post" action="{{ route('admin.proyectos.pago', [$p, $pg]) }}" class="d-flex gap-2 align-items-center">
+                                            <form method="post" action="{{ route('admin.proyectos.pago', [$p, $pg]) }}" class="d-flex gap-2 align-items-center flex-wrap">
                                                 @csrf @method('patch')
                                                 <input type="hidden" name="accion" value="pagar">
                                                 <input type="date" name="pagado_el" value="{{ $hoy }}" class="form-control form-control-sm num" style="width: 150px" aria-label="Fecha de pago">

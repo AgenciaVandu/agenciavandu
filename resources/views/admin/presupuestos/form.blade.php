@@ -107,7 +107,7 @@
     .colapsable[open] summary .bi-chevron-down { transform: rotate(180deg); }
     .colapsable:not([open]) .panel-head { border-bottom: 0; }
 
-    @media (max-width: 1199.98px) { .editor { grid-template-columns: 1fr; } .lateral { position: static; } }
+    @media (max-width: 1199.98px) { .editor { grid-template-columns: minmax(0, 1fr); } .lateral { position: static; } }
     @media (max-width: 767.98px) {
         .conceptos-head { display: none; }
         .concepto { grid-template-columns: 1fr 1fr; }
@@ -117,7 +117,7 @@
         .concepto .ops { grid-column: 2; flex-direction: row; justify-content: flex-end; }
         .costeo { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; }
         .costeo .res { grid-column: 1 / -1; text-align: left; padding-bottom: 0; }
-        .totales { grid-template-columns: 1fr; }
+        .totales { grid-template-columns: minmax(0, 1fr); }
     }
 </style>
 @endpush

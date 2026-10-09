@@ -80,7 +80,7 @@
     .hbar .val small { display: block; color: var(--muted); font-size: 12.5px; }
     .tasa-embudo { font-size: 12.5px; color: var(--muted); grid-column: 2 / 3; margin-top: -6px; }
 
-    @media (max-width: 1199.98px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rejilla { grid-template-columns: 1fr; } }
+    @media (max-width: 1199.98px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rejilla { grid-template-columns: minmax(0, 1fr); } }
     @media (max-width: 575.98px) { .kpi .v { font-size: 22px; } .hbar { grid-template-columns: 1fr auto; } .hbar .pista { grid-column: 1 / -1; order: 3; } .tasa-embudo { grid-column: 1 / -1; }
         .graf .barra { width: 5px; } .meses span { font-size: 10.5px; } }
 </style>

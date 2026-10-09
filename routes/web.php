@@ -56,6 +56,12 @@ Route::get('/vandu-fuente.woff2', fn () => response()->file(resource_path('fonts
 ]))->name('vandu.fuente');
 
 // Inicio de sesión del panel
+// El panel como app instalable (públicos: el navegador los pide antes de iniciar sesión)
+Route::get('/admin/manifest.webmanifest', [App\Http\Controllers\AppController::class, 'manifiesto'])->name('app.manifiesto');
+Route::get('/admin/sw.js', [App\Http\Controllers\AppController::class, 'serviceWorker'])->name('app.sw');
+Route::get('/admin/app/icono/{archivo}', [App\Http\Controllers\AppController::class, 'icono'])->where('archivo', '[a-z0-9-]+\.png')->name('app.icono');
+Route::get('/admin/sin-conexion', [App\Http\Controllers\AppController::class, 'sinConexion'])->name('app.sin-conexion');
+
 Route::middleware('guest')->group(function () {
     Route::get('/admin/login', [Admin\LoginController::class, 'show'])->name('login');
     Route::post('/admin/login', [Admin\LoginController::class, 'login'])->name('login.entrar');

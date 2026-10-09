@@ -2,10 +2,18 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="robots" content="noindex, nofollow">
     <title>Iniciar sesión · Vandu</title>
     <link rel="icon" href="/favi.svg" type="image/svg+xml">
+    <link rel="manifest" href="{{ route('app.manifiesto') }}">
+    <meta name="theme-color" content="#13161D">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Vandu">
+    <link rel="apple-touch-icon" href="{{ route('app.icono', 'apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ route('app.icono', 'favicon-32.png') }}">
     <link rel="preload" href="{{ route('vandu.fuente') }}" as="font" type="font/woff2" crossorigin>
     <style>
         @font-face { font-family: 'Geist'; src: url('{{ route('vandu.fuente') }}') format('woff2'); font-weight: 100 900; font-display: swap; }
@@ -54,7 +62,7 @@
         .volver:hover { color: var(--ink); }
 
         @media (max-width: 820px) {
-            body { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+            body { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
             .marca { padding: 28px 24px; gap: 20px; }
             .marca img { width: 104px; }
             .marca h1 { font-size: 28px; max-width: none; }
@@ -114,5 +122,6 @@
     </form>
 </main>
 
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register(@json(route('app.sw')), { scope: '/admin' }).catch(() => {});</script>
 </body>
 </html>

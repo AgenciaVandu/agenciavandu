@@ -20,8 +20,8 @@
     .mini > div + div { border-left: 1px solid var(--line); }
     .mini .v { font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
     .mini .k { font-size: 13px; color: var(--muted); }
-    @media (max-width: 991.98px) { .ficha { grid-template-columns: 1fr; } }
-    @media (max-width: 575.98px) { .mini { grid-template-columns: 1fr; } .mini > div + div { border-left: 0; border-top: 1px solid var(--line); } }
+    @media (max-width: 991.98px) { .ficha { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 575.98px) { .mini { grid-template-columns: minmax(0, 1fr); } .mini > div + div { border-left: 0; border-top: 1px solid var(--line); } }
 </style>
 @endpush
 

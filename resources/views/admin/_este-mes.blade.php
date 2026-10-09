@@ -55,7 +55,7 @@
     .em-vendido b { font-size: 20px; font-weight: 600; letter-spacing: -.01em; }
     .em-link { color: #00F385; font-size: 13.5px; font-weight: 500; text-decoration: none; }
     .em-link:hover { text-decoration: underline; color: #4DFFAE; }
-    @media (max-width: 767.98px) { .este-mes { grid-template-columns: 1fr; padding: 18px; gap: 16px; } .em-lado { border-left: 0; padding-left: 0; border-top: 1px solid rgba(255,255,255,.12); padding-top: 14px; } }
+    @media (max-width: 767.98px) { .este-mes { grid-template-columns: minmax(0, 1fr); padding: 18px; gap: 16px; } .em-lado { border-left: 0; padding-left: 0; border-top: 1px solid rgba(255,255,255,.12); padding-top: 14px; } }
 </style>
 @endpush
 @endonce
