@@ -37,6 +37,18 @@
     .fechas .nom { min-width: 200px; }
     .fechas .gate { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
     .fechas tr.completa td:first-child { box-shadow: inset 3px 0 0 var(--green-ink); }
+    @media (max-width: 991.98px) {
+        .fechas, .fechas tbody { display: block; }
+        .fechas thead { display: none; }
+        .fechas tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+        .fechas tbody tr:last-child { border-bottom: 0; }
+        .fechas tr.completa { box-shadow: inset 3px 0 0 var(--green-ink); }
+        .fechas tr.completa td:first-child { box-shadow: none; }
+        .fechas td { display: block; padding: 0; border: 0 !important; min-width: 0 !important; }
+        .fechas td[data-k]::before { content: attr(data-k); display: block; font-size: 12px; color: var(--muted); margin-bottom: 3px; }
+        .fechas td.nom { grid-column: 1 / -1; }
+        .fechas input[type=date] { min-width: 0; width: 100%; }
+    }
     .chips { display: flex; flex-wrap: wrap; gap: 6px; }
     .chips button { border: 1px solid var(--line-strong); background: var(--surface); border-radius: 99px; padding: 4px 12px; font-size: 13.5px; color: var(--text-2); }
     .chips button:hover, .chips button.activo { border-color: var(--ink); color: var(--text); }
@@ -163,19 +175,19 @@
                                     <input class="form-control fw-medium" :name="`etapas[${i}][nombre]`" x-model="e.nombre" required :aria-label="'Nombre de la etapa ' + (i + 1)">
                                     <div class="gate" x-show="bloqueos(e).length" x-text="'Requiere: ' + bloqueos(e).join(' y ')"></div>
                                 </td>
-                                <td>
+                                <td data-k="Inicio">
                                     <input type="date" class="form-control num" :name="`etapas[${i}][fecha_inicio]`" x-model="e.fecha_inicio" @change="alCambiarInicio(e)" :aria-label="(e.es_fecha ? 'Fecha de ' : 'Inicio de ') + e.nombre">
                                 </td>
-                                <td>
+                                <td data-k="Fin">
                                     <template x-if="!e.es_fecha"><input type="date" class="form-control num" :name="`etapas[${i}][fecha_fin]`" x-model="e.fecha_fin" :min="e.fecha_inicio" @change="alCambiarFin(e)" :aria-label="'Fin de ' + e.nombre"></template>
                                     <template x-if="e.es_fecha"><span class="secundario">Un solo día</span></template>
                                 </td>
-                                <td>
+                                <td data-k="Estado">
                                     <select class="form-select" :name="`etapas[${i}][estado]`" x-model="e.estado" @change="if (e.estado === 'completada' && !e.completada_el) e.completada_el = e.fecha_fin || e.fecha_inicio || hoy" :aria-label="'Estado de ' + e.nombre">
                                         @foreach(\App\Models\ProyectoEtapa::ESTADOS as $k => $l)<option value="{{ $k }}">{{ $l }}</option>@endforeach
                                     </select>
                                 </td>
-                                <td>
+                                <td data-k="Completada el">
                                     <input type="date" class="form-control num" :name="`etapas[${i}][completada_el]`" x-model="e.completada_el" :max="hoy" :disabled="e.estado !== 'completada'" :aria-label="'Completada el, ' + e.nombre">
                                 </td>
                             </tr>
@@ -195,21 +207,21 @@
                             <tr :class="{ completa: !!p.pagado_el }">
                                 <td class="nom"><span class="fw-medium" x-text="p.concepto"></span> <span class="secundario num" x-text="'· ' + (+p.porcentaje) + '%'"></span>
                                     <div class="gate" x-show="p.antes_de" x-text="'Antes de ' + nombreEtapa(p.antes_de)"></div></td>
-                                <td style="min-width:150px"><div class="input-group"><span class="input-group-text">$</span>
+                                <td data-k="Monto" style="min-width:150px"><div class="input-group"><span class="input-group-text">$</span>
                                     <input type="number" step="0.01" min="0" class="form-control num" :name="`pagos[${i}][monto]`" x-model="p.monto" required :aria-label="'Monto de ' + p.concepto"></div></td>
-                                <td x-show="forma === 'credito'">
+                                <td data-k="Vence el" x-show="forma === 'credito'">
                                     <input type="date" class="form-control num" :name="`pagos[${i}][vence_el]`" x-model="p.vence_el" @input="venceManual = true" :aria-label="'Vencimiento de ' + p.concepto">
                                     <div class="gate" x-show="!venceManual">Entrega + <span x-text="dias"></span> días</div>
                                 </td>
-                                <td>
+                                <td data-k="Pagado el">
                                     <input type="date" class="form-control num" :name="`pagos[${i}][pagado_el]`" x-model="p.pagado_el" :max="hoy" :aria-label="'Fecha de pago de ' + p.concepto">
                                     <div class="gate" x-show="!p.pagado_el">Vacío = pendiente</div>
                                 </td>
-                                <td style="min-width:170px"><select class="form-select" :name="`pagos[${i}][metodo]`" x-model="p.metodo" :aria-label="'Método de pago de ' + p.concepto">
+                                <td data-k="Método de pago" style="min-width:170px"><select class="form-select" :name="`pagos[${i}][metodo]`" x-model="p.metodo" :aria-label="'Método de pago de ' + p.concepto">
                                     <option value="">Sin especificar</option>
                                     @foreach(config('vandu.metodos_pago') as $mk => $ml)<option value="{{ $mk }}">{{ $ml }}</option>@endforeach
                                 </select></td>
-                                <td><input class="form-control" :name="`pagos[${i}][referencia]`" x-model="p.referencia" placeholder="Transferencia, folio…" :aria-label="'Referencia de ' + p.concepto"></td>
+                                <td data-k="Referencia"><input class="form-control" :name="`pagos[${i}][referencia]`" x-model="p.referencia" placeholder="Transferencia, folio…" :aria-label="'Referencia de ' + p.concepto"></td>
                             </tr>
                         </template>
                     </tbody>

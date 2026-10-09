@@ -205,6 +205,28 @@
         .main, .page, .panel { min-width: 0; }
         .table-responsive { max-width: 100%; position: relative; } /* que lo oculto para lectores no se salga del scroll */
 
+        /* ---------- Tablas en el celular: cada fila es una tarjeta, de 5 en 5 ---------- */
+        .pager-m { display: none; }
+        @media (max-width: 991.98px) {
+            table.tabla-m, .tabla-m tbody { display: block; width: 100%; }
+            .tabla-m thead { display: none; }
+            .tabla-m tbody tr { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+            .tabla-m tbody tr:last-child { border-bottom: 0; }
+            .tabla-m tbody tr.fuera-m { display: none; }
+            .tabla-m td { display: flow-root; flex: 1 1 100%; min-width: 0 !important; max-width: 100%; padding: 0; border: 0 !important; text-align: right !important; font-size: 14px; }
+            .tabla-m td::before { content: attr(data-k); float: left; margin-right: 12px; font-size: 12.5px; color: var(--muted); font-weight: 400; line-height: 1.9; }
+            .tabla-m td > .d-flex { justify-content: flex-end; }
+            .tabla-m td.m-titulo { text-align: left !important; padding-bottom: 4px; }
+            .tabla-m td.m-titulo::before, .tabla-m td.m-sin-k::before { content: none; }
+            .tabla-m td.m-sin-k { flex: 0 0 auto; margin-left: auto; }
+            .tabla-m td.m-sin-k + td.m-sin-k { margin-left: 0; }
+            .tabla-m td .text-truncate { max-width: 100%; }
+            .pager-m { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--line); background: var(--sunken); }
+            .pager-m button { width: 40px; height: 36px; border: 1px solid var(--line-strong); background: var(--surface); border-radius: 10px; color: var(--text); display: grid; place-items: center; }
+            .pager-m button:disabled { opacity: .35; }
+            .pager-m span { font-size: 13.5px; color: var(--text-2); }
+        }
+
         /* ---------- Ventana de correo ---------- */
         .correo-velo { position: fixed; inset: 0; z-index: 1080; background: rgba(15, 18, 25, .55); display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; overflow-y: auto; }
         .correo-ventana { background: var(--surface); border-radius: 16px; width: min(1180px, 100%); box-shadow: 0 24px 60px rgba(0,0,0,.25); display: flex; flex-direction: column; }
@@ -380,6 +402,68 @@
         document.querySelectorAll('.table-responsive [data-bs-toggle="dropdown"]').forEach((b) => {
             b.setAttribute('data-bs-popper-config', '{"strategy":"fixed"}');
         });
+        prepararTablas();
+    }
+
+    // En el celular cada fila se ve como tarjeta: cada celda lleva el nombre de su columna
+    function prepararTablas() {
+        document.querySelectorAll('table.tabla').forEach((t) => {
+            const nombres = [];
+            [...(t.tHead?.rows[0]?.cells || [])].forEach((th) => {
+                const c = th.cloneNode(true);
+                c.querySelectorAll('.visually-hidden').forEach((n) => n.remove());
+                for (let i = 0; i < (th.colSpan || 1); i++) nombres.push(c.textContent.trim());
+            });
+            t.classList.add('tabla-m');
+            [...t.tBodies].forEach((tb) => [...tb.rows].forEach((tr) => {
+                let col = 0;
+                [...tr.cells].forEach((td, j) => {
+                    if (!td.hasAttribute('data-k')) td.setAttribute('data-k', nombres[col] || '');
+                    td.classList.toggle('m-titulo', j === 0);
+                    td.classList.toggle('m-sin-k', j > 0 && !td.getAttribute('data-k'));
+                    col += td.colSpan || 1;
+                });
+            }));
+            paginarMovil(t);
+        });
+    }
+
+    // Más de 5 filas: en el celular se muestran de 5 en 5 (en computadora no cambia nada)
+    const POR_PAGINA_MOVIL = 5;
+    function paginarMovil(t) {
+        const filas = [...t.tBodies].flatMap((tb) => [...tb.rows]);
+        const caja = t.closest('.table-responsive') || t;
+        let pager = caja.nextElementSibling?.classList.contains('pager-m') ? caja.nextElementSibling : null;
+        if (filas.length <= POR_PAGINA_MOVIL) {
+            pager?.remove();
+            filas.forEach((f) => f.classList.remove('fuera-m'));
+            return;
+        }
+        if (!pager) {
+            pager = document.createElement('nav');
+            pager.className = 'pager-m';
+            pager.setAttribute('aria-label', 'Páginas de la tabla');
+            caja.after(pager);
+        }
+        const paginas = Math.ceil(filas.length / POR_PAGINA_MOVIL);
+        let pag = Math.min(+(t.dataset.pagM || 1), paginas);
+        const pintar = () => {
+            t.dataset.pagM = pag;
+            filas.forEach((f, i) => f.classList.toggle('fuera-m', Math.floor(i / POR_PAGINA_MOVIL) + 1 !== pag));
+            const de = (pag - 1) * POR_PAGINA_MOVIL + 1, a = Math.min(pag * POR_PAGINA_MOVIL, filas.length);
+            pager.innerHTML = `<button type="button" data-pm="-1" aria-label="Anteriores" ${pag === 1 ? 'disabled' : ''}><i class="bi bi-chevron-left"></i></button>`
+                + `<span class="num">${de}–${a} de ${filas.length}</span>`
+                + `<button type="button" data-pm="1" aria-label="Siguientes" ${pag === paginas ? 'disabled' : ''}><i class="bi bi-chevron-right"></i></button>`;
+        };
+        pager.onclick = (e) => {
+            const b = e.target.closest('[data-pm]');
+            if (!b || b.disabled) return;
+            pag = Math.max(1, Math.min(paginas, pag + +b.dataset.pm));
+            pintar();
+            const arriba = caja.getBoundingClientRect().top;
+            if (arriba < 70) window.scrollBy({ top: arriba - 80 });
+        };
+        pintar();
     }
     prepararPagina();
 
