@@ -49,7 +49,11 @@
         .hdr .emisor { text-align: right; font-size: 13px; line-height: 1.55; }
         .hdr .emisor a { color: #e6e6e6; text-decoration: none; }
 
-        .titulo { margin: 36px 0 8px; }
+        .atras { display: inline-flex; align-items: center; gap: 8px; margin: 22px 0 0; padding: 8px 14px 8px 10px; border: 1.5px solid var(--line);
+                 border-radius: 10px; text-decoration: none; font-weight: 500; font-size: 15px; color: var(--ink); background: #fff; cursor: pointer; font-family: inherit; }
+        .atras:hover { border-color: var(--ink); }
+        .atras svg { width: 18px; height: 18px; }
+        .titulo { margin: 24px 0 8px; }
         .titulo .cli { color: var(--muted); }
         .titulo h1 { font-size: clamp(26px, 4vw, 34px); line-height: 1.15; letter-spacing: -.02em; margin: 4px 0 0; font-weight: 600; }
         .avance { display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; align-items: end; margin: 24px 0 8px; }
@@ -161,8 +165,20 @@
         </div>
     </header>
 
+    @if($p->presupuesto)
+        <a class="atras" href="{{ $p->presupuesto->url_publica }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg>
+            Volver a mi cotización
+        </a>
+    @else
+        <button type="button" class="atras" onclick="history.length > 1 ? history.back() : null">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg>
+            Ir atrás
+        </button>
+    @endif
+
     <section class="titulo">
-        <div class="cli">{{ $quien }} · {{ $p->tipo_nombre }}@if($p->presupuesto) · <a href="{{ $p->presupuesto->url_publica }}" style="color:inherit">Ver cotización {{ $p->presupuesto->folio }}</a>@endif</div>
+        <div class="cli">{{ $quien }} · {{ $p->tipo_nombre }}</div>
         <h1>{{ $p->nombre }}</h1>
     </section>
 
