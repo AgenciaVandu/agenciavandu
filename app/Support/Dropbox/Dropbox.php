@@ -17,6 +17,7 @@ class Dropbox
     public const API = 'https://api.dropboxapi.com/2/';
     public const CONTENIDO = 'https://content.dropboxapi.com/2/';
     public const CHUNK = 8 * 1024 * 1024;
+    public const PERMISOS = ['account_info.read', 'files.metadata.read', 'files.metadata.write', 'files.content.read', 'files.content.write', 'sharing.read', 'sharing.write'];
 
     private static ?Dropbox $instancia = null;
 
@@ -49,6 +50,8 @@ class Dropbox
             'client_id'         => config('vandu.dropbox.app_key'),
             'response_type'     => 'code',
             'token_access_type' => 'offline',
+            // Pide todos los permisos que usa el panel (si la app no los tiene activos, Dropbox lo avisa al conectar)
+            'scope'             => implode(' ', self::PERMISOS),
             'redirect_uri'      => route('admin.dropbox.conectar'),
             'state'             => $estado,
         ]);
@@ -153,6 +156,12 @@ class Dropbox
             return $r->json() ?? [];
         }
         $resumen = $r->json('error_summary') ?? Str::limit($r->body(), 200);
+        // Permiso que falta en la app de Dropbox: explicar cómo arreglarlo
+        if (str_contains($resumen, 'missing_scope') || str_contains($r->body(), 'required scope')) {
+            preg_match("/scope '([a-z._]+)'/", $r->body(), $m);
+            $permiso = $m[1] ?? ($r->json('error.required_scope') ?? 'el permiso que falta');
+            throw new DropboxError("A tu app de Dropbox le falta el permiso «{$permiso}». Actívalo en dropbox.com/developers → tu app → Permissions → Submit, y luego en el panel desconecta y vuelve a conectar Dropbox.", $resumen);
+        }
         throw new DropboxError("Dropbox ($endpoint): $resumen", $resumen);
     }
 
