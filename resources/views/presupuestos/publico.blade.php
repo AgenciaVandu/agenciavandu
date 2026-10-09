@@ -3,7 +3,8 @@
     // Una cotización aceptada sigue disponible aunque pase su vigencia
     $aceptada = $p->estado === 'aceptada';
     $proyecto = $p->proyecto;
-    $vigente = $p->vigente || $aceptada;
+    $negociando = $p->estado === 'negociacion' && ! $p->vigente;
+    $vigente = $p->vigente || $aceptada || $p->estado === 'negociacion';
     $secciones = $p->consideraciones_limpias;
     $vence = \App\Models\Presupuesto::fechaLarga($p->vigencia_local) . ' a las ' . $p->vigencia_local->format('H:i');
     $wa = config('vandu.whatsapp');
@@ -152,12 +153,14 @@
 <body>
 
 {{-- ================= Barra de vigencia con cuenta regresiva ================= --}}
-<div class="vig {{ $aceptada ? 'aceptada' : ($vigente ? '' : 'vencida') }}" id="vig" role="status" data-fin="{{ $p->vigente_hasta->toIso8601String() }}">
+<div class="vig {{ $aceptada || $negociando ? 'aceptada' : ($vigente ? '' : 'vencida') }}" id="vig" role="status" data-fin="{{ $p->vigente_hasta->toIso8601String() }}">
     <div class="in">
         <span class="punto" aria-hidden="true"></span>
         @if($aceptada)
             <span class="txt">Cotización aceptada{{ $p->aceptada_el ? ' el ' . \App\Models\Presupuesto::fechaLarga($p->aceptada_el) : '' }}. ¡Gracias por tu confianza!</span>
             @if($proyecto)<a class="ir" href="{{ $proyecto->url_publica }}">Ver proyecto →</a>@endif
+        @elseif($negociando)
+            <span class="txt">Estamos afinando los detalles de esta cotización contigo.</span>
         @elseif($vigente)
             <span class="txt">Esta cotización es válida hasta el {{ $vence }}</span>
             <span class="reloj num" aria-label="Tiempo restante">

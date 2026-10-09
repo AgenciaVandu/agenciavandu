@@ -369,7 +369,7 @@
                 <div class="panel-head"><h2>Estado</h2></div>
                 <div class="panel-body">
                     <div class="estados" role="radiogroup" aria-label="Estado">
-                        @php $colores = ['borrador' => '#8A90A0', 'enviada' => 'var(--blue)', 'aceptada' => 'var(--green-ink)', 'rechazada' => 'var(--red)']; @endphp
+                        @php $colores = ['borrador' => '#8A90A0', 'enviada' => 'var(--blue)', 'negociacion' => '#6E32B5', 'aceptada' => 'var(--green-ink)', 'rechazada' => 'var(--red)']; @endphp
                         @foreach(\App\Models\Presupuesto::ESTADOS as $k => $label)
                             <label><input type="radio" name="estado" value="{{ $k }}" x-model="estadoSel"><span class="pt" style="background: {{ $colores[$k] }}"></span> {{ $label }}</label>
                         @endforeach

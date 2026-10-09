@@ -133,7 +133,7 @@
     <a href="{{ route('admin.presupuestos.index', ['filtro' => 'vigentes']) }}" class="panel kpi text-reset text-decoration-none">
         <div class="k"><i class="bi bi-send"></i> En juego</div>
         <div class="v num">{{ $d($kpi['enJuego']) }}</div>
-        <div class="s num">{{ $kpi['abiertas'] }} {{ $kpi['abiertas'] === 1 ? 'cotización abierta' : 'cotizaciones abiertas' }} · hoy</div>
+        <div class="s num">{{ $kpi['abiertas'] }} {{ $kpi['abiertas'] === 1 ? 'abierta' : 'abiertas' }}@if($kpi['negociacion']) · {{ $kpi['negociacion'] }} en negociación ({{ $d($kpi['negociacionMonto']) }})@endif</div>
     </a>
 </div>
 <div class="kpis">

@@ -2,7 +2,7 @@
 @section('titulo', 'Cotizaciones')
 
 @php
-    $filtros = ['vigentes' => 'Vigentes', 'por_vencer' => 'Por vencer', 'vencidas' => 'Vencidas', 'aceptada' => 'Aceptadas', 'todas' => 'Todas'];
+    $filtros = ['vigentes' => 'Vigentes', 'por_vencer' => 'Por vencer', 'negociacion' => 'En negociación', 'vencidas' => 'Vencidas', 'aceptada' => 'Aceptadas', 'todas' => 'Todas'];
 @endphp
 
 @section('contenido')

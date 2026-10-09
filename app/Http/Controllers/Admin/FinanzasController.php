@@ -48,13 +48,13 @@ class FinanzasController extends Controller
         ]));
 
         $enRango = fn (?string $fecha) => $fecha && (! $desde || $fecha >= $desde) && (! $hasta || $fecha <= $hasta);
-        $perdida = fn (Presupuesto $p) => $p->estado === 'rechazada' || ($p->estado !== 'aceptada' && ! $p->vigente);
+        $perdida = fn (Presupuesto $p) => $p->perdida;
 
         $delPeriodo = $cotizaciones->filter(fn ($p) => $enRango($p->fecha->toDateString()));
         $ganadas = $cotizaciones->filter(fn ($p) => $p->estado === 'aceptada' && $enRango(($p->aceptada_el ?? $p->updated_at->copy()->setTimezone($tz))->toDateString()));
         $perdidas = $delPeriodo->filter($perdida);
         $resueltasPeriodo = $delPeriodo->filter(fn ($p) => $p->estado === 'aceptada' || $perdida($p));
-        $abiertas = $cotizaciones->filter(fn ($p) => ! in_array($p->estado, ['aceptada', 'rechazada']) && $p->vigente);
+        $abiertas = $cotizaciones->filter(fn ($p) => $p->abierta);
         $cobrados = $pagos->filter(fn ($x) => $x->pago->pagado_el && $enRango($x->pago->pagado_el->toDateString()));
         $porCobrar = $pagos->filter(fn ($x) => ! $x->pago->pagado_el && $x->proyecto->estado !== 'pausado')
             ->sortBy(fn ($x) => $x->proyecto->fecha_inicio?->toDateString() ?? '9999');
@@ -72,6 +72,8 @@ class FinanzasController extends Controller
             'perdidas'       => $perdidas->count(),
             'enJuego'        => $suma($abiertas),
             'abiertas'       => $abiertas->count(),
+            'negociacion'    => $abiertas->where('estado', 'negociacion')->count(),
+            'negociacionMonto' => $suma($abiertas->where('estado', 'negociacion')),
             'cobrado'        => round($cobrados->sum('monto'), 2),
             'cobros'         => $cobrados->count(),
             'porCobrar'      => round($porCobrar->sum('monto'), 2),
@@ -167,7 +169,7 @@ class FinanzasController extends Controller
             fwrite($out, "\xEF\xBB\xBF"); // BOM para que Excel lea los acentos
             fputcsv($out, ['Folio', 'Fecha', 'Cliente', 'Empresa', 'Concepto principal', 'Estado', 'Resultado', 'Aceptada el', 'Subtotal', 'IVA', 'Total', 'Cobrado', 'Por cobrar', 'Tipo de proyecto']);
             foreach ($filas as $p) {
-                $perdida = $p->estado === 'rechazada' || ($p->estado !== 'aceptada' && ! $p->vigente);
+                $perdida = $p->perdida;
                 $cobrado = $p->proyecto ? $p->proyecto->pagos->whereNotNull('pagado_el')->sum('monto') : 0;
                 $pend = $p->proyecto ? $p->proyecto->pagos->whereNull('pagado_el')->sum('monto') : 0;
                 fputcsv($out, [

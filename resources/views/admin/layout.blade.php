@@ -1,7 +1,8 @@
 @php
     $usuario = auth()->user();
     $iniciales = collect(explode(' ', trim($usuario?->name ?? 'V')))->filter()->take(2)->map(fn ($p) => mb_substr($p, 0, 1))->join('');
-    $vigentesNav = \App\Models\Presupuesto::where('vigente_hasta', '>', now())->whereNotIn('estado', ['aceptada', 'rechazada'])->count();
+    $vigentesNav = \App\Models\Presupuesto::where(fn ($q) => $q->where('estado', 'negociacion')
+        ->orWhere(fn ($q2) => $q2->where('vigente_hasta', '>', now())->whereNotIn('estado', ['aceptada', 'rechazada'])))->count();
     $activosNav = \App\Models\Proyecto::where('estado', 'activo')->count();
     $nav = [
         ['ruta' => 'admin.resumen',             'activo' => 'admin.resumen',          'icono' => 'bi-grid-1x2',        'texto' => 'Resumen'],
@@ -140,6 +141,7 @@
         .estado-enviada { background: var(--blue-soft); color: var(--blue); }
         .estado-aceptada { background: var(--green-soft); color: var(--green-ink); }
         .estado-rechazada { background: var(--red-soft); color: var(--red); }
+        .estado-negociacion { background: #F3E8FD; color: #6E32B5; }
         .vig { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; white-space: nowrap; }
         .vig-ok { color: var(--text-2); } .vig-ok i { color: var(--green-ink); }
         .vig-pronto { color: var(--amber); }

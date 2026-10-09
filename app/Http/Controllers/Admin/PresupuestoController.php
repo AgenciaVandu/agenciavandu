@@ -24,8 +24,9 @@ class PresupuestoController extends Controller
                 ->where('folio', 'like', "%$q%")
                 ->orWhere('cliente_nombre', 'like', "%$q%")
                 ->orWhere('cliente_empresa', 'like', "%$q%")))
-            ->when($filtro === 'vigentes', fn ($w) => $w->where('vigente_hasta', '>', now())->whereNotIn('estado', ['aceptada', 'rechazada']))
-            ->when($filtro === 'vencidas', fn ($w) => $w->where('vigente_hasta', '<=', now()))
+            ->when($filtro === 'vigentes', fn ($w) => $w->where(fn ($q) => $q->where('estado', 'negociacion')
+                ->orWhere(fn ($q2) => $q2->where('vigente_hasta', '>', now())->whereNotIn('estado', ['aceptada', 'rechazada']))))
+            ->when($filtro === 'vencidas', fn ($w) => $w->where('vigente_hasta', '<=', now())->whereNotIn('estado', ['aceptada', 'negociacion']))
             ->when($filtro === 'por_vencer', fn ($w) => $w->whereBetween('vigente_hasta', [now(), now()->addHours(72)])
                 ->whereNotIn('estado', ['aceptada', 'rechazada']))
             ->when(array_key_exists($filtro, Presupuesto::ESTADOS), fn ($w) => $w->where('estado', $filtro))
@@ -34,10 +35,12 @@ class PresupuestoController extends Controller
             ->withQueryString();
 
         $conteos = [
-            'vigentes'   => Presupuesto::where('vigente_hasta', '>', now())->whereNotIn('estado', ['aceptada', 'rechazada'])->count(),
+            'vigentes'   => Presupuesto::where(fn ($q) => $q->where('estado', 'negociacion')
+                ->orWhere(fn ($q2) => $q2->where('vigente_hasta', '>', now())->whereNotIn('estado', ['aceptada', 'rechazada'])))->count(),
             'por_vencer' => Presupuesto::whereBetween('vigente_hasta', [now(), now()->addHours(72)])->whereNotIn('estado', ['aceptada', 'rechazada'])->count(),
-            'vencidas'   => Presupuesto::where('vigente_hasta', '<=', now())->count(),
+            'vencidas'   => Presupuesto::where('vigente_hasta', '<=', now())->whereNotIn('estado', ['aceptada', 'negociacion'])->count(),
             'aceptada'   => Presupuesto::where('estado', 'aceptada')->count(),
+            'negociacion' => Presupuesto::where('estado', 'negociacion')->count(),
             'todas'      => Presupuesto::count(),
         ];
 

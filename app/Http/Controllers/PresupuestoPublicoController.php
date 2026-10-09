@@ -28,7 +28,7 @@ class PresupuestoPublicoController extends Controller
     {
         $p = Presupuesto::where('token', $token)->firstOrFail();
 
-        if (! $p->vigente && $p->estado !== 'aceptada') {
+        if (! $p->vigente && ! in_array($p->estado, ['aceptada', 'negociacion'], true)) {
             return redirect()->route('presupuesto.publico', $token);
         }
 

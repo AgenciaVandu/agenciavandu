@@ -19,14 +19,14 @@ class ResumenController extends Controller
         $todas = Presupuesto::with(['conceptos', 'cliente'])->latest()->get();
         $abiertas = fn ($p) => ! in_array($p->estado, ['aceptada', 'rechazada']);
 
-        $vigentes = $todas->filter(fn ($p) => $p->vigente_hasta->gt($ahora) && $abiertas($p));
-        $porVencer = $vigentes->filter(fn ($p) => $p->vigente_hasta->lte($ahora->copy()->addHours(72)))
+        $vigentes = $todas->filter(fn ($p) => $p->abierta);
+        $porVencer = $vigentes->filter(fn ($p) => $p->estado !== 'negociacion' && $p->vigente_hasta->gt($ahora) && $p->vigente_hasta->lte($ahora->copy()->addHours(72)))
             ->sortBy('vigente_hasta')->values();
         $aceptadasMes = $todas->filter(fn ($p) => $p->estado === 'aceptada' && ($p->aceptada_el?->format('Y-m') ?? $p->updated_at->copy()->setTimezone($tz)->format('Y-m')) === now($tz)->format('Y-m'));
 
         // Tasa de aceptación de los últimos 90 días (solo cotizaciones ya resueltas o vencidas)
         $recientes = $todas->filter(fn ($p) => $p->fecha->gte($ahora->copy()->subDays(90)));
-        $resueltas = $recientes->filter(fn ($p) => in_array($p->estado, ['aceptada', 'rechazada']) || ! $p->vigente);
+        $resueltas = $recientes->filter(fn ($p) => $p->estado === 'aceptada' || $p->perdida);
         $tasa = $resueltas->count() ? round($resueltas->where('estado', 'aceptada')->count() / $resueltas->count() * 100) : null;
 
         // Monto cotizado por mes (últimos 6 meses, por fecha de la cotización)

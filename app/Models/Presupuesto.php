@@ -12,7 +12,8 @@ class Presupuesto extends Model
 {
     public const ESTADOS = [
         'borrador'  => 'Borrador',
-        'enviada'   => 'Enviada',
+        'enviada'     => 'Enviada',
+        'negociacion' => 'En negociación',
         'aceptada'  => 'Aceptada',
         'rechazada' => 'Rechazada',
     ];
@@ -169,6 +170,20 @@ class Presupuesto extends Model
     public function getVigenciaLocalAttribute(): Carbon
     {
         return $this->vigente_hasta->copy()->setTimezone(config('vandu.zona_horaria'));
+    }
+
+    /** En negociación sigue viva aunque pase su vigencia: no se da por perdida */
+    public function getPerdidaAttribute(): bool
+    {
+        return $this->estado === 'rechazada'
+            || (! in_array($this->estado, ['aceptada', 'negociacion'], true) && ! $this->vigente);
+    }
+
+    /** Abierta = se puede ganar todavía */
+    public function getAbiertaAttribute(): bool
+    {
+        return $this->estado === 'negociacion'
+            || (! in_array($this->estado, ['aceptada', 'rechazada'], true) && $this->vigente);
     }
 
     public function getVigenteAttribute(): bool
