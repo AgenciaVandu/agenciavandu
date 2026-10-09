@@ -167,6 +167,7 @@ class PresupuestoController extends Controller
 
             'vigente_hasta'    => 'required|date',
             'estado'           => ['required', Rule::in(array_keys(Presupuesto::ESTADOS))],
+            'aceptada_el'      => 'nullable|date',
             'notas_internas'   => 'nullable|string|max:5000',
         ], [
             'conceptos.required' => 'Agrega al menos un concepto.',

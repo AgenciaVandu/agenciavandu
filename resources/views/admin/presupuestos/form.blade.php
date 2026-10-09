@@ -372,6 +372,11 @@
                             <label><input type="radio" name="estado" value="{{ $k }}" x-model="estadoSel"><span class="pt" style="background: {{ $colores[$k] }}"></span> {{ $label }}</label>
                         @endforeach
                     </div>
+                    <div class="mt-3" x-show="estadoSel === 'aceptada'" x-cloak>
+                        <label class="form-label" for="aceptada_el">Aceptada el</label>
+                        <input type="date" name="aceptada_el" id="aceptada_el" class="form-control num" value="{{ old('aceptada_el', $p->aceptada_el?->toDateString()) }}" :disabled="estadoSel !== 'aceptada'">
+                        <div class="secundario mt-1" style="font-size:12.5px">Si la dejas vacía se usa la fecha de hoy.</div>
+                    </div>
                     <label class="form-label mt-3" for="notas_internas">Notas internas</label>
                     <textarea name="notas_internas" id="notas_internas" rows="3" class="form-control" placeholder="El cliente no las ve">{{ old('notas_internas', $p->notas_internas) }}</textarea>
                 </div>
@@ -421,8 +426,19 @@
                                     <label><input type="radio" name="tipo" value="{{ $k }}" form="convertir" @checked($k === $sugerido)><i class="bi {{ $m['icono'] }}"></i> {{ $m['nombre'] }}</label>
                                 @endforeach
                             </div>
-                            <label class="form-label" for="fecha_inicio_p">Inicia el</label>
-                            <input type="date" id="fecha_inicio_p" name="fecha_inicio" form="convertir" class="form-control num mb-3" value="{{ now(config('vandu.zona_horaria'))->toDateString() }}">
+                            <div x-data="{ terminado: false }">
+                                <label class="form-label" for="fecha_inicio_p" x-text="terminado ? 'Empezó el' : 'Inicia el'">Inicia el</label>
+                                <input type="date" id="fecha_inicio_p" name="fecha_inicio" form="convertir" class="form-control num mb-3" value="{{ ($p->aceptada_el ?? now(config('vandu.zona_horaria')))->toDateString() }}">
+                                <label class="form-check mb-2">
+                                    <input type="checkbox" class="form-check-input" name="terminado" value="1" form="convertir" x-model="terminado">
+                                    <span class="form-check-label">Ya se pagó y terminó</span>
+                                </label>
+                                <div x-show="terminado" x-cloak class="mb-3">
+                                    <label class="form-label" for="fecha_fin_p">Terminó el</label>
+                                    <input type="date" id="fecha_fin_p" name="fecha_fin" form="convertir" class="form-control num" value="{{ now(config('vandu.zona_horaria'))->subDay()->toDateString() }}" max="{{ now(config('vandu.zona_horaria'))->toDateString() }}" :disabled="!terminado">
+                                    <div class="secundario mt-1" style="font-size:12.5px">Se crea con todas las etapas completadas y los pagos registrados. Después puedes ajustar cualquier fecha.</div>
+                                </div>
+                            </div>
                             <button type="submit" form="convertir" class="btn btn-acento w-100"><i class="bi bi-kanban me-1"></i> Crear proyecto</button>
                         </div>
                     </section>

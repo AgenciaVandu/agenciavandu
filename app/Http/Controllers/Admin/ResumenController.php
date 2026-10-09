@@ -22,7 +22,7 @@ class ResumenController extends Controller
         $vigentes = $todas->filter(fn ($p) => $p->vigente_hasta->gt($ahora) && $abiertas($p));
         $porVencer = $vigentes->filter(fn ($p) => $p->vigente_hasta->lte($ahora->copy()->addHours(72)))
             ->sortBy('vigente_hasta')->values();
-        $aceptadasMes = $todas->filter(fn ($p) => $p->estado === 'aceptada' && $p->updated_at->gte($inicioMes));
+        $aceptadasMes = $todas->filter(fn ($p) => $p->estado === 'aceptada' && ($p->aceptada_el?->format('Y-m') ?? $p->updated_at->copy()->setTimezone($tz)->format('Y-m')) === now($tz)->format('Y-m'));
 
         // Tasa de aceptación de los últimos 90 días (solo cotizaciones ya resueltas o vencidas)
         $recientes = $todas->filter(fn ($p) => $p->fecha->gte($ahora->copy()->subDays(90)));

@@ -234,6 +234,9 @@
                                         <div class="col-md-3"><label class="form-label">Inicio</label><input type="date" name="fecha_inicio" value="{{ $e->fecha_inicio?->toDateString() }}" class="form-control form-control-sm num"></div>
                                         <div class="col-md-3"><label class="form-label">Fin</label><input type="date" name="fecha_fin" value="{{ $e->fecha_fin?->toDateString() }}" class="form-control form-control-sm num"></div>
                                     @endif
+                                    @if($e->estado === 'completada')
+                                        <div class="col-md-6"><label class="form-label">Completada el</label><input type="date" name="completada_el" value="{{ $e->completada_at?->timezone(config('vandu.zona_horaria'))->toDateString() }}" max="{{ $hoy }}" class="form-control form-control-sm num"></div>
+                                    @endif
                                     <div class="col-12"><label class="form-label">Descripción para el cliente</label><textarea name="descripcion" rows="2" class="form-control form-control-sm">{{ $e->descripcion }}</textarea></div>
                                     <div class="col-12 d-flex gap-2 justify-content-end">
                                         <button type="button" class="btn btn-sm btn-fantasma" @click="editar = false">Cancelar</button>

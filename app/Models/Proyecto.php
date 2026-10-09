@@ -47,13 +47,17 @@ class Proyecto extends Model
         return Str::contains($texto, config('vandu.palabras_audiovisual', [])) ? 'audiovisual' : 'web';
     }
 
-    public static function desdePresupuesto(Presupuesto $p, string $tipo, ?Carbon $inicio = null): self
+    /**
+     * @param Carbon|null $fin  Si se da, el proyecto se registra como ya terminado: etapas repartidas
+     *                          entre $inicio y $fin, todas completadas, y los pagos registrados.
+     */
+    public static function desdePresupuesto(Presupuesto $p, string $tipo, ?Carbon $inicio = null, ?Carbon $fin = null): self
     {
         $metodo = config("vandu.proyectos.$tipo");
         abort_unless($metodo, 422, 'Tipo de proyecto no válido.');
         $inicio ??= now(config('vandu.zona_horaria'))->startOfDay();
 
-        return DB::transaction(function () use ($p, $tipo, $metodo, $inicio) {
+        return DB::transaction(function () use ($p, $tipo, $metodo, $inicio, $fin) {
             $p->loadMissing('conceptos');
             $primero = Str::of($p->conceptos->first()?->descripcion ?? $metodo['nombre'])->before("\n")->limit(70, '…');
 
@@ -62,16 +66,34 @@ class Proyecto extends Model
                 'presupuesto_id' => $p->id,
                 'tipo'           => $tipo,
                 'nombre'         => (string) $primero,
-                'estado'         => 'activo',
+                'estado'         => $fin ? 'terminado' : 'activo',
                 'monto_total'    => $p->total,
                 'fecha_inicio'   => $inicio,
             ]);
+
+            $historico = $fin !== null;
+            $fechasEtapa = $historico ? self::repartir($metodo['etapas'], $inicio, $fin) : null;
 
             // Etapas con fechas propuestas en días hábiles (las de "fecha" se agendan después)
             $cursor = $inicio->copy();
             foreach ($metodo['etapas'] as $i => $e) {
                 $agendada = ! empty($e['fecha']);
-                $fin = $agendada ? null : $cursor->copy()->addWeekdays(max(1, $e['dias']) - 1);
+                if ($historico) {
+                    [$ini, $finEtapa] = $fechasEtapa[$i];
+                    $proyecto->etapas()->create([
+                        'clave'         => $e['clave'],
+                        'nombre'        => $e['nombre'],
+                        'descripcion'   => $e['descripcion'] ?? null,
+                        'orden'         => $i,
+                        'es_fecha'      => $agendada,
+                        'estado'        => 'completada',
+                        'fecha_inicio'  => $agendada ? $finEtapa : $ini,
+                        'fecha_fin'     => $agendada ? null : $finEtapa,
+                        'completada_at' => $finEtapa->copy()->setTime(18, 0)->shiftTimezone(config('vandu.zona_horaria'))->setTimezone(config('app.timezone')),
+                    ]);
+                    continue;
+                }
+                $finEt = $agendada ? null : $cursor->copy()->addWeekdays(max(1, $e['dias']) - 1);
                 $proyecto->etapas()->create([
                     'clave'        => $e['clave'],
                     'nombre'       => $e['nombre'],
@@ -79,12 +101,15 @@ class Proyecto extends Model
                     'orden'        => $i,
                     'es_fecha'     => $agendada,
                     'fecha_inicio' => $agendada ? null : $cursor->copy(),
-                    'fecha_fin'    => $fin,
+                    'fecha_fin'    => $finEt,
                 ]);
-                if ($fin) {
-                    $cursor = $fin->copy()->addWeekday();
+                if ($finEt) {
+                    $cursor = $finEt->copy()->addWeekday();
                 }
             }
+            $inicioDeEtapa = $historico
+                ? collect($metodo['etapas'])->mapWithKeys(fn ($e, $i) => [$e['clave'] => ! empty($e['fecha']) ? $fechasEtapa[$i][1] : $fechasEtapa[$i][0]])
+                : collect();
 
             // Pagos: el último absorbe el redondeo
             $acumulado = 0;
@@ -99,11 +124,32 @@ class Proyecto extends Model
                     'monto'      => $monto,
                     'antes_de'   => $pg['antes_de'] ?? null,
                     'orden'      => $i,
+                    // En proyectos ya terminados: el primer pago al inicio, los demás al empezar la etapa que habilitan
+                    'pagado_el'  => $historico ? ($i === 0 ? $inicio->copy() : ($inicioDeEtapa[$pg['antes_de'] ?? ''] ?? $fin->copy())) : null,
                 ]);
             }
 
             return $proyecto;
         });
+    }
+
+    /**
+     * Reparte las etapas entre dos fechas según su duración estimada.
+     * @return array<int, array{0: Carbon, 1: Carbon}> [inicio, fin] por etapa
+     */
+    private static function repartir(array $etapas, Carbon $inicio, Carbon $fin): array
+    {
+        $pesos = array_map(fn ($e) => max(1, $e['dias'] ?? 1), $etapas);
+        $total = array_sum($pesos);
+        $dias = max(0, $inicio->diffInDays($fin));
+        $acum = 0; $salida = [];
+        foreach ($pesos as $i => $peso) {
+            $desde = $inicio->copy()->addDays((int) floor($acum / $total * $dias));
+            $acum += $peso;
+            $hasta = $i === count($pesos) - 1 ? $fin->copy() : $inicio->copy()->addDays(max(0, (int) floor($acum / $total * $dias) - 1));
+            $salida[] = [$desde, $hasta->lt($desde) ? $desde->copy() : $hasta];
+        }
+        return $salida;
     }
 
     /* ---------------- Lectura ---------------- */

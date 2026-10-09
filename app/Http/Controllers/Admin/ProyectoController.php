@@ -42,17 +42,26 @@ class ProyectoController extends Controller
         $data = $request->validate([
             'tipo'         => ['required', Rule::in(array_keys(config('vandu.proyectos')))],
             'fecha_inicio' => 'nullable|date',
+            'terminado'    => 'nullable|boolean',
+            'fecha_fin'    => 'nullable|required_if:terminado,1|date|after_or_equal:fecha_inicio|before_or_equal:today',
+        ], [
+            'fecha_fin.required_if'     => 'Indica cuándo terminó el proyecto.',
+            'fecha_fin.after_or_equal'  => 'La fecha de fin no puede ser antes del inicio.',
+            'fecha_fin.before_or_equal' => 'La fecha de fin no puede ser futura.',
         ]);
 
-        $inicio = isset($data['fecha_inicio']) ? Carbon::parse($data['fecha_inicio'], config('vandu.zona_horaria')) : null;
-        $proyecto = Proyecto::desdePresupuesto($presupuesto, $data['tipo'], $inicio);
+        $tz = config('vandu.zona_horaria');
+        $inicio = isset($data['fecha_inicio']) ? Carbon::parse($data['fecha_inicio'], $tz)->startOfDay() : null;
+        $fin = $request->boolean('terminado') && ! empty($data['fecha_fin']) ? Carbon::parse($data['fecha_fin'], $tz)->startOfDay() : null;
+        $proyecto = Proyecto::desdePresupuesto($presupuesto, $data['tipo'], $inicio, $fin);
 
         if ($presupuesto->estado !== 'aceptada') {
-            $presupuesto->update(['estado' => 'aceptada']);
+            $presupuesto->update(['estado' => 'aceptada', 'aceptada_el' => $presupuesto->aceptada_el ?? $inicio?->toDateString()]);
         }
 
-        return redirect()->route('admin.proyectos.show', $proyecto)
-            ->with('ok', "Proyecto creado a partir de {$presupuesto->folio}. Revisa las fechas propuestas.");
+        return redirect()->route('admin.proyectos.show', $proyecto)->with('ok', $fin
+            ? "Proyecto terminado registrado a partir de {$presupuesto->folio}: etapas completadas y pagos registrados."
+            : "Proyecto creado a partir de {$presupuesto->folio}. Revisa las fechas propuestas.");
     }
 
     public function show(Proyecto $proyecto)
@@ -100,7 +109,9 @@ class ProyectoController extends Controller
             'descripcion'  => 'nullable|string|max:2000',
             'fecha_inicio' => 'nullable|date',
             'fecha_fin'    => 'nullable|date|after_or_equal:fecha_inicio',
-        ], ['fecha_fin.after_or_equal' => 'La fecha final no puede ser antes del inicio.']);
+            'completada_el' => 'nullable|date|before_or_equal:today',
+        ], [
+            'completada_el.before_or_equal' => 'La fecha en que se completó no puede ser futura.','fecha_fin.after_or_equal' => 'La fecha final no puede ser antes del inicio.']);
 
         // Regla de la metodología: no se avanza una etapa con pagos pendientes que la habilitan
         if (! empty($data['estado']) && $data['estado'] !== 'pendiente') {
@@ -121,6 +132,9 @@ class ProyectoController extends Controller
         }
         if ($request->filled('nombre')) $cambios['nombre'] = $data['nombre'];
         if ($request->has('descripcion')) $cambios['descripcion'] = $data['descripcion'];
+        if ($request->filled('completada_el') && ($cambios['estado'] ?? $etapa->estado) === 'completada') {
+            $cambios['completada_at'] = Carbon::parse($data['completada_el'], config('vandu.zona_horaria'))->setTime(18, 0)->setTimezone(config('app.timezone'));
+        }
         if ($request->has('fechas')) {
             $cambios['fecha_inicio'] = $data['fecha_inicio'] ?? null;
             $cambios['fecha_fin'] = $etapa->es_fecha ? null : ($data['fecha_fin'] ?? null);

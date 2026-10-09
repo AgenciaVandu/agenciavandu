@@ -29,11 +29,12 @@ class Presupuesto extends Model
         'modo_iva', 'iva_porcentaje', 'consideraciones',
         'mostrar_pago', 'pago_intro', 'banco', 'clabe', 'beneficiario',
         'nota_comprobante', 'nota_factura',
-        'vigente_hasta', 'estado', 'notas_internas',
+        'vigente_hasta', 'estado', 'aceptada_el', 'notas_internas',
     ];
 
     protected $casts = [
         'fecha'           => 'date',
+        'aceptada_el'     => 'date',
         'vigente_hasta'   => 'datetime',
         'ultima_vista_at' => 'datetime',
         'consideraciones' => 'array',
@@ -43,6 +44,15 @@ class Presupuesto extends Model
 
     protected static function booted(): void
     {
+        // La fecha de aceptación se llena sola; se puede editar para registrar ventas pasadas
+        static::saving(function (Presupuesto $p) {
+            if ($p->estado === 'aceptada' && ! $p->aceptada_el) {
+                $p->aceptada_el = now(config('vandu.zona_horaria'))->toDateString();
+            } elseif ($p->estado !== 'aceptada') {
+                $p->aceptada_el = null;
+            }
+        });
+
         static::creating(function (Presupuesto $p) {
             $p->token ??= Str::random(32);
             $p->folio ??= static::siguienteFolio();
@@ -101,7 +111,7 @@ class Presupuesto extends Model
     /** Copia completa (nuevo folio, nuevo enlace, fecha de hoy, vigencia reiniciada) */
     public function duplicar(): self
     {
-        $copia = $this->replicate(['folio', 'token', 'vistas', 'ultima_vista_at']);
+        $copia = $this->replicate(['folio', 'token', 'vistas', 'ultima_vista_at', 'aceptada_el']);
         $copia->fecha = now();
         $copia->estado = 'borrador';
         $copia->vigente_hasta = static::finDeDiaEnDias(config('vandu.vigencia_dias'));
