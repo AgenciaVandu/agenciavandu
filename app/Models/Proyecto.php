@@ -43,8 +43,14 @@ class Proyecto extends Model
     /** Tipo sugerido según las palabras de los conceptos */
     public static function tipoSugerido(Presupuesto $p): string
     {
+        if ($p->tipo && config("vandu.proyectos.{$p->tipo}")) {
+            return $p->tipo;
+        }
         $texto = Str::lower($p->conceptos->map(fn ($c) => $c->titulo . ' ' . $c->descripcion)->join(' '));
-        return Str::contains($texto, config('vandu.palabras_audiovisual', [])) ? 'audiovisual' : 'web';
+        if (Str::contains($texto, config('vandu.palabras_audiovisual', []))) {
+            return 'audiovisual';
+        }
+        return Str::contains($texto, config('vandu.palabras_produccion', [])) ? 'produccion' : 'web';
     }
 
     /**

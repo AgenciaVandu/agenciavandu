@@ -25,7 +25,7 @@ class Presupuesto extends Model
     ];
 
     protected $fillable = [
-        'cliente_id', 'cliente_nombre', 'cliente_empresa', 'fecha', 'titulo',
+        'cliente_id', 'cliente_nombre', 'cliente_empresa', 'fecha', 'titulo', 'tipo',
         'emisor_nombre', 'emisor_telefono', 'emisor_sitio', 'emisor_email',
         'modo_iva', 'iva_porcentaje', 'consideraciones',
         'mostrar_pago', 'pago_intro', 'banco', 'clabe', 'beneficiario',
@@ -119,7 +119,7 @@ class Presupuesto extends Model
         $copia->save();
 
         foreach ($this->conceptos as $concepto) {
-            $copia->conceptos()->create($concepto->only(['titulo', 'descripcion', 'cantidad', 'precio', 'orden']));
+            $copia->conceptos()->create($concepto->only(PresupuestoConcepto::COPIABLES));
         }
 
         return $copia;
@@ -135,6 +135,24 @@ class Presupuesto extends Model
     }
 
     /* ---------------- Importes ---------------- */
+
+    /** El tipo de servicio usa costeo (proveedor + gasolina + utilidad) */
+    public function getUsaCosteoAttribute(): bool
+    {
+        return (bool) config("vandu.proyectos.{$this->tipo}.costeo");
+    }
+
+    /** Costo interno de los conceptos que tienen costeo */
+    public function getCostoAttribute(): float
+    {
+        return round($this->conceptos->filter->tiene_costeo->sum(fn ($c) => $c->costo), 2);
+    }
+
+    /** Utilidad (antes de IVA) de los conceptos que tienen costeo */
+    public function getUtilidadAttribute(): float
+    {
+        return round($this->conceptos->filter->tiene_costeo->sum(fn ($c) => $c->ganancia), 2);
+    }
 
     public function getSubtotalAttribute(): float
     {

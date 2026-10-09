@@ -87,11 +87,29 @@ return [
                 ['clave' => 'entrega',       'nombre' => 'Entrega',                    'dias' => 1, 'fecha' => true, 'descripcion' => 'El material final queda disponible en tu galería para verlo y descargarlo.'],
             ],
         ],
+        // Impresión, instalación, rotulación, bordado y artículos publicitarios.
+        // costeo => en la cotización cada concepto se calcula con proveedor + gasolina + utilidad.
+        'produccion' => [
+            'nombre' => 'Producción e impresión',
+            'icono'  => 'bi-printer',
+            'costeo' => true,
+            'pagos'  => [
+                ['clave' => 'anticipo', 'concepto' => 'Anticipo', 'porcentaje' => 50, 'antes_de' => 'fabricacion'],
+                ['clave' => 'saldo',    'concepto' => 'Saldo',    'porcentaje' => 50, 'antes_de' => 'entrega'],
+            ],
+            'etapas' => [
+                ['clave' => 'fabricacion', 'nombre' => 'Fabricación',            'dias' => 7, 'descripcion' => 'Impresión, rotulación, bordado o fabricación de tus piezas. Arranca con el anticipo.'],
+                ['clave' => 'entrega',     'nombre' => 'Entrega / instalación', 'dias' => 1, 'fecha' => true, 'descripcion' => 'Entregamos o instalamos en el lugar acordado. El saldo se liquida antes de la entrega.'],
+            ],
+        ],
     ],
 
     // Tamaño máximo por archivo al subir entregables (también lo limita upload_max_filesize del servidor)
     'max_archivo_mb' => env('VANDU_MAX_ARCHIVO_MB', 512),
 
     // Palabras que hacen sugerir "Audiovisuales" al convertir una cotización
+    // Palabras que hacen sugerir "Producción e impresión"
+    'palabras_produccion' => ['impres', 'lona', 'vinil', 'rotul', 'bordad', 'playera', 'gorra', 'taza', 'termo', 'pluma', 'promocional', 'publicitari', 'instalación', 'letrero', 'señalética', 'sticker', 'etiqueta', 'display', 'uniforme', 'caja'],
+
     'palabras_audiovisual' => ['foto', 'video', 'vídeo', 'grabación', 'sesión', 'dron', 'audiovisual', 'filmación', 'reel'],
 ];

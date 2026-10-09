@@ -4,8 +4,10 @@
     $p = $presupuesto;
     $nuevo = ! $p->exists;
 
-    $conceptos = old('conceptos', $p->conceptos->map->only(['titulo', 'descripcion', 'cantidad', 'precio'])->values()->all())
-        ?: [['titulo' => '', 'descripcion' => '', 'cantidad' => 1, 'precio' => '']];
+    $vacio = ['titulo' => '', 'descripcion' => '', 'cantidad' => 1, 'precio' => '', 'costo_proveedor' => '', 'gasolina' => '', 'utilidad' => '', 'utilidad_modo' => 'pct'];
+    $conceptos = collect(old('conceptos', $p->conceptos->map->only(['titulo', 'descripcion', 'cantidad', 'precio', 'costo_proveedor', 'gasolina', 'utilidad', 'utilidad_modo'])->values()->all()))
+        ->map(fn ($c) => array_merge($vacio, array_map(fn ($x) => $x ?? '', $c)))->all() ?: [$vacio];
+    $tipos = config('vandu.proyectos');
     $consideraciones = old('consideraciones', $p->consideraciones ?? []);
     $estado = [
         'conceptos'       => array_values($conceptos),
@@ -19,6 +21,9 @@
         'clienteEmpresa'  => old('cliente_empresa', $p->cliente_empresa),
         'clientes'        => $clientes->keyBy('id'),
         'estadoSel'       => old('estado', $p->estado),
+        'tipo'            => old('tipo', $p->tipo ?? \App\Models\Proyecto::tipoSugerido($p)),
+        'tiposCosteo'     => collect($tipos)->filter(fn ($m) => ! empty($m['costeo']))->keys()->values(),
+        'vacio'           => $vacio,
     ];
     $wa = $p->cliente?->whatsapp;
 @endphp
@@ -38,6 +43,23 @@
     .concepto .costo { padding-top: 9px; text-align: right; font-weight: 500; }
     .concepto .ops { display: flex; flex-direction: column; gap: 2px; }
     .concepto textarea { resize: vertical; min-height: 42px; }
+    .tipos { display: flex; flex-wrap: wrap; gap: 6px; padding: 14px 20px; border-bottom: 1px solid var(--line); align-items: center; }
+    .tipos .lbl { font-size: 13px; color: var(--muted); margin-right: 4px; }
+    .tipos label { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; font-size: 13.5px; cursor: pointer; background: var(--surface, #fff); }
+    .tipos label:has(input:checked) { border-color: var(--ink, #111); background: var(--ink, #111); color: #fff; }
+    .tipos input { position: absolute; opacity: 0; pointer-events: none; }
+    .tipos label:has(input:focus-visible) { outline: 2px solid var(--blue); outline-offset: 2px; }
+    .costeo { grid-column: 2 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 10px 12px; align-items: end;
+              background: var(--sunken); border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; margin-top: -2px; }
+    .costeo .form-label { font-size: 12px; margin-bottom: 4px; color: var(--muted); }
+    .costeo .form-control, .costeo .form-select, .costeo .input-group-text { height: 36px; font-size: 14px; }
+    .costeo .res { font-size: 12.5px; color: var(--muted); text-align: right; white-space: nowrap; padding-bottom: 8px; }
+    .costeo .res b { color: var(--green-ink); font-weight: 600; }
+    .costeo .res b.neg { color: var(--red); }
+    .costeo .priv { grid-column: 1 / -1; font-size: 12px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+    .precio-auto { background: var(--sunken) !important; }
+    .lateral .utilidad { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); display: grid; gap: 4px; font-size: 13.5px; }
+    .lateral .utilidad div { display: flex; justify-content: space-between; }
     .agregar { display: flex; align-items: center; gap: 8px; width: 100%; padding: 12px 20px; border: 0; background: transparent; color: var(--text-2); font-weight: 500; text-align: left; }
     .agregar:hover { background: var(--sunken); color: var(--text); }
     .totales { padding: 16px 20px 20px; border-top: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: end; }
@@ -91,6 +113,8 @@
         .concepto .desc { grid-column: 1 / -1; }
         .concepto .costo { grid-column: 1; text-align: left; padding-top: 0; }
         .concepto .ops { grid-column: 2; flex-direction: row; justify-content: flex-end; }
+        .costeo { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; }
+        .costeo .res { grid-column: 1 / -1; text-align: left; padding-bottom: 0; }
         .totales { grid-template-columns: 1fr; }
     }
 </style>
@@ -161,6 +185,12 @@
             {{-- Conceptos --}}
             <section class="panel">
                 <div class="panel-head"><h2>Conceptos</h2><span class="ayuda" x-text="conceptos.length + (conceptos.length === 1 ? ' concepto' : ' conceptos')"></span></div>
+                <div class="tipos" role="radiogroup" aria-label="Tipo de servicio">
+                    <span class="lbl">Tipo de servicio</span>
+                    @foreach($tipos as $k => $m)
+                        <label><input type="radio" name="tipo" value="{{ $k }}" x-model="tipo"><i class="bi {{ $m['icono'] }}"></i> {{ $m['nombre'] }}</label>
+                    @endforeach
+                </div>
                 <div class="conceptos-head" aria-hidden="true"><span>#</span><span>Concepto</span><span>Cantidad</span><span>Precio unitario</span><span class="text-end">Costo</span><span></span></div>
                 <template x-for="(c, i) in conceptos" :key="i">
                     <div class="concepto">
@@ -179,7 +209,8 @@
                             <label class="form-label d-md-none" :for="'precio'+i">Precio unitario</label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
-                                <input type="number" step="0.01" min="0" class="form-control num" :id="'precio'+i" :name="`conceptos[${i}][precio]`" x-model.number="c.precio" required placeholder="0.00">
+                                <input type="number" step="0.01" min="0" class="form-control num" :id="'precio'+i" :name="`conceptos[${i}][precio]`" x-model.number="c.precio" required placeholder="0.00"
+                                       :readonly="conCosteo(c)" :class="conCosteo(c) && 'precio-auto'" :title="conCosteo(c) ? 'Se calcula con proveedor + gasolina + utilidad' : ''">
                             </div>
                         </div>
                         <div class="costo num" x-text="dinero(importe(c))"></div>
@@ -195,9 +226,37 @@
                                 </ul>
                             </div>
                         </div>
+                        <template x-if="usaCosteo">
+                            <div class="costeo" x-effect="if (conCosteo(c)) c.precio = precioCosteo(c)">
+                                <div>
+                                    <label class="form-label" :for="'prov'+i">Proveedor (c/u)</label>
+                                    <div class="input-group"><span class="input-group-text">$</span>
+                                        <input type="number" step="0.01" min="0" class="form-control num" :id="'prov'+i" :name="`conceptos[${i}][costo_proveedor]`" x-model="c.costo_proveedor" placeholder="0.00"></div>
+                                </div>
+                                <div>
+                                    <label class="form-label" :for="'gas'+i">Gasolina (total)</label>
+                                    <div class="input-group"><span class="input-group-text">$</span>
+                                        <input type="number" step="0.01" min="0" class="form-control num" :id="'gas'+i" :name="`conceptos[${i}][gasolina]`" x-model="c.gasolina" placeholder="0.00"></div>
+                                </div>
+                                <div>
+                                    <label class="form-label" :for="'util'+i">Utilidad</label>
+                                    <div class="input-group">
+                                        <input type="number" step="0.01" class="form-control num" :id="'util'+i" :name="`conceptos[${i}][utilidad]`" x-model="c.utilidad" placeholder="0">
+                                        <select class="form-select flex-grow-0" style="width: 64px" :name="`conceptos[${i}][utilidad_modo]`" x-model="c.utilidad_modo" aria-label="Utilidad en porcentaje o monto">
+                                            <option value="pct">%</option><option value="monto">$</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="res num" x-show="conCosteo(c)">
+                                    Costo <span x-text="dinero(costo(c))"></span><br>
+                                    Utilidad <b :class="importe(c) - costo(c) < 0 && 'neg'" x-text="dinero(importe(c) - costo(c))"></b>
+                                </div>
+                                <div class="priv"><i class="bi bi-lock"></i> Solo tú lo ves. El cliente ve el precio unitario y el importe.</div>
+                            </div>
+                        </template>
                     </div>
                 </template>
-                <button type="button" class="agregar" @click="conceptos.push({titulo: '', descripcion: '', cantidad: 1, precio: ''}); $nextTick(() => document.getElementById('tit' + (conceptos.length - 1)).focus())">
+                <button type="button" class="agregar" @click="conceptos.push({...vacio}); $nextTick(() => document.getElementById('tit' + (conceptos.length - 1)).focus())">
                     <i class="bi bi-plus-circle"></i> Agregar concepto
                 </button>
 
@@ -343,6 +402,10 @@
                 <div class="secundario num" x-show="modoIva !== 'sin_iva'">
                     <span x-text="dinero(subtotal)"></span> + IVA <span x-text="dinero(iva)"></span>
                 </div>
+                <div class="utilidad num" x-show="usaCosteo && costoTotal > 0" x-cloak>
+                    <div><span class="secundario">Costo (proveedor + gasolina)</span> <span x-text="dinero(costoTotal)"></span></div>
+                    <div><span class="secundario">Tu utilidad <span title="Porcentaje sobre el costo">(s/costo)</span></span> <b :style="utilidadTotal < 0 ? 'color: var(--red)' : 'color: var(--green-ink)'" x-text="dinero(utilidadTotal) + (margen !== null ? ' · ' + margen + '%' : '')"></b></div>
+                </div>
                 <div class="secundario mt-2" x-show="modoIva === 'mas_iva'"><i class="bi bi-info-circle me-1"></i>El cliente ve los precios con “+ IVA”.</div>
                 <button class="btn btn-primario w-100 mt-3">{{ $nuevo ? 'Crear cotización' : 'Guardar cambios' }}</button>
                 <div class="secundario text-center mt-2" style="font-size:12.5px">Atajo: Ctrl / ⌘ + S</div>
@@ -453,6 +516,19 @@ function editor(init) {
         ahora: Date.now(),
         init() { setInterval(() => this.ahora = Date.now(), 30000); },
         importe(c) { return Math.round((+c.cantidad || 0) * (+c.precio || 0) * 100) / 100; },
+        get usaCosteo() { return this.tiposCosteo.includes(this.tipo); },
+        conCosteo(c) { return this.usaCosteo && (c.costo_proveedor !== '' && c.costo_proveedor !== null || c.gasolina !== '' && c.gasolina !== null); },
+        costo(c) { return Math.round(((+c.cantidad || 0) * (+c.costo_proveedor || 0) + (+c.gasolina || 0)) * 100) / 100; },
+        // Misma fórmula que PresupuestoConcepto::precioDesdeCosteo
+        precioCosteo(c) {
+            const cant = +c.cantidad || 0, costo = cant * (+c.costo_proveedor || 0) + (+c.gasolina || 0);
+            const total = c.utilidad_modo === 'monto' ? costo + (+c.utilidad || 0) : costo * (1 + (+c.utilidad || 0) / 100);
+            return cant > 0 ? Math.round(total / cant * 100) / 100 : 0;
+        },
+        get costoTotal() { return this.conceptos.filter(c => this.conCosteo(c)).reduce((s, c) => s + this.costo(c), 0); },
+        get utilidadTotal() { return this.conceptos.filter(c => this.conCosteo(c)).reduce((s, c) => s + this.importe(c) - this.costo(c), 0); },
+        // % sobre el costo, igual que como capturas la utilidad
+        get margen() { return this.costoTotal > 0 ? Math.round(this.utilidadTotal / this.costoTotal * 100) : null; },
         get subtotal() { return this.conceptos.reduce((s, c) => s + this.importe(c), 0); },
         get iva() { return this.modoIva === 'sin_iva' ? 0 : Math.round(this.subtotal * (+this.ivaPct || 0)) / 100; },
         get total() { return this.subtotal + this.iva; },

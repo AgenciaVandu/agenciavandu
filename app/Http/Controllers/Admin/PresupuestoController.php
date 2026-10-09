@@ -143,6 +143,7 @@ class PresupuestoController extends Controller
             'cliente_empresa'  => 'nullable|string|max:255',
             'fecha'            => 'required|date',
             'titulo'           => 'required|string|max:255',
+            'tipo'             => ['nullable', Rule::in(array_keys(config('vandu.proyectos')))],
             'emisor_nombre'    => 'required|string|max:255',
             'emisor_telefono'  => 'nullable|string|max:255',
             'emisor_sitio'     => 'nullable|string|max:255',
@@ -155,6 +156,10 @@ class PresupuestoController extends Controller
             'conceptos.*.descripcion' => 'nullable|string|max:5000',
             'conceptos.*.cantidad'    => 'required|numeric|min:0',
             'conceptos.*.precio'      => 'required|numeric|min:0',
+            'conceptos.*.costo_proveedor' => 'nullable|numeric|min:0',
+            'conceptos.*.gasolina'        => 'nullable|numeric|min:0',
+            'conceptos.*.utilidad'        => 'nullable|numeric',
+            'conceptos.*.utilidad_modo'   => 'nullable|in:pct,monto',
 
             'consideraciones'            => 'nullable|array',
             'consideraciones.*.titulo'   => 'nullable|string|max:255',
@@ -178,13 +183,30 @@ class PresupuestoController extends Controller
             'conceptos.*.titulo.required_without' => 'Cada concepto necesita un título o una descripción.',
         ]);
 
-        $conceptos = collect($v['conceptos'])->values()->map(fn ($c, $i) => [
-            'titulo'      => trim((string) ($c['titulo'] ?? '')) ?: null,
-            'descripcion' => (string) ($c['descripcion'] ?? ''),
-            'cantidad'    => $c['cantidad'],
-            'precio'      => $c['precio'],
-            'orden'       => $i,
-        ])->all();
+        $costeo = (bool) config('vandu.proyectos.' . ($v['tipo'] ?? '') . '.costeo');
+        $num = fn ($x) => ($x === null || $x === '') ? null : (float) $x;
+
+        $conceptos = collect($v['conceptos'])->values()->map(function ($c, $i) use ($costeo, $num) {
+            $fila = [
+                'titulo'          => trim((string) ($c['titulo'] ?? '')) ?: null,
+                'descripcion'     => (string) ($c['descripcion'] ?? ''),
+                'cantidad'        => $c['cantidad'],
+                'precio'          => $c['precio'],
+                'orden'           => $i,
+                'costo_proveedor' => null, 'gasolina' => null, 'utilidad' => null, 'utilidad_modo' => 'pct',
+            ];
+            $prov = $num($c['costo_proveedor'] ?? null);
+            $gas = $num($c['gasolina'] ?? null);
+            if ($costeo && ($prov !== null || $gas !== null)) {
+                $fila['costo_proveedor'] = $prov;
+                $fila['gasolina'] = $gas;
+                $fila['utilidad'] = $num($c['utilidad'] ?? null);
+                $fila['utilidad_modo'] = ($c['utilidad_modo'] ?? 'pct') === 'monto' ? 'monto' : 'pct';
+                // El precio al cliente sale del costeo (misma fórmula que el editor)
+                $fila['precio'] = \App\Models\PresupuestoConcepto::precioDesdeCosteo((float) $c['cantidad'], $prov, $gas, $fila['utilidad'], $fila['utilidad_modo']);
+            }
+            return $fila;
+        })->all();
 
         $datos = collect($v)->except('conceptos')->all();
         $datos['mostrar_pago'] = $request->boolean('mostrar_pago');

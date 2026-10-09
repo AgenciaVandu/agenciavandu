@@ -168,7 +168,7 @@ class FinanzasController extends Controller
         return response()->streamDownload(function () use ($filas) {
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF"); // BOM para que Excel lea los acentos
-            fputcsv($out, ['Folio', 'Fecha', 'Cliente', 'Empresa', 'Concepto principal', 'Estado', 'Resultado', 'Aceptada el', 'Subtotal', 'IVA', 'Total', 'Cobrado', 'Por cobrar', 'Tipo de proyecto']);
+            fputcsv($out, ['Folio', 'Fecha', 'Cliente', 'Empresa', 'Concepto principal', 'Estado', 'Resultado', 'Aceptada el', 'Subtotal', 'IVA', 'Total', 'Cobrado', 'Por cobrar', 'Tipo de servicio', 'Costo (proveedor + gasolina)', 'Utilidad']);
             foreach ($filas as $p) {
                 $perdida = $p->perdida;
                 $cobrado = $p->proyecto ? $p->proyecto->pagos->whereNotNull('pagado_el')->sum('monto') : 0;
@@ -180,7 +180,9 @@ class FinanzasController extends Controller
                     $p->aceptada_el?->toDateString(),
                     number_format($p->subtotal, 2, '.', ''), number_format($p->iva, 2, '.', ''), number_format($p->total, 2, '.', ''),
                     number_format($cobrado, 2, '.', ''), number_format($pend, 2, '.', ''),
-                    $p->proyecto?->tipo_nombre,
+                    $p->proyecto?->tipo_nombre ?? config("vandu.proyectos.{$p->tipo}.nombre"),
+                    $p->costo > 0 ? number_format($p->costo, 2, '.', '') : '',
+                    $p->costo > 0 ? number_format($p->utilidad, 2, '.', '') : '',
                 ]);
             }
             fclose($out);
