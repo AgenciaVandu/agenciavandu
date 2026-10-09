@@ -74,7 +74,10 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::patch('presupuestos/{presupuesto}/rapido', [Admin\PresupuestoController::class, 'rapido'])->name('presupuestos.rapido');
     // Proyectos
     Route::get('proyectos', [Admin\ProyectoController::class, 'index'])->name('proyectos.index');
+    Route::get('presupuestos/{presupuesto}/proyecto', [Admin\ProyectoController::class, 'crear'])->name('proyectos.create');
     Route::post('presupuestos/{presupuesto}/proyecto', [Admin\ProyectoController::class, 'store'])->name('proyectos.store');
+    Route::get('proyectos/{proyecto}/fechas', [Admin\ProyectoController::class, 'fechas'])->name('proyectos.fechas');
+    Route::put('proyectos/{proyecto}/fechas', [Admin\ProyectoController::class, 'guardarFechas'])->name('proyectos.fechas.guardar');
     Route::get('proyectos/{proyecto}', [Admin\ProyectoController::class, 'show'])->name('proyectos.show');
     Route::put('proyectos/{proyecto}', [Admin\ProyectoController::class, 'update'])->name('proyectos.update');
     Route::delete('proyectos/{proyecto}', [Admin\ProyectoController::class, 'destroy'])->name('proyectos.destroy');

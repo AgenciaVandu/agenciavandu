@@ -109,6 +109,7 @@
         </div>
     </div>
     <div class="d-flex flex-wrap gap-2">
+        <a href="{{ route('admin.proyectos.fechas', $p) }}" class="btn btn-borde"><i class="bi bi-calendar-week me-1"></i> Editar fechas</a>
         <a href="{{ $p->url_publica }}?vista_previa=1" target="_blank" class="btn btn-borde"><i class="bi bi-eye me-1"></i> Ver como cliente</a>
         <button type="button" class="btn btn-primario" data-copiar="{{ $p->url_publica }}"><i class="bi bi-link-45deg me-1"></i> Copiar enlace</button>
     </div>
@@ -128,7 +129,7 @@
 
         {{-- ================= Línea del tiempo ================= --}}
         <section class="panel">
-            <div class="panel-head"><h2>Línea del tiempo</h2><span class="ayuda">El cliente ve lo mismo en su enlace</span></div>
+            <div class="panel-head"><h2>Línea del tiempo</h2><a href="{{ route('admin.proyectos.fechas', $p) }}" class="btn btn-fantasma btn-sm"><i class="bi bi-calendar-week me-1"></i> Editar todas las fechas</a></div>
             <ol class="tl">
                 @foreach($linea as $t)
                     @if($t['tipo'] === 'pago')

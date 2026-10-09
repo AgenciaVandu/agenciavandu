@@ -426,20 +426,8 @@
                                     <label><input type="radio" name="tipo" value="{{ $k }}" form="convertir" @checked($k === $sugerido)><i class="bi {{ $m['icono'] }}"></i> {{ $m['nombre'] }}</label>
                                 @endforeach
                             </div>
-                            <div x-data="{ terminado: false }">
-                                <label class="form-label" for="fecha_inicio_p" x-text="terminado ? 'Empezó el' : 'Inicia el'">Inicia el</label>
-                                <input type="date" id="fecha_inicio_p" name="fecha_inicio" form="convertir" class="form-control num mb-3" value="{{ ($p->aceptada_el ?? now(config('vandu.zona_horaria')))->toDateString() }}">
-                                <label class="form-check mb-2">
-                                    <input type="checkbox" class="form-check-input" name="terminado" value="1" form="convertir" x-model="terminado">
-                                    <span class="form-check-label">Ya se pagó y terminó</span>
-                                </label>
-                                <div x-show="terminado" x-cloak class="mb-3">
-                                    <label class="form-label" for="fecha_fin_p">Terminó el</label>
-                                    <input type="date" id="fecha_fin_p" name="fecha_fin" form="convertir" class="form-control num" value="{{ now(config('vandu.zona_horaria'))->subDay()->toDateString() }}" max="{{ now(config('vandu.zona_horaria'))->toDateString() }}" :disabled="!terminado">
-                                    <div class="secundario mt-1" style="font-size:12.5px">Se crea con todas las etapas completadas y los pagos registrados. Después puedes ajustar cualquier fecha.</div>
-                                </div>
-                            </div>
-                            <button type="submit" form="convertir" class="btn btn-acento w-100"><i class="bi bi-kanban me-1"></i> Crear proyecto</button>
+                            <p class="secundario" style="font-size:13px">En el siguiente paso revisas y ajustas las fechas de cada etapa y pago. Si el trabajo ya terminó, ahí lo registras.</p>
+                            <button type="submit" form="convertir" class="btn btn-acento w-100">Continuar <i class="bi bi-arrow-right ms-1"></i></button>
                         </div>
                     </section>
                 @endif
@@ -449,7 +437,7 @@
 </form>
 
 @unless($nuevo)
-    <form id="convertir" method="post" action="{{ route('admin.proyectos.store', $p) }}">@csrf</form>
+    <form id="convertir" method="get" action="{{ route('admin.proyectos.create', $p) }}"></form>
     <form id="duplicar" method="post" action="{{ route('admin.presupuestos.duplicar', $p) }}">@csrf</form>
     <form id="eliminar" method="post" action="{{ route('admin.presupuestos.destroy', $p) }}" onsubmit="return confirm('¿Eliminar {{ $p->folio }}? El enlace del cliente dejará de funcionar.')">@csrf @method('delete')</form>
 @endunless

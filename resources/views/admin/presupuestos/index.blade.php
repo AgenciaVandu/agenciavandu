@@ -97,7 +97,7 @@
                                     @if($p->proyecto)
                                         <li><a class="dropdown-item" href="{{ route('admin.proyectos.show', $p->proyecto) }}"><i class="bi bi-kanban"></i> Ver proyecto</a></li>
                                     @elseif($p->estado === 'aceptada')
-                                        <li><a class="dropdown-item fw-medium" href="{{ route('admin.presupuestos.edit', $p) }}#convertir"><i class="bi bi-kanban"></i> Convertir en proyecto</a></li>
+                                        <li><a class="dropdown-item fw-medium" href="{{ route('admin.proyectos.create', $p) }}"><i class="bi bi-kanban"></i> Convertir en proyecto</a></li>
                                     @endif
                                     <li><a class="dropdown-item" target="_blank" href="{{ $p->url_publica }}?vista_previa=1"><i class="bi bi-eye"></i> Ver como cliente</a></li>
                                     <li><a class="dropdown-item" target="_blank" href="{{ route('admin.presupuestos.pdf', $p) }}"><i class="bi bi-file-earmark-pdf"></i> Ver PDF</a></li>

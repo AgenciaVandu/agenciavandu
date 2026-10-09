@@ -11,6 +11,7 @@ use App\Models\ProyectoPago;
 use App\Support\ArchivosProyecto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class ProyectoController extends Controller
@@ -32,36 +33,184 @@ class ProyectoController extends Controller
         return view('admin.proyectos.index', compact('proyectos', 'filtro', 'tipo', 'conteos'));
     }
 
-    /** Convierte una cotización (aceptada) en proyecto */
+    /** Pantalla para revisar etapas, pagos y fechas antes de crear el proyecto */
+    public function crear(Request $request, Presupuesto $presupuesto)
+    {
+        if ($presupuesto->proyecto) {
+            return redirect()->route('admin.proyectos.show', $presupuesto->proyecto);
+        }
+        $presupuesto->load('conceptos', 'cliente');
+        $tipo = config("vandu.proyectos.{$request->query('tipo')}") ? $request->query('tipo') : Proyecto::tipoSugerido($presupuesto);
+        $metodo = config("vandu.proyectos.$tipo");
+        $total = $presupuesto->total;
+
+        $acum = 0;
+        $pagos = collect($metodo['pagos'])->values()->map(function ($pg, $i) use ($metodo, $total, &$acum) {
+            $ultimo = $i === count($metodo['pagos']) - 1;
+            $monto = $ultimo ? round($total - $acum, 2) : round($total * $pg['porcentaje'] / 100, 2);
+            $acum += $monto;
+            return $pg + ['id' => null, 'monto' => $monto, 'pagado_el' => '', 'referencia' => ''];
+        });
+
+        return view('admin.proyectos.fechas', [
+            'modo'        => 'crear',
+            'presupuesto' => $presupuesto,
+            'proyecto'    => null,
+            'tipo'        => $tipo,
+            'nombre'      => (string) \Illuminate\Support\Str::of($presupuesto->conceptos->first()?->descripcion ?? $metodo['nombre'])->before("\n")->limit(70, '…'),
+            'monto'       => $total,
+            'inicio'      => ($presupuesto->aceptada_el ?? now(config('vandu.zona_horaria')))->toDateString(),
+            'etapas'      => collect($metodo['etapas'])->values()->map(fn ($e) => [
+                'id' => null, 'clave' => $e['clave'], 'nombre' => $e['nombre'], 'descripcion' => $e['descripcion'] ?? null,
+                'es_fecha' => ! empty($e['fecha']), 'dias' => $e['dias'] ?? 1,
+                'fecha_inicio' => '', 'fecha_fin' => '', 'estado' => 'pendiente', 'completada_el' => '',
+            ]),
+            'pagos'       => $pagos,
+        ]);
+    }
+
+    /** Crea el proyecto con exactamente las fechas capturadas */
     public function store(Request $request, Presupuesto $presupuesto)
     {
         if ($presupuesto->proyecto) {
             return redirect()->route('admin.proyectos.show', $presupuesto->proyecto);
         }
+        $request->validate([
+            'tipo'   => ['required', Rule::in(array_keys(config('vandu.proyectos')))],
+            'nombre' => 'required|string|max:255',
+            'monto_total' => 'required|numeric|min:0',
+        ]);
+        [$etapas, $pagos] = $this->validarFechas($request);
+        $metodo = config("vandu.proyectos.{$request->input('tipo')}");
 
-        $data = $request->validate([
-            'tipo'         => ['required', Rule::in(array_keys(config('vandu.proyectos')))],
-            'fecha_inicio' => 'nullable|date',
-            'terminado'    => 'nullable|boolean',
-            'fecha_fin'    => 'nullable|required_if:terminado,1|date|after_or_equal:fecha_inicio|before_or_equal:today',
+        $proyecto = DB::transaction(function () use ($request, $presupuesto, $etapas, $pagos, $metodo) {
+            $terminado = collect($etapas)->every(fn ($e) => $e['estado'] === 'completada');
+            $proyecto = Proyecto::create([
+                'cliente_id'     => $presupuesto->cliente_id,
+                'presupuesto_id' => $presupuesto->id,
+                'tipo'           => $request->input('tipo'),
+                'nombre'         => $request->input('nombre'),
+                'estado'         => $terminado ? 'terminado' : 'activo',
+                'monto_total'    => $request->input('monto_total'),
+                'fecha_inicio'   => collect($etapas)->pluck('fecha_inicio')->filter()->min() ?? now(config('vandu.zona_horaria'))->toDateString(),
+            ]);
+            foreach ($metodo['etapas'] as $i => $e) {
+                $proyecto->etapas()->create($etapas[$i] + [
+                    'clave' => $e['clave'], 'descripcion' => $e['descripcion'] ?? null, 'orden' => $i, 'es_fecha' => ! empty($e['fecha']),
+                ]);
+            }
+            foreach ($metodo['pagos'] as $i => $pg) {
+                $proyecto->pagos()->create($pagos[$i] + [
+                    'clave' => $pg['clave'], 'concepto' => $pg['concepto'], 'porcentaje' => $pg['porcentaje'],
+                    'antes_de' => $pg['antes_de'] ?? null, 'orden' => $i,
+                ]);
+            }
+            if ($presupuesto->estado !== 'aceptada') {
+                $presupuesto->update(['estado' => 'aceptada', 'aceptada_el' => $presupuesto->aceptada_el ?? $proyecto->fecha_inicio]);
+            }
+            return $proyecto;
+        });
+
+        return redirect()->route('admin.proyectos.show', $proyecto)->with('ok', "Proyecto creado a partir de {$presupuesto->folio}.");
+    }
+
+    /** Editar todas las fechas de un proyecto existente */
+    public function fechas(Proyecto $proyecto)
+    {
+        $proyecto->load('etapas', 'pagos', 'presupuesto');
+        $tz = config('vandu.zona_horaria');
+
+        return view('admin.proyectos.fechas', [
+            'modo'        => 'editar',
+            'presupuesto' => $proyecto->presupuesto,
+            'proyecto'    => $proyecto,
+            'tipo'        => $proyecto->tipo,
+            'nombre'      => $proyecto->nombre,
+            'monto'       => $proyecto->monto_total,
+            'inicio'      => $proyecto->fecha_inicio?->toDateString(),
+            'etapas'      => $proyecto->etapas->map(fn ($e) => [
+                'id' => $e->id, 'clave' => $e->clave, 'nombre' => $e->nombre, 'descripcion' => $e->descripcion,
+                'es_fecha' => $e->es_fecha, 'dias' => collect(config("vandu.proyectos.{$proyecto->tipo}.etapas"))->firstWhere('clave', $e->clave)['dias'] ?? 1,
+                'fecha_inicio' => $e->fecha_inicio?->toDateString() ?? '', 'fecha_fin' => $e->fecha_fin?->toDateString() ?? '',
+                'estado' => $e->estado, 'completada_el' => $e->completada_at?->timezone($tz)->toDateString() ?? '',
+            ]),
+            'pagos'       => $proyecto->pagos->map(fn ($pg) => [
+                'id' => $pg->id, 'clave' => $pg->clave, 'concepto' => $pg->concepto, 'porcentaje' => $pg->porcentaje,
+                'antes_de' => $pg->antes_de, 'monto' => $pg->monto, 'pagado_el' => $pg->pagado_el?->toDateString() ?? '', 'referencia' => $pg->referencia ?? '',
+            ]),
+        ]);
+    }
+
+    public function guardarFechas(Request $request, Proyecto $proyecto)
+    {
+        $proyecto->load('etapas', 'pagos');
+        [$etapas, $pagos] = $this->validarFechas($request, $proyecto);
+
+        DB::transaction(function () use ($proyecto, $etapas, $pagos) {
+            foreach ($proyecto->etapas->values() as $i => $e) {
+                if (isset($etapas[$i])) $e->update($etapas[$i]);
+            }
+            foreach ($proyecto->pagos->values() as $i => $pg) {
+                if (isset($pagos[$i])) $pg->update($pagos[$i]);
+            }
+            $todas = $proyecto->etapas()->where('estado', '!=', 'completada')->doesntExist();
+            if ($todas && $proyecto->estado === 'activo') $proyecto->update(['estado' => 'terminado']);
+            if (! $todas && $proyecto->estado === 'terminado') $proyecto->update(['estado' => 'activo']);
+            $inicio = collect($etapas)->pluck('fecha_inicio')->filter()->min();
+            if ($inicio) $proyecto->update(['fecha_inicio' => $inicio]);
+        });
+
+        return redirect()->route('admin.proyectos.show', $proyecto)->with('ok', 'Fechas guardadas.');
+    }
+
+    /** @return array{0: array<int, array>, 1: array<int, array>} etapas y pagos listos para guardar */
+    private function validarFechas(Request $request, ?Proyecto $proyecto = null): array
+    {
+        $request->validate([
+            'etapas'                 => 'required|array|min:1',
+            'etapas.*.nombre'        => 'required|string|max:255',
+            'etapas.*.fecha_inicio'  => 'nullable|date',
+            'etapas.*.fecha_fin'     => 'nullable|date',
+            'etapas.*.estado'        => ['required', Rule::in(array_keys(ProyectoEtapa::ESTADOS))],
+            'etapas.*.completada_el' => 'nullable|date|before_or_equal:today',
+            'pagos'                  => 'array',
+            'pagos.*.monto'          => 'required|numeric|min:0',
+            'pagos.*.pagado_el'      => 'nullable|date|before_or_equal:today',
+            'pagos.*.referencia'     => 'nullable|string|max:255',
         ], [
-            'fecha_fin.required_if'     => 'Indica cuándo terminó el proyecto.',
-            'fecha_fin.after_or_equal'  => 'La fecha de fin no puede ser antes del inicio.',
-            'fecha_fin.before_or_equal' => 'La fecha de fin no puede ser futura.',
+            'etapas.*.completada_el.before_or_equal' => 'Una fecha de “completada” está en el futuro.',
+            'pagos.*.pagado_el.before_or_equal'      => 'Una fecha de pago está en el futuro.',
         ]);
 
         $tz = config('vandu.zona_horaria');
-        $inicio = isset($data['fecha_inicio']) ? Carbon::parse($data['fecha_inicio'], $tz)->startOfDay() : null;
-        $fin = $request->boolean('terminado') && ! empty($data['fecha_fin']) ? Carbon::parse($data['fecha_fin'], $tz)->startOfDay() : null;
-        $proyecto = Proyecto::desdePresupuesto($presupuesto, $data['tipo'], $inicio, $fin);
-
-        if ($presupuesto->estado !== 'aceptada') {
-            $presupuesto->update(['estado' => 'aceptada', 'aceptada_el' => $presupuesto->aceptada_el ?? $inicio?->toDateString()]);
+        $errores = [];
+        $etapas = collect($request->input('etapas'))->values()->map(function ($e, $i) use ($tz, &$errores) {
+            if (! empty($e['fecha_inicio']) && ! empty($e['fecha_fin']) && $e['fecha_fin'] < $e['fecha_inicio']) {
+                $errores["etapas.$i.fecha_fin"] = "En “{$e['nombre']}” la fecha final es antes del inicio.";
+            }
+            $completada = $e['estado'] === 'completada';
+            $cuando = $e['completada_el'] ?? null ?: ($e['fecha_fin'] ?? null ?: ($e['fecha_inicio'] ?? null));
+            return [
+                'nombre'        => $e['nombre'],
+                'fecha_inicio'  => $e['fecha_inicio'] ?: null,
+                'fecha_fin'     => $e['fecha_fin'] ?? null ?: null,
+                'estado'        => $e['estado'],
+                'completada_at' => $completada
+                    ? Carbon::parse($cuando ?: now($tz)->toDateString(), $tz)->setTime(18, 0)->setTimezone(config('app.timezone'))
+                    : null,
+            ];
+        })->all();
+        if ($errores) {
+            throw \Illuminate\Validation\ValidationException::withMessages($errores);
         }
 
-        return redirect()->route('admin.proyectos.show', $proyecto)->with('ok', $fin
-            ? "Proyecto terminado registrado a partir de {$presupuesto->folio}: etapas completadas y pagos registrados."
-            : "Proyecto creado a partir de {$presupuesto->folio}. Revisa las fechas propuestas.");
+        $pagos = collect($request->input('pagos', []))->values()->map(fn ($pg) => [
+            'monto'      => $pg['monto'],
+            'pagado_el'  => $pg['pagado_el'] ?: null,
+            'referencia' => $pg['referencia'] ?? null ?: null,
+        ])->all();
+
+        return [$etapas, $pagos];
     }
 
     public function show(Proyecto $proyecto)
