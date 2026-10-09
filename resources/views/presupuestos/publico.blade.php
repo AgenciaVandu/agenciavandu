@@ -212,7 +212,7 @@
         <div class="acciones">
             <a class="btn {{ $proyecto ? 'btn-sec' : 'btn-prim' }}" href="{{ route('presupuesto.descargar', $p->token) }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg>
-                Descargar PDF
+                Descargar cotización
             </a>
             @unless($proyecto)
             <a class="btn btn-sec" href="https://wa.me/{{ $wa }}?text={{ $waMsg }}" target="_blank" rel="noopener">
@@ -292,7 +292,7 @@
         <div class="acciones" style="margin: 40px 0 0">
             <a class="btn btn-prim" href="{{ route('presupuesto.descargar', $p->token) }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg>
-                Descargar PDF
+                Descargar cotización
             </a>
         </div>
     @else
