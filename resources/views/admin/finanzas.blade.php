@@ -95,6 +95,8 @@
     <a href="{{ route('admin.finanzas.exportar', ['periodo' => $periodo]) }}" class="btn btn-borde" data-recargar><i class="bi bi-download me-1"></i> Exportar CSV</a>
 </div>
 
+@include('admin._este-mes', ['mes' => \App\Support\EsteMes::datos($conIva), 'conIva' => $conIva, 'enlace' => $periodo !== 'mes' ? $q(['periodo' => 'mes']) : null, 'textoEnlace' => 'Ver el detalle de este mes'])
+
 <div class="controles">
     <nav class="segmento" aria-label="Periodo">
         @foreach(F::PERIODOS as $k => $label)

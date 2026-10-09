@@ -82,6 +82,8 @@
     </div>
 </div>
 
+@include('admin._este-mes', ['mes' => \App\Support\EsteMes::datos(true), 'conIva' => true, 'enlace' => route('admin.finanzas', ['periodo' => 'mes'])])
+
 <div class="kpis">
     <a href="{{ route('admin.presupuestos.index', ['filtro' => 'vigentes']) }}" class="panel kpi text-decoration-none text-reset">
         <div class="k"><i class="bi bi-file-earmark-text"></i> Cotizaciones vigentes</div>
@@ -93,10 +95,10 @@
         <div class="v num">{{ $kpi['porVencer'] }}</div>
         <div class="d">{{ $kpi['porVencer'] ? 'Buen momento para dar seguimiento' : 'Nada por vencer' }}</div>
     </a>
-    <a href="{{ route('admin.presupuestos.index', ['filtro' => 'aceptada']) }}" class="panel kpi text-decoration-none text-reset">
-        <div class="k"><i class="bi bi-check2-circle"></i> Aceptadas este mes</div>
-        <div class="v num">{{ $dinero($kpi['aceptadasMonto']) }}</div>
-        <div class="d num">{{ $kpi['aceptadasMes'] }} {{ $kpi['aceptadasMes'] === 1 ? 'cotización' : 'cotizaciones' }}, antes de IVA</div>
+    <a href="{{ route('admin.finanzas') }}#por-cobrar" class="panel kpi text-decoration-none text-reset {{ $kpi['vencidos'] ? 'alerta' : '' }}">
+        <div class="k"><i class="bi bi-cash-coin"></i> Por cobrar</div>
+        <div class="v num">{{ $dinero($kpi['porCobrar']) }}</div>
+        <div class="d num">{{ $kpi['pendientes'] }} {{ $kpi['pendientes'] === 1 ? 'pago pendiente' : 'pagos pendientes' }}@if($kpi['vencidos']) · {{ $kpi['vencidos'] }} {{ $kpi['vencidos'] === 1 ? 'vencido' : 'vencidos' }}@endif, con IVA</div>
     </a>
     <div class="panel kpi">
         <div class="k"><i class="bi bi-graph-up-arrow"></i> Tasa de aceptación</div>

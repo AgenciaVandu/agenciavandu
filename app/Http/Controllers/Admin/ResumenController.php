@@ -46,6 +46,9 @@ class ResumenController extends Controller
         // Pendientes: enviadas que el cliente aún no abre
         $sinAbrir = $vigentes->filter(fn ($p) => $p->estado === 'enviada' && ! $p->vistas)->take(5)->values();
 
+        // Pagos pendientes de proyectos que no están en pausa
+        $pendientes = \App\Models\ProyectoPago::whereNull('pagado_el')->whereHas('proyecto', fn ($q) => $q->where('estado', '!=', 'pausado'))->get();
+
         $actividad = $todas->whereNotNull('ultima_vista_at')->sortByDesc('ultima_vista_at')->take(6)->values();
 
         return view('admin.resumen', [
@@ -58,6 +61,9 @@ class ResumenController extends Controller
                 'tasa'           => $tasa,
                 'resueltas'      => $resueltas->count(),
                 'clientes'       => Cliente::count(),
+                'porCobrar'      => round($pendientes->sum('monto'), 2),
+                'pendientes'     => $pendientes->count(),
+                'vencidos'       => $pendientes->filter->vencido->count(),
             ],
             'meses'     => $meses,
             'porVencer' => $porVencer->take(6),
