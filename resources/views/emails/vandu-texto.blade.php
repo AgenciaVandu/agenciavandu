@@ -9,6 +9,9 @@
 @endforeach
 
 @endif
+@if($miniaturas)Tu galería tiene {!! count($miniaturas) + $mas !!} archivos listos para ver y descargar.
+
+@endif
 @if($boton && $url){!! $boton !!}: {!! $url !!}
 
 @endif

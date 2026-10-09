@@ -246,6 +246,28 @@ class Proyecto extends Model
         return 'Proyecto completado';
     }
 
+    public function getUrlEntregaAttribute(): string
+    {
+        return route('proyecto.entrega', $this->token);
+    }
+
+    /** "18 fotos y 2 videos" con lo visible de la galería */
+    public function getEntregablesTextoAttribute(): string
+    {
+        $g = $this->archivos->where('grupo', 'galeria')->where('visible', true);
+        $fotos = $g->filter->es_imagen->count();
+        $videos = $g->filter->es_video->count();
+        $otros = $g->count() - $fotos - $videos;
+        $partes = array_filter([
+            $fotos ? $fotos . ($fotos === 1 ? ' foto' : ' fotos') : null,
+            $videos ? $videos . ($videos === 1 ? ' video' : ' videos') : null,
+            $otros ? $otros . ($otros === 1 ? ' archivo' : ' archivos') : null,
+        ]);
+        if (! $partes) return 'tu material';
+        $ultimo = array_pop($partes);
+        return $partes ? implode(', ', $partes) . ' y ' . $ultimo : $ultimo;
+    }
+
     public function getUrlPublicaAttribute(): string
     {
         return route('proyecto.publico', $this->token);

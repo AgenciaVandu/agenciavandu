@@ -74,6 +74,7 @@
                             <label class="form-check d-flex align-items-center gap-2"><input type="checkbox" class="form-check-input mt-0" name="incluir_boton" value="1" x-model="conBoton"> <span class="form-check-label">Botón</span>
                                 <input name="boton" class="form-control form-control-sm" style="width: 190px" x-model="boton" :disabled="!conBoton" aria-label="Texto del botón"></label>
                         @endif
+                        <label class="form-check" x-show="plantillas[clave] && plantillas[clave].miniaturas" x-cloak><input type="checkbox" class="form-check-input" name="incluir_miniaturas" value="1" x-model="miniaturas"> <span class="form-check-label"><i class="bi bi-images"></i> Fotos de la galería en el correo</span></label>
                         <label class="form-check"><input type="checkbox" class="form-check-input" name="incluir_banco" value="1" x-model="banco"> <span class="form-check-label">Datos bancarios</span></label>
                         @if($hayPdf)
                             <label class="form-check"><input type="checkbox" class="form-check-input" name="adjuntar_pdf" value="1" x-model="pdf"> <span class="form-check-label"><i class="bi bi-paperclip"></i> Adjuntar PDF de {{ $ctxCorreo['presupuesto']->folio }}</span></label>

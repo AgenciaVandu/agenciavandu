@@ -109,6 +109,8 @@ Route::get('/cotizacion/{token}/descargar', [PresupuestoPublicoController::class
 // Vista pública del proyecto para el cliente
 Route::get('/proyecto/{token}', [\App\Http\Controllers\ProyectoPublicoController::class, 'show'])
     ->where('token', '[A-Za-z0-9]{32}')->name('proyecto.publico');
+Route::get('/proyecto/{token}/entrega', [\App\Http\Controllers\ProyectoPublicoController::class, 'entrega'])
+    ->where('token', '[A-Za-z0-9]{32}')->name('proyecto.entrega');
 Route::get('/proyecto/{token}/archivos/{archivo}', [\App\Http\Controllers\ProyectoPublicoController::class, 'archivo'])
     ->where('token', '[A-Za-z0-9]{32}')->name('proyecto.archivo');
 Route::get('/proyecto/{token}/galeria.zip', [\App\Http\Controllers\ProyectoPublicoController::class, 'zip'])

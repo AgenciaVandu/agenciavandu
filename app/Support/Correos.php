@@ -26,7 +26,7 @@ class Correos
             $ctx['presupuesto'] = Presupuesto::with(['conceptos', 'cliente', 'proyecto'])->findOrFail($id);
             $ctx['cliente'] = $ctx['presupuesto']->cliente;
         } else {
-            $ctx['proyecto'] = Proyecto::with(['cliente', 'presupuesto.conceptos', 'pagos', 'etapas'])->findOrFail($id);
+            $ctx['proyecto'] = Proyecto::with(['cliente', 'presupuesto.conceptos', 'pagos', 'etapas', 'archivos'])->findOrFail($id);
             $ctx['cliente'] = $ctx['proyecto']->cliente;
             $ctx['presupuesto'] = $ctx['proyecto']->presupuesto;
         }
@@ -49,6 +49,10 @@ class Correos
             if (! in_array($ctx['tipo'], $pl['para'], true)) {
                 continue;
             }
+            // La entrega digital solo aparece cuando hay algo visible en la galería
+            if ($clave === 'entrega_digital' && ! $ctx['proyecto']?->archivos->where('grupo', 'galeria')->where('visible', true)->count()) {
+                continue;
+            }
             if ($clave === 'recordatorio_pago') {
                 $pendientes = $ctx['proyecto']?->pagos->whereNull('pagado_el')->values() ?? collect();
                 foreach ($pendientes as $pago) {
@@ -66,7 +70,7 @@ class Correos
     {
         $vars = self::variables($ctx, $pago);
         $r = fn (string $t) => strtr($t, $vars);
-        $url = self::enlace($ctx);
+        $url = self::enlace($ctx, $clave);
 
         return [
             'clave'   => $clave,
@@ -80,6 +84,7 @@ class Correos
             'pdf'     => ! empty($pl['pdf']) && $ctx['presupuesto'],
             'resumen' => ! empty($pl['resumen']),
             'banco'   => ! empty($pl['banco']),
+            'miniaturas' => ! empty($pl['miniaturas']),
             'para'    => self::destinatario($ctx, $clave),
         ];
     }
@@ -111,6 +116,7 @@ class Correos
             '{pago}'         => $pago ? Str::lower($pago->concepto) : '',
             '{monto_pago}'   => $pago?->monto_texto ?? '',
             '{fecha_limite}' => $limite,
+            '{entregables}'  => $pr?->entregables_texto ?? '',
             '{siguiente}'    => $pr ? Str::lcfirst($pr->siguiente_paso ?? 'te mantendremos al tanto') : '',
             '{firma}'        => config('vandu.emisor.nombre'),
         ];
@@ -131,8 +137,10 @@ class Correos
     }
 
     /** Enlace del botón: la vista del proyecto o la de la cotización */
-    public static function enlace(array $ctx): ?string
+    public static function enlace(array $ctx, ?string $clave = null): ?string
     {
+        $pl = $clave ? config('vandu.correo.plantillas.' . Str::before($clave, '@'), []) : [];
+        if ($ctx['proyecto'] && ($pl['enlace'] ?? null) === 'entrega') return $ctx['proyecto']->url_entrega;
         if ($ctx['proyecto']) return $ctx['proyecto']->url_publica;
         if ($ctx['presupuesto']) return $ctx['presupuesto']->url_publica;
         $ultima = $ctx['cliente']?->presupuestos()->first();
@@ -172,6 +180,19 @@ class Correos
             ];
         }
         return [];
+    }
+
+    /** Hasta 6 fotos de la galería, en cuadro, para el correo */
+    public static function miniaturas(array $ctx, int $max = 6): array
+    {
+        $pr = $ctx['proyecto'];
+        if (! $pr) return [];
+        $fotos = $pr->archivos->where('grupo', 'galeria')->where('visible', true)->filter->es_imagen->values();
+        $n = $fotos->count() >= $max ? $max : ($fotos->count() >= 3 ? 3 : $fotos->count());
+        return $fotos->take($n)->map(fn ($a) => [
+            'src'  => route('proyecto.archivo', [$pr->token, $a]) . '?v=correo',
+            'alt'  => $a->nombre,
+        ])->all();
     }
 
     public static function banco(?Presupuesto $p = null): array

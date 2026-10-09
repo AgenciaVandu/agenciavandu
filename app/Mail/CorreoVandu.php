@@ -28,6 +28,8 @@ class CorreoVandu extends Mailable
         public array $resumen = [],
         public array $banco = [],
         public array $archivos = [],
+        public array $miniaturas = [],
+        public int $mas = 0,
         public bool $vistaPrevia = false,
     ) {
     }

@@ -16,7 +16,8 @@ class ProyectoArchivo extends Model
     {
         // Al borrar el registro se borran también sus archivos
         static::deleted(function (ProyectoArchivo $a) {
-            Storage::disk('local')->delete(array_filter([$a->ruta, $a->vista, $a->miniatura]));
+            $correo = str_replace('/originales/', '/optimizadas/', dirname($a->ruta)) . '/' . pathinfo($a->ruta, PATHINFO_FILENAME) . '-correo.jpg';
+            Storage::disk('local')->delete(array_filter([$a->ruta, $a->vista, $a->miniatura, $correo]));
         });
     }
 

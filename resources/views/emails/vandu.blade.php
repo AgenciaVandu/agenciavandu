@@ -77,6 +77,31 @@
             </tr>
         @endif
 
+        {{-- Miniaturas de la galería --}}
+        @if($miniaturas)
+            <tr>
+                <td class="px" style="padding:8px 36px 0;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                        @foreach(array_chunk($miniaturas, 3) as $fila)
+                            <tr>
+                                @foreach($fila as $i => $m)
+                                    <td width="33.33%" style="padding:4px;" valign="top">
+                                        <a href="{{ $url }}" target="_blank" style="display:block; position:relative;">
+                                            <img src="{{ $m['src'] }}" alt="{{ $m['alt'] }}" width="168" style="display:block; width:100%; max-width:168px; height:auto; border-radius:8px; border:0;">
+                                        </a>
+                                    </td>
+                                @endforeach
+                                @for($k = count($fila); $k < 3; $k++)<td width="33.33%" style="padding:4px;">&nbsp;</td>@endfor
+                            </tr>
+                        @endforeach
+                    </table>
+                    @if($mas > 0)
+                        <p style="margin:8px 4px 0; font-family:{{ $font }}; font-size:13px; color:#6B7180;">y {{ $mas }} {{ $mas === 1 ? 'archivo más' : 'archivos más' }} en tu galería</p>
+                    @endif
+                </td>
+            </tr>
+        @endif
+
         {{-- Botón --}}
         @if($boton && $url)
             <tr>

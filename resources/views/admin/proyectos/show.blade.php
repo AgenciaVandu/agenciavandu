@@ -298,10 +298,15 @@
         </section>
 
         {{-- ================= Galería ================= --}}
-        @if($p->tiene_galeria || $galeria->isNotEmpty())
             <section class="panel" id="galeria">
                 <div class="panel-head">
                     <div><h2>Galería de entregables</h2><span class="ayuda num">{{ $galeria->count() }} {{ $galeria->count() === 1 ? 'archivo' : 'archivos' }} · {{ $galeria->where('visible', true)->count() }} visibles para el cliente</span></div>
+                    @if($galeria->where('visible', true)->isNotEmpty())
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a href="{{ $p->url_entrega }}?vista_previa=1" target="_blank" class="btn btn-borde btn-sm"><i class="bi bi-box-arrow-up-right me-1"></i> Ver página de entrega</a>
+                            <button type="button" class="btn btn-primario btn-sm" data-correo="entrega_digital"><i class="bi bi-send me-1"></i> Enviar entrega por correo</button>
+                        </div>
+                    @endif
                 </div>
                 <div class="panel-body">
                     @include('admin.proyectos._subir', ['grupo' => 'galeria', 'texto' => 'Subir fotos o videos', 'accept' => 'image/*,video/*,.zip,.pdf', 'grande' => true])
@@ -334,7 +339,6 @@
                     @endif
                 </div>
             </section>
-        @endif
     </div>
 
     {{-- ================= Lateral ================= --}}

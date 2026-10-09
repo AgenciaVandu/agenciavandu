@@ -72,7 +72,7 @@ class CorreoController extends Controller
             ];
         }
 
-        $url = Correos::enlace($ctx);
+        $url = Correos::enlace($ctx, $d['plantilla']);
         $correo = new CorreoVandu(
             asunto: $d['asunto'],
             titulo: (string) ($d['titulo'] ?? ''),
@@ -82,6 +82,8 @@ class CorreoController extends Controller
             resumen: ! empty($d['incluir_resumen']) ? Correos::resumen($ctx, $pagoId) : [],
             banco: ! empty($d['incluir_banco']) ? Correos::banco($ctx['presupuesto']) : [],
             archivos: $archivos,
+            miniaturas: ! empty($d['incluir_miniaturas']) ? Correos::miniaturas($ctx) : [],
+            mas: ! empty($d['incluir_miniaturas']) ? max(0, ($ctx['proyecto']?->archivos->where('grupo', 'galeria')->where('visible', true)->count() ?? 0) - count(Correos::miniaturas($ctx))) : 0,
             vistaPrevia: $vistaPrevia,
         );
         return $correo;
@@ -104,6 +106,7 @@ class CorreoController extends Controller
             'incluir_resumen' => 'nullable|boolean',
             'incluir_banco'   => 'nullable|boolean',
             'adjuntar_pdf'    => 'nullable|boolean',
+            'incluir_miniaturas' => 'nullable|boolean',
         ], [
             'para.required'   => 'Escribe a quién va el correo.',
             'asunto.required' => 'El correo necesita un asunto.',

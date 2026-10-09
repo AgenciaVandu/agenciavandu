@@ -114,7 +114,7 @@ return [
     | responder_a: a dónde llegan las respuestas del cliente.
     | Plantillas: textos base editables antes de enviar. Variables disponibles:
     |   {nombre} {empresa} {folio} {concepto} {monto} {vigencia} {proyecto}
-    |   {pago} {monto_pago} {fecha_limite} {siguiente} {firma}
+    |   {pago} {monto_pago} {fecha_limite} {siguiente} {entregables} {firma}
     */
     'correo' => [
         'desde'       => env('VANDU_CORREO_DESDE', 'proyectos@agenciavandu.com'),
@@ -163,6 +163,13 @@ return [
                 'titulo' => 'Tu entrega está lista',
                 'cuerpo' => "Hola {nombre},\n\nTe aviso que el material de {proyecto} ya está disponible. Desde el enlace puedes verlo y descargarlo cuando quieras.\n\nGracias por trabajar con nosotros; nos encantará saber qué te pareció.",
                 'boton'  => 'Ver y descargar',
+            ],
+            'entrega_digital' => [
+                'nombre' => 'Entrega digital', 'icono' => 'bi-images', 'para' => ['proyecto'],
+                'asunto' => 'Tu entrega está lista · {proyecto}',
+                'titulo' => 'Tu material ya está listo',
+                'cuerpo' => "Hola {nombre},\n\nYa puedes ver y descargar {entregables} de {proyecto}. Preparamos una galería para que lo revises con calma desde tu computadora o tu celular.\n\nSi algo necesita un ajuste, respóndeme este correo y lo vemos.",
+                'boton'  => 'Ver mi entrega', 'enlace' => 'entrega', 'miniaturas' => true,
             ],
             'libre' => [
                 'nombre' => 'En blanco', 'icono' => 'bi-pencil', 'para' => ['cliente', 'presupuesto', 'proyecto'],

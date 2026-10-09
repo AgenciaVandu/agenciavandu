@@ -87,10 +87,46 @@ class ArchivosProyecto
         }
     }
 
-    /** Sirve el archivo: version = original | vista | miniatura */
+    /**
+     * Recorte cuadrado en JPG (480 px) para mostrar en correos: JPG porque Outlook no lee WebP.
+     * Se genera la primera vez que se pide y se guarda junto a las otras versiones.
+     */
+    public static function cuadroCorreo(ProyectoArchivo $a): ?string
+    {
+        if (! $a->es_imagen || ! function_exists('imagecreatetruecolor')) return null;
+        $disco = Storage::disk(self::DISCO);
+        $destino = dirname($a->miniatura ?: $a->ruta) . '/' . pathinfo($a->ruta, PATHINFO_FILENAME) . '-correo.jpg';
+        $destino = str_replace('/originales/', '/optimizadas/', $destino);
+        if ($disco->exists($destino)) return $destino;
+
+        try {
+            $fuente = $disco->path($a->vista ?: $a->ruta);
+            $img = match (strtolower(pathinfo($fuente, PATHINFO_EXTENSION))) {
+                'webp'        => @imagecreatefromwebp($fuente),
+                'png'         => @imagecreatefrompng($fuente),
+                'jpg', 'jpeg' => @imagecreatefromjpeg($fuente),
+                default       => false,
+            };
+            if (! $img) return null;
+            $w = imagesx($img); $h = imagesy($img); $lado = min($w, $h);
+            $lienzo = imagecreatetruecolor(480, 480);
+            imagefill($lienzo, 0, 0, imagecolorallocate($lienzo, 243, 244, 246));
+            imagecopyresampled($lienzo, $img, 0, 0, (int) (($w - $lado) / 2), (int) (($h - $lado) / 2), 480, 480, $lado, $lado);
+            if (! is_dir(dirname($disco->path($destino)))) mkdir(dirname($disco->path($destino)), 0775, true);
+            imagejpeg($lienzo, $disco->path($destino), 80);
+            imagedestroy($lienzo); imagedestroy($img);
+            return $destino;
+        } catch (\Throwable $e) {
+            report($e);
+            return null;
+        }
+    }
+
+    /** Sirve el archivo: version = original | vista | miniatura | correo */
     public static function responder(ProyectoArchivo $a, string $version = 'original', bool $descargar = false): BinaryFileResponse
     {
         $ruta = match ($version) {
+            'correo'    => self::cuadroCorreo($a) ?? ($a->miniatura ?: $a->ruta),
             'vista'     => $a->vista ?: $a->ruta,
             'miniatura' => $a->miniatura ?: ($a->vista ?: $a->ruta),
             default     => $a->ruta,

@@ -327,7 +327,7 @@
             plantillas: init.plantillas, previaUrl: init.previa,
             abierto: false, cargando: false, enviando: false, conCopia: false,
             clave: '', para: '', cc: '', asunto: '', titulo: '', cuerpo: '', boton: '',
-            conBoton: false, resumen: false, banco: false, pdf: false, ultimo: '',
+            conBoton: false, resumen: false, banco: false, pdf: false, miniaturas: false, ultimo: '',
             init() {
                 // ?correo=recordatorio_pago abre la ventana con esa plantilla
                 const u = new URL(location.href), q = u.searchParams.get('correo');
@@ -349,7 +349,7 @@
                 if (primeraVez || !this.para) this.para = pl.para || this.para;
                 this.asunto = pl.asunto; this.titulo = pl.titulo; this.cuerpo = pl.cuerpo;
                 this.boton = pl.boton || pl.boton_por_defecto || ''; this.conBoton = !!pl.boton;
-                this.resumen = !!pl.resumen; this.banco = !!pl.banco; this.pdf = !!pl.pdf;
+                this.resumen = !!pl.resumen; this.banco = !!pl.banco; this.pdf = !!pl.pdf; this.miniaturas = !!pl.miniaturas;
                 this.$nextTick(() => this.previsualizar());
             },
             cerrar() { this.abierto = false; },
