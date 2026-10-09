@@ -73,6 +73,16 @@ class ArchivosProyecto
         return $ruta;
     }
 
+    /** Crea la carpeta del proyecto con sus subcarpetas (Galería, No publicado, Documentos) */
+    public static function prepararCarpetas(Proyecto $p): string
+    {
+        $dbx = Dropbox::cliente();
+        foreach (['Galería', 'No publicado', 'Documentos'] as $sub) {
+            $dbx->crearCarpeta(self::carpetaProyecto($p) . '/' . $sub);
+        }
+        return self::carpetaProyecto($p);
+    }
+
     public static function carpetaGaleria(Proyecto $p): string { return self::carpetaProyecto($p) . '/Galería'; }
     public static function carpetaOculta(Proyecto $p): string { return self::carpetaProyecto($p) . '/No publicado'; }
 

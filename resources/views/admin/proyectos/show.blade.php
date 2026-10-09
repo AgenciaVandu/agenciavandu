@@ -333,7 +333,7 @@
                         <div class="dbx-barra">
                             <span class="ruta" title="{{ $carpetaGal }}"><i class="bi bi-dropbox me-1"></i> {{ $carpetaGal }}</span>
                             @unless(config('vandu.dropbox.simulado'))
-                                <a href="https://www.dropbox.com/home{{ str_replace('%2F', '/', rawurlencode(\App\Support\ArchivosProyecto::carpetaProyecto($p))) }}" target="_blank" rel="noopener" class="btn btn-fantasma btn-sm"><i class="bi bi-box-arrow-up-right me-1"></i> Abrir en Dropbox</a>
+                                <a href="{{ route('admin.dropbox.abrir', ['proyecto' => $p->id]) }}" target="_blank" rel="noopener" class="btn btn-fantasma btn-sm"><i class="bi bi-box-arrow-up-right me-1"></i> Abrir en Dropbox</a>
                             @endunless
                             <button type="button" class="btn btn-borde btn-sm" onclick="window.dispatchEvent(new CustomEvent('explorar-dropbox'))"><i class="bi bi-folder2-open me-1"></i> Importar de otra carpeta</button>
                             <form method="post" action="{{ route('admin.proyectos.dropbox.sincronizar', $p) }}" class="d-inline">@csrf

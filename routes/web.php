@@ -96,6 +96,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::get('dropbox', [Admin\DropboxController::class, 'index'])->name('dropbox');
     Route::get('dropbox/conectar', [Admin\DropboxController::class, 'conectar'])->name('dropbox.conectar');
     Route::post('dropbox/desconectar', [Admin\DropboxController::class, 'desconectar'])->name('dropbox.desconectar');
+    Route::get('dropbox/abrir', [Admin\DropboxController::class, 'abrir'])->name('dropbox.abrir');
     Route::get('dropbox/token', [Admin\DropboxController::class, 'token'])->name('dropbox.token');
     Route::get('dropbox/explorar', [Admin\DropboxController::class, 'explorar'])->name('dropbox.explorar');
     Route::get('proyectos/{proyecto}/dropbox/destino', [Admin\DropboxController::class, 'destino'])->name('proyectos.dropbox.destino');

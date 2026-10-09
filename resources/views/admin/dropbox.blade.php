@@ -36,7 +36,7 @@ DROPBOX_APP_SECRET=tu_app_secret</pre>
                         <dd class="num">{{ $raiz }}</dd>
                     </dl>
                     @unless($simulado)
-                        <a href="https://www.dropbox.com/home{{ $raiz }}" target="_blank" rel="noopener" class="btn btn-borde"><i class="bi bi-box-arrow-up-right me-1"></i> Abrir carpeta en Dropbox</a>
+                        <a href="{{ route('admin.dropbox.abrir') }}" target="_blank" rel="noopener" class="btn btn-borde"><i class="bi bi-box-arrow-up-right me-1"></i> Abrir carpeta en Dropbox</a>
                         <form method="post" action="{{ route('admin.dropbox.desconectar') }}" class="d-inline" onsubmit="return confirm('¿Desconectar Dropbox? Tus archivos se quedan en Dropbox, pero el panel ya no podrá mostrarlos hasta que lo vuelvas a conectar.')">@csrf
                             <button class="btn btn-fantasma text-danger"><i class="bi bi-plug me-1"></i> Desconectar</button>
                         </form>

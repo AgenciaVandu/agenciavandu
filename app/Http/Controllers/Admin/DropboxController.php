@@ -47,7 +47,9 @@ class DropboxController extends Controller
 
         try {
             $int = Dropbox::cliente()->conectar($request->query('code'));
-            Dropbox::cliente()->crearCarpeta(Dropbox::raiz());
+            foreach (['', '/Proyectos', '/Clientes'] as $sub) {
+                Dropbox::cliente()->crearCarpeta(Dropbox::raiz() . $sub);
+            }
         } catch (DropboxError $e) {
             return redirect()->route('admin.dropbox')->withErrors(['dropbox' => $e->getMessage()]);
         }
@@ -58,6 +60,24 @@ class DropboxController extends Controller
     {
         Dropbox::cliente()->desconectar();
         return redirect()->route('admin.dropbox')->with('ok', 'Dropbox desconectado. Los archivos siguen en tu Dropbox.');
+    }
+
+    /** Abre la carpeta en dropbox.com; la crea primero si todavía no existe (si no, Dropbox abre la raíz) */
+    public function abrir(Request $request)
+    {
+        abort_unless(Dropbox::conectado(), 409);
+        try {
+            if ($request->filled('proyecto')) {
+                $p = Proyecto::findOrFail($request->integer('proyecto'));
+                $ruta = ArchivosProyecto::prepararCarpetas($p);
+            } else {
+                $ruta = Dropbox::raiz();
+                Dropbox::cliente()->crearCarpeta($ruta);
+            }
+        } catch (DropboxError $e) {
+            return back()->withErrors(['dropbox' => $e->getMessage()]);
+        }
+        return redirect()->away('https://www.dropbox.com/home' . str_replace('%2F', '/', rawurlencode($ruta)));
     }
 
     /** Token temporal para que el navegador suba directo a Dropbox */
