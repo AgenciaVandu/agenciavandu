@@ -98,7 +98,7 @@
     <tbody>
         @foreach($p->conceptos as $c)
             <tr>
-                <td class="desc">{!! nl2br(e($c->descripcion)) !!}</td>
+                <td class="desc">@if($c->titulo)<b>{{ $c->titulo }}</b>@if(trim($c->descripcion))<br>@endif @endif{!! nl2br(e(trim($c->descripcion))) !!}</td>
                 <td class="c">{{ $c->cantidad_texto }}</td>
                 <td class="c">{{ $p->monto($c->importe) }}</td>
             </tr>

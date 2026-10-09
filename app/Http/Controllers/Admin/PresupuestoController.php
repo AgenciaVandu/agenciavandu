@@ -148,7 +148,8 @@ class PresupuestoController extends Controller
             'iva_porcentaje'   => 'required|numeric|min:0|max:100',
 
             'conceptos'               => 'required|array|min:1',
-            'conceptos.*.descripcion' => 'required|string|max:5000',
+            'conceptos.*.titulo'      => 'nullable|required_without:conceptos.*.descripcion|string|max:255',
+            'conceptos.*.descripcion' => 'nullable|string|max:5000',
             'conceptos.*.cantidad'    => 'required|numeric|min:0',
             'conceptos.*.precio'      => 'required|numeric|min:0',
 
@@ -171,11 +172,12 @@ class PresupuestoController extends Controller
             'notas_internas'   => 'nullable|string|max:5000',
         ], [
             'conceptos.required' => 'Agrega al menos un concepto.',
-            'conceptos.*.descripcion.required' => 'Cada concepto necesita una descripción.',
+            'conceptos.*.titulo.required_without' => 'Cada concepto necesita un título o una descripción.',
         ]);
 
         $conceptos = collect($v['conceptos'])->values()->map(fn ($c, $i) => [
-            'descripcion' => $c['descripcion'],
+            'titulo'      => trim((string) ($c['titulo'] ?? '')) ?: null,
+            'descripcion' => (string) ($c['descripcion'] ?? ''),
             'cantidad'    => $c['cantidad'],
             'precio'      => $c['precio'],
             'orden'       => $i,

@@ -118,7 +118,7 @@ class Presupuesto extends Model
         $copia->save();
 
         foreach ($this->conceptos as $concepto) {
-            $copia->conceptos()->create($concepto->only(['descripcion', 'cantidad', 'precio', 'orden']));
+            $copia->conceptos()->create($concepto->only(['titulo', 'descripcion', 'cantidad', 'precio', 'orden']));
         }
 
         return $copia;

@@ -6,12 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class PresupuestoConcepto extends Model
 {
-    protected $fillable = ['descripcion', 'cantidad', 'precio', 'orden'];
+    protected $fillable = ['titulo', 'descripcion', 'cantidad', 'precio', 'orden'];
 
     protected $casts = [
         'cantidad' => 'float',
         'precio'   => 'float',
     ];
+
+    /** Texto corto para listados: el título o, si no hay, la descripción */
+    public function getResumenAttribute(): string
+    {
+        return trim($this->titulo ?: explode("\n", (string) $this->descripcion)[0]);
+    }
 
     public function getImporteAttribute(): float
     {

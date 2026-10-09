@@ -69,7 +69,7 @@
                                 @include('admin._avatar', ['nombre' => $quien])
                                 <div>
                                     <div class="principal text-truncate">{{ $quien }}</div>
-                                    <div class="secundario text-truncate">{{ $p->cliente_empresa ? $p->cliente_nombre : \Illuminate\Support\Str::limit($p->conceptos->first()?->descripcion, 40) }}</div>
+                                    <div class="secundario text-truncate">{{ $p->cliente_empresa ? $p->cliente_nombre : \Illuminate\Support\Str::limit($p->conceptos->first()?->resumen, 40) }}</div>
                                 </div>
                             </a>
                         </td>

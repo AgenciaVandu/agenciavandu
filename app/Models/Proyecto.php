@@ -43,7 +43,7 @@ class Proyecto extends Model
     /** Tipo sugerido según las palabras de los conceptos */
     public static function tipoSugerido(Presupuesto $p): string
     {
-        $texto = Str::lower($p->conceptos->pluck('descripcion')->join(' '));
+        $texto = Str::lower($p->conceptos->map(fn ($c) => $c->titulo . ' ' . $c->descripcion)->join(' '));
         return Str::contains($texto, config('vandu.palabras_audiovisual', [])) ? 'audiovisual' : 'web';
     }
 
@@ -59,7 +59,7 @@ class Proyecto extends Model
 
         return DB::transaction(function () use ($p, $tipo, $metodo, $inicio, $fin) {
             $p->loadMissing('conceptos');
-            $primero = Str::of($p->conceptos->first()?->descripcion ?? $metodo['nombre'])->before("\n")->limit(70, '…');
+            $primero = Str::of($p->conceptos->first()?->resumen ?: $metodo['nombre'])->before("\n")->limit(70, '…');
 
             $proyecto = self::create([
                 'cliente_id'     => $p->cliente_id,

@@ -67,7 +67,7 @@
                             <tr>
                                 <td class="text-nowrap"><a href="{{ route('admin.presupuestos.edit', $p) }}" class="fila-link"><span class="principal num">{{ $p->folio }}</span></a>
                                     <div class="secundario">{{ $p->fecha->locale('es')->isoFormat('D MMM YYYY') }}</div></td>
-                                <td class="secundario" style="min-width: 180px">{{ \Illuminate\Support\Str::limit($p->conceptos->first()?->descripcion, 60) }}</td>
+                                <td class="secundario" style="min-width: 180px">{{ \Illuminate\Support\Str::limit($p->conceptos->first()?->resumen, 60) }}</td>
                                 <td class="text-end num fw-medium text-nowrap">{{ $p->monto($p->modo_iva === 'desglosado' ? $p->total : $p->subtotal) }}</td>
                                 <td>@include('admin.presupuestos._vigencia', ['p' => $p])</td>
                                 <td><span class="estado estado-{{ $p->estado }}">{{ \App\Models\Presupuesto::ESTADOS[$p->estado] }}</span></td>

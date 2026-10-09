@@ -92,7 +92,9 @@
         .tabla th.c, .tabla td.c { text-align: center; }
         .tabla th.r, .tabla td.r { text-align: right; }
         .tabla td { padding: 20px 14px; vertical-align: middle; border-bottom: 1px solid var(--line); }
-        .tabla td.desc { white-space: pre-line; }
+        .tabla td.desc .c-tit { display: block; font-weight: 600; }
+        .tabla td.desc .c-desc { display: block; white-space: pre-line; color: #3f4450; }
+        .tabla td.desc .c-tit + .c-desc { margin-top: 2px; }
         .tot { margin-left: auto; width: min(100%, 340px); margin-top: 16px; }
         .tot div { display: flex; justify-content: space-between; padding: 10px 14px; background: var(--mist); }
         .tot div + div { margin-top: 2px; }
@@ -135,7 +137,7 @@
             .tabla, .tabla tbody, .tabla tr, .tabla td { display: block; width: 100%; }
             .tabla tr { border-bottom: 1px solid var(--line); padding: 16px 0; }
             .tabla td { border: 0; padding: 2px 0; text-align: left !important; }
-            .tabla td.desc { font-weight: 500; margin-bottom: 8px; }
+            .tabla td.desc { margin-bottom: 8px; }
             .tabla td[data-k]::before { content: attr(data-k) ': '; color: var(--muted); }
             .banco .fila { grid-template-columns: 1fr auto; }
             .banco .k { grid-column: 1 / -1; }
@@ -219,7 +221,7 @@
             <tbody>
             @foreach($p->conceptos as $c)
                 <tr>
-                    <td class="desc">{{ $c->descripcion }}</td>
+                    <td class="desc">@if($c->titulo)<span class="c-tit">{{ $c->titulo }}</span>@endif @if(trim($c->descripcion))<span class="c-desc">{{ trim($c->descripcion) }}</span>@endif</td>
                     <td class="c num" data-k="Cantidad">{{ $c->cantidad_texto }}</td>
                     <td class="r num" data-k="Costo">{{ $p->monto($c->importe) }}</td>
                 </tr>

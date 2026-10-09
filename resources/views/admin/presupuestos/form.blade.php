@@ -4,8 +4,8 @@
     $p = $presupuesto;
     $nuevo = ! $p->exists;
 
-    $conceptos = old('conceptos', $p->conceptos->map->only(['descripcion', 'cantidad', 'precio'])->values()->all())
-        ?: [['descripcion' => '', 'cantidad' => 1, 'precio' => '']];
+    $conceptos = old('conceptos', $p->conceptos->map->only(['titulo', 'descripcion', 'cantidad', 'precio'])->values()->all())
+        ?: [['titulo' => '', 'descripcion' => '', 'cantidad' => 1, 'precio' => '']];
     $consideraciones = old('consideraciones', $p->consideraciones ?? []);
     $estado = [
         'conceptos'       => array_values($conceptos),
@@ -161,13 +161,15 @@
             {{-- Conceptos --}}
             <section class="panel">
                 <div class="panel-head"><h2>Conceptos</h2><span class="ayuda" x-text="conceptos.length + (conceptos.length === 1 ? ' concepto' : ' conceptos')"></span></div>
-                <div class="conceptos-head" aria-hidden="true"><span>#</span><span>Descripción</span><span>Cantidad</span><span>Precio unitario</span><span class="text-end">Costo</span><span></span></div>
+                <div class="conceptos-head" aria-hidden="true"><span>#</span><span>Concepto</span><span>Cantidad</span><span>Precio unitario</span><span class="text-end">Costo</span><span></span></div>
                 <template x-for="(c, i) in conceptos" :key="i">
                     <div class="concepto">
                         <span class="n num" x-text="i + 1"></span>
                         <div class="desc">
+                            <label class="visually-hidden" :for="'tit'+i">Título</label>
+                            <input class="form-control fw-semibold mb-2" :id="'tit'+i" :name="`conceptos[${i}][titulo]`" x-model="c.titulo" placeholder="Título, p. ej. Caja personalizada" :required="!c.descripcion">
                             <label class="visually-hidden" :for="'desc'+i">Descripción</label>
-                            <textarea class="form-control" rows="2" :id="'desc'+i" :name="`conceptos[${i}][descripcion]`" x-model="c.descripcion" required placeholder="Describe el producto o servicio"></textarea>
+                            <textarea class="form-control" rows="2" :id="'desc'+i" :name="`conceptos[${i}][descripcion]`" x-model="c.descripcion" placeholder="Descripción (opcional): medidas, alcance, detalles…"></textarea>
                         </div>
                         <div>
                             <label class="form-label d-md-none" :for="'cant'+i">Cantidad</label>
@@ -195,7 +197,7 @@
                         </div>
                     </div>
                 </template>
-                <button type="button" class="agregar" @click="conceptos.push({descripcion: '', cantidad: 1, precio: ''}); $nextTick(() => document.getElementById('desc' + (conceptos.length - 1)).focus())">
+                <button type="button" class="agregar" @click="conceptos.push({titulo: '', descripcion: '', cantidad: 1, precio: ''}); $nextTick(() => document.getElementById('tit' + (conceptos.length - 1)).focus())">
                     <i class="bi bi-plus-circle"></i> Agregar concepto
                 </button>
 

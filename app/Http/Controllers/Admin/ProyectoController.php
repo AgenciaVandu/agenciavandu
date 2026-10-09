@@ -57,7 +57,7 @@ class ProyectoController extends Controller
             'presupuesto' => $presupuesto,
             'proyecto'    => null,
             'tipo'        => $tipo,
-            'nombre'      => (string) \Illuminate\Support\Str::of($presupuesto->conceptos->first()?->descripcion ?? $metodo['nombre'])->before("\n")->limit(70, '…'),
+            'nombre'      => (string) \Illuminate\Support\Str::of($presupuesto->conceptos->first()?->resumen ?: $metodo['nombre'])->before("\n")->limit(70, '…'),
             'monto'       => $total,
             'inicio'      => ($presupuesto->aceptada_el ?? now(config('vandu.zona_horaria')))->toDateString(),
             'etapas'      => collect($metodo['etapas'])->values()->map(fn ($e) => [
