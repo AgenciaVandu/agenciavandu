@@ -101,6 +101,9 @@
         .tot div + div { margin-top: 2px; }
         .tot .final { font-weight: 700; font-size: 18px; }
 
+        .obs { margin-top: 28px; padding: 18px 20px; border-radius: 14px; background: #F6F7F9; border: 1px solid #E7E9EE; }
+        .obs h3 { font-size: 15px; font-weight: 600; margin: 0 0 6px; }
+        .obs p { margin: 6px 0 0; color: #4B5160; font-size: 15px; line-height: 1.5; }
         h2 { font-size: 22px; font-weight: 600; margin: 48px 0 8px; letter-spacing: -.01em; }
         .sec { padding: 18px 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: 32px 1fr; gap: 0 8px; }
         .sec .n { font-weight: 600; color: var(--muted); }
@@ -239,6 +242,13 @@
                 <div class="final"><span>Total</span><span>{{ $p->monto($p->total) }}</span></div>
             @endif
         </div>
+
+        @if($obs = $p->observaciones_lineas)
+            <section class="obs" aria-label="Observaciones">
+                <h3>Observaciones</h3>
+                @foreach($obs as $linea)<p>{{ $linea }}</p>@endforeach
+            </section>
+        @endif
 
         @if(count($secciones) || $p->mostrar_pago)
             <h2>Consideraciones</h2>

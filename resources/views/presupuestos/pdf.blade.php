@@ -44,6 +44,12 @@
     .conceptos tr.tot + tr.tot td { border-top: 0.75pt solid #fff; }
     .conceptos tr.tot.final td { font-weight: bold; }
 
+    /* Observaciones */
+    .obs { width: 485pt; margin-top: 18pt; page-break-inside: avoid; }
+    .obs h2 { margin-top: 0; }
+    .obs p { font-size: 10pt; line-height: 0.91; margin-top: 6pt; }
+    .obs h2 + p { margin-top: 9pt; }
+
     /* Consideraciones */
     h2 { font-size: 13pt; line-height: 0.91; font-weight: bold; margin-top: 10.9pt; }
     .sec { margin-left: 21pt; page-break-inside: avoid; }
@@ -122,6 +128,13 @@
         @endif
     </tbody>
 </table>
+
+@if($obs = $p->observaciones_lineas)
+    <div class="obs">
+        <h2>Observaciones</h2>
+        @foreach($obs as $linea)<p>{{ $linea }}</p>@endforeach
+    </div>
+@endif
 
 @if(count($secciones) || $p->mostrar_pago)
     <h2>Consideraciones</h2>

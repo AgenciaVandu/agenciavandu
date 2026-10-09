@@ -93,6 +93,8 @@ return [
             'nombre' => 'Producción e impresión',
             'icono'  => 'bi-printer',
             'costeo' => true,
+            // Texto base de "Observaciones" al elegir este tipo (editable en cada cotización)
+            'observaciones' => "Las medidas, colores y acabados finales se confirman con una prueba digital antes de producir.\nLos colores impresos pueden variar ligeramente respecto a como se ven en pantalla.\nLos archivos del cliente deben entregarse en vectores (AI, PDF o SVG) o en alta resolución.\nPara la instalación, el área debe estar libre y accesible el día acordado.",
             'pagos'  => [
                 ['clave' => 'anticipo', 'concepto' => 'Anticipo', 'porcentaje' => 50, 'antes_de' => 'fabricacion'],
                 ['clave' => 'saldo',    'concepto' => 'Saldo',    'porcentaje' => 50, 'antes_de' => 'entrega'],

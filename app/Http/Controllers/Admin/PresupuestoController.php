@@ -161,6 +161,7 @@ class PresupuestoController extends Controller
             'conceptos.*.utilidad'        => 'nullable|numeric',
             'conceptos.*.utilidad_modo'   => 'nullable|in:pct,monto',
 
+            'observaciones'              => 'nullable|string|max:5000',
             'consideraciones'            => 'nullable|array',
             'consideraciones.*.titulo'   => 'nullable|string|max:255',
             'consideraciones.*.items'    => 'nullable|array',

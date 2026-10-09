@@ -24,6 +24,8 @@
         'tipo'            => old('tipo', $p->tipo ?? \App\Models\Proyecto::tipoSugerido($p)),
         'tiposCosteo'     => collect($tipos)->filter(fn ($m) => ! empty($m['costeo']))->keys()->values(),
         'vacio'           => $vacio,
+        'observaciones'   => (string) old('observaciones', $p->observaciones),
+        'obsBase'         => collect($tipos)->map(fn ($m) => $m['observaciones'] ?? '')->filter(),
     ];
     $wa = $p->cliente?->whatsapp;
 @endphp
@@ -185,7 +187,7 @@
             {{-- Conceptos --}}
             <section class="panel">
                 <div class="panel-head"><h2>Conceptos</h2><span class="ayuda" x-text="conceptos.length + (conceptos.length === 1 ? ' concepto' : ' conceptos')"></span></div>
-                <div class="tipos" role="radiogroup" aria-label="Tipo de servicio">
+                <div class="tipos" role="radiogroup" aria-label="Tipo de servicio" @change="sugerirObservaciones()">
                     <span class="lbl">Tipo de servicio</span>
                     @foreach($tipos as $k => $m)
                         <label><input type="radio" name="tipo" value="{{ $k }}" x-model="tipo"><i class="bi {{ $m['icono'] }}"></i> {{ $m['nombre'] }}</label>
@@ -283,6 +285,20 @@
                         <div x-show="modoIva !== 'sin_iva'"><dt x-text="'IVA ' + ivaPct + '%'"></dt><dd x-text="dinero(iva)"></dd></div>
                         <div class="gran"><dt>Total</dt><dd x-text="dinero(total)"></dd></div>
                     </dl>
+                </div>
+            </section>
+
+            {{-- Observaciones --}}
+            <section class="panel">
+                <div class="panel-head"><h2>Observaciones</h2><span class="ayuda">Debajo de los conceptos · opcional</span></div>
+                <div class="panel-body">
+                    <label class="visually-hidden" for="observaciones">Observaciones</label>
+                    <textarea name="observaciones" id="observaciones" rows="4" class="form-control" x-model="observaciones"
+                              placeholder="Aclaraciones para el cliente: medidas, materiales, archivos, instalación…"></textarea>
+                    <div class="d-flex justify-content-between align-items-center mt-2 gap-2 flex-wrap">
+                        <span class="secundario" style="font-size:12.5px">Cada renglón se muestra como un párrafo en el PDF y en el enlace del cliente.</span>
+                        <button type="button" class="btn btn-fantasma btn-sm" x-show="obsBase[tipo] && observaciones.trim() !== obsBase[tipo]" @click="observaciones = obsBase[tipo]"><i class="bi bi-arrow-counterclockwise me-1"></i> Usar texto base</button>
+                    </div>
                 </div>
             </section>
 
@@ -516,6 +532,14 @@ function editor(init) {
         ahora: Date.now(),
         init() { setInterval(() => this.ahora = Date.now(), 30000); },
         importe(c) { return Math.round((+c.cantidad || 0) * (+c.precio || 0) * 100) / 100; },
+        sugerirObservaciones() {
+            // Al cambiar a un tipo con texto base, solo se llena si está vacío o tenía otro texto base
+            const base = this.obsBase[this.tipo];
+            const actual = this.observaciones.trim();
+            const eraBase = Object.values(this.obsBase).includes(actual);
+            if (base && (actual === '' || eraBase)) this.observaciones = base;
+            else if (! base && eraBase) this.observaciones = '';   // no dejar el texto de otro tipo sin tocar
+        },
         get usaCosteo() { return this.tiposCosteo.includes(this.tipo); },
         conCosteo(c) { return this.usaCosteo && (c.costo_proveedor !== '' && c.costo_proveedor !== null || c.gasolina !== '' && c.gasolina !== null); },
         costo(c) { return Math.round(((+c.cantidad || 0) * (+c.costo_proveedor || 0) + (+c.gasolina || 0)) * 100) / 100; },

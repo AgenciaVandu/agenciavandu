@@ -27,7 +27,7 @@ class Presupuesto extends Model
     protected $fillable = [
         'cliente_id', 'cliente_nombre', 'cliente_empresa', 'fecha', 'titulo', 'tipo',
         'emisor_nombre', 'emisor_telefono', 'emisor_sitio', 'emisor_email',
-        'modo_iva', 'iva_porcentaje', 'consideraciones',
+        'modo_iva', 'iva_porcentaje', 'consideraciones', 'observaciones',
         'mostrar_pago', 'pago_intro', 'banco', 'clabe', 'beneficiario',
         'nota_comprobante', 'nota_factura',
         'vigente_hasta', 'estado', 'aceptada_el', 'notas_internas',
@@ -135,6 +135,12 @@ class Presupuesto extends Model
     }
 
     /* ---------------- Importes ---------------- */
+
+    /** Renglones no vacíos de las observaciones */
+    public function getObservacionesLineasAttribute(): array
+    {
+        return array_values(array_filter(array_map('trim', preg_split('/\R/', (string) $this->observaciones)), fn ($l) => $l !== ''));
+    }
 
     /** El tipo de servicio usa costeo (proveedor + gasolina + utilidad) */
     public function getUsaCosteoAttribute(): bool
