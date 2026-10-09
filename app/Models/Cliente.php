@@ -10,7 +10,7 @@ class Cliente extends Model
 {
     protected $fillable = [
         'nombre', 'empresa', 'email', 'telefono',
-        'rfc', 'razon_social', 'regimen_fiscal', 'cp_fiscal', 'uso_cfdi', 'metodo_pago', 'email_factura', 'notas',
+        'rfc', 'razon_social', 'regimen_fiscal', 'cp_fiscal', 'uso_cfdi', 'metodo_pago', 'dias_credito', 'email_factura', 'notas',
     ];
 
     protected static function booted(): void
@@ -54,7 +54,7 @@ class Cliente extends Model
             'Régimen fiscal' => $this->regimen_texto,
             'Código postal'  => $this->cp_fiscal,
             'Uso de CFDI'    => $this->uso_cfdi_texto,
-            'Método de pago' => $this->metodo_pago_texto,
+            'Método de pago' => $this->metodo_pago_texto . ($this->metodo_pago === 'credito' && $this->dias_credito ? " a {$this->dias_credito} días" : ''),
             'Correo'         => $this->email_factura ?: $this->email,
         ])->filter()->map(fn ($v, $k) => "$k: $v")->join("\n");
     }

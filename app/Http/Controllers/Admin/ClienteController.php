@@ -160,6 +160,7 @@ class ClienteController extends Controller
             'cp_fiscal'      => 'nullable|digits:5',
             'uso_cfdi'       => ['nullable', Rule::in(array_keys(config('vandu.sat.usos_cfdi')))],
             'metodo_pago'    => ['nullable', Rule::in(array_keys(config('vandu.metodos_pago')))],
+            'dias_credito'   => 'nullable|integer|min:1|max:365',
             'email_factura'  => 'nullable|email|max:255',
             'notas'          => 'nullable|string|max:5000',
         ] + $this->reglasConstancia(), [

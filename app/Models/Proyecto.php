@@ -16,7 +16,7 @@ class Proyecto extends Model
 
     protected $fillable = [
         'cliente_id', 'presupuesto_id', 'tipo', 'nombre', 'estado', 'monto_total',
-        'fecha_inicio', 'mensaje_cliente', 'notas_internas',
+        'forma_pago', 'dias_credito', 'fecha_inicio', 'mensaje_cliente', 'notas_internas',
     ];
 
     protected $casts = [
@@ -197,6 +197,11 @@ class Proyecto extends Model
     public function getEtapaActualAttribute(): ?ProyectoEtapa
     {
         return $this->etapas->firstWhere('estado', 'en_curso') ?? $this->etapas->firstWhere('estado', 'pendiente');
+    }
+
+    public function getACreditoAttribute(): bool
+    {
+        return $this->forma_pago === 'credito';
     }
 
     /** Pagos pendientes que bloquean una etapa */

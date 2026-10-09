@@ -209,6 +209,7 @@
                                 <span class="pill ok">Recibido el {{ $f($pg->pagado_el) }}</span>
                             @else
                                 <span class="pill pend">Pendiente</span>
+                                @if($pg->vence_el)<span>Fecha límite: {{ $f($pg->vence_el) }}</span>@endif
                                 @if($antes)<span>Necesario para iniciar {{ mb_strtolower($antes->nombre) }}</span>@endif
                             @endif
                         </div>

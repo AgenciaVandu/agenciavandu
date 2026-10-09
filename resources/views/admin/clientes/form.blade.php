@@ -84,14 +84,21 @@
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6" x-data="{ m: {{ Js::from(old('metodo_pago', $cliente->metodo_pago)) }} }">
                 <label class="form-label" for="metodo_pago">Método de pago</label>
-                <select name="metodo_pago" id="metodo_pago" class="form-select">
+                <div class="d-flex gap-2">
+                <select name="metodo_pago" id="metodo_pago" class="form-select" x-model="m">
                     <option value="">Sin definir</option>
                     @foreach(config('vandu.metodos_pago') as $k => $v)
                         <option value="{{ $k }}" @selected(old('metodo_pago', $cliente->metodo_pago) === $k)>{{ $v }}</option>
                     @endforeach
                 </select>
+                <div class="input-group flex-nowrap" style="width: 150px" x-show="m === 'credito'" x-cloak>
+                    <input type="number" min="1" max="365" name="dias_credito" class="form-control num" value="{{ old('dias_credito', $cliente->dias_credito) }}" placeholder="30" aria-label="Días de crédito" :disabled="m !== 'credito'">
+                    <span class="input-group-text">días</span>
+                </div>
+                </div>
+                <div class="secundario mt-1" style="font-size:12.5px" x-show="m === 'credito'" x-cloak>Sus proyectos se proponen a crédito: sin anticipo y con el pago a estos días de la entrega.</div>
             </div>
             <div class="col-md-6">
                 <label class="form-label" for="email_factura">Correo para la factura <span class="text-secondary fw-normal">(si es otro)</span></label>

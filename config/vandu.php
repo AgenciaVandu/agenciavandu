@@ -114,6 +114,13 @@ return [
         'tarjeta_credito' => 'Tarjeta de crédito',
     ],
 
+    // Proyectos a crédito (empresas que pagan diferido): un solo pago que vence N días después de la entrega
+    'credito' => [
+        'concepto' => 'Pago a crédito',
+        'dias'     => [15, 30, 45, 60, 90],
+        'dias_por_defecto' => 30,
+    ],
+
     // Catálogos del SAT para los datos de facturación del cliente
     'sat' => [
         'regimenes' => [

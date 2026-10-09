@@ -50,8 +50,9 @@ class ProyectoController extends Controller
             $ultimo = $i === count($metodo['pagos']) - 1;
             $monto = $ultimo ? round($total - $acum, 2) : round($total * $pg['porcentaje'] / 100, 2);
             $acum += $monto;
-            return $pg + ['id' => null, 'monto' => $monto, 'pagado_el' => '', 'referencia' => '', 'metodo' => $metodoCliente];
+            return $pg + ['id' => null, 'monto' => $monto, 'pagado_el' => '', 'referencia' => '', 'metodo' => $metodoCliente, 'vence_el' => ''];
         });
+        $cli = $presupuesto->cliente;
 
         return view('admin.proyectos.fechas', [
             'modo'        => 'crear',
@@ -67,6 +68,9 @@ class ProyectoController extends Controller
                 'fecha_inicio' => '', 'fecha_fin' => '', 'estado' => 'pendiente', 'completada_el' => '',
             ]),
             'pagos'       => $pagos,
+            'forma'       => $cli?->metodo_pago === 'credito' ? 'credito' : 'contado',
+            'diasCredito' => $cli?->dias_credito ?: config('vandu.credito.dias_por_defecto'),
+            'pagoCredito' => $this->pagoCredito($total),
         ]);
     }
 
@@ -81,10 +85,15 @@ class ProyectoController extends Controller
             'nombre' => 'required|string|max:255',
             'monto_total' => 'required|numeric|min:0',
         ]);
+        $request->validate([
+            'forma_pago'   => 'required|in:contado,credito',
+            'dias_credito' => 'nullable|required_if:forma_pago,credito|integer|min:1|max:365',
+        ], ['dias_credito.required_if' => 'Indica a cuántos días es el crédito.']);
         [$etapas, $pagos] = $this->validarFechas($request);
         $metodo = config("vandu.proyectos.{$request->input('tipo')}");
+        $credito = $request->input('forma_pago') === 'credito';
 
-        $proyecto = DB::transaction(function () use ($request, $presupuesto, $etapas, $pagos, $metodo) {
+        $proyecto = DB::transaction(function () use ($request, $presupuesto, $etapas, $pagos, $metodo, $credito) {
             $terminado = collect($etapas)->every(fn ($e) => $e['estado'] === 'completada');
             $proyecto = Proyecto::create([
                 'cliente_id'     => $presupuesto->cliente_id,
@@ -93,6 +102,8 @@ class ProyectoController extends Controller
                 'nombre'         => $request->input('nombre'),
                 'estado'         => $terminado ? 'terminado' : 'activo',
                 'monto_total'    => $request->input('monto_total'),
+                'forma_pago'     => $credito ? 'credito' : 'contado',
+                'dias_credito'   => $credito ? (int) $request->input('dias_credito') : null,
                 'fecha_inicio'   => collect($etapas)->pluck('fecha_inicio')->filter()->min() ?? now(config('vandu.zona_horaria'))->toDateString(),
             ]);
             foreach ($metodo['etapas'] as $i => $e) {
@@ -100,7 +111,9 @@ class ProyectoController extends Controller
                     'clave' => $e['clave'], 'descripcion' => $e['descripcion'] ?? null, 'orden' => $i, 'es_fecha' => ! empty($e['fecha']),
                 ]);
             }
-            foreach ($metodo['pagos'] as $i => $pg) {
+            // A crédito: un solo pago diferido que no frena ninguna etapa
+            $plantilla = $credito ? [$this->pagoCredito((float) $request->input('monto_total'))] : $metodo['pagos'];
+            foreach ($plantilla as $i => $pg) {
                 $proyecto->pagos()->create($pagos[$i] + [
                     'clave' => $pg['clave'], 'concepto' => $pg['concepto'], 'porcentaje' => $pg['porcentaje'],
                     'antes_de' => $pg['antes_de'] ?? null, 'orden' => $i,
@@ -113,6 +126,15 @@ class ProyectoController extends Controller
         });
 
         return redirect()->route('admin.proyectos.show', $proyecto)->with('ok', "Proyecto creado a partir de {$presupuesto->folio}.");
+    }
+
+    /** Plantilla del pago único de un proyecto a crédito */
+    private function pagoCredito(float $total): array
+    {
+        return [
+            'id' => null, 'clave' => 'credito', 'concepto' => config('vandu.credito.concepto'), 'porcentaje' => 100,
+            'antes_de' => null, 'monto' => round($total, 2), 'pagado_el' => '', 'referencia' => '', 'metodo' => 'credito', 'vence_el' => '',
+        ];
     }
 
     /** Editar todas las fechas de un proyecto existente */
@@ -139,7 +161,11 @@ class ProyectoController extends Controller
                 'id' => $pg->id, 'clave' => $pg->clave, 'concepto' => $pg->concepto, 'porcentaje' => $pg->porcentaje,
                 'antes_de' => $pg->antes_de, 'monto' => $pg->monto, 'pagado_el' => $pg->pagado_el?->toDateString() ?? '', 'referencia' => $pg->referencia ?? '',
                 'metodo' => $pg->metodo ?? ($proyecto->cliente?->metodo_pago ?? ''),
+                'vence_el' => $pg->vence_el?->toDateString() ?? '',
             ]),
+            'forma'       => $proyecto->forma_pago,
+            'diasCredito' => $proyecto->dias_credito,
+            'pagoCredito' => null,
         ]);
     }
 
@@ -148,7 +174,11 @@ class ProyectoController extends Controller
         $proyecto->load('etapas', 'pagos');
         [$etapas, $pagos] = $this->validarFechas($request, $proyecto);
 
+        if ($proyecto->a_credito && $request->filled('dias_credito')) {
+            $proyecto->dias_credito = max(1, min(365, (int) $request->input('dias_credito')));
+        }
         DB::transaction(function () use ($proyecto, $etapas, $pagos) {
+            $proyecto->save();
             foreach ($proyecto->etapas->values() as $i => $e) {
                 if (isset($etapas[$i])) $e->update($etapas[$i]);
             }
@@ -180,6 +210,7 @@ class ProyectoController extends Controller
             'pagos.*.pagado_el'      => 'nullable|date|before_or_equal:today',
             'pagos.*.referencia'     => 'nullable|string|max:255',
             'pagos.*.metodo'         => ['nullable', Rule::in(array_keys(config('vandu.metodos_pago')))],
+            'pagos.*.vence_el'       => 'nullable|date',
         ], [
             'etapas.*.completada_el.before_or_equal' => 'Una fecha de “completada” está en el futuro.',
             'pagos.*.pagado_el.before_or_equal'      => 'Una fecha de pago está en el futuro.',
@@ -212,6 +243,7 @@ class ProyectoController extends Controller
             'pagado_el'  => $pg['pagado_el'] ?: null,
             'referencia' => $pg['referencia'] ?? null ?: null,
             'metodo'     => $pg['metodo'] ?? null ?: null,
+            'vence_el'   => $pg['vence_el'] ?? null ?: null,
         ])->all();
 
         return [$etapas, $pagos];
@@ -315,6 +347,7 @@ class ProyectoController extends Controller
             'monto'      => 'nullable|numeric|min:0',
             'referencia' => 'nullable|string|max:255',
             'metodo'     => ['nullable', Rule::in(array_keys(config('vandu.metodos_pago')))],
+            'vence_el'   => 'nullable|date',
         ]);
 
         if (($data['accion'] ?? null) === 'pagar') {
@@ -327,6 +360,7 @@ class ProyectoController extends Controller
         if (isset($data['monto'])) $pago->monto = $data['monto'];
         if ($request->has('referencia')) $pago->referencia = $data['referencia'];
         if ($request->has('metodo')) $pago->metodo = $data['metodo'] ?: null;
+        if ($request->has('vence_el')) $pago->vence_el = $data['vence_el'] ?: null;
         $pago->save();
 
         return back()->with('ok', $pago->pagado ? "{$pago->concepto} registrado como pagado." : "{$pago->concepto} actualizado.");

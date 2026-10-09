@@ -147,6 +147,8 @@
                                             <span class="num fw-medium text-body">{{ $pg->monto_texto }}</span>
                                             @if($pg->pagado)
                                                 <button type="button" class="vig vig-ok border-0 bg-transparent p-0" @click="editar = true" title="Cambiar fecha de pago"><i class="bi bi-check-circle"></i> Pagado el {{ $pg->pagado_el->locale('es')->isoFormat('D [de] MMMM') }} <i class="bi bi-pencil small text-secondary"></i></button>
+                                            @elseif($pg->vence_el)
+                                                <span class="vig {{ $pg->vencido ? 'vig-vencida' : 'vig-pronto' }}"><i class="bi {{ $pg->vencido ? 'bi-exclamation-circle' : 'bi-calendar-event' }}"></i> {{ $pg->vencido ? 'Venció' : 'Vence' }} el {{ $pg->vence_el->locale('es')->isoFormat('D [de] MMMM') }}@if($p->a_credito && $p->dias_credito) · crédito {{ $p->dias_credito }} días @endif</span>
                                             @elseif($pg->antes_de)
                                                 <span class="vig vig-pronto"><i class="bi bi-lock"></i> Requerido antes de {{ $p->etapas->firstWhere('clave', $pg->antes_de)?->nombre }}</span>
                                             @endif
@@ -182,6 +184,10 @@
                                 <form method="post" action="{{ route('admin.proyectos.pago', [$p, $pg]) }}" class="row g-2 mt-2" x-show="editar" x-cloak>
                                     @csrf @method('patch')
                                     <input type="hidden" name="editar_fecha" value="1">
+                                    @if($pg->vence_el || $p->a_credito)
+                                        <div class="col-sm-3"><label class="form-label">Vence el</label>
+                                            <input type="date" name="vence_el" value="{{ $pg->vence_el?->toDateString() }}" class="form-control form-control-sm num"></div>
+                                    @endif
                                     <div class="col-sm-3"><label class="form-label">Pagado el</label>
                                         <input type="date" name="pagado_el" value="{{ $pg->pagado_el?->toDateString() }}" max="{{ $hoy }}" class="form-control form-control-sm num">
                                         <div class="secundario" style="font-size:12px">Vacío = pendiente</div></div>

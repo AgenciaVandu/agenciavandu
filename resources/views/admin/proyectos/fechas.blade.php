@@ -5,7 +5,9 @@
     $hoy = now(config('vandu.zona_horaria'))->toDateString();
     // Si hubo error de validación, se vuelve a mostrar lo capturado
     $etapasIni = collect(old('etapas', $etapas->all()))->values()->map(fn ($e, $i) => array_merge($etapas[$i] ?? [], $e))->all();
-    $pagosIni = collect(old('pagos', $pagos->all()))->values()->map(fn ($p, $i) => array_merge($pagos[$i] ?? [], $p))->all();
+    $forma = old('forma_pago', $forma);
+    $basePagos = ($crear && $forma === 'credito') ? collect([$pagoCredito]) : collect($pagos);
+    $pagosIni = collect(old('pagos', $basePagos->all()))->values()->map(fn ($p, $i) => array_merge($basePagos[$i] ?? [], $p))->all();
     $estado = [
         'etapas'  => $etapasIni,
         'pagos'   => $pagosIni,
@@ -14,6 +16,11 @@
         'terminado' => (bool) old('terminado', false),
         'proponer'  => $crear && ! old('etapas'),
         'hoy'     => $hoy,
+        'forma'   => $forma,
+        'dias'    => (int) old('dias_credito', $diasCredito ?: config('vandu.credito.dias_por_defecto')),
+        'pagosContado' => collect($pagos)->values()->all(),
+        'pagoCredito'  => $pagoCredito,
+        'venceManual'  => (bool) collect($pagosIni)->first(fn ($p) => ! empty($p['vence_el'])),
     ];
     $cancelar = $crear ? route('admin.presupuestos.edit', $presupuesto) : route('admin.proyectos.show', $proyecto);
 @endphp
@@ -30,6 +37,10 @@
     .fechas .nom { min-width: 200px; }
     .fechas .gate { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
     .fechas tr.completa td:first-child { box-shadow: inset 3px 0 0 var(--green-ink); }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chips button { border: 1px solid var(--line-strong); background: var(--surface); border-radius: 99px; padding: 4px 12px; font-size: 13.5px; color: var(--text-2); }
+    .chips button:hover, .chips button.activo { border-color: var(--ink); color: var(--text); }
+    .chips button.activo { background: var(--ink); color: #fff; }
     .herramientas { display: flex; flex-wrap: wrap; gap: 14px 20px; align-items: flex-end; }
     .herramientas > div { min-width: 0; }
     .barra-acciones { position: sticky; bottom: 0; z-index: 5; margin: 24px -36px -64px; padding: 14px 36px; background: rgba(244,245,247,.92);
@@ -84,6 +95,40 @@
                     </div>
                 </div>
             </section>
+        @endif
+
+        @if($crear || $forma === 'credito')
+        <section class="panel">
+            <div class="panel-head"><h2>Forma de pago</h2><span class="ayuda" x-show="forma === 'credito'" x-cloak>Para empresas que pagan diferido</span></div>
+            <div class="panel-body herramientas">
+                @if($crear)
+                    <div>
+                        <div class="segmento" role="radiogroup" aria-label="Forma de pago">
+                            <a href="#" role="radio" :aria-checked="forma === 'contado'" :class="forma === 'contado' && 'activo'" @click.prevent="cambiarForma('contado')"><i class="bi bi-cash-coin"></i> Contado · {{ collect($metodo['pagos'])->pluck('concepto')->join(' y ') }}</a>
+                            <a href="#" role="radio" :aria-checked="forma === 'credito'" :class="forma === 'credito' && 'activo'" @click.prevent="cambiarForma('credito')"><i class="bi bi-hourglass-split"></i> Crédito / pago diferido</a>
+                        </div>
+                        <input type="hidden" name="forma_pago" :value="forma">
+                    </div>
+                @endif
+                <div x-show="forma === 'credito'" x-cloak>
+                    <label class="form-label" for="dias_credito">Días de crédito</label>
+                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                        <div class="input-group" style="width: 130px">
+                            <input type="number" min="1" max="365" name="dias_credito" id="dias_credito" class="form-control num" x-model.number="dias" :disabled="forma !== 'credito'">
+                            <span class="input-group-text">días</span>
+                        </div>
+                        <div class="chips" role="group" aria-label="Atajos de días de crédito">
+                            @foreach(config('vandu.credito.dias') as $dc)
+                                <button type="button" :class="dias === {{ $dc }} && 'activo'" @click="dias = {{ $dc }}; venceManual = false">{{ $dc }}</button>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                <p class="secundario mb-0" style="flex-basis: 100%; font-size: 13.5px" x-show="forma === 'credito'" x-cloak>
+                    Sin anticipo: las etapas avanzan sin esperar pagos y el cobro vence <b x-text="dias + ' días'"></b> después de la entrega<span x-show="pagos[0] && pagos[0].vence_el" x-text="' (' + fechaLarga(pagos[0] && pagos[0].vence_el) + ')'"></span>.
+                </p>
+            </div>
+        </section>
         @endif
 
         <section class="panel">
@@ -144,7 +189,7 @@
             <div class="panel-head"><h2>Pagos</h2><span class="ayuda" x-text="'Total ' + dinero(pagos.reduce((s, p) => s + (+p.monto || 0), 0))"></span></div>
             <div class="table-responsive">
                 <table class="fechas">
-                    <thead><tr><th>Concepto</th><th>Monto</th><th>Pagado el</th><th>Método de pago</th><th>Referencia</th></tr></thead>
+                    <thead><tr><th>Concepto</th><th>Monto</th><th x-show="forma === 'credito'">Vence el</th><th>Pagado el</th><th>Método de pago</th><th>Referencia</th></tr></thead>
                     <tbody>
                         <template x-for="(p, i) in pagos" :key="i">
                             <tr :class="{ completa: !!p.pagado_el }">
@@ -152,6 +197,10 @@
                                     <div class="gate" x-show="p.antes_de" x-text="'Antes de ' + nombreEtapa(p.antes_de)"></div></td>
                                 <td style="min-width:150px"><div class="input-group"><span class="input-group-text">$</span>
                                     <input type="number" step="0.01" min="0" class="form-control num" :name="`pagos[${i}][monto]`" x-model="p.monto" required :aria-label="'Monto de ' + p.concepto"></div></td>
+                                <td x-show="forma === 'credito'">
+                                    <input type="date" class="form-control num" :name="`pagos[${i}][vence_el]`" x-model="p.vence_el" @input="venceManual = true" :aria-label="'Vencimiento de ' + p.concepto">
+                                    <div class="gate" x-show="!venceManual">Entrega + <span x-text="dias"></span> días</div>
+                                </td>
                                 <td>
                                     <input type="date" class="form-control num" :name="`pagos[${i}][pagado_el]`" x-model="p.pagado_el" :max="hoy" :aria-label="'Fecha de pago de ' + p.concepto">
                                     <div class="gate" x-show="!p.pagado_el">Vacío = pendiente</div>
@@ -185,7 +234,31 @@ function fechasProyecto(init) {
     const habil = (d) => { const r = new Date(d); while (!(r.getDay() % 6)) r.setDate(r.getDate() + 1); return r; };
     return {
         ...init, mensaje: '',
-        init() { if (this.proponer) this.proponerFechas(true); },
+        init() {
+            if (this.proponer) this.proponerFechas(true);
+            // El vencimiento del crédito sigue a la fecha de entrega mientras no lo cambies a mano
+            this.$watch('dias', () => this.calcularVence());
+            this.$watch('etapas', () => this.calcularVence(), { deep: true });
+            this.calcularVence();
+        },
+        cambiarForma(f) {
+            if (f === this.forma) return;
+            this.forma = f;
+            this.pagos = f === 'credito'
+                ? [{ ...this.pagoCredito, monto: +(document.getElementById('monto_total')?.value || this.pagoCredito.monto) }]
+                : this.pagosContado.map((p) => ({ ...p }));
+            this.venceManual = false;
+            this.calcularVence();
+        },
+        calcularVence() {
+            if (this.forma !== 'credito' || this.venceManual || !this.pagos.length) return;
+            const ult = [...this.etapas].reverse().find((e) => e.fecha_fin || e.fecha_inicio);
+            const base = ult ? (ult.fecha_fin || ult.fecha_inicio) : this.inicio;
+            if (!base || !this.dias) return;
+            const d = leer(base); d.setDate(d.getDate() + (+this.dias || 0));
+            this.pagos.forEach((p) => { if (!p.pagado_el) p.vence_el = iso(d); });
+        },
+        fechaLarga(s) { if (!s) return ''; return leer(s).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' }); },
         dinero(n) { return '$' + (+n || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
         nombreEtapa(clave) { return (this.etapas.find((e) => e.clave === clave) || {}).nombre || ''; },
         // Mantiene coherentes las fechas mientras editas a mano
@@ -216,7 +289,7 @@ function fechasProyecto(init) {
                 });
                 this.pagos.forEach((p, i) => {
                     const etapa = this.etapas.find((e) => e.clave === p.antes_de);
-                    p.pagado_el = i === 0 ? this.inicio : (etapa ? etapa.fecha_inicio : this.fin);
+                    p.pagado_el = this.forma === 'credito' ? this.fin : (i === 0 ? this.inicio : (etapa ? etapa.fecha_inicio : this.fin));
                 });
                 this.mensaje = 'Listo: todo completado y pagado. Ajusta lo que no coincida.';
             } else {

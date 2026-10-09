@@ -259,7 +259,7 @@
     @else
         <div class="table-responsive">
             <table class="tabla">
-                <thead><tr><th>Cliente</th><th>Proyecto</th><th>Pago</th><th>Bloquea</th><th class="text-end">Monto</th></tr></thead>
+                <thead><tr><th>Cliente</th><th>Proyecto</th><th>Pago</th><th>Bloquea / vence</th><th class="text-end">Monto</th></tr></thead>
                 <tbody>
                 @foreach($porCobrar as $x)
                     @php $quien = $x->proyecto->cliente?->empresa ?: $x->proyecto->cliente?->nombre; $etapa = $x->proyecto->etapas->firstWhere('clave', $x->pago->antes_de); @endphp
@@ -269,7 +269,8 @@
                             <div class="secundario">{{ $x->proyecto->tipo_nombre }}{{ $x->proyecto->fecha_inicio ? ' · desde ' . $x->proyecto->fecha_inicio->locale('es')->isoFormat('D MMM') : '' }}</div></td>
                         <td>{{ $x->pago->concepto }}</td>
                         <td>
-                            @if($etapa && $etapa->estado !== 'completada')<span class="vig vig-pronto"><i class="bi bi-lock"></i> {{ $etapa->nombre }}</span>
+                            @if($x->pago->vence_el)<span class="vig {{ $x->pago->vencido ? 'vig-vencida' : 'vig-ok' }}"><i class="bi {{ $x->pago->vencido ? 'bi-exclamation-circle' : 'bi-calendar-event' }}"></i> {{ $x->pago->vencido ? 'Venció' : 'Vence' }} {{ $x->pago->vence_el->locale('es')->isoFormat('D MMM') }}</span>
+                            @elseif($etapa && $etapa->estado !== 'completada')<span class="vig vig-pronto"><i class="bi bi-lock"></i> {{ $etapa->nombre }}</span>
                             @elseif($etapa)<span class="vig vig-vencida"><i class="bi bi-exclamation-circle"></i> {{ $etapa->nombre }} ya se hizo</span>
                             @else<span class="secundario">—</span>@endif
                         </td>
