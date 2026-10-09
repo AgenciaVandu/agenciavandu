@@ -7,7 +7,9 @@
     $linea = $p->lineaDelTiempo();
     $bloqueo = session('bloqueo');
     $wa = $p->cliente?->whatsapp;
-    $msgWa = "Hola {$p->cliente?->nombre}, aquí puedes seguir el avance de tu proyecto: {$p->url_publica}";
+    // Un solo enlace para el cliente: el de su cotización (desde ahí entra a su proyecto)
+    $enlaceCliente = $p->presupuesto?->url_publica ?? $p->url_publica;
+    $msgWa = "Hola {$p->cliente?->nombre}, aquí puedes ver tu cotización y el avance de tu proyecto: {$enlaceCliente}";
     $hoy = now(config('vandu.zona_horaria'))->toDateString();
 @endphp
 

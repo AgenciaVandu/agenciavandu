@@ -162,7 +162,7 @@
     </header>
 
     <section class="titulo">
-        <div class="cli">{{ $quien }} · {{ $p->tipo_nombre }}</div>
+        <div class="cli">{{ $quien }} · {{ $p->tipo_nombre }}@if($p->presupuesto) · <a href="{{ $p->presupuesto->url_publica }}" style="color:inherit">Ver cotización {{ $p->presupuesto->folio }}</a>@endif</div>
         <h1>{{ $p->nombre }}</h1>
     </section>
 

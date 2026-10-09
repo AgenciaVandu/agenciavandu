@@ -1,6 +1,9 @@
 @php
     /** @var \App\Models\Presupuesto $p */
-    $vigente = $p->vigente;
+    // Una cotización aceptada sigue disponible aunque pase su vigencia
+    $aceptada = $p->estado === 'aceptada';
+    $proyecto = $p->proyecto;
+    $vigente = $p->vigente || $aceptada;
     $secciones = $p->consideraciones_limpias;
     $vence = \App\Models\Presupuesto::fechaLarga($p->vigencia_local) . ' a las ' . $p->vigencia_local->format('H:i');
     $wa = config('vandu.whatsapp');
@@ -44,6 +47,19 @@
         .vig.pronto .punto { background: var(--ink); }
         .vig.pronto .reloj span { background: rgba(0,0,0,.08); }
         .vig.vencida { background: var(--red); }
+        .vig.aceptada { background: var(--ink); }
+        .vig.aceptada .punto { background: var(--green); }
+        .vig .ir { color: var(--green); font-weight: 600; text-decoration: none; white-space: nowrap; }
+        .vig .ir:hover { text-decoration: underline; }
+        .proyecto-card { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 18px 20px; border: 1.5px solid var(--ink); border-radius: 14px; margin-bottom: 28px; }
+        .proyecto-card .info { flex: 1 1 260px; min-width: 0; }
+        .proyecto-card .k { font-size: 13px; color: var(--muted); }
+        .proyecto-card .n { font-weight: 600; font-size: 17px; margin: 2px 0 8px; }
+        .proyecto-card .barra { height: 8px; border-radius: 99px; background: var(--mist); overflow: hidden; }
+        .proyecto-card .barra span { display: block; height: 100%; background: var(--ink); border-radius: 99px; }
+        .proyecto-card .sig { font-size: 14px; color: var(--muted); margin-top: 6px; }
+        .proyecto-card .sig b { color: var(--ink); font-weight: 600; }
+        @media (max-width: 600px) { .proyecto-card .btn { flex: 1 1 100%; } }
         .vig.vencida .punto { background: #fff; }
 
         /* ---------- Documento ---------- */
@@ -134,10 +150,13 @@
 <body>
 
 {{-- ================= Barra de vigencia con cuenta regresiva ================= --}}
-<div class="vig {{ $vigente ? '' : 'vencida' }}" id="vig" role="status" data-fin="{{ $p->vigente_hasta->toIso8601String() }}">
+<div class="vig {{ $aceptada ? 'aceptada' : ($vigente ? '' : 'vencida') }}" id="vig" role="status" data-fin="{{ $p->vigente_hasta->toIso8601String() }}">
     <div class="in">
         <span class="punto" aria-hidden="true"></span>
-        @if($vigente)
+        @if($aceptada)
+            <span class="txt">Cotización aceptada{{ $p->aceptada_el ? ' el ' . \App\Models\Presupuesto::fechaLarga($p->aceptada_el) : '' }}. ¡Gracias por tu confianza!</span>
+            @if($proyecto)<a class="ir" href="{{ $proyecto->url_publica }}">Ver proyecto →</a>@endif
+        @elseif($vigente)
             <span class="txt">Esta cotización es válida hasta el {{ $vence }}</span>
             <span class="reloj num" aria-label="Tiempo restante">
                 <span><b id="d">--</b><small>d</small></span>
@@ -168,15 +187,31 @@
     </section>
 
     @if($vigente)
+        @if($proyecto)
+            <section class="proyecto-card" aria-label="Tu proyecto">
+                <div class="info">
+                    <div class="k">Tu proyecto · {{ $proyecto->tipo_nombre }}</div>
+                    <div class="n">{{ $proyecto->nombre }}</div>
+                    <div class="barra" role="progressbar" aria-valuenow="{{ $proyecto->progreso }}" aria-valuemin="0" aria-valuemax="100" aria-label="Avance"><span style="width: {{ $proyecto->progreso }}%"></span></div>
+                    <div class="sig num">{{ $proyecto->progreso }}% · @if($proyecto->estado === 'terminado')<b>Terminado</b>@else Siguiente: <b>{{ $proyecto->siguiente_paso }}</b>@endif</div>
+                </div>
+                <a class="btn btn-prim" href="{{ $proyecto->url_publica }}">
+                    Ver proyecto
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+                </a>
+            </section>
+        @endif
         <div class="acciones">
-            <a class="btn btn-prim" href="{{ route('presupuesto.descargar', $p->token) }}">
+            <a class="btn {{ $proyecto ? 'btn-sec' : 'btn-prim' }}" href="{{ route('presupuesto.descargar', $p->token) }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg>
                 Descargar PDF
             </a>
+            @unless($proyecto)
             <a class="btn btn-sec" href="https://wa.me/{{ $wa }}?text={{ $waMsg }}" target="_blank" rel="noopener">
                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.3.8 3.2.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3Z"/></svg>
                 Tengo una duda
             </a>
+            @endunless
         </div>
 
         <table class="tabla">
@@ -273,7 +308,7 @@
     });
 
     // Cuenta regresiva
-    var bar = document.getElementById('vig'); if (!bar || bar.classList.contains('vencida')) return;
+    var bar = document.getElementById('vig'); if (!bar || bar.classList.contains('vencida') || bar.classList.contains('aceptada')) return;
     var fin = new Date(bar.dataset.fin).getTime();
     var el = { d: document.getElementById('d'), h: document.getElementById('h'), m: document.getElementById('m'), s: document.getElementById('s') };
     var pad = function (n) { return String(n).padStart(2, '0'); };

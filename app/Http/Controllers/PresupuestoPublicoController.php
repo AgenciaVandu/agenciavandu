@@ -11,7 +11,7 @@ class PresupuestoPublicoController extends Controller
 {
     public function show(Request $request, string $token)
     {
-        $p = Presupuesto::where('token', $token)->with('conceptos')->firstOrFail();
+        $p = Presupuesto::where('token', $token)->with(['conceptos', 'proyecto.etapas', 'proyecto.pagos'])->firstOrFail();
 
         // ?vista_previa=1 lo usa el panel para no contar tus propias visitas
         if (! $request->boolean('vista_previa')) {
@@ -28,7 +28,7 @@ class PresupuestoPublicoController extends Controller
     {
         $p = Presupuesto::where('token', $token)->firstOrFail();
 
-        if (! $p->vigente) {
+        if (! $p->vigente && $p->estado !== 'aceptada') {
             return redirect()->route('presupuesto.publico', $token);
         }
 
