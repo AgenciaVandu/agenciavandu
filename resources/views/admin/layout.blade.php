@@ -260,6 +260,14 @@
         }
         @media (min-width: 992px) { .tabbar { display: none; } }
         @media (display-mode: standalone) { .solo-navegador { display: none !important; } }
+        .ios-instalar { position: relative; z-index: 1040; background: #0B0D12; color: #fff; padding: calc(10px + env(safe-area-inset-top)) 12px 10px; }
+        .ios-instalar .ios-in { display: flex; gap: 12px; align-items: flex-start; max-width: 640px; margin: 0 auto; font-size: 13.5px; line-height: 1.45; }
+        .ios-instalar img { border-radius: 10px; flex: none; }
+        .ios-instalar .t { flex: 1; min-width: 0; color: #C9CDD6; }
+        .ios-instalar .t > b { display: block; color: #fff; font-size: 14.5px; }
+        .ios-instalar .t span b { color: #fff; }
+        .ios-instalar .t i { color: #00F385; }
+        .ios-instalar button { border: 0; background: transparent; color: #9AA0AC; font-size: 16px; padding: 2px 4px; }
         .instalar { margin: 0 12px 10px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; border: 1px dashed var(--ink-line, #2C313D); color: #C9CDD6; font-size: 13px; background: transparent; text-align: left; width: calc(100% - 24px); }
         .instalar:hover { border-color: var(--green); color: #fff; }
         .instalar i { color: var(--green); font-size: 18px; }
@@ -269,6 +277,20 @@
 </head>
 <body x-data="{ menu: false }" @keydown.escape="menu = false">
 <div class="cargando-barra" id="cargando" aria-hidden="true"></div>
+
+{{-- iPhone: cómo instalar la app (Apple no deja mostrar un botón de "Instalar") --}}
+<div class="ios-instalar" x-data="avisoIos()" x-show="visible" x-cloak role="note">
+    <div class="ios-in">
+        <img src="{{ route('app.icono', 'icono-192.png') }}" alt="" width="40" height="40">
+        <div class="t">
+            <b>Instala Vandu en tu iPhone</b>
+            <template x-if="paso === 'safari'"><span>Toca <i class="bi bi-box-arrow-up"></i> <b>Compartir</b> abajo y luego <b>«Agregar a inicio»</b>.</span></template>
+            <template x-if="paso === 'chrome'"><span>Toca <i class="bi bi-box-arrow-up"></i> <b>Compartir</b> en la barra de arriba y luego <b>«Agregar a pantalla de inicio»</b>.</span></template>
+            <template x-if="paso === 'abrir'"><span>Esta ventana no permite instalar. Abre <b>agenciavandu.com/admin</b> en <b>Safari</b> y ahí sigue los pasos.</span></template>
+        </div>
+        <button type="button" @click="cerrar()" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+    </div>
+</div>
 
 <header class="topbar-m">
     <button type="button" @click="menu = true" aria-label="Abrir menú"><i class="bi bi-list"></i></button>
@@ -371,6 +393,21 @@
     }
     let promptInstalar = null;
     window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); promptInstalar = e; window.dispatchEvent(new Event('vandu-instalable')); });
+    window.avisoIos = () => ({
+        visible: false, paso: 'safari',
+        init() {
+            const ua = navigator.userAgent;
+            const ios = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            const instalada = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+            let cerrado = false; try { cerrado = localStorage.getItem('vandu-aviso-ios') === '1'; } catch {}
+            if (!ios || instalada || cerrado) return;
+            // Navegadores dentro de otras apps (WhatsApp, Instagram, Gmail…) no pueden instalar
+            if (/FBAN|FBAV|Instagram|Line\/|GSA\/|WhatsApp|Snapchat|LinkedInApp/i.test(ua)) this.paso = 'abrir';
+            else if (/CriOS|EdgiOS|FxiOS/i.test(ua)) this.paso = 'chrome';
+            this.visible = true;
+        },
+        cerrar() { this.visible = false; try { localStorage.setItem('vandu-aviso-ios', '1'); } catch {} },
+    });
     window.instalarApp = () => ({
         ios: /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream,
         visible: false,
