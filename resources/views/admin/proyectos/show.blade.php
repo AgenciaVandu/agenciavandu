@@ -377,7 +377,7 @@ function subidor(url, grupo, etapaId) {
             x.setRequestHeader('Accept', 'application/json');
             x.upload.onprogress = (e) => { if (e.lengthComputable) this.pct = Math.round(e.loaded / e.total * 100); };
             x.onload = () => {
-                if (x.status >= 200 && x.status < 300) { location.reload(); return; }
+                if (x.status >= 200 && x.status < 300) { this.subiendo = false; window.vanduRefrescar ? window.vanduRefrescar() : location.reload(); return; }
                 this.subiendo = false;
                 try { const r = JSON.parse(x.responseText); this.error = Object.values(r.errors || {}).flat()[0] || r.message; }
                 catch { this.error = x.status === 413 ? 'Los archivos pesan más de lo que permite el servidor.' : 'No se pudieron subir los archivos.'; }

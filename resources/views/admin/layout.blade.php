@@ -162,6 +162,16 @@
 
         .aviso { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 14.5px; }
         .aviso-ok { background: var(--green-soft); color: var(--green-ink); border: 1px solid #BDF2D6; }
+        /* El aviso de "guardado" flota abajo a la derecha y se va solo */
+        .page > .aviso-ok { position: fixed; right: 24px; bottom: 24px; z-index: 1080; margin: 0; max-width: min(420px, calc(100vw - 32px));
+                            background: var(--ink); color: #fff; border: 0; box-shadow: 0 12px 32px rgba(16,24,40,.25); animation: toast 4s ease forwards; }
+        .page > .aviso-ok i { color: var(--green); }
+        @keyframes toast { 0% { opacity: 0; transform: translateY(8px); } 6%, 85% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(8px); visibility: hidden; } }
+        .cargando-barra { position: fixed; top: 0; left: 0; height: 3px; width: 0; background: var(--green); z-index: 1090; transition: width .4s ease, opacity .3s; opacity: 0; }
+        .cargando-barra.activa { opacity: 1; width: 70%; transition: width 4s cubic-bezier(.1,.6,.2,1); }
+        .cargando-barra.lista { opacity: 0; width: 100%; transition: width .2s, opacity .3s .2s; }
+        form.enviando button[type=submit], form.enviando button:not([type]) { pointer-events: none; opacity: .7; }
+        @media (max-width: 575.98px) { .page > .aviso-ok { left: 16px; right: 16px; bottom: 16px; } }
         .aviso-error { background: var(--red-soft); color: var(--red); border: 1px solid #F6CFCB; }
         .aviso-error ul { margin: 4px 0 0; padding-left: 18px; }
 
@@ -195,6 +205,7 @@
     @stack('head')
 </head>
 <body x-data="{ menu: false }" @keydown.escape="menu = false">
+<div class="cargando-barra" id="cargando" aria-hidden="true"></div>
 
 <header class="topbar-m">
     <button type="button" @click="menu = true" aria-label="Abrir menú"><i class="bi bi-list"></i></button>
@@ -258,9 +269,12 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     // Menús dentro de tablas con scroll: que se dibujen por encima y no queden recortados
-    document.querySelectorAll('.table-responsive [data-bs-toggle="dropdown"]').forEach((b) => {
-        b.setAttribute('data-bs-popper-config', '{"strategy":"fixed"}');
-    });
+    function prepararPagina() {
+        document.querySelectorAll('.table-responsive [data-bs-toggle="dropdown"]').forEach((b) => {
+            b.setAttribute('data-bs-popper-config', '{"strategy":"fixed"}');
+        });
+    }
+    prepararPagina();
 
     // Copiar enlaces al portapapeles: <button data-copiar="texto">
     document.addEventListener('click', async (e) => {
@@ -269,6 +283,99 @@
         try { await navigator.clipboard.writeText(b.dataset.copiar); } catch { prompt('Copia el enlace:', b.dataset.copiar); return; }
         const t = b.innerHTML; b.innerHTML = '<i class="bi bi-check2"></i> Copiado'; setTimeout(() => b.innerHTML = t, 1500);
     });
+
+    /*
+     * Guardar sin recargar la página.
+     * Los formularios del panel se envían en segundo plano. Si la respuesta es la misma página,
+     * solo se reemplaza el contenido (te quedas donde estabas). Si lleva a otra página, se navega normal.
+     * Para excluir un formulario: <form data-recargar>.
+     */
+    (function () {
+        const barra = document.getElementById('cargando');
+        const progreso = (on) => {
+            if (on) { barra.classList.remove('lista'); void barra.offsetWidth; barra.classList.add('activa'); }
+            else { barra.classList.remove('activa'); barra.classList.add('lista'); }
+        };
+        const mismaPagina = (url) => { const u = new URL(url, location.href); return u.pathname === location.pathname; };
+
+        // Al ir a otra página, el aviso ("Cliente creado", etc.) viaja con ella
+        function irA(url, html) {
+            try {
+                const aviso = new DOMParser().parseFromString(html || '', 'text/html').querySelector('main.page > .aviso-ok');
+                if (aviso) sessionStorage.setItem('vanduAviso', aviso.textContent.trim());
+            } catch (e) {}
+            location.href = url;
+        }
+        try {
+            const pendiente = sessionStorage.getItem('vanduAviso');
+            sessionStorage.removeItem('vanduAviso');
+            if (pendiente && !document.querySelector('main.page > .aviso-ok')) {
+                const a = document.createElement('div');
+                a.className = 'aviso aviso-ok'; a.setAttribute('role', 'status');
+                a.innerHTML = '<i class="bi bi-check-circle-fill"></i> ';
+                a.append(pendiente);
+                document.querySelector('main.page').prepend(a);
+            }
+        } catch (e) {}
+
+        function reemplazar(html, url) {
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const nuevoMain = doc.querySelector('main.page'), nuevoNav = doc.querySelector('.side');
+            if (!nuevoMain) { location.href = url; return; }
+            document.querySelectorAll('.dropdown-menu.show').forEach((m) => m.classList.remove('show'));
+            document.querySelector('main.page').innerHTML = nuevoMain.innerHTML;
+            if (nuevoNav) {
+                const navs = document.querySelectorAll('.side nav'), nuevos = nuevoNav.querySelectorAll('nav');
+                navs.forEach((n, i) => { if (nuevos[i]) n.innerHTML = nuevos[i].innerHTML; });
+            }
+            if (doc.title) document.title = doc.title;
+            const u = new URL(url, location.href);
+            if (u.href !== location.href) history.replaceState(null, '', u.href);
+            prepararPagina();
+            // Si hubo errores, llévalos a la vista
+            const err = document.querySelector('main.page .aviso-error');
+            if (err) err.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        async function refrescar(url = location.href) {
+            progreso(true);
+            try {
+                const r = await fetch(url, { headers: { 'X-Requested-With': 'fetch' }, credentials: 'same-origin' });
+                const html = await r.text();
+                if (!mismaPagina(r.url)) { irA(r.url, html); return; }
+                reemplazar(html, r.url);
+            } finally { progreso(false); }
+        }
+        window.vanduRefrescar = refrescar;
+
+        document.addEventListener('submit', async (e) => {
+            const f = e.target;
+            if (e.defaultPrevented || f.hasAttribute('data-recargar') || (f.getAttribute('method') || 'get').toLowerCase() !== 'post') return;
+            if (f.target && f.target !== '_self') return;
+            if (f.querySelector('input[type=file]')) return;
+            e.preventDefault();
+            if (f.classList.contains('enviando')) return;
+
+            const datos = new FormData(f, e.submitter || undefined);
+            f.classList.add('enviando'); progreso(true);
+            try {
+                const r = await fetch(f.action, { method: 'POST', body: datos, credentials: 'same-origin',
+                    headers: { 'X-Requested-With': 'fetch', 'Accept': 'text/html' } });
+                if (r.status === 419) { location.reload(); return; }          // sesión vencida
+                if (!r.ok && r.status !== 422) throw new Error(r.status);
+                const html = await r.text();
+                if (!mismaPagina(r.url)) { irA(r.url, html); return; }       // p. ej. al crear: va a otra página
+                reemplazar(html, r.url);
+            } catch (err) {
+                const aviso = document.createElement('div');
+                aviso.className = 'aviso aviso-error'; aviso.setAttribute('role', 'alert');
+                aviso.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i> No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.';
+                document.querySelector('main.page').prepend(aviso); aviso.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } finally {
+                f.classList.remove('enviando'); progreso(false);
+            }
+        });
+    })();
 </script>
 @stack('scripts')
 </body>
