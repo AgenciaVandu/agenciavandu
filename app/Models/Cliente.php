@@ -16,7 +16,10 @@ class Cliente extends Model
     protected static function booted(): void
     {
         // Al borrar el cliente se borra su expediente de constancias
-        static::deleting(fn (Cliente $c) => Storage::disk('local')->deleteDirectory("clientes/{$c->id}"));
+        static::deleting(function (Cliente $c) {
+            $c->constancias->each->delete(); // las de Dropbox van a su papelera
+            Storage::disk('local')->deleteDirectory("clientes/{$c->id}");
+        });
     }
 
     public function constancias(): HasMany

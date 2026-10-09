@@ -11,13 +11,19 @@ class ClienteConstancia extends Model
 {
     protected $table = 'cliente_constancias';
 
-    protected $fillable = ['nombre', 'ruta', 'mime', 'peso', 'emitida_el'];
+    protected $fillable = ['nombre', 'ruta', 'origen', 'dropbox_id', 'mime', 'peso', 'emitida_el'];
 
     protected $casts = ['peso' => 'integer', 'emitida_el' => 'date'];
 
     protected static function booted(): void
     {
-        static::deleted(fn (ClienteConstancia $c) => Storage::disk('local')->delete($c->ruta));
+        static::deleted(function (ClienteConstancia $c) {
+            if ($c->origen === 'dropbox') {
+                try { \App\Support\Dropbox\Dropbox::cliente()->borrar($c->dropbox_id); } catch (\Throwable $e) { report($e); }
+            } else {
+                Storage::disk('local')->delete($c->ruta);
+            }
+        });
     }
 
     public function cliente(): BelongsTo

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Storage;
 
 class ProyectoArchivo extends Model
 {
-    protected $fillable = ['etapa_id', 'grupo', 'nombre', 'ruta', 'mime', 'peso', 'vista', 'miniatura', 'ancho', 'alto', 'visible', 'orden'];
+    protected $fillable = ['etapa_id', 'grupo', 'origen', 'dropbox_id', 'nombre', 'ruta', 'mime', 'peso', 'vista', 'miniatura', 'ancho', 'alto', 'visible', 'orden'];
 
     protected $casts = ['visible' => 'boolean', 'peso' => 'integer'];
 
@@ -16,13 +16,30 @@ class ProyectoArchivo extends Model
     {
         // Al borrar el registro se borran también sus archivos
         static::deleted(function (ProyectoArchivo $a) {
-            $correo = str_replace('/originales/', '/optimizadas/', dirname($a->ruta)) . '/' . pathinfo($a->ruta, PATHINFO_FILENAME) . '-correo.jpg';
-            Storage::disk('local')->delete(array_filter([$a->ruta, $a->vista, $a->miniatura, $correo]));
+            $locales = array_filter([$a->vista, $a->miniatura, $a->ruta_correo]);
+            if ($a->origen === 'dropbox') {
+                // Va a la papelera de Dropbox (se puede recuperar desde dropbox.com)
+                try { \App\Support\Dropbox\Dropbox::cliente()->borrar($a->dropbox_id); } catch (\Throwable $e) { report($e); }
+            } else {
+                $locales[] = $a->ruta;
+            }
+            Storage::disk('local')->delete($locales);
         });
     }
 
     public function proyecto(): BelongsTo { return $this->belongsTo(Proyecto::class); }
     public function etapa(): BelongsTo { return $this->belongsTo(ProyectoEtapa::class, 'etapa_id'); }
+
+    /** Recorte cuadrado para correos (se genera al pedirlo) */
+    public function getRutaCorreoAttribute(): string
+    {
+        return "proyectos/{$this->proyecto_id}/optimizadas/correo-{$this->id}.jpg";
+    }
+
+    public function getEnDropboxAttribute(): bool
+    {
+        return $this->origen === 'dropbox';
+    }
 
     public function getEsImagenAttribute(): bool { return str_starts_with((string) $this->mime, 'image/'); }
     public function getEsVideoAttribute(): bool { return str_starts_with((string) $this->mime, 'video/'); }

@@ -180,6 +180,17 @@ return [
         ],
     ],
 
+    /*
+    | Dropbox: ahí se guardan los archivos del panel (fotos, videos, documentos, constancias).
+    | Crea una app en dropbox.com/developers y pon sus llaves en .env.
+    */
+    'dropbox' => [
+        'app_key'    => env('DROPBOX_APP_KEY'),
+        'app_secret' => env('DROPBOX_APP_SECRET'),
+        'carpeta'    => env('DROPBOX_CARPETA', 'Vandu'),   // carpeta raíz dentro de tu Dropbox
+        'simulado'   => (bool) env('VANDU_DROPBOX_SIMULADO', false), // solo pruebas locales
+    ],
+
     // Métodos de pago (cliente y cada pago registrado)
     'metodos_pago' => [
         'transferencia'   => 'Transferencia',

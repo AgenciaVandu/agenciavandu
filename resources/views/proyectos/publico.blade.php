@@ -17,6 +17,7 @@
         'tipo'   => $a->es_imagen ? 'img' : ($a->es_video ? 'video' : 'archivo'),
         'vista'  => $a->es_imagen ? $ruta($a, 'vista') : $ruta($a),
         'bajar'  => $ruta($a, null, true),
+        'poster' => $a->es_video && $a->vista ? $ruta($a, 'vista') : null,
         'nombre' => $a->nombre,
         'peso'   => $a->peso_texto,
     ])->values();
@@ -270,6 +271,9 @@
                 <button type="button" data-i="{{ $i }}" aria-label="Ver {{ $a->nombre }}">
                     @if($a->es_imagen)
                         <img src="{{ $ruta($a, 'miniatura') }}" alt="" loading="lazy" @if($a->ancho) width="{{ $a->ancho }}" height="{{ $a->alto }}" @endif>
+                    @elseif($a->es_video && $a->miniatura)
+                        <img src="{{ $ruta($a, 'miniatura') }}" alt="" loading="lazy">
+                        <span class="play"><i><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></i></span>
                     @elseif($a->es_video)
                         <video src="{{ $ruta($a) }}#t=0.5" preload="metadata" muted playsinline></video>
                         <span class="play"><i><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></i></span>
@@ -318,7 +322,7 @@
         medio.innerHTML = '';
         var el;
         if (it.tipo === 'img') { el = new Image(); el.src = it.vista; el.alt = it.nombre; }
-        else if (it.tipo === 'video') { el = document.createElement('video'); el.src = it.vista; el.controls = true; el.autoplay = true; el.playsInline = true; }
+        else if (it.tipo === 'video') { el = document.createElement('video'); if (it.poster) el.poster = it.poster; el.src = it.vista; el.controls = true; el.autoplay = true; el.playsInline = true; }
         else { el = document.createElement('a'); el.href = it.bajar; el.className = 'btn sec'; el.textContent = 'Descargar ' + it.nombre; }
         medio.appendChild(el);
         document.getElementById('v-nombre').textContent = it.nombre + ' · ' + it.peso;

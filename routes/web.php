@@ -92,6 +92,17 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::delete('proyectos/{proyecto}', [Admin\ProyectoController::class, 'destroy'])->name('proyectos.destroy');
     Route::patch('proyectos/{proyecto}/etapas/{etapa}', [Admin\ProyectoController::class, 'etapa'])->name('proyectos.etapa');
     Route::patch('proyectos/{proyecto}/pagos/{pago}', [Admin\ProyectoController::class, 'pago'])->name('proyectos.pago');
+    // Dropbox
+    Route::get('dropbox', [Admin\DropboxController::class, 'index'])->name('dropbox');
+    Route::get('dropbox/conectar', [Admin\DropboxController::class, 'conectar'])->name('dropbox.conectar');
+    Route::post('dropbox/desconectar', [Admin\DropboxController::class, 'desconectar'])->name('dropbox.desconectar');
+    Route::get('dropbox/token', [Admin\DropboxController::class, 'token'])->name('dropbox.token');
+    Route::get('dropbox/explorar', [Admin\DropboxController::class, 'explorar'])->name('dropbox.explorar');
+    Route::get('proyectos/{proyecto}/dropbox/destino', [Admin\DropboxController::class, 'destino'])->name('proyectos.dropbox.destino');
+    Route::post('proyectos/{proyecto}/dropbox/registrar', [Admin\DropboxController::class, 'registrar'])->name('proyectos.dropbox.registrar');
+    Route::post('proyectos/{proyecto}/dropbox/importar', [Admin\DropboxController::class, 'importar'])->name('proyectos.dropbox.importar');
+    Route::post('proyectos/{proyecto}/dropbox/sincronizar', [Admin\DropboxController::class, 'sincronizar'])->name('proyectos.dropbox.sincronizar');
+
     Route::post('proyectos/{proyecto}/archivos', [Admin\ProyectoController::class, 'subir'])->name('proyectos.subir');
     Route::patch('proyectos/{proyecto}/archivos/{archivo}', [Admin\ProyectoController::class, 'archivo'])->name('proyectos.archivo');
     Route::delete('proyectos/{proyecto}/archivos/{archivo}', [Admin\ProyectoController::class, 'borrarArchivo'])->name('proyectos.archivo.borrar');
@@ -115,3 +126,10 @@ Route::get('/proyecto/{token}/archivos/{archivo}', [\App\Http\Controllers\Proyec
     ->where('token', '[A-Za-z0-9]{32}')->name('proyecto.archivo');
 Route::get('/proyecto/{token}/galeria.zip', [\App\Http\Controllers\ProyectoPublicoController::class, 'zip'])
     ->where('token', '[A-Za-z0-9]{32}')->middleware('throttle:10,1')->name('proyecto.zip');
+
+// Dropbox simulado: solo para pruebas locales (VANDU_DROPBOX_SIMULADO=true)
+if (config('vandu.dropbox.simulado') && app()->environment('local', 'testing')) {
+    Route::post('/_dropbox-simulado/api/{endpoint}', [App\Http\Controllers\Admin\DropboxController::class, 'simuladoApi'])->where('endpoint', '.*')
+        ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+    Route::get('/_dropbox-simulado/{id}', [App\Http\Controllers\Admin\DropboxController::class, 'simulado'])->where('id', 'id:[A-Za-z0-9]+')->name('dropbox.simulado');
+}

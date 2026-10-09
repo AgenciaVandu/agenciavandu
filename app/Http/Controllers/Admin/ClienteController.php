@@ -84,6 +84,9 @@ class ClienteController extends Controller
     public function verConstancia(Request $request, Cliente $cliente, ClienteConstancia $constancia)
     {
         abort_unless($constancia->cliente_id === $cliente->id, 404);
+        if ($constancia->origen === 'dropbox') {
+            return redirect()->away(\App\Support\Dropbox\Dropbox::cliente()->enlaceTemporal($constancia->dropbox_id));
+        }
         $disco = Storage::disk('local');
         abort_unless($disco->exists($constancia->ruta), 404);
 
@@ -107,11 +110,28 @@ class ClienteController extends Controller
             return;
         }
         $nombre = $archivo->getClientOriginalName() ?: 'constancia.pdf';
-        $ruta = $archivo->storeAs("clientes/{$cliente->id}/constancias", Str::uuid() . '.' . strtolower($archivo->getClientOriginalExtension() ?: 'pdf'), 'local');
+        $origen = 'local';
+        $dropboxId = null;
+        if (\App\Support\Dropbox\Dropbox::conectado()) {
+            // En Dropbox: /Vandu/Clientes/<Cliente>/Constancias/
+            $dbx = \App\Support\Dropbox\Dropbox::cliente();
+            $carpeta = \App\Support\Dropbox\Dropbox::raiz() . '/Clientes/' . \App\Support\Dropbox\Dropbox::nombreSeguro($cliente->empresa ?: $cliente->nombre) . '/Constancias';
+            try {
+                $dbx->crearCarpeta($carpeta);
+                $meta = $dbx->subirArchivo($archivo->getRealPath(), $carpeta . '/' . \App\Support\ArchivosProyecto::nombreArchivo($nombre));
+            } catch (\App\Support\Dropbox\DropboxError $e) {
+                throw \Illuminate\Validation\ValidationException::withMessages(['constancia' => 'No se pudo guardar en Dropbox: ' . $e->getMessage()]);
+            }
+            [$ruta, $origen, $dropboxId] = [$meta['path_display'], 'dropbox', $meta['id']];
+        } else {
+            $ruta = $archivo->storeAs("clientes/{$cliente->id}/constancias", Str::uuid() . '.' . strtolower($archivo->getClientOriginalExtension() ?: 'pdf'), 'local');
+        }
 
         $cliente->constancias()->create([
             'nombre'     => $nombre,
             'ruta'       => $ruta,
+            'origen'     => $origen,
+            'dropbox_id' => $dropboxId,
             'mime'       => $archivo->getMimeType(),
             'peso'       => $archivo->getSize(),
             'emitida_el' => $request->input('constancia_emitida_el') ?: null,

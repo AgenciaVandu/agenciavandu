@@ -265,6 +265,11 @@
     <div class="side-label mt-4">Sitio</div>
     <nav>
         <a href="/" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> agenciavandu.com</a>
+        @php $dbxNav = \App\Support\Dropbox\Dropbox::conectado(); @endphp
+        <a href="{{ route('admin.dropbox') }}" class="{{ request()->routeIs('admin.dropbox*') ? 'activo' : '' }}">
+            <i class="bi bi-dropbox"></i> Dropbox
+            <span class="ms-auto" title="{{ $dbxNav ? 'Conectado' : 'Sin conectar' }}" style="width:8px;height:8px;border-radius:50%;background:{{ $dbxNav ? 'var(--green, #00C46A)' : '#E5484D' }}"></span>
+        </a>
     </nav>
 
     <x-logo-vandu archivo="icono-vandu.svg" alt="" class="side-eco" aria-hidden="true" />

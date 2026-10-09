@@ -274,9 +274,15 @@ class ProyectoController extends Controller
 
     public function destroy(Proyecto $proyecto)
     {
-        foreach ($proyecto->archivos as $a) {
+        // La carpeta del proyecto en Dropbox va completa a la papelera de Dropbox (se puede recuperar)
+        if ($proyecto->dropbox_carpeta && \App\Support\Dropbox\Dropbox::conectado()) {
+            try { \App\Support\Dropbox\Dropbox::cliente()->borrar($proyecto->dropbox_carpeta); } catch (\Throwable $e) { report($e); }
+            $proyecto->archivos()->where('origen', 'dropbox')->get()->each->deleteQuietly();
+        }
+        foreach ($proyecto->archivos()->get() as $a) {
             $a->delete(); // borra también los archivos del disco
         }
+        \Illuminate\Support\Facades\Storage::disk('local')->deleteDirectory($proyecto->carpeta);
         $proyecto->delete();
 
         return redirect()->route('admin.proyectos.index')->with('ok', 'Proyecto eliminado. La cotización sigue disponible.');
@@ -381,8 +387,12 @@ class ProyectoController extends Controller
             'archivos.*.uploaded' => 'Un archivo no se pudo subir. Puede que pese más de lo que permite el servidor (' . ini_get('upload_max_filesize') . ').',
         ]);
 
-        foreach ($request->file('archivos') as $f) {
-            ArchivosProyecto::guardar($proyecto, $f, $data['grupo'], $data['etapa_id'] ?? null);
+        try {
+            foreach ($request->file('archivos') as $f) {
+                ArchivosProyecto::guardar($proyecto, $f, $data['grupo'], $data['etapa_id'] ?? null);
+            }
+        } catch (\App\Support\Dropbox\DropboxError $e) {
+            return $request->expectsJson() ? response()->json(['message' => $e->getMessage()], 502) : back()->withErrors(['dropbox' => $e->getMessage()]);
         }
 
         $n = count($request->file('archivos'));
@@ -395,7 +405,12 @@ class ProyectoController extends Controller
     public function archivo(Request $request, Proyecto $proyecto, ProyectoArchivo $archivo)
     {
         abort_unless($archivo->proyecto_id === $proyecto->id, 404);
-        $archivo->update($request->validate(['visible' => 'required|boolean']));
+        $visible = (bool) $request->validate(['visible' => 'required|boolean'])['visible'];
+        try {
+            ArchivosProyecto::cambiarVisibilidad($archivo, $visible);
+        } catch (\App\Support\Dropbox\DropboxError $e) {
+            return back()->withErrors(['dropbox' => $e->getMessage()]);
+        }
 
         return back()->with('ok', $archivo->visible ? 'Ahora el cliente puede verlo.' : 'Oculto para el cliente.');
     }
@@ -411,7 +426,7 @@ class ProyectoController extends Controller
     public function verArchivo(Request $request, Proyecto $proyecto, ProyectoArchivo $archivo)
     {
         abort_unless($archivo->proyecto_id === $proyecto->id, 404);
-        $version = in_array($request->query('v'), ['vista', 'miniatura']) ? $request->query('v') : 'original';
+        $version = in_array($request->query('v'), ['vista', 'miniatura', 'correo']) ? $request->query('v') : 'original';
 
         return ArchivosProyecto::responder($archivo, $version, $request->boolean('descargar'));
     }

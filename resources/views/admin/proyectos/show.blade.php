@@ -11,6 +11,7 @@
     $enlaceCliente = $p->presupuesto?->url_publica ?? $p->url_publica;
     $msgWa = "Hola {$p->cliente?->nombre}, aquí puedes ver tu cotización y el avance de tu proyecto: {$enlaceCliente}";
     $hoy = now(config('vandu.zona_horaria'))->toDateString();
+    $dbx = \App\Support\Dropbox\Dropbox::conectado();
     $metodoCliente = $p->cliente?->metodo_pago;
 @endphp
 
@@ -87,6 +88,24 @@
     .g-item:hover .g-acc, .g-item:focus-within .g-acc { opacity: 1; }
     .g-acc button, .g-acc a { width: 30px; height: 30px; border-radius: 8px; border: 0; background: rgba(255,255,255,.95); color: var(--text); display: grid; place-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
     .g-item.oculto img, .g-item.oculto video { opacity: .35; }
+    .g-item .marca-dbx { position: absolute; left: 6px; top: 6px; width: 22px; height: 22px; border-radius: 6px; background: rgba(255,255,255,.95); color: #0061FE; display: grid; place-items: center; font-size: 12px; }
+    .dbx-barra { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; padding: 10px 14px; margin-bottom: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--sunken); font-size: 13.5px; }
+    .dbx-barra .ruta { color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1 1 220px; }
+    .dbx-barra .ruta i { color: #0061FE; }
+    .dbx-velo { position: fixed; inset: 0; z-index: 1080; background: rgba(15,18,25,.55); display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
+    .dbx-ventana { background: var(--surface); border-radius: 16px; width: min(760px, 100%); box-shadow: 0 24px 60px rgba(0,0,0,.25); }
+    .dbx-cab { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+    .dbx-cab h2 { font-size: 17px; font-weight: 600; margin: 0; }
+    .dbx-migas { display: flex; flex-wrap: wrap; gap: 4px; padding: 10px 20px; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+    .dbx-migas button { border: 0; background: none; padding: 2px 4px; color: var(--muted); border-radius: 6px; }
+    .dbx-migas button:hover { background: var(--sunken); color: var(--text); }
+    .dbx-lista { max-height: 52vh; overflow-y: auto; }
+    .dbx-fila { display: flex; align-items: center; gap: 12px; padding: 9px 20px; border-bottom: 1px solid var(--line); font-size: 14px; cursor: pointer; }
+    .dbx-fila:hover { background: var(--sunken); }
+    .dbx-fila i.tipo { font-size: 18px; color: var(--muted); width: 20px; text-align: center; }
+    .dbx-fila.carpeta i.tipo { color: #0061FE; }
+    .dbx-fila .n { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dbx-pie { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 14px 20px; }
     .g-item .marca-oculto { position: absolute; left: 6px; bottom: 6px; font-size: 12px; background: rgba(19,22,29,.8); color: #fff; border-radius: 6px; padding: 2px 8px; }
 
     @media (max-width: 1199.98px) { .ficha-p { grid-template-columns: 1fr; } .lateral { position: static; } }
@@ -309,6 +328,19 @@
                     @endif
                 </div>
                 <div class="panel-body">
+                    @if($dbx)
+                        @php $carpetaGal = \App\Support\ArchivosProyecto::carpetaGaleria($p); @endphp
+                        <div class="dbx-barra">
+                            <span class="ruta" title="{{ $carpetaGal }}"><i class="bi bi-dropbox me-1"></i> {{ $carpetaGal }}</span>
+                            @unless(config('vandu.dropbox.simulado'))
+                                <a href="https://www.dropbox.com/home{{ str_replace('%2F', '/', rawurlencode(\App\Support\ArchivosProyecto::carpetaProyecto($p))) }}" target="_blank" rel="noopener" class="btn btn-fantasma btn-sm"><i class="bi bi-box-arrow-up-right me-1"></i> Abrir en Dropbox</a>
+                            @endunless
+                            <button type="button" class="btn btn-borde btn-sm" onclick="window.dispatchEvent(new CustomEvent('explorar-dropbox'))"><i class="bi bi-folder2-open me-1"></i> Importar de otra carpeta</button>
+                            <form method="post" action="{{ route('admin.proyectos.dropbox.sincronizar', $p) }}" class="d-inline">@csrf
+                                <button class="btn btn-borde btn-sm" title="Trae lo que agregaste directo en la carpeta Galería o No publicado"><i class="bi bi-arrow-repeat me-1"></i> Sincronizar</button>
+                            </form>
+                        </div>
+                    @endif
                     @include('admin.proyectos._subir', ['grupo' => 'galeria', 'texto' => 'Subir fotos o videos', 'accept' => 'image/*,video/*,.zip,.pdf', 'grande' => true])
                     @if($galeria->isNotEmpty())
                         <div class="galeria mt-3">
@@ -316,6 +348,9 @@
                                 <div class="g-item {{ $a->visible ? '' : 'oculto' }}">
                                     @if($a->es_imagen)
                                         <img src="{{ route('admin.proyectos.archivo.ver', [$p, $a]) }}?v=miniatura" alt="{{ $a->nombre }}" loading="lazy">
+                                    @elseif($a->es_video && $a->miniatura)
+                                        <img src="{{ route('admin.proyectos.archivo.ver', [$p, $a]) }}?v=miniatura" alt="{{ $a->nombre }}" loading="lazy">
+                                        <span class="play"><i class="bi bi-play-fill"></i></span>
                                     @elseif($a->es_video)
                                         <video src="{{ route('admin.proyectos.archivo.ver', [$p, $a]) }}#t=0.5" preload="metadata" muted playsinline></video>
                                         <span class="play"><i class="bi bi-play-fill"></i></span>
@@ -323,6 +358,7 @@
                                         <div class="archivo"><div><i class="bi {{ $a->icono }}"></i>{{ \Illuminate\Support\Str::limit($a->nombre, 28) }}</div></div>
                                     @endif
                                     @unless($a->visible)<span class="marca-oculto">Oculto</span>@endunless
+                                    @if($a->en_dropbox)<span class="marca-dbx" title="Guardado en Dropbox"><i class="bi bi-dropbox"></i></span>@endif
                                     <div class="g-acc">
                                         <a href="{{ route('admin.proyectos.archivo.ver', [$p, $a]) }}" target="_blank" title="Abrir original" aria-label="Abrir {{ $a->nombre }}"><i class="bi bi-arrows-angle-expand"></i></a>
                                         <form method="post" action="{{ route('admin.proyectos.archivo', [$p, $a]) }}">@csrf @method('patch')
@@ -386,15 +422,167 @@
     </aside>
 </div>
 @include('admin.correos._modal', ['ctxTipo' => 'proyecto', 'ctxId' => $p->id])
+
+@if($dbx)
+{{-- Explorador de Dropbox para importar a la galería --}}
+<div x-data="exploradorDropbox({{ Js::from(['explorar' => route('admin.dropbox.explorar'), 'importar' => route('admin.proyectos.dropbox.importar', $p), 'inicio' => \App\Support\Dropbox\Dropbox::raiz(), 'token' => csrf_token()]) }})"
+     @explorar-dropbox.window="abrir()" @keydown.escape.window="abierto && !importando && (abierto = false)">
+    <div class="dbx-velo" x-show="abierto" x-cloak x-transition.opacity @click.self="!importando && (abierto = false)">
+        <div class="dbx-ventana" role="dialog" aria-modal="true" aria-labelledby="dbx-titulo">
+            <div class="dbx-cab">
+                <div><h2 id="dbx-titulo"><i class="bi bi-dropbox me-1" style="color:#0061FE"></i> Importar desde Dropbox</h2>
+                    <span class="secundario" style="font-size:13px">Los archivos elegidos se mueven a la carpeta Galería de este proyecto.</span></div>
+                <button type="button" class="btn btn-fantasma btn-icono" @click="abierto = false" :disabled="importando" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="dbx-migas">
+                <template x-for="(m, i) in migas" :key="m.ruta">
+                    <span class="d-inline-flex align-items-center"><i class="bi bi-chevron-right small text-secondary me-1" x-show="i > 0"></i><button type="button" @click="ir(m.ruta)" x-text="m.nombre"></button></span>
+                </template>
+            </div>
+            <div class="dbx-lista">
+                <div class="p-4 text-center secundario" x-show="cargando"><span class="spinner-border spinner-border-sm me-2"></span> Abriendo carpeta…</div>
+                <div class="p-4 text-danger" x-show="error" x-text="error" x-cloak></div>
+                <template x-if="!cargando && !error">
+                    <div>
+                        <template x-for="c in carpetas" :key="c.ruta">
+                            <div class="dbx-fila carpeta" @click="ir(c.ruta)"><i class="bi bi-folder-fill tipo"></i><span class="n" x-text="c.nombre"></span><i class="bi bi-chevron-right text-secondary"></i></div>
+                        </template>
+                        <template x-for="a in archivos" :key="a.id">
+                            <label class="dbx-fila mb-0">
+                                <input type="checkbox" class="form-check-input mt-0" :value="a.id" x-model="elegidos">
+                                <i class="bi tipo" :class="a.tipo === 'foto' ? 'bi-image' : (a.tipo === 'video' ? 'bi-film' : 'bi-file-earmark')"></i>
+                                <span class="n" x-text="a.nombre"></span><span class="secundario num" style="font-size:12.5px" x-text="a.peso"></span>
+                            </label>
+                        </template>
+                        <div class="p-4 text-center secundario" x-show="!carpetas.length && !archivos.length">Esta carpeta está vacía.</div>
+                    </div>
+                </template>
+            </div>
+            <div class="dbx-pie">
+                <button type="button" class="btn btn-fantasma btn-sm" x-show="archivos.length" @click="elegidos = elegidos.length === archivos.length ? [] : archivos.map(a => a.id)" x-text="elegidos.length === archivos.length ? 'Quitar selección' : 'Elegir todos'"></button>
+                <span class="secundario me-auto" style="font-size:13px" x-show="importando" x-text="'Importando ' + hechos + ' de ' + total + '…'"></span>
+                <span class="text-danger me-auto" style="font-size:13px" x-show="errorImportar" x-text="errorImportar" x-cloak></span>
+                <button type="button" class="btn btn-borde" @click="abierto = false" :disabled="importando">Cancelar</button>
+                <button type="button" class="btn btn-primario" :disabled="!elegidos.length || importando" @click="importar()">
+                    <i class="bi bi-download me-1"></i> <span x-text="elegidos.length ? 'Importar ' + elegidos.length : 'Importar'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 @endsection
 
 @push('scripts')
 <script>
+/* ---------- Dropbox: subida directa desde el navegador ---------- */
+const VANDU_DBX = {{ Js::from([
+    'activo'    => $dbx,
+    'token'     => route('admin.dropbox.token'),
+    'destino'   => route('admin.proyectos.dropbox.destino', $p),
+    'registrar' => route('admin.proyectos.dropbox.registrar', $p),
+    'csrf'      => csrf_token(),
+]) }};
+const DBX_CHUNK = 8 * 1024 * 1024;
+// Dropbox pide el encabezado Dropbox-API-Arg en ASCII
+const dbxArg = (o) => JSON.stringify(o).replace(/[\u007f-\uffff]/g, (c) => '\\u' + ('000' + c.charCodeAt(0).toString(16)).slice(-4));
+
+function dbxPost(api, token, endpoint, arg, cuerpo, alAvanzar) {
+    return new Promise((ok, mal) => {
+        const x = new XMLHttpRequest();
+        x.open('POST', api + endpoint);
+        x.setRequestHeader('Authorization', 'Bearer ' + token);
+        x.setRequestHeader('Dropbox-API-Arg', dbxArg(arg));
+        x.setRequestHeader('Content-Type', 'application/octet-stream');
+        if (alAvanzar) x.upload.onprogress = (e) => alAvanzar(e.loaded);
+        x.onload = () => {
+            if (x.status >= 200 && x.status < 300) { try { ok(JSON.parse(x.responseText || 'null')); } catch { ok(null); } return; }
+            let m = x.responseText; try { m = JSON.parse(x.responseText).error_summary || m; } catch {}
+            mal(new Error(x.status === 507 || /insufficient_space/.test(m) ? 'Tu Dropbox no tiene espacio suficiente.' : 'Dropbox respondió: ' + String(m).slice(0, 160)));
+        };
+        x.onerror = () => mal(new Error('Se perdió la conexión con Dropbox.'));
+        x.send(cuerpo);
+    });
+}
+
+async function conReintentos(fn, veces = 3) {
+    for (let i = 1; ; i++) {
+        try { return await fn(); } catch (e) { if (i >= veces) throw e; await new Promise((r) => setTimeout(r, 1200 * i)); }
+    }
+}
+
+/** Sube un archivo a Dropbox (en partes de 8 MB si es grande). alAvanzar recibe los bytes de este archivo ya enviados. */
+async function subirADropbox(archivo, ruta, cred, alAvanzar) {
+    const commit = { path: ruta, mode: 'add', autorename: true, mute: true };
+    if (archivo.size <= DBX_CHUNK) {
+        return conReintentos(() => dbxPost(cred.api, cred.token, 'files/upload', commit, archivo, alAvanzar));
+    }
+    let offset = 0;
+    const primera = archivo.slice(0, DBX_CHUNK);
+    const inicio = await conReintentos(() => dbxPost(cred.api, cred.token, 'files/upload_session/start', { close: false }, primera, (n) => alAvanzar(n)));
+    offset = primera.size;
+    while (archivo.size - offset > DBX_CHUNK) {
+        const parte = archivo.slice(offset, offset + DBX_CHUNK), base = offset;
+        await conReintentos(() => dbxPost(cred.api, cred.token, 'files/upload_session/append_v2', { cursor: { session_id: inicio.session_id, offset: base }, close: false }, parte, (n) => alAvanzar(base + n)));
+        offset += parte.size;
+    }
+    const resto = archivo.slice(offset), base = offset;
+    return conReintentos(() => dbxPost(cred.api, cred.token, 'files/upload_session/finish', { cursor: { session_id: inicio.session_id, offset: base }, commit }, resto, (n) => alAvanzar(base + n)));
+}
+
+/** Toma un cuadro del video (en tu computadora, antes de subirlo) para usarlo como portada */
+function portadaDeVideo(archivo) {
+    return new Promise((ok) => {
+        const v = document.createElement('video'), url = URL.createObjectURL(archivo);
+        const fin = (b) => { URL.revokeObjectURL(url); ok(b); };
+        const limite = setTimeout(() => fin(null), 10000);
+        v.muted = true; v.playsInline = true; v.preload = 'metadata'; v.src = url;
+        v.onloadedmetadata = () => { v.currentTime = Math.min(1.5, (v.duration || 3) / 3); };
+        v.onseeked = () => {
+            const esc = Math.min(1, 1600 / (v.videoWidth || 1600)), c = document.createElement('canvas');
+            c.width = Math.round(v.videoWidth * esc); c.height = Math.round(v.videoHeight * esc);
+            c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+            c.toBlob((b) => { clearTimeout(limite); fin(b); }, 'image/jpeg', 0.84);
+        };
+        v.onerror = () => { clearTimeout(limite); fin(null); };
+    });
+}
+
 function subidor(url, grupo, etapaId) {
     return {
-        subiendo: false, arrastrando: false, pct: 0, cuantos: 0, error: '',
+        subiendo: false, arrastrando: false, pct: 0, cuantos: 0, error: '', detalle: '',
+        async enviarDropbox(lista) {
+            const archivos = [...lista];
+            this.cuantos = archivos.length; this.pct = 0; this.error = ''; this.subiendo = true;
+            const total = archivos.reduce((s, f) => s + f.size, 0) || 1;
+            let listos = 0;
+            try {
+                const cred = await (await fetch(VANDU_DBX.token, { headers: { Accept: 'application/json' }, credentials: 'same-origin' })).json();
+                const q = new URLSearchParams({ grupo, ...(etapaId ? { etapa_id: etapaId } : {}) });
+                const r = await fetch(VANDU_DBX.destino + '?' + q, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+                if (!r.ok) throw new Error('No se pudo preparar la carpeta del proyecto en Dropbox.');
+                const { carpeta } = await r.json();
+                for (const [i, f] of archivos.entries()) {
+                    this.detalle = (archivos.length > 1 ? (i + 1) + ' de ' + archivos.length + ' · ' : '') + f.name;
+                    const meta = await subirADropbox(f, carpeta + '/' + f.name, cred, (n) => { this.pct = Math.min(99, Math.round((listos + n) / total * 100)); });
+                    listos += f.size;
+                    const fd = new FormData();
+                    fd.append('_token', VANDU_DBX.csrf); fd.append('grupo', grupo); fd.append('dropbox_id', meta.id);
+                    if (etapaId) fd.append('etapa_id', etapaId);
+                    if (f.type.startsWith('video/')) { const portada = await portadaDeVideo(f); if (portada) fd.append('poster', portada, 'portada.jpg'); }
+                    const reg = await fetch(VANDU_DBX.registrar, { method: 'POST', body: fd, headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+                    if (!reg.ok) { let m = ''; try { m = (await reg.json()).message; } catch {} throw new Error('Se subió a Dropbox, pero no se pudo registrar en el panel' + (m ? ': ' + m : '.')); }
+                }
+                this.pct = 100; this.subiendo = false;
+                window.vanduRefrescar ? window.vanduRefrescar() : location.reload();
+            } catch (e) {
+                this.subiendo = false; this.error = e.message || 'No se pudo subir a Dropbox.';
+                if (listos) window.vanduRefrescar && window.vanduRefrescar();
+            }
+        },
         enviar(lista) {
             if (!lista || !lista.length) return;
+            if (VANDU_DBX.activo) return this.enviarDropbox(lista);
             const fd = new FormData();
             fd.append('_token', '{{ csrf_token() }}');
             fd.append('grupo', grupo);
@@ -414,6 +602,40 @@ function subidor(url, grupo, etapaId) {
             };
             x.onerror = () => { this.subiendo = false; this.error = 'Se perdió la conexión al subir.'; };
             x.send(fd);
+        },
+    };
+}
+
+function exploradorDropbox(cfg) {
+    return {
+        abierto: false, cargando: false, error: '', ruta: cfg.inicio, migas: [], carpetas: [], archivos: [], elegidos: [],
+        importando: false, hechos: 0, total: 0, errorImportar: '',
+        abrir() { this.abierto = true; this.errorImportar = ''; this.ir(this.ruta); },
+        async ir(ruta) {
+            this.cargando = true; this.error = ''; this.elegidos = [];
+            try {
+                const r = await fetch(cfg.explorar + '?' + new URLSearchParams({ ruta }), { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+                const d = await r.json();
+                if (!r.ok) throw new Error(d.error || 'No se pudo abrir la carpeta.');
+                Object.assign(this, { ruta: d.ruta, migas: d.migas, carpetas: d.carpetas, archivos: d.archivos });
+            } catch (e) { this.error = e.message; } finally { this.cargando = false; }
+        },
+        async importar() {
+            const ids = [...this.elegidos];
+            this.importando = true; this.hechos = 0; this.total = ids.length; this.errorImportar = '';
+            for (let i = 0; i < ids.length; i += 5) {
+                const fd = new FormData(); fd.append('_token', cfg.token);
+                ids.slice(i, i + 5).forEach((id) => fd.append('ids[]', id));
+                try {
+                    const r = await fetch(cfg.importar, { method: 'POST', body: fd, headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+                    const d = await r.json();
+                    this.hechos += d.importados || 0;
+                    if (d.errores && d.errores.length) this.errorImportar = d.errores[0];
+                } catch (e) { this.errorImportar = 'Se perdió la conexión al importar.'; break; }
+            }
+            this.importando = false;
+            if (!this.errorImportar) this.abierto = false;
+            window.vanduRefrescar ? window.vanduRefrescar() : location.reload();
         },
     };
 }
