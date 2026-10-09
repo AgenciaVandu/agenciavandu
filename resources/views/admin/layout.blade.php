@@ -32,7 +32,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
-    <style>
+    <style id="estilos-base">
         @font-face { font-family: 'Geist'; src: url('{{ route('vandu.fuente') }}') format('woff2'); font-weight: 100 900; font-display: swap; }
 
         /* ===================== Tokens ===================== */
@@ -195,6 +195,10 @@
 
         .pagination { --bs-pagination-color: var(--text); --bs-pagination-active-bg: var(--ink); --bs-pagination-active-border-color: var(--ink); --bs-pagination-border-color: var(--line); }
         [x-cloak] { display: none !important; }
+        main.page.cambiando { opacity: .55; transition: opacity .15s ease .12s; pointer-events: none; }
+        main.page.entrando { animation: entrar .22s ease-out; }
+        @keyframes entrar { from { opacity: .4; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+        @media (prefers-reduced-motion: reduce) { main.page.entrando { animation: none; } }
         /* Las tablas ocultas para lectores de pantalla no deben ensanchar la página en el celular */
         table.visually-hidden { display: block; }
         body { overflow-x: clip; }
@@ -370,7 +374,7 @@
 </nav>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
+<script id="vandu-base">
     // Menús dentro de tablas con scroll: que se dibujen por encima y no queden recortados
     function prepararPagina() {
         document.querySelectorAll('.table-responsive [data-bs-toggle="dropdown"]').forEach((b) => {
@@ -489,11 +493,99 @@
         };
         const mismaPagina = (url) => { const u = new URL(url, location.href); return u.pathname === location.pathname; };
 
-        // Al ir a otra página, el aviso ("Cliente creado", etc.) viaja con ella
+        /*
+         * Navegación tipo app: al tocar un enlace del panel se trae la página en segundo plano y solo se cambia
+         * el contenido. La barra lateral y la de abajo se quedan quietas (no "parpadea" todo).
+         * Si algo no es una página del panel (PDF, descarga, Dropbox…), se navega normal.
+         */
+        const NO_INTERCEPTAR = /\/(pdf|exportar|conectar|abrir|descargar|sw\.js|manifest\.webmanifest)(\/|\?|$)|\/archivos\/\d+|\/constancias\/\d+|\/logout/;
+        const precargas = new Map();
+        const esInterno = (a) => {
+            if (!a || !a.href || a.hasAttribute('download') || a.hasAttribute('data-recargar') || a.hasAttribute('data-correo')) return false;
+            if (a.target && a.target !== '_self') return false;
+            const u = new URL(a.href, location.href);
+            if (u.origin !== location.origin || !u.pathname.startsWith('/admin') || NO_INTERCEPTAR.test(u.pathname)) return false;
+            if (u.pathname === location.pathname && u.search === location.search && u.hash) return false; // ancla en la misma página
+            return u;
+        };
+        const pedir = (url) => fetch(url, { headers: { 'X-Requested-With': 'fetch', 'Accept': 'text/html' }, credentials: 'same-origin' });
+
+        // Precarga al tocar (antes de soltar el dedo): la página llega más rápido
+        document.addEventListener('pointerdown', (e) => {
+            const u = esInterno(e.target.closest('a[href]')); if (!u) return;
+            if (!precargas.has(u.href)) { precargas.set(u.href, pedir(u.href)); setTimeout(() => precargas.delete(u.href), 8000); }
+        }, { passive: true });
+
+        document.addEventListener('click', (e) => {
+            if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            const a = e.target.closest('a[href]'); const u = esInterno(a); if (!u) return;
+            e.preventDefault();
+            // Respuesta inmediata en la barra de abajo
+            if (a.closest('.tabbar')) { document.querySelectorAll('.tabbar a').forEach((x) => x.classList.toggle('activo', x === a)); }
+            navegar(u.href, true);
+        });
+
+        window.addEventListener('popstate', () => navegar(location.href, false));
+
+        let navegacion = 0;
+        async function navegar(url, nueva) {
+            const yo = ++navegacion;
+            progreso(true);
+            document.querySelector('main.page')?.classList.add('cambiando');
+            try {
+                const r = await (precargas.get(url) || pedir(url));
+                precargas.delete(url);
+                if (yo !== navegacion) return; // ya se tocó otra cosa
+                const tipo = r.headers.get('content-type') || '';
+                if (!r.ok && r.status !== 422 || !tipo.includes('text/html')) { location.href = url; return; }
+                const html = await r.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                if (!doc.querySelector('main.page')) { location.href = r.url; return; } // p. ej. la sesión venció
+                aplicar(doc, r.url, nueva);
+            } catch (err) {
+                location.href = url;
+            } finally {
+                if (yo === navegacion) { progreso(false); document.querySelector('main.page')?.classList.remove('cambiando'); }
+            }
+        }
+
+        /** Pone otra página del panel sin recargar: estilos y scripts de la página, contenido, menús y título */
+        function aplicar(doc, url, nueva) {
+            // 1. Estilos propios de la página
+            document.querySelectorAll('head style:not(#estilos-base)').forEach((s) => s.remove());
+            doc.querySelectorAll('head style:not(#estilos-base)').forEach((s) => document.head.appendChild(s.cloneNode(true)));
+            // 2. Scripts propios de la página (antes del contenido, para que Alpine encuentre sus funciones)
+            doc.querySelectorAll('body > script:not([src]):not(#vandu-base)').forEach((s) => {
+                const n = document.createElement('script');
+                n.textContent = '{\n' + s.textContent + '\n}'; // en bloque: se puede volver a cargar sin chocar
+                document.body.appendChild(n); n.remove();
+            });
+            // 3. Contenido, menú lateral y barra de abajo
+            document.querySelectorAll('.dropdown-menu.show').forEach((m) => m.classList.remove('show'));
+            const main = document.querySelector('main.page');
+            main.innerHTML = doc.querySelector('main.page').innerHTML;
+            const navs = document.querySelectorAll('.side nav'), nuevos = doc.querySelectorAll('.side nav');
+            navs.forEach((n, i) => { if (nuevos[i]) n.innerHTML = nuevos[i].innerHTML; });
+            const tab = document.querySelector('.tabbar'), tabNuevo = doc.querySelector('.tabbar');
+            if (tab && tabNuevo) tab.innerHTML = tabNuevo.innerHTML;
+            document.title = doc.title || document.title;
+            const u = new URL(url, location.href);
+            if (nueva) history.pushState(null, '', u.href); else if (u.href !== location.href) history.replaceState(null, '', u.href);
+            // 4. Cerrar el menú del celular, subir al inicio y acomodar
+            try { if (window.Alpine) Alpine.$data(document.body).menu = false; } catch (e) {}
+            if (nueva) window.scrollTo({ top: 0 });
+            main.classList.remove('cambiando'); main.classList.add('entrando');
+            setTimeout(() => main.classList.remove('entrando'), 250);
+            prepararPagina();
+            const err = main.querySelector('.aviso-error');
+            if (err) err.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Al ir a otra página después de guardar: se cambia sin recargar y el aviso ya viene en el contenido
         function irA(url, html) {
             try {
-                const aviso = new DOMParser().parseFromString(html || '', 'text/html').querySelector('main.page > .aviso-ok');
-                if (aviso) sessionStorage.setItem('vanduAviso', aviso.textContent.trim());
+                const doc = new DOMParser().parseFromString(html || '', 'text/html');
+                if (doc.querySelector('main.page')) { aplicar(doc, url, true); return; }
             } catch (e) {}
             location.href = url;
         }
@@ -543,7 +635,6 @@
             const f = e.target;
             if (e.defaultPrevented || f.hasAttribute('data-recargar') || (f.getAttribute('method') || 'get').toLowerCase() !== 'post') return;
             if (f.target && f.target !== '_self') return;
-            if (f.querySelector('input[type=file]')) return;
             e.preventDefault();
             if (f.classList.contains('enviando')) return;
 
