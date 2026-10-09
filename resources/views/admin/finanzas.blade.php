@@ -98,14 +98,16 @@
 <div class="controles">
     <nav class="segmento" aria-label="Periodo">
         @foreach(F::PERIODOS as $k => $label)
-            <a href="{{ $q(['periodo' => $k]) }}" class="{{ $periodo === $k ? 'activo' : '' }}">{{ $label }}</a>
+            @php [$rd, $rh] = $rangos[$k]; @endphp
+            <a href="{{ $q(['periodo' => $k]) }}" class="{{ $periodo === $k ? 'activo' : '' }}"
+               title="{{ $rd ? $f($rd) . ' – ' . $f($rh) : 'Todo lo registrado, sin límite de fechas' }}">{{ $label }}</a>
         @endforeach
     </nav>
     <nav class="segmento" aria-label="IVA">
         <a href="{{ $q(['iva' => null]) }}" class="{{ ! $conIva ? 'activo' : '' }}">Sin IVA</a>
         <a href="{{ $q(['iva' => 'con']) }}" class="{{ $conIva ? 'activo' : '' }}">Con IVA</a>
     </nav>
-    @if($desde)<span class="rango num">{{ $f($desde) }} – {{ $f($hasta) }}</span>@endif
+    <span class="rango num">{{ $desde ? $f($desde) . ' – ' . $f($hasta) : 'Todo lo registrado' }}</span>
 </div>
 
 {{-- ================= Indicadores ================= --}}

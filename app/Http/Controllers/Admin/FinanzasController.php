@@ -19,19 +19,19 @@ use Illuminate\Support\Collection;
  */
 class FinanzasController extends Controller
 {
+    /** "Todo" va primero y es el periodo por defecto: suma todo lo registrado */
     public const PERIODOS = [
-        'mes'       => 'Este mes',
-        'mes_ant'   => 'Mes pasado',
-        'trimestre' => 'Últimos 3 meses',
-        'anio'      => 'Este año',
-        '12m'       => 'Últimos 12 meses',
         'todo'      => 'Todo',
+        'anio'      => 'Este año',
+        'trimestre' => 'Últimos 3 meses',
+        'mes_ant'   => 'Mes pasado',
+        'mes'       => 'Este mes',
     ];
 
     public function index(Request $request)
     {
         $tz = config('vandu.zona_horaria');
-        $periodo = array_key_exists($request->query('periodo'), self::PERIODOS) ? $request->query('periodo') : 'anio';
+        $periodo = array_key_exists($request->query('periodo'), self::PERIODOS) ? $request->query('periodo') : 'todo';
         $conIva = $request->query('iva') === 'con';
         [$desde, $hasta] = $this->rango($periodo);
         $hoy = now($tz)->toDateString();
@@ -149,13 +149,14 @@ class FinanzasController extends Controller
             'perdidas'  => $perdidas->sortByDesc(fn ($p) => $monto($p))->take(8)->values(),
             'monto'     => $monto,
             'hoy'       => $hoy,
+            'rangos'    => collect(self::PERIODOS)->map(fn ($l, $k) => $this->rango($k))->all(),
         ]);
     }
 
     /** Exporta las cotizaciones del periodo en CSV (se abre en Excel o Sheets) */
     public function exportar(Request $request)
     {
-        $periodo = array_key_exists($request->query('periodo'), self::PERIODOS) ? $request->query('periodo') : 'anio';
+        $periodo = array_key_exists($request->query('periodo'), self::PERIODOS) ? $request->query('periodo') : 'todo';
         [$desde, $hasta] = $this->rango($periodo);
         $tz = config('vandu.zona_horaria');
 
@@ -195,7 +196,6 @@ class FinanzasController extends Controller
             'mes_ant'   => [$hoy->copy()->subMonthNoOverflow()->startOfMonth()->toDateString(), $hoy->copy()->subMonthNoOverflow()->endOfMonth()->toDateString()],
             'trimestre' => [$hoy->copy()->subMonthsNoOverflow(2)->startOfMonth()->toDateString(), $hoy->toDateString()],
             'anio'      => [$hoy->copy()->startOfYear()->toDateString(), $hoy->toDateString()],
-            '12m'       => [$hoy->copy()->subMonthsNoOverflow(11)->startOfMonth()->toDateString(), $hoy->toDateString()],
             default     => [null, null],
         };
     }
