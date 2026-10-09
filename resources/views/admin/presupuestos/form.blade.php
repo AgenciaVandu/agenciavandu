@@ -476,6 +476,7 @@
                             <a class="btn btn-borde w-100 mt-2" target="_blank"
                                href="https://wa.me/{{ $wa }}?text={{ rawurlencode("Hola {$p->cliente_nombre}, te comparto la cotización {$p->folio}: {$p->url_publica}") }}"><i class="bi bi-whatsapp me-1"></i> Enviar por WhatsApp</a>
                         @endif
+                        <button type="button" class="btn btn-borde w-100 mt-2" data-correo="{{ $p->vigente && now()->diffInHours($p->vigente_hasta, false) <= 72 && ! in_array($p->estado, ['aceptada', 'rechazada']) ? 'por_vencer' : 'cotizacion' }}"><i class="bi bi-envelope me-1"></i> Enviar por correo</button>
                         <p class="secundario mt-3 mb-0">
                             @if($p->vistas)
                                 Abierta {{ $p->vistas }} {{ $p->vistas === 1 ? 'vez' : 'veces' }}; la última {{ $p->ultima_vista_at->locale('es')->diffForHumans() }}.
@@ -485,6 +486,9 @@
                         </p>
                     </div>
                 </section>
+            @endunless
+            @unless($nuevo)
+                @include('admin.correos._historial', ['correos' => \App\Models\Correo::where('presupuesto_id', $p->id)->latest()->take(8)->get(), 'plantilla' => 'cotizacion'])
             @endunless
             @if(! $nuevo && $p->cliente)
                 @php $cl = $p->cliente; $csf = $cl->constancias()->first(); @endphp
@@ -549,6 +553,7 @@
     <form id="convertir" method="get" action="{{ route('admin.proyectos.create', $p) }}"></form>
     <form id="duplicar" method="post" action="{{ route('admin.presupuestos.duplicar', $p) }}">@csrf</form>
     <form id="eliminar" method="post" action="{{ route('admin.presupuestos.destroy', $p) }}" onsubmit="return confirm('¿Eliminar {{ $p->folio }}? El enlace del cliente dejará de funcionar.')">@csrf @method('delete')</form>
+    @include('admin.correos._modal', ['ctxTipo' => 'presupuesto', 'ctxId' => $p->id])
 @endunless
 @endsection
 

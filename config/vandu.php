@@ -106,6 +106,73 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Correos desde el panel
+    |--------------------------------------------------------------------------
+    | desde: la cuenta que envía (créala en cPanel y pon sus datos SMTP en .env).
+    | responder_a: a dónde llegan las respuestas del cliente.
+    | Plantillas: textos base editables antes de enviar. Variables disponibles:
+    |   {nombre} {empresa} {folio} {concepto} {monto} {vigencia} {proyecto}
+    |   {pago} {monto_pago} {fecha_limite} {siguiente} {firma}
+    */
+    'correo' => [
+        'desde'       => env('VANDU_CORREO_DESDE', 'proyectos@agenciavandu.com'),
+        'nombre'      => env('VANDU_CORREO_NOMBRE', 'Agencia Vandu'),
+        'responder_a' => env('VANDU_CORREO_RESPONDER_A', env('VANDU_EMISOR_EMAIL', 'ab@agenciavandu.com')),
+        'pie'         => 'Agencia Vandu · Mérida, Yucatán',
+
+        'plantillas' => [
+            'bienvenida' => [
+                'nombre' => 'Bienvenida', 'icono' => 'bi-stars', 'para' => ['cliente', 'presupuesto', 'proyecto'],
+                'asunto' => 'Bienvenido a Agencia Vandu',
+                'titulo' => 'Qué gusto trabajar contigo',
+                'cuerpo' => "Hola {nombre},\n\nGracias por confiar en Agencia Vandu. A partir de hoy tienes un equipo dedicado a que tu proyecto salga como lo imaginas.\n\nCualquier duda, idea o cambio, respóndeme este correo o escríbeme por WhatsApp: estamos para ayudarte.",
+            ],
+            'cotizacion' => [
+                'nombre' => 'Enviar cotización', 'icono' => 'bi-file-earmark-text', 'para' => ['presupuesto'],
+                'asunto' => 'Cotización {folio} · {concepto}',
+                'titulo' => 'Tu cotización está lista',
+                'cuerpo' => "Hola {nombre},\n\nTe comparto la cotización {folio} para {concepto}. Puedes verla en línea o descargarla en PDF; los precios están vigentes hasta el {vigencia}.\n\nSi quieres ajustar algo, con gusto lo revisamos.",
+                'boton'  => 'Ver mi cotización', 'pdf' => true, 'resumen' => true,
+            ],
+            'por_vencer' => [
+                'nombre' => 'Cotización por vencer', 'icono' => 'bi-hourglass-split', 'para' => ['presupuesto'],
+                'asunto' => 'Tu cotización {folio} vence el {vigencia}',
+                'titulo' => 'Tu cotización está por vencer',
+                'cuerpo' => "Hola {nombre},\n\nTe recuerdo que la cotización {folio} sigue vigente hasta el {vigencia}. Si quieres arrancar, con tu confirmación apartamos fechas.\n\n¿Te queda alguna duda? Con gusto la resolvemos.",
+                'boton'  => 'Revisar cotización', 'resumen' => true,
+            ],
+            'inicio_proyecto' => [
+                'nombre' => 'Arranque de proyecto', 'icono' => 'bi-rocket-takeoff', 'para' => ['proyecto'],
+                'asunto' => 'Arrancamos: {proyecto}',
+                'titulo' => 'Tu proyecto ya está en marcha',
+                'cuerpo' => "Hola {nombre},\n\n¡Arrancamos con {proyecto}! Desde el enlace de abajo puedes seguir el avance, las fechas de cada etapa y descargar los archivos cuando estén listos.\n\nLo siguiente: {siguiente}.",
+                'boton'  => 'Ver mi proyecto', 'resumen' => true,
+            ],
+            'recordatorio_pago' => [
+                'nombre' => 'Recordatorio de pago', 'icono' => 'bi-cash-coin', 'para' => ['proyecto'],
+                'asunto' => 'Recordatorio de pago · {proyecto}',
+                'titulo' => 'Recordatorio de pago',
+                'cuerpo' => "Hola {nombre},\n\nTe escribo para recordarte el {pago} de {monto_pago} correspondiente a {proyecto}{fecha_limite}.\n\nAbajo van los datos bancarios. Cuando lo realices, respóndeme con tu comprobante y lo registramos. Si ya lo hiciste, muchas gracias y omite este mensaje.",
+                'boton'  => 'Ver estado del proyecto', 'resumen' => true, 'banco' => true,
+            ],
+            'entrega' => [
+                'nombre' => 'Entrega lista', 'icono' => 'bi-box-seam', 'para' => ['proyecto'],
+                'asunto' => 'Tu entrega está lista · {proyecto}',
+                'titulo' => 'Tu entrega está lista',
+                'cuerpo' => "Hola {nombre},\n\nTe aviso que el material de {proyecto} ya está disponible. Desde el enlace puedes verlo y descargarlo cuando quieras.\n\nGracias por trabajar con nosotros; nos encantará saber qué te pareció.",
+                'boton'  => 'Ver y descargar',
+            ],
+            'libre' => [
+                'nombre' => 'En blanco', 'icono' => 'bi-pencil', 'para' => ['cliente', 'presupuesto', 'proyecto'],
+                'asunto' => '',
+                'titulo' => '',
+                'cuerpo' => "Hola {nombre},\n\n",
+            ],
+        ],
+    ],
+
     // Métodos de pago (cliente y cada pago registrado)
     'metodos_pago' => [
         'transferencia'   => 'Transferencia',

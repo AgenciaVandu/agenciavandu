@@ -36,6 +36,7 @@
         </div>
     </div>
     <div class="d-flex gap-2">
+        <button type="button" class="btn btn-borde" data-correo="bienvenida"><i class="bi bi-envelope me-1"></i> Enviar correo</button>
         <a href="{{ route('admin.clientes.edit', $cliente) }}" class="btn btn-borde"><i class="bi bi-pencil me-1"></i> Editar</a>
         <a href="{{ route('admin.presupuestos.create', ['cliente' => $cliente->id]) }}" class="btn btn-primario"><i class="bi bi-plus-lg me-1"></i> Nueva cotización</a>
     </div>
@@ -175,6 +176,8 @@
             </div>
         </section>
 
+        @include('admin.correos._historial', ['correos' => \App\Models\Correo::where('cliente_id', $cliente->id)->latest()->take(10)->get(), 'plantilla' => 'bienvenida'])
+
         @if($cliente->notas)
             <section class="panel">
                 <div class="panel-head"><h2>Notas</h2></div>
@@ -183,4 +186,5 @@
         @endif
     </div>
 </div>
+@include('admin.correos._modal', ['ctxTipo' => 'cliente', 'ctxId' => $cliente->id])
 @endsection

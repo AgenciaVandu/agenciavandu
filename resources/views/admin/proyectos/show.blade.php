@@ -173,6 +173,9 @@
                                             <button class="btn btn-fantasma btn-icono" data-bs-toggle="dropdown" aria-label="Opciones de {{ $pg->concepto }}"><i class="bi bi-three-dots"></i></button>
                                             <ul class="dropdown-menu dropdown-menu-end">
                                                 <li><button type="button" class="dropdown-item" @click="editar = !editar"><i class="bi bi-pencil"></i> Editar fecha, monto, método o referencia</button></li>
+                                                @unless($pg->pagado)
+                                                    <li><button type="button" class="dropdown-item" data-correo="recordatorio_pago@{{ $pg->id }}"><i class="bi bi-envelope"></i> Enviar recordatorio por correo</button></li>
+                                                @endunless
                                                 @if($pg->pagado)
                                                     <li><form method="post" action="{{ route('admin.proyectos.pago', [$p, $pg]) }}">@csrf @method('patch')
                                                         <input type="hidden" name="accion" value="deshacer"><button class="dropdown-item"><i class="bi bi-arrow-counterclockwise"></i> Marcar como pendiente</button></form></li>
@@ -346,9 +349,12 @@
                 @if($wa)
                     <a class="btn btn-borde w-100 mt-2" target="_blank" href="https://wa.me/{{ $wa }}?text={{ rawurlencode($msgWa) }}"><i class="bi bi-whatsapp me-1"></i> Enviar por WhatsApp</a>
                 @endif
+                <button type="button" class="btn btn-borde w-100 mt-2" data-correo="inicio_proyecto"><i class="bi bi-envelope me-1"></i> Enviar por correo</button>
                 <p class="secundario mt-3 mb-0">{{ $p->vistas ? "Abierto {$p->vistas} " . ($p->vistas === 1 ? 'vez' : 'veces') . ', la última ' . $p->ultima_vista_at->locale('es')->diffForHumans() . '.' : 'El cliente aún no lo abre.' }}</p>
             </div>
         </section>
+
+        @include('admin.correos._historial', ['correos' => \App\Models\Correo::where('proyecto_id', $p->id)->latest()->take(8)->get(), 'plantilla' => 'inicio_proyecto'])
 
         <section class="panel">
             <div class="panel-head"><h2>Datos del proyecto</h2></div>
@@ -375,6 +381,7 @@
         </form>
     </aside>
 </div>
+@include('admin.correos._modal', ['ctxTipo' => 'proyecto', 'ctxId' => $p->id])
 @endsection
 
 @push('scripts')

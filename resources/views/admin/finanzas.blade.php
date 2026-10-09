@@ -259,7 +259,7 @@
     @else
         <div class="table-responsive">
             <table class="tabla">
-                <thead><tr><th>Cliente</th><th>Proyecto</th><th>Pago</th><th>Bloquea / vence</th><th class="text-end">Monto</th></tr></thead>
+                <thead><tr><th>Cliente</th><th>Proyecto</th><th>Pago</th><th>Bloquea / vence</th><th class="text-end">Monto</th><th><span class="visually-hidden">Recordatorio</span></th></tr></thead>
                 <tbody>
                 @foreach($porCobrar as $x)
                     @php $quien = $x->proyecto->cliente?->empresa ?: $x->proyecto->cliente?->nombre; $etapa = $x->proyecto->etapas->firstWhere('clave', $x->pago->antes_de); @endphp
@@ -275,6 +275,7 @@
                             @else<span class="secundario">—</span>@endif
                         </td>
                         <td class="text-end num fw-medium">{{ $d($x->monto) }}</td>
+                        <td class="text-end"><a href="{{ route('admin.proyectos.show', [$x->proyecto, 'correo' => 'recordatorio_pago@' . $x->pago->id]) }}" class="btn btn-fantasma btn-icono" title="Enviar recordatorio por correo" aria-label="Enviar recordatorio de {{ $x->pago->concepto }}"><i class="bi bi-envelope"></i></a></td>
                     </tr>
                 @endforeach
                 </tbody>

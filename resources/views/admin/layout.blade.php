@@ -187,6 +187,33 @@
 
         .pagination { --bs-pagination-color: var(--text); --bs-pagination-active-bg: var(--ink); --bs-pagination-active-border-color: var(--ink); --bs-pagination-border-color: var(--line); }
         [x-cloak] { display: none !important; }
+
+        /* ---------- Ventana de correo ---------- */
+        .correo-velo { position: fixed; inset: 0; z-index: 1080; background: rgba(15, 18, 25, .55); display: flex; align-items: flex-start; justify-content: center; padding: 32px 16px; overflow-y: auto; }
+        .correo-ventana { background: var(--surface); border-radius: 16px; width: min(1180px, 100%); box-shadow: 0 24px 60px rgba(0,0,0,.25); display: flex; flex-direction: column; }
+        .correo-cabeza { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 18px 22px; border-bottom: 1px solid var(--line); }
+        .correo-cabeza h2 { font-size: 17px; font-weight: 600; margin: 0; }
+        .correo-cuerpo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); }
+        .correo-campos { padding: 18px 22px; display: grid; gap: 14px; align-content: start; }
+        .correo-plantillas { display: flex; flex-wrap: wrap; gap: 6px; }
+        .correo-plantillas button { border: 1px solid var(--line-strong); background: var(--surface); border-radius: 99px; padding: 5px 12px; font-size: 13.5px; color: var(--text-2); display: inline-flex; gap: 6px; align-items: center; }
+        .correo-plantillas button:hover { border-color: var(--ink); color: var(--text); }
+        .correo-plantillas button.activo { background: var(--ink); border-color: var(--ink); color: #fff; }
+        .correo-opciones { display: grid; gap: 8px; padding: 12px 14px; background: var(--sunken); border-radius: 10px; }
+        .correo-opciones .form-check { margin: 0; font-size: 14px; }
+        .correo-previa { padding: 18px 22px; background: var(--sunken); border-left: 1px solid var(--line); border-radius: 0 0 0 0; display: flex; flex-direction: column; }
+        .correo-previa iframe { width: 100%; flex: 1; min-height: 560px; border: 1px solid var(--line); border-radius: 12px; background: #EEF0F3; }
+        .correo-pie { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 14px 22px; border-top: 1px solid var(--line); }
+        .correos-lista summary { cursor: pointer; list-style: none; }
+        .correos-lista summary::-webkit-details-marker { display: none; }
+        .correos-lista summary:hover { background: var(--sunken); }
+        @media (max-width: 991.98px) {
+            .correo-velo { padding: 0; }
+            .correo-ventana { border-radius: 0; min-height: 100%; }
+            .correo-cuerpo { grid-template-columns: 1fr; }
+            .correo-previa { border-left: 0; border-top: 1px solid var(--line); }
+            .correo-previa iframe { min-height: 480px; }
+        }
         .d-grid { grid-template-columns: minmax(0, 1fr); }
         .min-w-0 { min-width: 0; }
 
@@ -286,6 +313,59 @@
         try { await navigator.clipboard.writeText(b.dataset.copiar); } catch { prompt('Copia el enlace:', b.dataset.copiar); return; }
         const t = b.innerHTML; b.innerHTML = '<i class="bi bi-check2"></i> Copiado'; setTimeout(() => b.innerHTML = t, 1500);
     });
+
+    // Abrir la ventana de correo desde cualquier botón con data-correo="plantilla"
+    document.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-correo]'); if (!b) return;
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('abrir-correo', { detail: b.dataset.correo || '' }));
+    });
+
+    /** Editor de correo (admin/correos/_modal) */
+    window.correoVandu = function (init) {
+        return {
+            plantillas: init.plantillas, previaUrl: init.previa,
+            abierto: false, cargando: false, enviando: false, conCopia: false,
+            clave: '', para: '', cc: '', asunto: '', titulo: '', cuerpo: '', boton: '',
+            conBoton: false, resumen: false, banco: false, pdf: false, ultimo: '',
+            init() {
+                // ?correo=recordatorio_pago abre la ventana con esa plantilla
+                const u = new URL(location.href), q = u.searchParams.get('correo');
+                if (q !== null) {
+                    u.searchParams.delete('correo'); history.replaceState(null, '', u.href);
+                    this.$nextTick(() => this.abrir(q));
+                }
+            },
+            abrir(clave) {
+                const claves = Object.keys(this.plantillas);
+                const k = claves.find((c) => c === clave) || claves.find((c) => clave && c.startsWith(clave)) || claves[0];
+                this.usar(k, true);
+                this.abierto = true;
+                this.$nextTick(() => document.getElementById(this.para ? 'correo-asunto' : 'correo-para')?.focus());
+            },
+            usar(k, primeraVez = false) {
+                const pl = this.plantillas[k]; if (!pl) return;
+                this.clave = k;
+                if (primeraVez || !this.para) this.para = pl.para || this.para;
+                this.asunto = pl.asunto; this.titulo = pl.titulo; this.cuerpo = pl.cuerpo;
+                this.boton = pl.boton || pl.boton_por_defecto || ''; this.conBoton = !!pl.boton;
+                this.resumen = !!pl.resumen; this.banco = !!pl.banco; this.pdf = !!pl.pdf;
+                this.$nextTick(() => this.previsualizar());
+            },
+            cerrar() { this.abierto = false; },
+            async previsualizar() {
+                if (!this.abierto && !this.clave) return;
+                const datos = new FormData(this.$refs.form);
+                const firma = new URLSearchParams(datos).toString();
+                if (firma === this.ultimo) return;
+                this.ultimo = firma; this.cargando = true;
+                try {
+                    const r = await fetch(this.previaUrl, { method: 'POST', body: datos, credentials: 'same-origin', headers: { 'X-Requested-With': 'fetch' } });
+                    if (r.ok) this.$refs.previa.srcdoc = await r.text();
+                } finally { this.cargando = false; }
+            },
+        };
+    };
 
     /*
      * Guardar sin recargar la página.
