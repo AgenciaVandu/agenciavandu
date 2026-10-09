@@ -72,6 +72,10 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
         ->parameters(['presupuestos' => 'presupuesto']);
     Route::post('presupuestos/{presupuesto}/duplicar', [Admin\PresupuestoController::class, 'duplicar'])->name('presupuestos.duplicar');
     Route::patch('presupuestos/{presupuesto}/rapido', [Admin\PresupuestoController::class, 'rapido'])->name('presupuestos.rapido');
+    // Finanzas
+    Route::get('finanzas', [Admin\FinanzasController::class, 'index'])->name('finanzas');
+    Route::get('finanzas/exportar', [Admin\FinanzasController::class, 'exportar'])->name('finanzas.exportar');
+
     // Proyectos
     Route::get('proyectos', [Admin\ProyectoController::class, 'index'])->name('proyectos.index');
     Route::get('presupuestos/{presupuesto}/proyecto', [Admin\ProyectoController::class, 'crear'])->name('proyectos.create');
