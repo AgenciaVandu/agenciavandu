@@ -106,6 +106,33 @@ return [
         ],
     ],
 
+    // Catálogos del SAT para los datos de facturación del cliente
+    'sat' => [
+        'regimenes' => [
+            '601' => 'General de Ley Personas Morales',
+            '603' => 'Personas Morales con Fines no Lucrativos',
+            '605' => 'Sueldos y Salarios e Ingresos Asimilados a Salarios',
+            '606' => 'Arrendamiento',
+            '612' => 'Personas Físicas con Actividades Empresariales y Profesionales',
+            '616' => 'Sin obligaciones fiscales',
+            '620' => 'Sociedades Cooperativas de Producción',
+            '621' => 'Incorporación Fiscal',
+            '622' => 'Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras',
+            '623' => 'Opcional para Grupos de Sociedades',
+            '624' => 'Coordinados',
+            '625' => 'Actividades Empresariales con ingresos a través de Plataformas Tecnológicas',
+            '626' => 'Régimen Simplificado de Confianza',
+        ],
+        'usos_cfdi' => [
+            'G01'  => 'Adquisición de mercancías',
+            'G03'  => 'Gastos en general',
+            'I04'  => 'Equipo de computo y accesorios',
+            'I08'  => 'Otra maquinaria y equipo',
+            'S01'  => 'Sin efectos fiscales',
+            'CP01' => 'Pagos',
+        ],
+    ],
+
     // Tamaño máximo por archivo al subir entregables (también lo limita upload_max_filesize del servidor)
     'max_archivo_mb' => env('VANDU_MAX_ARCHIVO_MB', 512),
 

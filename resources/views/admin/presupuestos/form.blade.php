@@ -486,6 +486,34 @@
                     </div>
                 </section>
             @endunless
+            @if(! $nuevo && $p->cliente)
+                @php $cl = $p->cliente; $csf = $cl->constancias()->first(); @endphp
+                <section class="panel">
+                    <div class="panel-head"><h2>Facturación</h2>
+                        @if($cl->fiscales_completos)<span class="estado estado-aceptada">Completos</span>
+                        @elseif($cl->rfc || $cl->razon_social)<span class="estado estado-enviada">Incompletos</span>
+                        @else<span class="estado estado-borrador">Sin datos</span>@endif
+                    </div>
+                    <div class="panel-body">
+                        @if($cl->rfc || $cl->razon_social)
+                            <div class="principal num">{{ $cl->rfc }}</div>
+                            <div class="secundario text-truncate">{{ $cl->razon_social }}</div>
+                            <div class="secundario" style="font-size:12.5px">{{ collect([$cl->regimen_fiscal ? 'Régimen ' . $cl->regimen_fiscal : null, $cl->cp_fiscal ? 'C.P. ' . $cl->cp_fiscal : null, $cl->uso_cfdi])->filter()->join(' · ') }}</div>
+                        @else
+                            <div class="secundario">Aún no capturas los datos fiscales de {{ $cl->empresa ?: $cl->nombre }}.</div>
+                        @endif
+                        <div class="d-grid gap-2 mt-3">
+                            @if($cl->rfc || $cl->razon_social)
+                                <button type="button" class="btn btn-borde btn-sm" data-copiar="{{ $cl->fiscales_texto }}"><i class="bi bi-clipboard me-1"></i> Copiar datos</button>
+                            @endif
+                            @if($csf)
+                                <a href="{{ route('admin.clientes.constancias.show', [$cl, $csf]) }}" target="_blank" class="btn btn-borde btn-sm"><i class="bi bi-file-earmark-pdf me-1"></i> Ver constancia</a>
+                            @endif
+                            <a href="{{ route('admin.clientes.edit', $cl) }}#rfc" class="btn btn-fantasma btn-sm">{{ $cl->rfc || $cl->razon_social ? 'Editar datos' : 'Capturar datos y constancia' }}</a>
+                        </div>
+                    </div>
+                </section>
+            @endif
             @unless($nuevo)
                 @if($p->proyecto)
                     <section class="panel">

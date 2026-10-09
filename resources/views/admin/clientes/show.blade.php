@@ -112,17 +112,66 @@
             </dl>
         </section>
 
-        <section class="panel">
-            <div class="panel-head"><h2>Datos fiscales</h2></div>
+        <section class="panel" id="facturacion">
+            <div class="panel-head">
+                <h2>Facturación</h2>
+                @if($cliente->fiscales_completos)
+                    <span class="estado estado-aceptada">Completos</span>
+                @elseif($cliente->rfc || $cliente->razon_social)
+                    <span class="estado estado-enviada">Incompletos</span>
+                @endif
+            </div>
             @if($cliente->rfc || $cliente->razon_social)
                 <dl class="panel-body datos mb-0">
                     <dt>RFC</dt><dd class="num">{{ $cliente->rfc ?: '—' }}</dd>
                     <dt>Razón social</dt><dd>{{ $cliente->razon_social ?: '—' }}</dd>
-                    <dt>Uso de CFDI</dt><dd>{{ $cliente->uso_cfdi ?: '—' }}</dd>
+                    <dt>Régimen fiscal</dt><dd>{{ $cliente->regimen_texto ?: '—' }}</dd>
+                    <dt>C.P. fiscal</dt><dd class="num">{{ $cliente->cp_fiscal ?: '—' }}</dd>
+                    <dt>Uso de CFDI</dt><dd>{{ $cliente->uso_cfdi_texto ?: '—' }}</dd>
+                    <dt>Correo para la factura</dt><dd>{{ $cliente->email_factura ?: ($cliente->email ? $cliente->email . ' (contacto)' : '—') }}</dd>
                 </dl>
+                <div class="px-3 pb-3 d-flex gap-2 flex-wrap">
+                    <button type="button" class="btn btn-borde btn-sm" data-copiar="{{ $cliente->fiscales_texto }}"><i class="bi bi-clipboard me-1"></i> Copiar datos</button>
+                    <a href="{{ route('admin.clientes.edit', $cliente) }}#rfc" class="btn btn-fantasma btn-sm"><i class="bi bi-pencil me-1"></i> Editar</a>
+                </div>
             @else
-                <div class="panel-body secundario">Sin datos fiscales. <a href="{{ route('admin.clientes.edit', $cliente) }}">Agregarlos</a> para facturar.</div>
+                <div class="panel-body secundario">Sin datos de facturación. <a href="{{ route('admin.clientes.edit', $cliente) }}#rfc">Capturarlos</a></div>
             @endif
+
+            <div class="border-top">
+                <div class="px-3 pt-3 pb-2 d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold" style="font-size:14px">Constancia de Situación Fiscal</span>
+                    <span class="secundario num" style="font-size:12.5px">{{ $cliente->constancias->count() ?: '' }}</span>
+                </div>
+                @if($cliente->constancias->isNotEmpty())
+                    <ul class="list-unstyled m-0 constancias">
+                        @foreach($cliente->constancias as $c)
+                            <li class="d-flex align-items-center gap-2 px-3 py-2 {{ $loop->first ? '' : 'border-top' }}">
+                                <i class="bi {{ $c->es_pdf ? 'bi-file-earmark-pdf' : 'bi-file-earmark-image' }} fs-5 {{ $loop->first ? 'text-danger' : 'text-secondary' }}"></i>
+                                <a href="{{ route('admin.clientes.constancias.show', [$cliente, $c]) }}" target="_blank" class="flex-grow-1 text-reset text-decoration-none" style="min-width:0">
+                                    <div class="text-truncate fw-medium" style="font-size:14px">{{ $c->nombre }}</div>
+                                    <div class="secundario num" style="font-size:12.5px">
+                                        @if($loop->first)<span class="text-success">Vigente</span> · @endif
+                                        {{ $c->emitida_el ? 'Emitida ' . $c->emitida_el->locale('es')->isoFormat('D MMM YYYY') : 'Subida ' . $c->created_at->timezone(config('vandu.zona_horaria'))->locale('es')->isoFormat('D MMM YYYY') }} · {{ $c->peso_texto }}
+                                    </div>
+                                </a>
+                                <a href="{{ route('admin.clientes.constancias.show', [$cliente, $c]) }}?descargar=1" class="btn btn-fantasma btn-icono" title="Descargar" aria-label="Descargar {{ $c->nombre }}" data-recargar><i class="bi bi-download"></i></a>
+                                <form method="post" action="{{ route('admin.clientes.constancias.destroy', [$cliente, $c]) }}" onsubmit="return confirm('¿Eliminar {{ $c->nombre }} del expediente?')">@csrf @method('delete')
+                                    <button class="btn btn-fantasma btn-icono" title="Eliminar" aria-label="Eliminar {{ $c->nombre }}"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
+                <form method="post" enctype="multipart/form-data" action="{{ route('admin.clientes.constancias.store', $cliente) }}" class="px-3 pb-3 pt-2 subir-constancia">
+                    @csrf
+                    <label class="btn btn-borde btn-sm w-100 mb-0">
+                        <i class="bi bi-upload me-1"></i> {{ $cliente->constancias->isEmpty() ? 'Subir constancia' : 'Subir una más reciente' }}
+                        <input type="file" name="constancia" accept="application/pdf,image/jpeg,image/png" class="visually-hidden" onchange="this.form.requestSubmit()">
+                    </label>
+                    @error('constancia')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                </form>
+            </div>
         </section>
 
         @if($cliente->notas)

@@ -22,7 +22,7 @@
 </div>
 <div class="page-head"><h1>{{ $nuevo ? 'Nuevo cliente' : 'Editar cliente' }}</h1></div>
 
-<form method="post" action="{{ $nuevo ? route('admin.clientes.store') : route('admin.clientes.update', $cliente) }}">
+<form method="post" enctype="multipart/form-data" action="{{ $nuevo ? route('admin.clientes.store') : route('admin.clientes.update', $cliente) }}">
     @csrf
     @unless($nuevo) @method('put') @endunless
 
@@ -49,19 +49,56 @@
     </div>
 
     <div class="seccion">
-        <div><h2>Datos fiscales</h2><p>Opcionales. Te sirven para emitir la factura cuando acepten.</p></div>
+        <div><h2>Datos de facturación</h2><p>Los capturas tú. Si tienes la Constancia de Situación Fiscal, súbela aquí y queda en el expediente del cliente.</p></div>
         <div class="panel panel-body row g-3 mx-0">
             <div class="col-md-5">
                 <label class="form-label" for="rfc">RFC</label>
-                <input name="rfc" id="rfc" class="form-control text-uppercase num" maxlength="13" value="{{ old('rfc', $cliente->rfc) }}">
+                <input name="rfc" id="rfc" class="form-control text-uppercase num @error('rfc') is-invalid @enderror" maxlength="14" value="{{ old('rfc', $cliente->rfc) }}" placeholder="XAXX010101000" autocomplete="off">
+                @error('rfc')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="col-md-7">
-                <label class="form-label" for="uso_cfdi">Uso de CFDI</label>
-                <input name="uso_cfdi" id="uso_cfdi" class="form-control text-uppercase" maxlength="10" value="{{ old('uso_cfdi', $cliente->uso_cfdi) }}" placeholder="G03">
+                <label class="form-label" for="razon_social">Razón social <span class="text-secondary fw-normal">(tal como aparece en la constancia)</span></label>
+                <input name="razon_social" id="razon_social" class="form-control text-uppercase" value="{{ old('razon_social', $cliente->razon_social) }}">
             </div>
-            <div class="col-12">
-                <label class="form-label" for="razon_social">Razón social</label>
-                <input name="razon_social" id="razon_social" class="form-control" value="{{ old('razon_social', $cliente->razon_social) }}">
+            <div class="col-md-8">
+                <label class="form-label" for="regimen_fiscal">Régimen fiscal</label>
+                <select name="regimen_fiscal" id="regimen_fiscal" class="form-select">
+                    <option value="">Sin definir</option>
+                    @foreach(config('vandu.sat.regimenes') as $k => $v)
+                        <option value="{{ $k }}" @selected(old('regimen_fiscal', $cliente->regimen_fiscal) == $k)>{{ $k }} · {{ $v }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="cp_fiscal">C.P. fiscal</label>
+                <input name="cp_fiscal" id="cp_fiscal" class="form-control num @error('cp_fiscal') is-invalid @enderror" inputmode="numeric" maxlength="5" value="{{ old('cp_fiscal', $cliente->cp_fiscal) }}" placeholder="97000">
+                @error('cp_fiscal')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="uso_cfdi">Uso de CFDI</label>
+                @php $uso = old('uso_cfdi', $cliente->uso_cfdi); @endphp
+                <select name="uso_cfdi" id="uso_cfdi" class="form-select">
+                    <option value="">Sin definir</option>
+                    @foreach(config('vandu.sat.usos_cfdi') as $k => $v)
+                        <option value="{{ $k }}" @selected($uso == $k)>{{ $k }} · {{ $v }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="email_factura">Correo para la factura <span class="text-secondary fw-normal">(si es otro)</span></label>
+                <input type="email" name="email_factura" id="email_factura" class="form-control" value="{{ old('email_factura', $cliente->email_factura) }}" placeholder="facturas@empresa.com">
+            </div>
+            <div class="col-md-8">
+                <label class="form-label" for="constancia">Constancia de Situación Fiscal <span class="text-secondary fw-normal">(PDF, opcional)</span></label>
+                <input type="file" name="constancia" id="constancia" class="form-control @error('constancia') is-invalid @enderror" accept="application/pdf,image/jpeg,image/png">
+                @error('constancia')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                @if(! $nuevo && $cliente->constancias()->exists())
+                    <div class="secundario mt-1" style="font-size:12.5px"><i class="bi bi-file-earmark-pdf"></i> Ya hay {{ $cliente->constancias()->count() }} en el expediente; si subes otra se agrega y la anterior se conserva.</div>
+                @endif
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="constancia_emitida_el">Emitida el</label>
+                <input type="date" name="constancia_emitida_el" id="constancia_emitida_el" class="form-control num" value="{{ old('constancia_emitida_el') }}">
             </div>
         </div>
     </div>
