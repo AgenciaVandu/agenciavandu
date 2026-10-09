@@ -498,7 +498,7 @@
                         @if($cl->rfc || $cl->razon_social)
                             <div class="principal num">{{ $cl->rfc }}</div>
                             <div class="secundario text-truncate">{{ $cl->razon_social }}</div>
-                            <div class="secundario" style="font-size:12.5px">{{ collect([$cl->regimen_fiscal ? 'Régimen ' . $cl->regimen_fiscal : null, $cl->cp_fiscal ? 'C.P. ' . $cl->cp_fiscal : null, $cl->uso_cfdi])->filter()->join(' · ') }}</div>
+                            <div class="secundario" style="font-size:12.5px">{{ collect([$cl->regimen_fiscal ? 'Régimen ' . $cl->regimen_fiscal : null, $cl->cp_fiscal ? 'C.P. ' . $cl->cp_fiscal : null, $cl->uso_cfdi, $cl->metodo_pago_texto])->filter()->join(' · ') }}</div>
                         @else
                             <div class="secundario">Aún no capturas los datos fiscales de {{ $cl->empresa ?: $cl->nombre }}.</div>
                         @endif

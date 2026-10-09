@@ -45,11 +45,12 @@ class ProyectoController extends Controller
         $total = $presupuesto->total;
 
         $acum = 0;
-        $pagos = collect($metodo['pagos'])->values()->map(function ($pg, $i) use ($metodo, $total, &$acum) {
+        $metodoCliente = $presupuesto->cliente?->metodo_pago ?? '';
+        $pagos = collect($metodo['pagos'])->values()->map(function ($pg, $i) use ($metodo, $total, &$acum, $metodoCliente) {
             $ultimo = $i === count($metodo['pagos']) - 1;
             $monto = $ultimo ? round($total - $acum, 2) : round($total * $pg['porcentaje'] / 100, 2);
             $acum += $monto;
-            return $pg + ['id' => null, 'monto' => $monto, 'pagado_el' => '', 'referencia' => ''];
+            return $pg + ['id' => null, 'monto' => $monto, 'pagado_el' => '', 'referencia' => '', 'metodo' => $metodoCliente];
         });
 
         return view('admin.proyectos.fechas', [
@@ -137,6 +138,7 @@ class ProyectoController extends Controller
             'pagos'       => $proyecto->pagos->map(fn ($pg) => [
                 'id' => $pg->id, 'clave' => $pg->clave, 'concepto' => $pg->concepto, 'porcentaje' => $pg->porcentaje,
                 'antes_de' => $pg->antes_de, 'monto' => $pg->monto, 'pagado_el' => $pg->pagado_el?->toDateString() ?? '', 'referencia' => $pg->referencia ?? '',
+                'metodo' => $pg->metodo ?? ($proyecto->cliente?->metodo_pago ?? ''),
             ]),
         ]);
     }
@@ -177,6 +179,7 @@ class ProyectoController extends Controller
             'pagos.*.monto'          => 'required|numeric|min:0',
             'pagos.*.pagado_el'      => 'nullable|date|before_or_equal:today',
             'pagos.*.referencia'     => 'nullable|string|max:255',
+            'pagos.*.metodo'         => ['nullable', Rule::in(array_keys(config('vandu.metodos_pago')))],
         ], [
             'etapas.*.completada_el.before_or_equal' => 'Una fecha de “completada” está en el futuro.',
             'pagos.*.pagado_el.before_or_equal'      => 'Una fecha de pago está en el futuro.',
@@ -208,6 +211,7 @@ class ProyectoController extends Controller
             'monto'      => $pg['monto'],
             'pagado_el'  => $pg['pagado_el'] ?: null,
             'referencia' => $pg['referencia'] ?? null ?: null,
+            'metodo'     => $pg['metodo'] ?? null ?: null,
         ])->all();
 
         return [$etapas, $pagos];
@@ -310,6 +314,7 @@ class ProyectoController extends Controller
             'pagado_el'  => 'nullable|date|before_or_equal:today',
             'monto'      => 'nullable|numeric|min:0',
             'referencia' => 'nullable|string|max:255',
+            'metodo'     => ['nullable', Rule::in(array_keys(config('vandu.metodos_pago')))],
         ]);
 
         if (($data['accion'] ?? null) === 'pagar') {
@@ -321,6 +326,7 @@ class ProyectoController extends Controller
         }
         if (isset($data['monto'])) $pago->monto = $data['monto'];
         if ($request->has('referencia')) $pago->referencia = $data['referencia'];
+        if ($request->has('metodo')) $pago->metodo = $data['metodo'] ?: null;
         $pago->save();
 
         return back()->with('ok', $pago->pagado ? "{$pago->concepto} registrado como pagado." : "{$pago->concepto} actualizado.");

@@ -11,6 +11,7 @@
     $enlaceCliente = $p->presupuesto?->url_publica ?? $p->url_publica;
     $msgWa = "Hola {$p->cliente?->nombre}, aquí puedes ver tu cotización y el avance de tu proyecto: {$enlaceCliente}";
     $hoy = now(config('vandu.zona_horaria'))->toDateString();
+    $metodoCliente = $p->cliente?->metodo_pago;
 @endphp
 
 @push('head')
@@ -149,6 +150,7 @@
                                             @elseif($pg->antes_de)
                                                 <span class="vig vig-pronto"><i class="bi bi-lock"></i> Requerido antes de {{ $p->etapas->firstWhere('clave', $pg->antes_de)?->nombre }}</span>
                                             @endif
+                                            @if($pg->metodo_texto)<span><i class="bi {{ ['transferencia' => 'bi-bank', 'efectivo' => 'bi-cash', 'credito' => 'bi-hourglass-split', 'tarjeta_credito' => 'bi-credit-card'][$pg->metodo] ?? 'bi-wallet2' }} me-1"></i>{{ $pg->metodo_texto }}</span>@endif
                                             @if($pg->referencia)<span>Ref. {{ $pg->referencia }}</span>@endif
                                         </div>
                                     </div>
@@ -158,13 +160,17 @@
                                                 @csrf @method('patch')
                                                 <input type="hidden" name="accion" value="pagar">
                                                 <input type="date" name="pagado_el" value="{{ $hoy }}" class="form-control form-control-sm num" style="width: 150px" aria-label="Fecha de pago">
+                                                <select name="metodo" class="form-select form-select-sm" style="width: 170px" aria-label="Método de pago">
+                                                    <option value="">Método…</option>
+                                                    @foreach(config('vandu.metodos_pago') as $mk => $ml)<option value="{{ $mk }}" @selected(($pg->metodo ?? $metodoCliente) === $mk)>{{ $ml }}</option>@endforeach
+                                                </select>
                                                 <button class="btn btn-sm btn-acento text-nowrap"><i class="bi bi-check-lg"></i> Registrar pago</button>
                                             </form>
                                         @endunless
                                         <div class="dropdown">
                                             <button class="btn btn-fantasma btn-icono" data-bs-toggle="dropdown" aria-label="Opciones de {{ $pg->concepto }}"><i class="bi bi-three-dots"></i></button>
                                             <ul class="dropdown-menu dropdown-menu-end">
-                                                <li><button type="button" class="dropdown-item" @click="editar = !editar"><i class="bi bi-pencil"></i> Editar fecha, monto o referencia</button></li>
+                                                <li><button type="button" class="dropdown-item" @click="editar = !editar"><i class="bi bi-pencil"></i> Editar fecha, monto, método o referencia</button></li>
                                                 @if($pg->pagado)
                                                     <li><form method="post" action="{{ route('admin.proyectos.pago', [$p, $pg]) }}">@csrf @method('patch')
                                                         <input type="hidden" name="accion" value="deshacer"><button class="dropdown-item"><i class="bi bi-arrow-counterclockwise"></i> Marcar como pendiente</button></form></li>
@@ -179,9 +185,14 @@
                                     <div class="col-sm-3"><label class="form-label">Pagado el</label>
                                         <input type="date" name="pagado_el" value="{{ $pg->pagado_el?->toDateString() }}" max="{{ $hoy }}" class="form-control form-control-sm num">
                                         <div class="secundario" style="font-size:12px">Vacío = pendiente</div></div>
-                                    <div class="col-sm-3"><label class="form-label">Monto</label>
+                                    <div class="col-sm-2"><label class="form-label">Monto</label>
                                         <div class="input-group input-group-sm"><span class="input-group-text">$</span><input type="number" step="0.01" min="0" name="monto" value="{{ $pg->monto }}" class="form-control num"></div></div>
-                                    <div class="col-sm-4"><label class="form-label">Referencia o nota</label><input name="referencia" value="{{ $pg->referencia }}" class="form-control form-control-sm" placeholder="Transferencia, folio…"></div>
+                                    <div class="col-sm-2"><label class="form-label">Método</label>
+                                        <select name="metodo" class="form-select form-select-sm">
+                                            <option value="">Sin especificar</option>
+                                            @foreach(config('vandu.metodos_pago') as $mk => $ml)<option value="{{ $mk }}" @selected(($pg->metodo ?? $metodoCliente) === $mk)>{{ $ml }}</option>@endforeach
+                                        </select></div>
+                                    <div class="col-sm-3"><label class="form-label">Referencia o nota</label><input name="referencia" value="{{ $pg->referencia }}" class="form-control form-control-sm" placeholder="Transferencia, folio…"></div>
                                     <div class="col-sm-2 d-flex align-items-start" style="padding-top:26px"><button class="btn btn-sm btn-primario w-100">Guardar</button></div>
                                 </form>
                             </div>

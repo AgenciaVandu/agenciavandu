@@ -106,6 +106,14 @@ return [
         ],
     ],
 
+    // Métodos de pago (cliente y cada pago registrado)
+    'metodos_pago' => [
+        'transferencia'   => 'Transferencia',
+        'efectivo'        => 'Efectivo',
+        'credito'         => 'Crédito',
+        'tarjeta_credito' => 'Tarjeta de crédito',
+    ],
+
     // Catálogos del SAT para los datos de facturación del cliente
     'sat' => [
         'regimenes' => [

@@ -121,13 +121,14 @@
                     <span class="estado estado-enviada">Incompletos</span>
                 @endif
             </div>
-            @if($cliente->rfc || $cliente->razon_social)
+            @if($cliente->rfc || $cliente->razon_social || $cliente->metodo_pago)
                 <dl class="panel-body datos mb-0">
                     <dt>RFC</dt><dd class="num">{{ $cliente->rfc ?: '—' }}</dd>
                     <dt>Razón social</dt><dd>{{ $cliente->razon_social ?: '—' }}</dd>
                     <dt>Régimen fiscal</dt><dd>{{ $cliente->regimen_texto ?: '—' }}</dd>
                     <dt>C.P. fiscal</dt><dd class="num">{{ $cliente->cp_fiscal ?: '—' }}</dd>
                     <dt>Uso de CFDI</dt><dd>{{ $cliente->uso_cfdi_texto ?: '—' }}</dd>
+                    <dt>Método de pago</dt><dd>{{ $cliente->metodo_pago_texto ?: '—' }}</dd>
                     <dt>Correo para la factura</dt><dd>{{ $cliente->email_factura ?: ($cliente->email ? $cliente->email . ' (contacto)' : '—') }}</dd>
                 </dl>
                 <div class="px-3 pb-3 d-flex gap-2 flex-wrap">

@@ -144,7 +144,7 @@
             <div class="panel-head"><h2>Pagos</h2><span class="ayuda" x-text="'Total ' + dinero(pagos.reduce((s, p) => s + (+p.monto || 0), 0))"></span></div>
             <div class="table-responsive">
                 <table class="fechas">
-                    <thead><tr><th>Concepto</th><th>Monto</th><th>Pagado el</th><th>Referencia</th></tr></thead>
+                    <thead><tr><th>Concepto</th><th>Monto</th><th>Pagado el</th><th>Método de pago</th><th>Referencia</th></tr></thead>
                     <tbody>
                         <template x-for="(p, i) in pagos" :key="i">
                             <tr :class="{ completa: !!p.pagado_el }">
@@ -156,6 +156,10 @@
                                     <input type="date" class="form-control num" :name="`pagos[${i}][pagado_el]`" x-model="p.pagado_el" :max="hoy" :aria-label="'Fecha de pago de ' + p.concepto">
                                     <div class="gate" x-show="!p.pagado_el">Vacío = pendiente</div>
                                 </td>
+                                <td style="min-width:170px"><select class="form-select" :name="`pagos[${i}][metodo]`" x-model="p.metodo" :aria-label="'Método de pago de ' + p.concepto">
+                                    <option value="">Sin especificar</option>
+                                    @foreach(config('vandu.metodos_pago') as $mk => $ml)<option value="{{ $mk }}">{{ $ml }}</option>@endforeach
+                                </select></td>
                                 <td><input class="form-control" :name="`pagos[${i}][referencia]`" x-model="p.referencia" placeholder="Transferencia, folio…" :aria-label="'Referencia de ' + p.concepto"></td>
                             </tr>
                         </template>

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProyectoPago extends Model
 {
-    protected $fillable = ['clave', 'concepto', 'porcentaje', 'monto', 'antes_de', 'orden', 'pagado_el', 'referencia'];
+    protected $fillable = ['clave', 'concepto', 'porcentaje', 'monto', 'antes_de', 'orden', 'pagado_el', 'metodo', 'referencia'];
 
     protected $casts = [
         'monto'      => 'float',
@@ -20,6 +20,11 @@ class ProyectoPago extends Model
     public function getPagadoAttribute(): bool
     {
         return $this->pagado_el !== null;
+    }
+
+    public function getMetodoTextoAttribute(): ?string
+    {
+        return $this->metodo ? config("vandu.metodos_pago.{$this->metodo}", $this->metodo) : null;
     }
 
     public function getMontoTextoAttribute(): string

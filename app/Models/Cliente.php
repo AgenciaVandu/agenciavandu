@@ -10,7 +10,7 @@ class Cliente extends Model
 {
     protected $fillable = [
         'nombre', 'empresa', 'email', 'telefono',
-        'rfc', 'razon_social', 'regimen_fiscal', 'cp_fiscal', 'uso_cfdi', 'email_factura', 'notas',
+        'rfc', 'razon_social', 'regimen_fiscal', 'cp_fiscal', 'uso_cfdi', 'metodo_pago', 'email_factura', 'notas',
     ];
 
     protected static function booted(): void
@@ -40,6 +40,11 @@ class Cliente extends Model
         return $this->uso_cfdi ? $this->uso_cfdi . ' · ' . (config("vandu.sat.usos_cfdi.{$this->uso_cfdi}") ?? '') : null;
     }
 
+    public function getMetodoPagoTextoAttribute(): ?string
+    {
+        return $this->metodo_pago ? config("vandu.metodos_pago.{$this->metodo_pago}", $this->metodo_pago) : null;
+    }
+
     /** Bloque listo para pegar en el sistema de facturación */
     public function getFiscalesTextoAttribute(): string
     {
@@ -49,6 +54,7 @@ class Cliente extends Model
             'Régimen fiscal' => $this->regimen_texto,
             'Código postal'  => $this->cp_fiscal,
             'Uso de CFDI'    => $this->uso_cfdi_texto,
+            'Método de pago' => $this->metodo_pago_texto,
             'Correo'         => $this->email_factura ?: $this->email,
         ])->filter()->map(fn ($v, $k) => "$k: $v")->join("\n");
     }

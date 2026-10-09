@@ -85,6 +85,15 @@
                 </select>
             </div>
             <div class="col-md-6">
+                <label class="form-label" for="metodo_pago">Método de pago</label>
+                <select name="metodo_pago" id="metodo_pago" class="form-select">
+                    <option value="">Sin definir</option>
+                    @foreach(config('vandu.metodos_pago') as $k => $v)
+                        <option value="{{ $k }}" @selected(old('metodo_pago', $cliente->metodo_pago) === $k)>{{ $v }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-6">
                 <label class="form-label" for="email_factura">Correo para la factura <span class="text-secondary fw-normal">(si es otro)</span></label>
                 <input type="email" name="email_factura" id="email_factura" class="form-control" value="{{ old('email_factura', $cliente->email_factura) }}" placeholder="facturas@empresa.com">
             </div>
