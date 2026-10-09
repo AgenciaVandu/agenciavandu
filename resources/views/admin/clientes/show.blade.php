@@ -82,6 +82,21 @@
     </div>
 
     <div class="d-grid gap-4">
+        @if($cliente->proyectos->isNotEmpty())
+            <section class="panel">
+                <div class="panel-head"><h2>Proyectos</h2></div>
+                <ul class="list-unstyled m-0">
+                    @foreach($cliente->proyectos as $pr)
+                        <li class="{{ $loop->first ? '' : 'border-top' }}">
+                            <a href="{{ route('admin.proyectos.show', $pr) }}" class="d-block px-3 py-3 text-decoration-none text-reset">
+                                <div class="d-flex justify-content-between gap-2"><span class="principal text-truncate">{{ $pr->nombre }}</span><span class="secundario num">{{ $pr->progreso }}%</span></div>
+                                <div class="secundario"><i class="bi {{ $pr->metodologia['icono'] ?? 'bi-kanban' }} me-1"></i>{{ $pr->tipo_nombre }} · {{ $pr->siguiente_paso ?? 'Terminado' }}</div>
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+            </section>
+        @endif
         <section class="panel">
             <div class="panel-head"><h2>Contacto</h2></div>
             <dl class="panel-body datos mb-0">

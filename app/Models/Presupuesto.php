@@ -56,6 +56,11 @@ class Presupuesto extends Model
         return $this->belongsTo(Cliente::class);
     }
 
+    public function proyecto(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Proyecto::class);
+    }
+
     public function conceptos(): HasMany
     {
         return $this->hasMany(PresupuestoConcepto::class)->orderBy('orden');

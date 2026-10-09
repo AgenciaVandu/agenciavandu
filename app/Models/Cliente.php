@@ -17,6 +17,11 @@ class Cliente extends Model
         return $this->hasMany(Presupuesto::class)->latest();
     }
 
+    public function proyectos(): HasMany
+    {
+        return $this->hasMany(Proyecto::class)->latest();
+    }
+
     /** Teléfono solo con dígitos y lada 52 para wa.me */
     public function getWhatsappAttribute(): ?string
     {

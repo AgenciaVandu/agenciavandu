@@ -400,11 +400,40 @@
                     </div>
                 </section>
             @endunless
+            @unless($nuevo)
+                @if($p->proyecto)
+                    <section class="panel">
+                        <div class="panel-head"><h2>Proyecto</h2><span class="estado estado-aceptada">{{ $p->proyecto->tipo_nombre }}</span></div>
+                        <div class="panel-body">
+                            <div class="principal">{{ $p->proyecto->nombre }}</div>
+                            <div class="secundario mb-3">{{ $p->proyecto->siguiente_paso }}</div>
+                            <a href="{{ route('admin.proyectos.show', $p->proyecto) }}" class="btn btn-borde w-100"><i class="bi bi-kanban me-1"></i> Abrir proyecto</a>
+                        </div>
+                    </section>
+                @elseif($p->estado === 'aceptada')
+                    @php $sugerido = \App\Models\Proyecto::tipoSugerido($p); @endphp
+                    <section class="panel" style="border-color: #BDF2D6">
+                        <div class="panel-head"><h2>Convertir en proyecto</h2></div>
+                        <div class="panel-body">
+                            <p class="secundario mt-0">Crea la línea del tiempo, los pagos y el enlace de seguimiento para el cliente.</p>
+                            <div class="estados mb-3" role="radiogroup" aria-label="Tipo de proyecto">
+                                @foreach(config('vandu.proyectos') as $k => $m)
+                                    <label><input type="radio" name="tipo" value="{{ $k }}" form="convertir" @checked($k === $sugerido)><i class="bi {{ $m['icono'] }}"></i> {{ $m['nombre'] }}</label>
+                                @endforeach
+                            </div>
+                            <label class="form-label" for="fecha_inicio_p">Inicia el</label>
+                            <input type="date" id="fecha_inicio_p" name="fecha_inicio" form="convertir" class="form-control num mb-3" value="{{ now(config('vandu.zona_horaria'))->toDateString() }}">
+                            <button type="submit" form="convertir" class="btn btn-acento w-100"><i class="bi bi-kanban me-1"></i> Crear proyecto</button>
+                        </div>
+                    </section>
+                @endif
+            @endunless
         </aside>
     </div>
 </form>
 
 @unless($nuevo)
+    <form id="convertir" method="post" action="{{ route('admin.proyectos.store', $p) }}">@csrf</form>
     <form id="duplicar" method="post" action="{{ route('admin.presupuestos.duplicar', $p) }}">@csrf</form>
     <form id="eliminar" method="post" action="{{ route('admin.presupuestos.destroy', $p) }}" onsubmit="return confirm('¿Eliminar {{ $p->folio }}? El enlace del cliente dejará de funcionar.')">@csrf @method('delete')</form>
 @endunless

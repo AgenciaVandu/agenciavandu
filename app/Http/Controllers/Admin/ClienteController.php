@@ -45,7 +45,7 @@ class ClienteController extends Controller
 
     public function show(Cliente $cliente)
     {
-        $cliente->load('presupuestos.conceptos');
+        $cliente->load(['presupuestos.conceptos', 'proyectos.etapas', 'proyectos.pagos']);
 
         return view('admin.clientes.show', compact('cliente'));
     }

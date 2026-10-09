@@ -72,6 +72,19 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
         ->parameters(['presupuestos' => 'presupuesto']);
     Route::post('presupuestos/{presupuesto}/duplicar', [Admin\PresupuestoController::class, 'duplicar'])->name('presupuestos.duplicar');
     Route::patch('presupuestos/{presupuesto}/rapido', [Admin\PresupuestoController::class, 'rapido'])->name('presupuestos.rapido');
+    // Proyectos
+    Route::get('proyectos', [Admin\ProyectoController::class, 'index'])->name('proyectos.index');
+    Route::post('presupuestos/{presupuesto}/proyecto', [Admin\ProyectoController::class, 'store'])->name('proyectos.store');
+    Route::get('proyectos/{proyecto}', [Admin\ProyectoController::class, 'show'])->name('proyectos.show');
+    Route::put('proyectos/{proyecto}', [Admin\ProyectoController::class, 'update'])->name('proyectos.update');
+    Route::delete('proyectos/{proyecto}', [Admin\ProyectoController::class, 'destroy'])->name('proyectos.destroy');
+    Route::patch('proyectos/{proyecto}/etapas/{etapa}', [Admin\ProyectoController::class, 'etapa'])->name('proyectos.etapa');
+    Route::patch('proyectos/{proyecto}/pagos/{pago}', [Admin\ProyectoController::class, 'pago'])->name('proyectos.pago');
+    Route::post('proyectos/{proyecto}/archivos', [Admin\ProyectoController::class, 'subir'])->name('proyectos.subir');
+    Route::patch('proyectos/{proyecto}/archivos/{archivo}', [Admin\ProyectoController::class, 'archivo'])->name('proyectos.archivo');
+    Route::delete('proyectos/{proyecto}/archivos/{archivo}', [Admin\ProyectoController::class, 'borrarArchivo'])->name('proyectos.archivo.borrar');
+    Route::get('proyectos/{proyecto}/archivos/{archivo}', [Admin\ProyectoController::class, 'verArchivo'])->name('proyectos.archivo.ver');
+
     Route::get('presupuestos/{presupuesto}/pdf', [Admin\PresupuestoController::class, 'pdf'])->name('presupuestos.pdf');
 });
 
@@ -80,3 +93,11 @@ Route::get('/cotizacion/{token}', [PresupuestoPublicoController::class, 'show'])
     ->where('token', '[A-Za-z0-9]{32}')->name('presupuesto.publico');
 Route::get('/cotizacion/{token}/descargar', [PresupuestoPublicoController::class, 'descargar'])
     ->where('token', '[A-Za-z0-9]{32}')->middleware('throttle:30,1')->name('presupuesto.descargar');
+
+// Vista pública del proyecto para el cliente
+Route::get('/proyecto/{token}', [\App\Http\Controllers\ProyectoPublicoController::class, 'show'])
+    ->where('token', '[A-Za-z0-9]{32}')->name('proyecto.publico');
+Route::get('/proyecto/{token}/archivos/{archivo}', [\App\Http\Controllers\ProyectoPublicoController::class, 'archivo'])
+    ->where('token', '[A-Za-z0-9]{32}')->name('proyecto.archivo');
+Route::get('/proyecto/{token}/galeria.zip', [\App\Http\Controllers\ProyectoPublicoController::class, 'zip'])
+    ->where('token', '[A-Za-z0-9]{32}')->middleware('throttle:10,1')->name('proyecto.zip');

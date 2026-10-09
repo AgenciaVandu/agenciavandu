@@ -46,4 +46,52 @@ return [
         ['titulo' => 'Tiempos de entrega', 'items' => ['3 días hábiles después de la recepción del pago.']],
         ['titulo' => 'Condiciones de pago', 'items' => ['Pago por adelantado.']],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Proyectos: metodología por tipo
+    |--------------------------------------------------------------------------
+    | Al convertir una cotización aceptada en proyecto se copian estas etapas y
+    | pagos. Después todo es editable por proyecto.
+    |   pagos.*.antes_de => clave de la etapa que no puede empezar sin ese pago
+    |   etapas.*.dias    => duración estimada (para proponer fechas)
+    |   etapas.*.fecha   => la etapa se agenda en un día concreto (levantamiento)
+    */
+    'proyectos' => [
+        'web' => [
+            'nombre' => 'Desarrollo web',
+            'icono'  => 'bi-window-stack',
+            'pagos'  => [
+                ['clave' => 'anticipo', 'concepto' => 'Anticipo', 'porcentaje' => 50, 'antes_de' => 'definicion'],
+                ['clave' => 'saldo',    'concepto' => 'Saldo',    'porcentaje' => 50, 'antes_de' => 'lanzamiento'],
+            ],
+            'etapas' => [
+                ['clave' => 'definicion',  'nombre' => 'Definición del producto', 'dias' => 5,  'descripcion' => 'Objetivos, alcance, mapa del sitio y contenidos.'],
+                ['clave' => 'prototipo',   'nombre' => 'Prototipado',             'dias' => 5,  'descripcion' => 'Estructura de cada pantalla para validar la navegación.'],
+                ['clave' => 'diseno',      'nombre' => 'Diseño del sitio',        'dias' => 7,  'descripcion' => 'Diseño visual con tu marca, listo para tu aprobación.'],
+                ['clave' => 'desarrollo',  'nombre' => 'Desarrollo',              'dias' => 15, 'descripcion' => 'Programación y carga de contenidos.'],
+                ['clave' => 'lanzamiento', 'nombre' => 'Puesta en marcha',        'dias' => 3,  'descripcion' => 'Publicación en tu dominio, pruebas finales y capacitación.'],
+                ['clave' => 'soporte',     'nombre' => 'Soporte',                 'dias' => 30, 'descripcion' => 'Ajustes y acompañamiento después del lanzamiento.'],
+            ],
+        ],
+        'audiovisual' => [
+            'nombre'  => 'Audiovisuales',
+            'icono'   => 'bi-camera-reels',
+            'galeria' => true,
+            'pagos'   => [
+                ['clave' => 'anticipo', 'concepto' => 'Anticipo',                   'porcentaje' => 50, 'antes_de' => 'levantamiento'],
+                ['clave' => 'saldo',    'concepto' => 'Saldo para confirmar fecha', 'porcentaje' => 50, 'antes_de' => 'levantamiento'],
+            ],
+            'etapas' => [
+                ['clave' => 'levantamiento', 'nombre' => 'Grabación / levantamiento', 'dias' => 1, 'fecha' => true, 'descripcion' => 'Día de grabación o sesión de fotografía. Se confirma con el pago del saldo.'],
+                ['clave' => 'entrega',       'nombre' => 'Entrega',                    'dias' => 1, 'fecha' => true, 'descripcion' => 'El material final queda disponible en tu galería para verlo y descargarlo.'],
+            ],
+        ],
+    ],
+
+    // Tamaño máximo por archivo al subir entregables (también lo limita upload_max_filesize del servidor)
+    'max_archivo_mb' => env('VANDU_MAX_ARCHIVO_MB', 512),
+
+    // Palabras que hacen sugerir "Audiovisuales" al convertir una cotización
+    'palabras_audiovisual' => ['foto', 'video', 'vídeo', 'grabación', 'sesión', 'dron', 'audiovisual', 'filmación', 'reel'],
 ];

@@ -94,6 +94,11 @@
                                 <button class="btn btn-fantasma btn-icono" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Más acciones para {{ $p->folio }}"><i class="bi bi-three-dots"></i></button>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item" href="{{ route('admin.presupuestos.edit', $p) }}"><i class="bi bi-pencil"></i> Editar</a></li>
+                                    @if($p->proyecto)
+                                        <li><a class="dropdown-item" href="{{ route('admin.proyectos.show', $p->proyecto) }}"><i class="bi bi-kanban"></i> Ver proyecto</a></li>
+                                    @elseif($p->estado === 'aceptada')
+                                        <li><a class="dropdown-item fw-medium" href="{{ route('admin.presupuestos.edit', $p) }}#convertir"><i class="bi bi-kanban"></i> Convertir en proyecto</a></li>
+                                    @endif
                                     <li><a class="dropdown-item" target="_blank" href="{{ $p->url_publica }}?vista_previa=1"><i class="bi bi-eye"></i> Ver como cliente</a></li>
                                     <li><a class="dropdown-item" target="_blank" href="{{ route('admin.presupuestos.pdf', $p) }}"><i class="bi bi-file-earmark-pdf"></i> Ver PDF</a></li>
                                     @if($wa)

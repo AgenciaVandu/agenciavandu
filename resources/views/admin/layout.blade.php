@@ -2,9 +2,11 @@
     $usuario = auth()->user();
     $iniciales = collect(explode(' ', trim($usuario?->name ?? 'V')))->filter()->take(2)->map(fn ($p) => mb_substr($p, 0, 1))->join('');
     $vigentesNav = \App\Models\Presupuesto::where('vigente_hasta', '>', now())->whereNotIn('estado', ['aceptada', 'rechazada'])->count();
+    $activosNav = \App\Models\Proyecto::where('estado', 'activo')->count();
     $nav = [
         ['ruta' => 'admin.resumen',             'activo' => 'admin.resumen',          'icono' => 'bi-grid-1x2',        'texto' => 'Resumen'],
         ['ruta' => 'admin.presupuestos.index',  'activo' => 'admin.presupuestos.*',   'icono' => 'bi-file-earmark-text','texto' => 'Cotizaciones', 'cuenta' => $vigentesNav],
+        ['ruta' => 'admin.proyectos.index',     'activo' => 'admin.proyectos.*',      'icono' => 'bi-kanban',          'texto' => 'Proyectos', 'cuenta' => $activosNav],
         ['ruta' => 'admin.clientes.index',      'activo' => 'admin.clientes.*',       'icono' => 'bi-people',          'texto' => 'Clientes'],
     ];
 @endphp
@@ -215,7 +217,7 @@
             <a href="{{ route($item['ruta']) }}" class="{{ request()->routeIs($item['activo']) ? 'activo' : '' }}"
                @if(request()->routeIs($item['activo'])) aria-current="page" @endif>
                 <i class="bi {{ $item['icono'] }}"></i> {{ $item['texto'] }}
-                @if(! empty($item['cuenta']))<span class="cuenta num" title="Cotizaciones vigentes">{{ $item['cuenta'] }}</span>@endif
+                @if(! empty($item['cuenta']))<span class="cuenta num">{{ $item['cuenta'] }}</span>@endif
             </a>
         @endforeach
     </nav>
