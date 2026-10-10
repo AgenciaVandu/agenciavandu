@@ -111,6 +111,37 @@ class DropboxSimulado extends Dropbox
         return $this->subirContenido(file_get_contents($rutaLocal), $destino);
     }
 
+    private function sesionArchivo(string $sesion): string
+    {
+        abort_unless(preg_match('/^[A-Za-z0-9]{12}$/', $sesion), 422);
+        $dir = self::base() . '/.sesiones';
+        if (! is_dir($dir)) mkdir($dir, 0775, true);
+        return "$dir/$sesion";
+    }
+
+    public function sesionIniciar(string $parte): string
+    {
+        $id = Str::random(12);
+        file_put_contents($this->sesionArchivo($id), $parte);
+        return $id;
+    }
+
+    public function sesionAgregar(string $sesion, int $offset, string $parte): void
+    {
+        $f = $this->sesionArchivo($sesion);
+        if (! is_file($f) || filesize($f) !== $offset) throw new DropboxError('incorrect_offset', 'incorrect_offset/');
+        file_put_contents($f, $parte, FILE_APPEND);
+    }
+
+    public function sesionTerminar(string $sesion, int $offset, string $parte, string $destino): array
+    {
+        $this->sesionAgregar($sesion, $offset, $parte);
+        $f = $this->sesionArchivo($sesion);
+        $m = $this->subirArchivo($f, $destino);
+        unlink($f);
+        return $m;
+    }
+
     public function subirContenido(string $contenido, string $destino): array
     {
         $d = $this->destinoLibre($destino);

@@ -67,6 +67,9 @@ Route::middleware('guest')->group(function () {
     Route::post('/admin/login', [Admin\LoginController::class, 'login'])->name('login.entrar');
 });
 Route::post('/admin/logout', [Admin\LoginController::class, 'logout'])->middleware('admin.vandu')->name('logout');
+// Invitación al equipo (o enlace para nueva contraseña)
+Route::get('/admin/invitacion/{token}', [App\Http\Controllers\InvitacionController::class, 'show'])->where('token', '[A-Za-z0-9]{48}')->middleware('throttle:30,1')->name('invitacion');
+Route::post('/admin/invitacion/{token}', [App\Http\Controllers\InvitacionController::class, 'guardar'])->where('token', '[A-Za-z0-9]{48}')->middleware('throttle:10,1')->name('invitacion.guardar');
 
 Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(function () {
     Route::get('/', [Admin\ResumenController::class, 'index'])->name('resumen');
@@ -162,6 +165,28 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::get('proyectos/{proyecto}/archivos/{archivo}', [Admin\ProyectoController::class, 'verArchivo'])->name('proyectos.archivo.ver');
 
     Route::get('presupuestos/{presupuesto}/pdf', [Admin\PresupuestoController::class, 'pdf'])->name('presupuestos.pdf');
+
+    // Equipo
+    Route::get('usuarios', [Admin\UsuariosController::class, 'index'])->name('usuarios');
+    Route::post('usuarios', [Admin\UsuariosController::class, 'store'])->name('usuarios.store');
+    Route::get('usuarios/{usuario}', [Admin\UsuariosController::class, 'edit'])->name('usuarios.edit');
+    Route::put('usuarios/{usuario}', [Admin\UsuariosController::class, 'update'])->name('usuarios.update');
+    Route::post('usuarios/{usuario}/enlace', [Admin\UsuariosController::class, 'enlace'])->name('usuarios.enlace');
+    Route::delete('usuarios/{usuario}', [Admin\UsuariosController::class, 'destroy'])->name('usuarios.destroy');
+    Route::post('roles', [Admin\UsuariosController::class, 'rolStore'])->name('roles.store');
+    Route::put('roles/{rol}', [Admin\UsuariosController::class, 'rolUpdate'])->name('roles.update');
+    Route::delete('roles/{rol}', [Admin\UsuariosController::class, 'rolDestroy'])->name('roles.destroy');
+    Route::get('cuenta', [Admin\CuentaController::class, 'show'])->name('cuenta');
+    Route::put('cuenta', [Admin\CuentaController::class, 'update'])->name('cuenta.update');
+
+    // Tareas
+    Route::post('tareas/carpeta', [Admin\TareasController::class, 'carpeta'])->name('tareas.carpeta');
+    Route::resource('tareas', Admin\TareasController::class)->parameters(['tareas' => 'tarea']);
+    Route::patch('tareas/{tarea}/estado', [Admin\TareasController::class, 'estado'])->name('tareas.estado');
+    Route::post('tareas/{tarea}/comentar', [Admin\TareasController::class, 'comentar'])->name('tareas.comentar');
+    Route::post('tareas/{tarea}/subir', [Admin\TareasController::class, 'subir'])->name('tareas.subir');
+    Route::get('tareas/{tarea}/archivos/{id}', [Admin\TareasController::class, 'verArchivo'])->where('id', 'id:[A-Za-z0-9_-]+')->name('tareas.archivo');
+    Route::delete('tareas/{tarea}/archivos/{id}', [Admin\TareasController::class, 'quitarArchivo'])->where('id', 'id:[A-Za-z0-9_-]+')->name('tareas.archivo.quitar');
 });
 
 // Vista pública para el cliente (enlace con token, vigente hasta la fecha de la cotización)

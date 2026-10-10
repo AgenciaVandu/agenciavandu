@@ -14,15 +14,23 @@ class NotificacionController extends Controller
 {
     public function index(Request $request)
     {
+        $u = $request->user();
+        $eventos = self::eventosDe($u);
         return view('admin.notificaciones', [
-            'eventos'      => config('vandu.push.eventos'),
-            'dispositivos' => PushSuscripcion::where('user_id', $request->user()->id)->latest('updated_at')->get(),
-            'recientes'    => Notificacion::latest('id')->take(8)->get(),
+            'eventos'      => $eventos,
+            'dispositivos' => PushSuscripcion::where('user_id', $u->id)->latest('updated_at')->get(),
+            'recientes'    => Notificacion::whereIn('evento', array_keys($eventos))->latest('id')->take(8)->get(),
             'clave'        => WebPush::claves()['publica'],
             'hora'         => config('vandu.push.resumen_hora'),
-            'cron'         => self::estadoCron(),
+            'cron'         => $u->puede('configuracion') ? self::estadoCron() : null,
             'ultimoResumen'=> Notificacion::where('evento', 'resumen_diario')->latest('id')->first(),
         ]);
+    }
+
+    /** Avisos que esta persona puede recibir según su rol */
+    public static function eventosDe($u): array
+    {
+        return array_filter(config('vandu.push.eventos'), fn ($e, $k) => Notificar::puedeRecibir($u, $k), ARRAY_FILTER_USE_BOTH);
     }
 
     /** ¿Está corriendo el cron del servidor? (el programador deja un "latido" cada minuto) */
@@ -58,7 +66,7 @@ class NotificacionController extends Controller
         $s->save();
 
         if ($nueva && $request->boolean('bienvenida')) {
-            Notificar::ahora('prueba', 'Listo, las notificaciones están activas', 'Aquí te avisaremos cuando un cliente abra su cotización y más.', route('admin.notificaciones'), 'bienvenida', [$s]);
+            Notificar::ahora('prueba', 'Listo, las notificaciones están activas', $request->user()->puede('cotizaciones') ? 'Aquí te avisaremos cuando un cliente abra su cotización y más.' : 'Aquí te avisaremos cuando te asignen una tarea o te comenten.', route('admin.notificaciones'), 'bienvenida', [$s]);
         }
 
         return response()->json($this->fila($s));
@@ -67,7 +75,7 @@ class NotificacionController extends Controller
     public function preferencias(Request $request, PushSuscripcion $suscripcion)
     {
         abort_unless($suscripcion->user_id === $request->user()->id, 404);
-        $validos = array_keys(config('vandu.push.eventos'));
+        $validos = array_keys(self::eventosDe($request->user()));
         $eventos = array_values(array_intersect($request->input('eventos', []), $validos));
         $suscripcion->update(['eventos' => count($eventos) === count($validos) ? null : $eventos]);
 
@@ -92,7 +100,7 @@ class NotificacionController extends Controller
 
     private function fila(PushSuscripcion $s): array
     {
-        $todos = array_keys(config('vandu.push.eventos'));
+        $todos = array_keys(self::eventosDe($s->user ?? auth()->user()));
         return ['id' => $s->id, 'dispositivo' => $s->dispositivo, 'eventos' => $s->eventos ?? $todos];
     }
 }

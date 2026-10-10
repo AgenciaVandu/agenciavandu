@@ -29,6 +29,8 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'activo' => true,
+            'rol_id' => fn () => \App\Models\Rol::where('todo', true)->value('id'), // por defecto, super admin
         ];
     }
 

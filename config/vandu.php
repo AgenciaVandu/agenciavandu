@@ -160,15 +160,19 @@ return [
         // Cuánto esperar antes de volver a avisar que el mismo cliente abrió lo mismo
         'repetir_vista_horas' => 3,
         'eventos' => [
-            'cotizacion_abierta'    => ['texto' => 'Un cliente abre una cotización', 'ayuda' => 'La primera vez y cuando vuelve a abrirla después de unas horas', 'icono' => 'bi-eye'],
-            'cotizacion_aceptada'   => ['texto' => 'Un cliente acepta su cotización', 'ayuda' => 'La aceptó en línea con su código de verificación', 'icono' => 'bi-check-circle'],
-            'cambios_solicitados'   => ['texto' => 'Un cliente pide cambios', 'ayuda' => 'Escribió qué quiere ajustar en su cotización', 'icono' => 'bi-chat-left-text'],
-            'redes_aprobado'        => ['texto' => 'Un cliente aprueba su contenido', 'ayuda' => 'Aprobó uno o varios posts de su calendario', 'icono' => 'bi-check2-square'],
-            'redes_cambios'         => ['texto' => 'Un cliente comenta un post', 'ayuda' => 'Pidió un cambio o dejó una observación en su contenido', 'icono' => 'bi-chat-square-dots'],
-            'cotizacion_descargada' => ['texto' => 'Un cliente descarga la cotización', 'ayuda' => 'Cuando baja el PDF desde su enlace', 'icono' => 'bi-file-earmark-arrow-down'],
-            'proyecto_visto'        => ['texto' => 'Un cliente revisa su proyecto', 'ayuda' => 'Abre su página de avance o de entrega', 'icono' => 'bi-kanban'],
-            'mensaje_sitio'         => ['texto' => 'Llega un mensaje desde el sitio', 'ayuda' => 'Alguien llenó el formulario de cotizar en agenciavandu.com', 'icono' => 'bi-chat-dots'],
-            'resumen_diario'        => ['texto' => 'Resumen de la mañana', 'ayuda' => 'Cobros vencidos o por vencer, etapas del día y cotizaciones a punto de vencer', 'icono' => 'bi-sunrise'],
+            'cotizacion_abierta'    => ['seccion' => 'cotizaciones', 'texto' => 'Un cliente abre una cotización', 'ayuda' => 'La primera vez y cuando vuelve a abrirla después de unas horas', 'icono' => 'bi-eye'],
+            'cotizacion_aceptada'   => ['seccion' => 'cotizaciones', 'texto' => 'Un cliente acepta su cotización', 'ayuda' => 'La aceptó en línea con su código de verificación', 'icono' => 'bi-check-circle'],
+            'cambios_solicitados'   => ['seccion' => 'cotizaciones', 'texto' => 'Un cliente pide cambios', 'ayuda' => 'Escribió qué quiere ajustar en su cotización', 'icono' => 'bi-chat-left-text'],
+            'redes_aprobado'        => ['seccion' => 'redes', 'texto' => 'Un cliente aprueba su contenido', 'ayuda' => 'Aprobó uno o varios posts de su calendario', 'icono' => 'bi-check2-square'],
+            'redes_cambios'         => ['seccion' => 'redes', 'texto' => 'Un cliente comenta un post', 'ayuda' => 'Pidió un cambio o dejó una observación en su contenido', 'icono' => 'bi-chat-square-dots'],
+            'cotizacion_descargada' => ['seccion' => 'cotizaciones', 'texto' => 'Un cliente descarga la cotización', 'ayuda' => 'Cuando baja el PDF desde su enlace', 'icono' => 'bi-file-earmark-arrow-down'],
+            'proyecto_visto'        => ['seccion' => 'proyectos', 'texto' => 'Un cliente revisa su proyecto', 'ayuda' => 'Abre su página de avance o de entrega', 'icono' => 'bi-kanban'],
+            'mensaje_sitio'         => ['seccion' => 'clientes', 'texto' => 'Llega un mensaje desde el sitio', 'ayuda' => 'Alguien llenó el formulario de cotizar en agenciavandu.com', 'icono' => 'bi-chat-dots'],
+            'resumen_diario'        => ['seccion' => 'resumen', 'texto' => 'Resumen de la mañana', 'ayuda' => 'Cobros vencidos o por vencer, etapas del día y cotizaciones a punto de vencer', 'icono' => 'bi-sunrise'],
+            // Tareas: llegan solo a las personas involucradas
+            'tarea_asignada'        => ['texto' => 'Te asignan una tarea', 'ayuda' => 'Alguien del equipo te asignó trabajo nuevo', 'icono' => 'bi-check2-square'],
+            'tarea_entregada'       => ['seccion' => 'tareas', 'texto' => 'Alguien entrega una tarea', 'ayuda' => 'Una tarea pasó a revisión', 'icono' => 'bi-box-arrow-in-down'],
+            'tarea_comentario'      => ['texto' => 'Comentarios en tus tareas', 'ayuda' => 'Te comentan, te piden ajustes o dan por terminada una tarea', 'icono' => 'bi-chat-left-dots'],
         ],
     ],
 

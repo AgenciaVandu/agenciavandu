@@ -105,6 +105,7 @@
     </div>
 
     <div class="col-lg-5 d-grid gap-4 align-content-start">
+        @if($cron)
         <section class="panel">
             <div class="panel-head"><h2>Resumen de la mañana</h2>
                 @if($cron['activo'])<span class="estado estado-aceptada">Programado</span>@else<span class="estado estado-rechazada">Falta el cron</span>@endif
@@ -132,6 +133,7 @@
                 @endif
             </div>
         </section>
+        @endif
 
         <section class="panel">
             <div class="panel-head"><h2>Tus dispositivos</h2><span class="ayuda">{{ $dispositivos->count() }}</span></div>

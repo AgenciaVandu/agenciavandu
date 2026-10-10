@@ -6,14 +6,30 @@
     $activosNav = \App\Models\Proyecto::where('estado', 'activo')->count();
     try { $redesNav = \App\Models\RedesPost::where('estado', 'cambios')->count(); } catch (\Throwable $e) { $redesNav = 0; }
     try { $nuevosNav = \App\Models\Cliente::where('nuevo', true)->count(); } catch (\Throwable $e) { $nuevosNav = 0; } // antes de migrar
-    $nav = [
-        ['ruta' => 'admin.resumen',             'activo' => 'admin.resumen',          'icono' => 'bi-grid-1x2',        'texto' => 'Resumen'],
-        ['ruta' => 'admin.presupuestos.index',  'activo' => 'admin.presupuestos.*',   'icono' => 'bi-file-earmark-text','texto' => 'Cotizaciones', 'cuenta' => $vigentesNav],
-        ['ruta' => 'admin.proyectos.index',     'activo' => 'admin.proyectos.*',      'icono' => 'bi-kanban',          'texto' => 'Proyectos', 'cuenta' => $activosNav],
-        ['ruta' => 'admin.redes',               'activo' => 'admin.redes*',           'icono' => 'bi-grid-3x3-gap',    'texto' => 'Redes sociales', 'cuenta' => $redesNav ?? 0],
-        ['ruta' => 'admin.clientes.index',      'activo' => 'admin.clientes.*',       'icono' => 'bi-people',          'texto' => 'Clientes', 'cuenta' => $nuevosNav, 'nuevos' => true],
-        ['ruta' => 'admin.finanzas',            'activo' => 'admin.finanzas*',        'icono' => 'bi-graph-up-arrow',  'texto' => 'Finanzas'],
-    ];
+    // Cada quien ve solo las secciones de su rol
+    $puede = fn ($s) => $usuario?->puede($s) ?? false;
+    try { $tareasNav = \App\Models\Tarea::where('asignada_a', $usuario?->id)->abiertas()->count(); } catch (\Throwable $e) { $tareasNav = 0; }
+    $nav = array_values(array_filter([
+        ['ruta' => 'admin.resumen',             'activo' => 'admin.resumen',          'icono' => 'bi-grid-1x2',        'texto' => 'Resumen', 'seccion' => 'resumen'],
+        ['ruta' => 'admin.tareas.index',        'activo' => 'admin.tareas.*',         'icono' => 'bi-check2-square',   'texto' => $puede('tareas') ? 'Tareas' : 'Mis tareas', 'cuenta' => $tareasNav, 'seccion' => null],
+        ['ruta' => 'admin.presupuestos.index',  'activo' => 'admin.presupuestos.*',   'icono' => 'bi-file-earmark-text','texto' => 'Cotizaciones', 'cuenta' => $vigentesNav, 'seccion' => 'cotizaciones'],
+        ['ruta' => 'admin.proyectos.index',     'activo' => 'admin.proyectos.*',      'icono' => 'bi-kanban',          'texto' => 'Proyectos', 'cuenta' => $activosNav, 'seccion' => 'proyectos'],
+        ['ruta' => 'admin.redes',               'activo' => 'admin.redes*',           'icono' => 'bi-grid-3x3-gap',    'texto' => 'Redes sociales', 'cuenta' => $redesNav ?? 0, 'seccion' => 'redes'],
+        ['ruta' => 'admin.clientes.index',      'activo' => 'admin.clientes.*',       'icono' => 'bi-people',          'texto' => 'Clientes', 'cuenta' => $nuevosNav, 'nuevos' => true, 'seccion' => 'clientes'],
+        ['ruta' => 'admin.finanzas',            'activo' => 'admin.finanzas*',        'icono' => 'bi-graph-up-arrow',  'texto' => 'Finanzas', 'seccion' => 'finanzas'],
+    ], fn ($i) => $i['seccion'] === null || $puede($i['seccion'])));
+    $inicioNav = $usuario ? \App\Support\Permisos::inicio($usuario) : route('admin.resumen');
+    // Barra inferior del celular: hasta 4 accesos (+ el botón de nueva cotización si la puede hacer)
+    $tabs = array_slice(array_values(array_filter([
+        $puede('resumen') ? ['url' => route('admin.resumen'), 'activo' => 'admin.resumen', 'icono' => 'bi-grid-1x2', 'lleno' => 'bi-grid-1x2-fill', 'texto' => 'Inicio'] : null,
+        $puede('cotizaciones') ? ['url' => route('admin.presupuestos.index'), 'activo' => 'admin.presupuestos.*', 'icono' => 'bi-file-earmark-text', 'lleno' => 'bi-file-earmark-text-fill', 'texto' => 'Cotizaciones', 'cuenta' => $vigentesNav] : null,
+        $puede('proyectos') ? ['url' => route('admin.proyectos.index'), 'activo' => 'admin.proyectos.*', 'icono' => 'bi-kanban', 'lleno' => 'bi-kanban-fill', 'texto' => 'Proyectos'] : null,
+        ['url' => route('admin.tareas.index'), 'activo' => 'admin.tareas.*', 'icono' => 'bi-check2-square', 'lleno' => 'bi-check2-square', 'texto' => 'Tareas', 'cuenta' => $tareasNav],
+        $puede('finanzas') ? ['url' => route('admin.finanzas'), 'activo' => 'admin.finanzas*', 'icono' => 'bi-graph-up-arrow', 'lleno' => 'bi-graph-up-arrow', 'texto' => 'Finanzas'] : null,
+        $puede('redes') ? ['url' => route('admin.redes'), 'activo' => 'admin.redes*', 'icono' => 'bi-grid-3x3-gap', 'lleno' => 'bi-grid-3x3-gap-fill', 'texto' => 'Redes'] : null,
+        ['url' => route('admin.notificaciones'), 'activo' => 'admin.notificaciones*', 'icono' => 'bi-bell', 'lleno' => 'bi-bell-fill', 'texto' => 'Avisos'],
+    ])), 0, 4);
+    $conMas = $puede('cotizaciones');
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -339,19 +355,25 @@
 
 <header class="topbar-m">
     <button type="button" @click="menu = true" aria-label="Abrir menú"><i class="bi bi-list"></i></button>
-    <a href="{{ route('admin.resumen') }}"><x-logo-vandu alt="Vandu" height="22" /></a>
+    <a href="{{ $inicioNav }}"><x-logo-vandu alt="Vandu" height="22" /></a>
     <span style="width:40px"></span>
 </header>
 <div class="velo" x-show="menu" x-cloak @click="menu = false"></div>
 
 <aside class="side" :class="{ abierta: menu }" aria-label="Navegación del panel">
     <div class="side-brand">
-        <a href="{{ route('admin.resumen') }}"><x-logo-vandu alt="Vandu" /></a>
+        <a href="{{ $inicioNav }}"><x-logo-vandu alt="Vandu" /></a>
         <button type="button" class="btn btn-sm text-white d-lg-none" @click="menu = false" aria-label="Cerrar menú"><i class="bi bi-x-lg"></i></button>
     </div>
-    <div class="side-cta">
-        <a href="{{ route('admin.presupuestos.create') }}"><i class="bi bi-plus-lg"></i> Nueva cotización</a>
-    </div>
+    @if($conMas)
+        <div class="side-cta">
+            <a href="{{ route('admin.presupuestos.create') }}"><i class="bi bi-plus-lg"></i> Nueva cotización</a>
+        </div>
+    @elseif($puede('tareas'))
+        <div class="side-cta">
+            <a href="{{ route('admin.tareas.create') }}"><i class="bi bi-plus-lg"></i> Nueva tarea</a>
+        </div>
+    @endif
     <div class="side-label">Panel</div>
     <nav>
         @foreach($nav as $item)
@@ -366,9 +388,12 @@
     <nav>
         <a href="/" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> agenciavandu.com</a>
         @php $dbxNav = \App\Support\Dropbox\Dropbox::conectado(); @endphp
+        @if($puede('archivos'))
         <a href="{{ route('admin.archivos') }}" class="{{ request()->routeIs('admin.archivos*') ? 'activo' : '' }}">
             <i class="bi {{ request()->routeIs('admin.archivos*') ? 'bi-folder-fill' : 'bi-folder2-open' }}"></i> Archivos
         </a>
+        @endif
+        @if($puede('configuracion'))
         <a href="{{ route('admin.dropbox') }}" class="{{ request()->routeIs('admin.dropbox*') ? 'activo' : '' }}">
             <i class="bi bi-dropbox"></i> Dropbox
             <span class="ms-auto" title="{{ $dbxNav ? 'Conectado' : 'Sin conectar' }}" style="width:8px;height:8px;border-radius:50%;background:{{ $dbxNav ? 'var(--green, #00C46A)' : '#E5484D' }}"></span>
@@ -379,6 +404,12 @@
         <a href="{{ route('admin.correos.plantillas') }}" class="{{ request()->routeIs('admin.correos.plantillas*') ? 'activo' : '' }}">
             <i class="bi {{ request()->routeIs('admin.correos.plantillas*') ? 'bi-envelope-paper-fill' : 'bi-envelope-paper' }}"></i> Plantillas de correo
         </a>
+        @endif
+        @if($puede('usuarios'))
+        <a href="{{ route('admin.usuarios') }}" class="{{ request()->routeIs('admin.usuarios*') ? 'activo' : '' }}">
+            <i class="bi {{ request()->routeIs('admin.usuarios*') ? 'bi-person-gear' : 'bi-person-gear' }}"></i> Usuarios
+        </a>
+        @endif
         <a href="{{ route('admin.notificaciones') }}" class="{{ request()->routeIs('admin.notificaciones*') ? 'activo' : '' }}">
             <i class="bi {{ request()->routeIs('admin.notificaciones*') ? 'bi-bell-fill' : 'bi-bell' }}"></i> Notificaciones
         </a>
@@ -392,7 +423,7 @@
 
     <div class="side-foot">
         <span class="avatar av-yo">{{ $iniciales }}</span>
-        <div class="yo"><b>{{ $usuario?->name }}</b><span>{{ $usuario?->email }}</span></div>
+        <a href="{{ route('admin.cuenta') }}" class="yo text-decoration-none" title="Mi cuenta"><b>{{ $usuario?->name }}</b><span>{{ $usuario?->puesto ?: $usuario?->email }}</span></a>
         <form method="post" action="{{ route('logout') }}" class="m-0">
             @csrf
             <button type="submit" title="Cerrar sesión" aria-label="Cerrar sesión"><i class="bi bi-box-arrow-right"></i></button>
@@ -417,13 +448,14 @@
     </main>
 </div>
 
-<nav class="tabbar" aria-label="Navegación rápida">
-    <a href="{{ route('admin.resumen') }}" class="{{ request()->routeIs('admin.resumen') ? 'activo' : '' }}"><i class="bi {{ request()->routeIs('admin.resumen') ? 'bi-grid-1x2-fill' : 'bi-grid-1x2' }}"></i> Inicio</a>
-    <a href="{{ route('admin.presupuestos.index') }}" class="{{ request()->routeIs('admin.presupuestos.*') ? 'activo' : '' }}"><i class="bi {{ request()->routeIs('admin.presupuestos.*') ? 'bi-file-earmark-text-fill' : 'bi-file-earmark-text' }}"></i> Cotizaciones
-        @if($vigentesNav)<span class="burbuja num">{{ $vigentesNav }}</span>@endif</a>
-    <a href="{{ route('admin.presupuestos.create') }}" class="mas" aria-label="Nueva cotización"><span><i class="bi bi-plus-lg"></i></span></a>
-    <a href="{{ route('admin.proyectos.index') }}" class="{{ request()->routeIs('admin.proyectos.*') ? 'activo' : '' }}"><i class="bi {{ request()->routeIs('admin.proyectos.*') ? 'bi-kanban-fill' : 'bi-kanban' }}"></i> Proyectos</a>
-    <a href="{{ route('admin.finanzas') }}" class="{{ request()->routeIs('admin.finanzas*') ? 'activo' : '' }}"><i class="bi bi-graph-up-arrow"></i> Finanzas</a>
+<nav class="tabbar" aria-label="Navegación rápida" style="grid-template-columns: repeat({{ count($tabs) + ($conMas ? 1 : 0) }}, 1fr)">
+    @foreach($tabs as $k => $tab)
+        @if($conMas && $k === intdiv(count($tabs), 2))
+            <a href="{{ route('admin.presupuestos.create') }}" class="mas" aria-label="Nueva cotización"><span><i class="bi bi-plus-lg"></i></span></a>
+        @endif
+        <a href="{{ $tab['url'] }}" class="{{ request()->routeIs($tab['activo']) ? 'activo' : '' }}"><i class="bi {{ request()->routeIs($tab['activo']) ? $tab['lleno'] : $tab['icono'] }}"></i> {{ $tab['texto'] }}
+            @if(! empty($tab['cuenta']))<span class="burbuja num">{{ $tab['cuenta'] }}</span>@endif</a>
+    @endforeach
 </nav>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

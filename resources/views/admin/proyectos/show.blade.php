@@ -134,6 +134,9 @@
         @if(! empty($p->metodologia['redes']) && $p->cliente)
             <a href="{{ route('admin.redes.cliente', $p->cliente) }}" class="btn btn-borde"><i class="bi bi-grid-3x3-gap me-1"></i> Calendario de contenido</a>
         @endif
+        @if(auth()->user()->puede('tareas'))
+            <a href="{{ route('admin.tareas.create', ['proyecto' => $p->id]) }}" class="btn btn-borde"><i class="bi bi-check2-square me-1"></i> Nueva tarea</a>
+        @endif
         <a href="{{ route('admin.proyectos.fechas', $p) }}" class="btn btn-borde"><i class="bi bi-calendar-week me-1"></i> Etapas y fechas</a>
         <a href="{{ $p->url_publica }}?vista_previa=1" target="_blank" class="btn btn-borde"><i class="bi bi-eye me-1"></i> Ver como cliente</a>
         <button type="button" class="btn btn-primario" data-copiar="{{ $p->url_publica }}"><i class="bi bi-link-45deg me-1"></i> Copiar enlace</button>

@@ -235,6 +235,25 @@ class Dropbox
         return $this->contenido('files/upload_session/finish', ['cursor' => ['session_id' => $sesion, 'offset' => $offset], 'commit' => $commit], $resto);
     }
 
+    /* Subida en partes a través del servidor (el navegador nunca recibe el token de Dropbox) */
+    public function sesionIniciar(string $parte): string
+    {
+        return $this->contenido('files/upload_session/start', ['close' => false], $parte)['session_id'];
+    }
+
+    public function sesionAgregar(string $sesion, int $offset, string $parte): void
+    {
+        $this->contenido('files/upload_session/append_v2', ['cursor' => ['session_id' => $sesion, 'offset' => $offset], 'close' => false], $parte);
+    }
+
+    public function sesionTerminar(string $sesion, int $offset, string $parte, string $destino): array
+    {
+        return $this->contenido('files/upload_session/finish', [
+            'cursor' => ['session_id' => $sesion, 'offset' => $offset],
+            'commit' => ['path' => $destino, 'mode' => 'add', 'autorename' => true, 'mute' => false],
+        ], $parte);
+    }
+
     public function subirContenido(string $contenido, string $destino): array
     {
         return $this->contenido('files/upload', ['path' => $destino, 'mode' => 'add', 'autorename' => true, 'mute' => true], $contenido);

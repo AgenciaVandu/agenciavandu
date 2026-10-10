@@ -25,13 +25,37 @@ class Notificar
         }
     }
 
+    /** Avisa solo a ciertas personas del equipo (tareas): en sus dispositivos que quieran ese aviso */
+    public static function aUsuarios(array $usuarios, string $evento, string $titulo, ?string $cuerpo = null, ?string $url = null, ?string $etiqueta = null): void
+    {
+        $enviar = function () use ($usuarios, $evento, $titulo, $cuerpo, $url, $etiqueta) {
+            try {
+                if (! Schema::hasTable('push_suscripciones')) return;
+                $destinos = PushSuscripcion::whereIn('user_id', $usuarios)->get()->filter->quiere($evento);
+                static::ahora($evento, $titulo, $cuerpo, $url, $etiqueta, $destinos, false);
+            } catch (Throwable $e) {
+                Log::warning('Push: ' . $e->getMessage());
+            }
+        };
+        if (app()->runningInConsole() || app()->runningUnitTests()) $enviar(); else app()->terminating($enviar);
+    }
+
+    /** Sección del panel que hay que poder ver para recibir este aviso */
+    public static function puedeRecibir(?\App\Models\User $u, string $evento): bool
+    {
+        if (! $u || ! $u->activo) return false;
+        $seccion = config("vandu.push.eventos.$evento.seccion");
+        return $seccion === null || $u->puede($seccion);
+    }
+
     /** @return int cuántos dispositivos lo recibieron */
-    public static function ahora(string $evento, string $titulo, ?string $cuerpo = null, ?string $url = null, ?string $etiqueta = null, ?iterable $destinos = null): int
+    public static function ahora(string $evento, string $titulo, ?string $cuerpo = null, ?string $url = null, ?string $etiqueta = null, ?iterable $destinos = null, bool $historial = true): int
     {
         try {
             if (! Schema::hasTable('push_suscripciones')) return 0;
 
-            $destinos ??= PushSuscripcion::all()->filter->quiere($evento);
+            // Avisos del negocio: solo a quien puede ver esa sección (un fotógrafo no recibe cobros)
+            $destinos ??= PushSuscripcion::with('user.rol')->get()->filter(fn ($s) => $s->quiere($evento) && static::puedeRecibir($s->user, $evento));
             $mensaje = array_filter([
                 'titulo'   => $titulo,
                 'cuerpo'   => $cuerpo,
@@ -57,7 +81,7 @@ class Notificar
                 }
             }
 
-            if ($evento !== 'prueba') Notificacion::create(['evento' => $evento, 'titulo' => $titulo, 'cuerpo' => $cuerpo, 'url' => $mensaje['url'], 'entregadas' => $entregadas]);
+            if ($evento !== 'prueba' && $historial) Notificacion::create(['evento' => $evento, 'titulo' => $titulo, 'cuerpo' => $cuerpo, 'url' => $mensaje['url'], 'entregadas' => $entregadas]);
 
             return $entregadas;
         } catch (Throwable $e) {

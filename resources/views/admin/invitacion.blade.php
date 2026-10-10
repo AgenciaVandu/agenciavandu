@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="robots" content="noindex, nofollow">
-    <title>Iniciar sesión · Vandu</title>
+    <title>{{ $u && $u->pendiente ? 'Bienvenido' : 'Nueva contraseña' }} · Vandu</title>
     <link rel="icon" href="/favi.svg" type="image/svg+xml">
     <link rel="manifest" href="{{ route('app.manifiesto') }}">
     <meta name="theme-color" content="#13161D">
@@ -78,51 +78,50 @@
 <aside class="marca">
     <x-logo-vandu width="128" height="41" />
     <div>
-        <h1>Clientes y cotizaciones</h1>
-        <p>Da de alta clientes, arma sus cotizaciones y compárteles un enlace con vigencia.</p>
+        <h1>El panel del equipo Vandu</h1>
+        <p>Tus tareas, tus entregas y lo que necesitas de cada cliente, en un solo lugar.</p>
     </div>
     <span class="pie">agenciavandu.com</span>
     <x-logo-vandu archivo="icono-vandu.svg" alt="" class="eco" aria-hidden="true" />
 </aside>
 
 <main class="form">
-    <form method="post" action="{{ route('login.entrar') }}" novalidate
-          onsubmit="this.querySelector('.entrar').disabled = true; this.querySelector('.entrar').textContent = 'Entrando…';">
-        @csrf
-        <h2>Inicia sesión</h2>
-        <p class="sub">Entra con tu correo de Vandu.</p>
+    @if(! $u)
+        <form onsubmit="return false">
+            <h2>Este enlace ya no sirve</h2>
+            <p class="sub">Venció o ya se usó. Pídele a quien administra el panel que te mande uno nuevo.</p>
+            <a href="{{ route('login') }}" class="volver">Ir a iniciar sesión</a>
+        </form>
+    @else
+        <form method="post" action="{{ route('invitacion.guardar', $token) }}" novalidate
+              onsubmit="this.querySelector('.entrar').disabled = true; this.querySelector('.entrar').textContent = 'Guardando…';">
+            @csrf
+            <h2>{{ $u->pendiente ? '¡Hola, ' . $u->primer_nombre . '!' : 'Crea tu nueva contraseña' }}</h2>
+            <p class="sub">{{ $u->pendiente ? 'Crea tu contraseña para entrar al panel' . ($u->puesto ? ' como ' . $u->puesto : '') . '.' : 'Después de guardarla entrarás directo al panel.' }} Tu correo es <b>{{ $u->email }}</b>.</p>
 
-        @if(session('ok'))
-            <div class="aviso" role="status">{{ session('ok') }}</div>
-        @endif
-
-        <div class="campo">
-            <label for="email">Correo</label>
-            <input type="email" id="email" name="email" value="{{ old('email') }}" autocomplete="username" autofocus required
-                   class="{{ $errors->has('email') ? 'mal' : '' }}" aria-describedby="{{ $errors->has('email') ? 'err-email' : '' }}">
-            @error('email')<div class="error" id="err-email" role="alert">{{ $message }}</div>@enderror
-        </div>
-
-        <div class="campo">
-            <label for="password">Contraseña</label>
-            <div class="pass">
-                <input type="password" id="password" name="password" autocomplete="current-password" required
-                       class="{{ $errors->has('password') ? 'mal' : '' }}">
-                <button type="button" class="ver" aria-controls="password"
-                        onclick="const i = document.getElementById('password'); const v = i.type === 'password'; i.type = v ? 'text' : 'password'; this.textContent = v ? 'Ocultar' : 'Mostrar';">Mostrar</button>
+            <div class="campo">
+                <label for="name">Tu nombre</label>
+                <input type="text" id="name" name="name" value="{{ old('name', $u->name) }}" autocomplete="name" required class="{{ $errors->has('name') ? 'mal' : '' }}">
+                @error('name')<div class="error" role="alert">{{ $message }}</div>@enderror
             </div>
-            @error('password')<div class="error" role="alert">{{ $message }}</div>@enderror
-        </div>
+            <input type="email" name="email" value="{{ $u->email }}" autocomplete="username" hidden readonly>
+            <div class="campo">
+                <label for="password">Contraseña</label>
+                <div class="pass">
+                    <input type="password" id="password" name="password" autocomplete="new-password" required minlength="8" autofocus class="{{ $errors->has('password') ? 'mal' : '' }}">
+                    <button type="button" class="ver" aria-controls="password"
+                            onclick="const i = document.getElementById('password'); const v = i.type === 'password'; i.type = v ? 'text' : 'password'; this.textContent = v ? 'Ocultar' : 'Mostrar';">Mostrar</button>
+                </div>
+                @error('password')<div class="error" role="alert">{{ $message }}</div>@else<div style="font-size:13px;color:var(--muted);margin-top:6px">Al menos 8 caracteres.</div>@enderror
+            </div>
+            <div class="campo">
+                <label for="password_confirmation">Escríbela otra vez</label>
+                <input type="password" id="password_confirmation" name="password_confirmation" autocomplete="new-password" required>
+            </div>
 
-        <label class="recordar"><input type="checkbox" name="recordar" value="1" @checked(old('recordar'))> Mantener la sesión iniciada</label>
-
-        <button type="submit" class="entrar">Entrar</button>
-
-        <p style="font-size:13.5px;color:var(--muted);margin:18px 0 0">¿Olvidaste tu contraseña? Pídele a quien administra el panel un enlace para crear una nueva.</p>
-        <a href="/" class="volver">Ir al sitio web</a>
-    </form>
+            <button type="submit" class="entrar">{{ $u->pendiente ? 'Crear contraseña y entrar' : 'Guardar y entrar' }}</button>
+        </form>
+    @endif
 </main>
-
-<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register(@json(route('app.sw')), { scope: '/admin' }).catch(() => {});</script>
 </body>
 </html>

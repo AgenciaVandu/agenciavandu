@@ -36,7 +36,7 @@ class LoginController extends Controller
             ]);
         }
 
-        if (! Auth::attempt($datos, $request->boolean('recordar'))) {
+        if (! Auth::attempt($datos + ['activo' => true], $request->boolean('recordar'))) {
             RateLimiter::hit($llave, 60);
             throw ValidationException::withMessages([
                 'email' => 'El correo o la contraseña no coinciden.',
