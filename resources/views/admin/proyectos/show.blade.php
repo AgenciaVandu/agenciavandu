@@ -7,9 +7,9 @@
     $linea = $p->lineaDelTiempo();
     $bloqueo = session('bloqueo');
     $wa = $p->cliente?->whatsapp;
-    // Un solo enlace para el cliente: el de su cotización (desde ahí entra a su proyecto)
-    $enlaceCliente = $p->presupuesto?->url_publica ?? $p->url_publica;
-    $msgWa = "Hola {$p->cliente?->nombre}, aquí puedes ver tu cotización y el avance de tu proyecto: {$enlaceCliente}";
+    // Desde el proyecto se manda el enlace del proyecto (ahí mismo puede regresar a su cotización)
+    $nombreWa = \App\Support\Correos::primerNombre((string) $p->cliente?->nombre);
+    $msgWa = "Hola {$nombreWa}, aquí puedes ver el avance de tu proyecto {$p->nombre}: {$p->url_publica}";
     $hoy = now(config('vandu.zona_horaria'))->toDateString();
     $dbx = \App\Support\Dropbox\Dropbox::conectado();
     $metodoCliente = $p->cliente?->metodo_pago;

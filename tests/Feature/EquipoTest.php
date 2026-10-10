@@ -286,4 +286,14 @@ class EquipoTest extends TestCase
         $this->assertSame('terminada', $t->fresh()->estado);
         $this->assertSame('pendiente', $etapa->fresh()->estado); // no se pidió completarla
     }
+
+    public function test_whatsapp_del_proyecto_manda_el_enlace_del_proyecto(): void
+    {
+        $pr = $this->proyectoConEtapas();
+        $pr->cliente->update(['telefono' => '9991234567']);
+        $html = $this->actingAs($this->admin)->get("/admin/proyectos/{$pr->id}")->assertOk()->getContent();
+        preg_match('#https://wa\.me/529991234567\?text=([^"]+)#', $html, $m);
+        $this->assertNotEmpty($m, 'No hay botón de WhatsApp');
+        $this->assertStringContainsString($pr->url_publica, rawurldecode(html_entity_decode($m[1])));
+    }
 }
