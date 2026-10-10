@@ -126,6 +126,8 @@ return [
         'repetir_vista_horas' => 3,
         'eventos' => [
             'cotizacion_abierta'    => ['texto' => 'Un cliente abre una cotización', 'ayuda' => 'La primera vez y cuando vuelve a abrirla después de unas horas', 'icono' => 'bi-eye'],
+            'cotizacion_aceptada'   => ['texto' => 'Un cliente acepta su cotización', 'ayuda' => 'La aceptó en línea con su código de verificación', 'icono' => 'bi-check-circle'],
+            'cambios_solicitados'   => ['texto' => 'Un cliente pide cambios', 'ayuda' => 'Escribió qué quiere ajustar en su cotización', 'icono' => 'bi-chat-left-text'],
             'cotizacion_descargada' => ['texto' => 'Un cliente descarga la cotización', 'ayuda' => 'Cuando baja el PDF desde su enlace', 'icono' => 'bi-file-earmark-arrow-down'],
             'proyecto_visto'        => ['texto' => 'Un cliente revisa su proyecto', 'ayuda' => 'Abre su página de avance o de entrega', 'icono' => 'bi-kanban'],
             'mensaje_sitio'         => ['texto' => 'Llega un mensaje desde el sitio', 'ayuda' => 'Alguien llenó el formulario de cotizar en agenciavandu.com', 'icono' => 'bi-chat-dots'],
@@ -151,14 +153,14 @@ return [
                 'asunto' => 'Cotización {folio} · {concepto}',
                 'titulo' => 'Tu cotización está lista',
                 'cuerpo' => "Hola {nombre},\n\nTe comparto la cotización {folio} para {concepto}. Puedes verla en línea o descargarla en PDF; los precios están vigentes hasta el {vigencia}.\n\nSi quieres ajustar algo, con gusto lo revisamos.",
-                'boton'  => 'Ver mi cotización', 'pdf' => true, 'resumen' => true,
+                'boton'  => 'Ver mi cotización', 'pdf' => true, 'resumen' => true, 'codigo' => true,
             ],
             'por_vencer' => [
                 'nombre' => 'Cotización por vencer', 'icono' => 'bi-hourglass-split', 'para' => ['presupuesto'],
                 'asunto' => 'Tu cotización {folio} vence el {vigencia}',
                 'titulo' => 'Tu cotización está por vencer',
                 'cuerpo' => "Hola {nombre},\n\nTe recuerdo que la cotización {folio} sigue vigente hasta el {vigencia}. Si quieres arrancar, con tu confirmación apartamos fechas.\n\n¿Te queda alguna duda? Con gusto la resolvemos.",
-                'boton'  => 'Revisar cotización', 'resumen' => true,
+                'boton'  => 'Revisar cotización', 'resumen' => true, 'codigo' => true,
             ],
             'inicio_proyecto' => [
                 'nombre' => 'Arranque de proyecto', 'icono' => 'bi-rocket-takeoff', 'para' => ['proyecto'],

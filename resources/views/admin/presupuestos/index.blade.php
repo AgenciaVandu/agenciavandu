@@ -102,7 +102,7 @@
                                     <li><a class="dropdown-item" target="_blank" href="{{ $p->url_publica }}?vista_previa=1"><i class="bi bi-eye"></i> Ver como cliente</a></li>
                                     <li><a class="dropdown-item" target="_blank" href="{{ route('admin.presupuestos.pdf', $p) }}"><i class="bi bi-file-earmark-pdf"></i> Ver PDF</a></li>
                                     @if($wa)
-                                        <li><a class="dropdown-item" target="_blank" href="https://wa.me/{{ $wa }}?text={{ rawurlencode($msg) }}"><i class="bi bi-whatsapp"></i> Enviar por WhatsApp</a></li>
+                                        <li><a class="dropdown-item" target="_blank" rel="noopener" href="{{ route('admin.presupuestos.whatsapp', $p) }}"><i class="bi bi-whatsapp"></i> Enviar por WhatsApp</a></li>
                                     @endif
                                     <li><hr class="dropdown-divider"></li>
                                     <li>

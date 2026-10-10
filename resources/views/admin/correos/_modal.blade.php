@@ -76,6 +76,9 @@
                         @endif
                         <label class="form-check" x-show="plantillas[clave] && plantillas[clave].miniaturas" x-cloak><input type="checkbox" class="form-check-input" name="incluir_miniaturas" value="1" x-model="miniaturas"> <span class="form-check-label"><i class="bi bi-images"></i> Fotos de la galería en el correo</span></label>
                         <label class="form-check"><input type="checkbox" class="form-check-input" name="incluir_banco" value="1" x-model="banco"> <span class="form-check-label">Datos bancarios</span></label>
+                        @if($ctxCorreo['presupuesto'] && \App\Support\Aceptacion::puedeResponder($ctxCorreo['presupuesto']))
+                            <label class="form-check"><input type="checkbox" class="form-check-input" name="incluir_codigo" value="1" x-model="codigo"> <span class="form-check-label"><i class="bi bi-shield-lock"></i> Código para aceptar o pedir cambios en línea <span class="secundario">(vale 24 h)</span></span></label>
+                        @endif
                         @if($hayPdf)
                             <label class="form-check"><input type="checkbox" class="form-check-input" name="adjuntar_pdf" value="1" x-model="pdf"> <span class="form-check-label"><i class="bi bi-paperclip"></i> Adjuntar PDF de {{ $ctxCorreo['presupuesto']->folio }}</span></label>
                         @endif

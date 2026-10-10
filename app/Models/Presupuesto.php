@@ -72,6 +72,16 @@ class Presupuesto extends Model
         return $this->hasOne(Proyecto::class);
     }
 
+    public function eventos(): HasMany
+    {
+        return $this->hasMany(PresupuestoEvento::class)->latest('id');
+    }
+
+    public function codigos(): HasMany
+    {
+        return $this->hasMany(PresupuestoCodigo::class);
+    }
+
     public function conceptos(): HasMany
     {
         return $this->hasMany(PresupuestoConcepto::class)->orderBy('orden');

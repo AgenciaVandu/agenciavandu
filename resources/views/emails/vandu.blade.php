@@ -117,6 +117,19 @@
             </tr>
         @endif
 
+        {{-- Código de verificación para aceptar o pedir cambios en línea --}}
+        @if(! empty($codigo))
+            <tr>
+                <td class="px" style="padding:24px 40px 8px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F1FFF8; border:1px solid #BDF2D6; border-radius:12px;">
+                        <tr><td style="padding:16px 20px 4px; font-family:{{ $font }}; font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#047A4B;">Tu código de verificación</td></tr>
+                        <tr><td style="padding:2px 20px 4px; font-family:'SFMono-Regular', Menlo, Consolas, monospace; font-size:30px; font-weight:700; letter-spacing:.18em; color:#13161D;">{{ $codigo['formateado'] }}</td></tr>
+                        <tr><td style="padding:2px 20px 16px; font-family:{{ $font }}; font-size:13.5px; line-height:1.5; color:#3F4450;">Úsalo en el enlace de tu cotización para <b>aceptarla</b> o <b>pedir cambios</b>. Válido hasta el {{ $codigo['vigencia'] }}.</td></tr>
+                    </table>
+                </td>
+            </tr>
+        @endif
+
         {{-- Datos bancarios --}}
         @if($banco)
             <tr>

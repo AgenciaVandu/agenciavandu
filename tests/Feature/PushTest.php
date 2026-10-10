@@ -99,7 +99,7 @@ class PushTest extends TestCase
         $r = $this->actingAs($this->u)->withHeaders(['User-Agent' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Safari/604.1'])
             ->postJson('/admin/notificaciones/suscribir', $datos + ['bienvenida' => true])->assertOk()->json();
         $this->assertSame('iPhone · Safari', $r['dispositivo']);
-        $this->assertCount(5, $r['eventos']);
+        $this->assertCount(count(config('vandu.push.eventos')), $r['eventos']);
         Http::assertSentCount(1); // bienvenida
 
         $this->patchJson('/admin/notificaciones/' . $r['id'], ['eventos' => ['resumen_diario']])->assertOk()->assertJson(['eventos' => ['resumen_diario']]);

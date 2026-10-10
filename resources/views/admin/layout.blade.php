@@ -561,7 +561,7 @@
             abierto: false, cargando: false, enviando: false, conCopia: false,
             clave: '', para: '', cc: '', asunto: '', titulo: '', cuerpo: '', boton: '',
             conBoton: false, resumen: false, banco: false, pdf: false, miniaturas: false, ultimo: '',
-            archivos: [], pideAdjuntos: false,
+            archivos: [], pideAdjuntos: false, codigo: false,
             init() {
                 // ?correo=recordatorio_pago abre la ventana con esa plantilla
                 const u = new URL(location.href), q = u.searchParams.get('correo');
@@ -585,7 +585,7 @@
                 this.asunto = pl.asunto; this.titulo = pl.titulo; this.cuerpo = pl.cuerpo;
                 this.boton = pl.boton || pl.boton_por_defecto || ''; this.conBoton = !!pl.boton;
                 this.resumen = !!pl.resumen; this.banco = !!pl.banco; this.pdf = !!pl.pdf; this.miniaturas = !!pl.miniaturas;
-                this.pideAdjuntos = !!pl.adjuntos;
+                this.pideAdjuntos = !!pl.adjuntos; this.codigo = !!pl.codigo;
                 this.$nextTick(() => this.previsualizar());
             },
             cerrar() { this.abierto = false; },
@@ -643,7 +643,7 @@
          * el contenido. La barra lateral y la de abajo se quedan quietas (no "parpadea" todo).
          * Si algo no es una página del panel (PDF, descarga, Dropbox…), se navega normal.
          */
-        const NO_INTERCEPTAR = /\/(pdf|exportar|conectar|abrir|descargar|sw\.js|manifest\.webmanifest)(\/|\?|$)|\/archivos\/(\d+|ver|miniatura)|\/constancias\/\d+|\/logout/;
+        const NO_INTERCEPTAR = /\/(pdf|exportar|conectar|abrir|descargar|sw\.js|manifest\.webmanifest)(\/|\?|$)|\/archivos\/(\d+|ver|miniatura)|\/constancias\/\d+|\/whatsapp(\/|\?|$)|\/logout/;
         const precargas = new Map();
         const esInterno = (a) => {
             if (!a || !a.href || a.hasAttribute('download') || a.hasAttribute('data-recargar') || a.hasAttribute('data-correo')) return false;

@@ -86,6 +86,7 @@ class Correos
             'banco'   => ! empty($pl['banco']),
             'miniaturas' => ! empty($pl['miniaturas']),
             'adjuntos' => ! empty($pl['adjuntos']),
+            'codigo'   => ! empty($pl['codigo']) && $ctx['presupuesto'] && Aceptacion::puedeResponder($ctx['presupuesto']),
             'para'    => self::destinatario($ctx, $clave),
         ];
     }
@@ -121,6 +122,7 @@ class Correos
             '{entregables}'  => $pr?->entregables_texto ?? '',
             '{siguiente}'    => $pr ? Str::lcfirst($pr->siguiente_paso ?? 'te mantendremos al tanto') : '',
             '{firma}'        => config('vandu.emisor.nombre'),
+            '{codigo}'       => '{codigo}', // se genera al enviar
         ];
     }
 

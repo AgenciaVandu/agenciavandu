@@ -31,6 +31,7 @@ class CorreoVandu extends Mailable
         public array $miniaturas = [],
         public int $mas = 0,
         public bool $vistaPrevia = false,
+        public ?array $codigo = null, // ['formateado' => '482 913', 'vigencia' => '10 de octubre a las 9:56 pm']
     ) {
     }
 

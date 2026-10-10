@@ -90,6 +90,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
         ->parameters(['presupuestos' => 'presupuesto']);
     Route::post('presupuestos/{presupuesto}/duplicar', [Admin\PresupuestoController::class, 'duplicar'])->name('presupuestos.duplicar');
     Route::patch('presupuestos/{presupuesto}/rapido', [Admin\PresupuestoController::class, 'rapido'])->name('presupuestos.rapido');
+    Route::get('presupuestos/{presupuesto}/whatsapp', [Admin\PresupuestoController::class, 'whatsapp'])->name('presupuestos.whatsapp');
+    Route::post('presupuestos/{presupuesto}/codigo', [Admin\PresupuestoController::class, 'codigo'])->name('presupuestos.codigo');
     // Finanzas
     Route::get('finanzas', [Admin\FinanzasController::class, 'index'])->name('finanzas');
     Route::get('finanzas/exportar', [Admin\FinanzasController::class, 'exportar'])->name('finanzas.exportar');
@@ -141,6 +143,10 @@ Route::get('/cotizacion/{token}', [PresupuestoPublicoController::class, 'show'])
     ->where('token', '[A-Za-z0-9]{32}')->name('presupuesto.publico');
 Route::get('/cotizacion/{token}/descargar', [PresupuestoPublicoController::class, 'descargar'])
     ->where('token', '[A-Za-z0-9]{32}')->middleware('throttle:30,1')->name('presupuesto.descargar');
+Route::post('/cotizacion/{token}/responder', [PresupuestoPublicoController::class, 'responder'])
+    ->where('token', '[A-Za-z0-9]{32}')->middleware('throttle:12,1')->name('presupuesto.responder');
+Route::post('/cotizacion/{token}/codigo', [PresupuestoPublicoController::class, 'pedirCodigo'])
+    ->where('token', '[A-Za-z0-9]{32}')->middleware('throttle:4,10')->name('presupuesto.codigo');
 
 // Vista pública del proyecto para el cliente
 Route::get('/proyecto/{token}', [\App\Http\Controllers\ProyectoPublicoController::class, 'show'])

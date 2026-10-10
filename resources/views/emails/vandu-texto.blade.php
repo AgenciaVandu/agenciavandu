@@ -15,6 +15,10 @@
 @if($boton && $url){!! $boton !!}: {!! $url !!}
 
 @endif
+@if(! empty($codigo))Tu código de verificación: {!! $codigo['formateado'] !!}
+Úsalo en el enlace de tu cotización para aceptarla o pedir cambios. Válido hasta el {!! $codigo['vigencia'] !!}.
+
+@endif
 @if($banco)Datos para tu pago
 @foreach($banco as $k => $v){!! $k !!}: {!! $v !!}
 @endforeach

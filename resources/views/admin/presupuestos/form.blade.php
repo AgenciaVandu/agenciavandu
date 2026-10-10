@@ -464,6 +464,10 @@
             </section>
 
             @unless($nuevo)
+                @include('admin.presupuestos._respuesta', ['p' => $p])
+            @endunless
+
+            @unless($nuevo)
                 <section class="panel">
                     <div class="panel-head"><h2>Enlace del cliente</h2>
                         <span class="ayuda d-inline-flex align-items-center gap-1"><i class="bi bi-eye"></i> {{ $p->vistas }}</span></div>
@@ -473,8 +477,8 @@
                             <button type="button" class="btn btn-primario btn-icono flex-none" style="width:40px;height:40px" data-copiar="{{ $p->url_publica }}" title="Copiar" aria-label="Copiar enlace"><i class="bi bi-copy"></i></button>
                         </div>
                         @if($wa)
-                            <a class="btn btn-borde w-100 mt-2" target="_blank"
-                               href="https://wa.me/{{ $wa }}?text={{ rawurlencode("Hola {$p->cliente_nombre}, te comparto la cotización {$p->folio}: {$p->url_publica}") }}"><i class="bi bi-whatsapp me-1"></i> Enviar por WhatsApp</a>
+                            <a class="btn btn-borde w-100 mt-2" target="_blank" rel="noopener" href="{{ route('admin.presupuestos.whatsapp', $p) }}"
+                               title="Incluye el código de verificación para aceptar en línea"><i class="bi bi-whatsapp me-1"></i> Enviar por WhatsApp</a>
                         @endif
                         <button type="button" class="btn btn-borde w-100 mt-2" data-correo="{{ $p->vigente && now()->diffInHours($p->vigente_hasta, false) <= 72 && ! in_array($p->estado, ['aceptada', 'rechazada']) ? 'por_vencer' : 'cotizacion' }}"><i class="bi bi-envelope me-1"></i> Enviar por correo</button>
                         <p class="secundario mt-3 mb-0">
@@ -552,6 +556,7 @@
 @unless($nuevo)
     <form id="convertir" method="get" action="{{ route('admin.proyectos.create', $p) }}"></form>
     <form id="duplicar" method="post" action="{{ route('admin.presupuestos.duplicar', $p) }}">@csrf</form>
+    <form id="generar-codigo" method="post" action="{{ route('admin.presupuestos.codigo', $p) }}">@csrf</form>
     <form id="eliminar" method="post" action="{{ route('admin.presupuestos.destroy', $p) }}" onsubmit="return confirm('¿Eliminar {{ $p->folio }}? El enlace del cliente dejará de funcionar.')">@csrf @method('delete')</form>
     @include('admin.correos._modal', ['ctxTipo' => 'presupuesto', 'ctxId' => $p->id])
 @endunless

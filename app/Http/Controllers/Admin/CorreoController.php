@@ -15,6 +15,8 @@ use Illuminate\Validation\ValidationException;
 
 class CorreoController extends Controller
 {
+    private ?array $codigoGenerado = null;
+
     /** HTML del correo tal como lo va a recibir el cliente */
     public function vistaPrevia(Request $request)
     {
@@ -47,6 +49,7 @@ class CorreoController extends Controller
             Mail::to($para)->cc($cc)->send($correo);
             $registro->estado = 'enviado';
             $registro->save();
+            $this->historialCotizacion($ctx, $datos, $para);
         } catch (\Throwable $e) {
             report($e);
             $registro->estado = 'fallido';
@@ -79,11 +82,24 @@ class CorreoController extends Controller
             }
         }
 
+        // Código de verificación para que el cliente acepte o pida cambios en línea (se genera al enviar)
+        $codigo = null;
+        $pres = $ctx['presupuesto'];
+        if (! empty($d['incluir_codigo']) && $pres && \App\Support\Aceptacion::puedeResponder($pres)) {
+            $c = $vistaPrevia
+                ? ['formateado' => '123 456', 'expira' => now()->addHours(\App\Support\Aceptacion::HORAS)]
+                : \App\Support\Aceptacion::generarCodigo($pres, 'correo');
+            $codigo = ['formateado' => $c['formateado'], 'vigencia' => \App\Support\Aceptacion::vigenciaTexto($c['expira'])];
+            $this->codigoGenerado = $vistaPrevia ? null : $c;
+        }
+        $conCodigo = fn ($t) => str_replace('{codigo}', $codigo['formateado'] ?? '', (string) $t);
+
         $url = Correos::enlace($ctx, $d['plantilla']);
         $correo = new CorreoVandu(
-            asunto: $d['asunto'],
-            titulo: (string) ($d['titulo'] ?? ''),
-            cuerpo: $d['cuerpo'],
+            asunto: $conCodigo($d['asunto']),
+            titulo: $conCodigo($d['titulo'] ?? ''),
+            cuerpo: $conCodigo($d['cuerpo']),
+            codigo: $codigo,
             boton: ! empty($d['incluir_boton']) && $url ? ($d['boton'] ?: 'Ver detalles') : null,
             url: $url,
             resumen: ! empty($d['incluir_resumen']) ? Correos::resumen($ctx, $pagoId) : [],
@@ -94,6 +110,21 @@ class CorreoController extends Controller
             vistaPrevia: $vistaPrevia,
         );
         return $correo;
+    }
+
+    /** Deja constancia en el historial de la cotización (y la marca como enviada si era borrador) */
+    private function historialCotizacion(array $ctx, array $datos, array $para): void
+    {
+        $p = $ctx['presupuesto'];
+        if (! $p || ! in_array(Str::before($datos['plantilla'], '@'), ['cotizacion', 'por_vencer'], true) && ! $this->codigoGenerado) return;
+
+        if ($p->estado === 'borrador') {
+            $p->update(['estado' => 'enviada']);
+        }
+        \App\Support\Aceptacion::registrar($p, 'enviada', 'agencia', null, 'Por correo a ' . implode(', ', array_map([\App\Support\Aceptacion::class, 'correoOculto'], $para)), ['canal' => 'correo']);
+        if ($this->codigoGenerado) {
+            \App\Support\Aceptacion::registrar($p, 'codigo', 'agencia', null, 'Código enviado por correo · vence el ' . \App\Support\Aceptacion::vigenciaTexto($this->codigoGenerado['expira']), ['canal' => 'correo'], false);
+        }
     }
 
     /** @return array{0: array, 1: array} */
@@ -114,6 +145,7 @@ class CorreoController extends Controller
             'incluir_banco'   => 'nullable|boolean',
             'adjuntar_pdf'    => 'nullable|boolean',
             'incluir_miniaturas' => 'nullable|boolean',
+            'incluir_codigo'  => 'nullable|boolean',
             'adjuntos'        => 'nullable|array|max:8',
             'adjuntos.*'      => ['file', 'max:15360', function ($attr, $f, $fail) {
                 if (! in_array(strtolower($f->getClientOriginalExtension()), ['pdf', 'xml', 'zip', 'png', 'jpg', 'jpeg', 'doc', 'docx', 'xls', 'xlsx'], true)) {

@@ -12,6 +12,12 @@
         ? "Hola, tengo una duda sobre la cotización {$p->folio}."
         : "Hola, la cotización {$p->folio} venció. ¿Me pueden enviar una actualizada?");
     $n = 0;
+    $puedeResponder = \App\Support\Aceptacion::puedeResponder($p);
+    $eventos = $p->eventos; // solo los visibles para el cliente, del más reciente al más antiguo
+    $ultimaAceptacion = $eventos->firstWhere('tipo', 'aceptada');
+    $ultimosCambios = $p->estado === 'negociacion' ? $eventos->firstWhere('tipo', 'cambios') : null;
+    $hayCorreo = (bool) $p->cliente?->email;
+    $fechaEv = fn ($d) => $d->copy()->setTimezone(config('vandu.zona_horaria'))->locale('es')->isoFormat('D MMM YYYY, h:mm a');
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -126,6 +132,49 @@
         .pie { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px;
                display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
+        /* Responder: aceptar o pedir cambios */
+        .resp { border: 1.5px solid var(--ink); border-radius: 14px; padding: 20px 22px; margin: 0 0 32px; }
+        .resp h2 { margin: 0 0 4px; font-size: 19px; }
+        .resp p { margin: 0 0 14px; color: var(--muted); font-size: 15px; }
+        .resp .acciones { margin: 0; }
+        .resp.ok { border-color: #00C46A; background: #F1FFF8; }
+        .resp .cita { margin: 10px 0 14px; padding: 12px 14px; border-left: 3px solid var(--ink); background: var(--mist); border-radius: 0 10px 10px 0; white-space: pre-line; color: var(--ink); font-size: 15px; }
+        .aviso-flash { border-radius: 12px; padding: 14px 16px; margin: 0 0 20px; font-weight: 500; }
+        .aviso-flash.ok { background: #E3FBEF; color: #047A4B; }
+        .aviso-flash.error { background: #FDECEC; color: #B4232A; }
+
+        dialog.modal { border: 0; border-radius: 16px; padding: 0; width: min(520px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); box-shadow: 0 24px 60px rgba(0,0,0,.25); color: var(--ink); }
+        dialog.modal::backdrop { background: rgba(15,18,25,.55); }
+        .modal form { padding: 22px; display: grid; gap: 14px; }
+        .modal h3 { margin: 0; font-size: 20px; }
+        .modal .sub { margin: -8px 0 0; color: var(--muted); font-size: 14.5px; }
+        .modal label { font-weight: 600; font-size: 14.5px; display: block; margin-bottom: 6px; }
+        .modal input[type=text], .modal textarea { width: 100%; font: inherit; border: 1.5px solid var(--line); border-radius: 10px; padding: 11px 13px; }
+        .modal input:focus, .modal textarea:focus { border-color: var(--ink); outline: none; }
+        .modal textarea { min-height: 130px; resize: vertical; }
+        .modal .codigo { font-size: 26px; letter-spacing: .32em; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+        .modal .ayuda { font-size: 13.5px; color: var(--muted); margin-top: 6px; }
+        .modal .ayuda button { font: inherit; font-weight: 600; color: var(--ink); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
+        .modal .check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; font-size: 14.5px; }
+        .modal .check input { width: 20px; height: 20px; margin-top: 2px; flex: none; accent-color: var(--ink); }
+        .modal .error { color: #B4232A; font-size: 14px; font-weight: 500; }
+        .modal .exito { color: #047A4B; font-size: 14px; font-weight: 500; }
+        .modal .pie-modal { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+        .modal .btn[disabled] { opacity: .6; cursor: wait; }
+        .modal [hidden] { display: none !important; }
+
+        /* Historial */
+        .hist { list-style: none; margin: 8px 0 0; padding: 0; }
+        .hist li { position: relative; padding: 0 0 18px 30px; }
+        .hist li::before { content: ''; position: absolute; left: 8px; top: 22px; bottom: 0; width: 1.5px; background: var(--line); }
+        .hist li:last-child::before { display: none; }
+        .hist .pt { position: absolute; left: 0; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--mist); border: 1.5px solid var(--line); }
+        .hist li.aceptada .pt { background: var(--green); border-color: var(--green); }
+        .hist li.cambios .pt { background: var(--amber); border-color: var(--amber); }
+        .hist .t { font-weight: 600; }
+        .hist .f { font-size: 13.5px; color: var(--muted); }
+        .hist .d { margin-top: 4px; font-size: 14.5px; white-space: pre-line; color: #3f4450; }
+
         /* Vencida */
         .vencida-card { margin-top: 32px; background: var(--mist); border-radius: 14px; padding: 32px; }
         .vencida-card h1 { font-size: 26px; margin: 0 0 8px; letter-spacing: -.01em; }
@@ -148,7 +197,7 @@
             .vig .reloj span { font-size: 16px; }
         }
         @media print {
-            .vig, .acciones, .copiar { display: none !important; }
+            .vig, .acciones, .copiar, .resp, .hist-sec, dialog { display: none !important; }
             .doc { padding-top: 0; }
         }
     </style>
@@ -222,6 +271,39 @@
             @endunless
         </div>
 
+        @if(session('respuesta_ok'))<div class="aviso-flash ok" role="status">{{ session('respuesta_ok') }}</div>@endif
+        @if(session('respuesta_error'))<div class="aviso-flash error" role="alert">{{ session('respuesta_error') }}</div>@endif
+
+        @if($aceptada)
+            <section class="resp ok" aria-label="Cotización aceptada">
+                <h2>Cotización aceptada</h2>
+                <p style="margin:0">@if($ultimaAceptacion)Aceptada por <b>{{ $ultimaAceptacion->autor }}</b> el {{ $fechaEv($ultimaAceptacion->created_at) }}.@else Aceptada{{ $p->aceptada_el ? ' el ' . \App\Models\Presupuesto::fechaLarga($p->aceptada_el) : '' }}.@endif
+                    Si necesitas algún ajuste, escríbenos.</p>
+            </section>
+        @elseif($puedeResponder)
+            <section class="resp" aria-label="Responder a la cotización">
+                @if($ultimosCambios)
+                    <h2>Recibimos tus comentarios</h2>
+                    <p style="margin-bottom:0">{{ $ultimosCambios->autor }} · {{ $fechaEv($ultimosCambios->created_at) }}</p>
+                    <div class="cita">{{ $ultimosCambios->detalle }}</div>
+                    <p>Estamos preparando la versión actualizada. Si ya estás de acuerdo con esta, puedes aceptarla.</p>
+                @else
+                    <h2>¿Todo listo?</h2>
+                    <p>Acepta la cotización para apartar fechas, o dinos qué te gustaría ajustar.</p>
+                @endif
+                <div class="acciones">
+                    <button type="button" class="btn btn-prim" data-responder="aceptar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+                        Aceptar cotización
+                    </button>
+                    <button type="button" class="btn btn-sec" data-responder="cambios">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                        Solicitar cambios
+                    </button>
+                </div>
+            </section>
+        @endif
+
         <table class="tabla">
             <thead><tr><th>Concepto</th><th class="c" style="width:110px">Cantidad</th><th class="r" style="width:170px">Costo</th></tr></thead>
             <tbody>
@@ -290,7 +372,11 @@
         @endif
 
         <div class="acciones" style="margin: 40px 0 0">
-            <a class="btn btn-prim" href="{{ route('presupuesto.descargar', $p->token) }}">
+            @if($puedeResponder)
+                <button type="button" class="btn btn-prim" data-responder="aceptar">Aceptar cotización</button>
+                <button type="button" class="btn btn-sec" data-responder="cambios">Solicitar cambios</button>
+            @endif
+            <a class="btn {{ $puedeResponder ? 'btn-sec' : 'btn-prim' }}" href="{{ route('presupuesto.descargar', $p->token) }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg>
                 Descargar cotización
             </a>
@@ -304,6 +390,63 @@
                 @if($p->emisor_email)<a class="btn btn-sec" href="mailto:{{ $p->emisor_email }}?subject={{ rawurlencode('Cotización ' . $p->folio) }}">Enviar correo</a>@endif
             </div>
         </section>
+    @endif
+
+    @if($eventos->isNotEmpty())
+        <section class="hist-sec" aria-label="Historial">
+            <h2>Historial de esta cotización</h2>
+            <ul class="hist">
+                @foreach($eventos as $ev)
+                    <li class="{{ $ev->tipo }}">
+                        <span class="pt" aria-hidden="true"></span>
+                        <div class="t">{{ $ev->titulo }}</div>
+                        <div class="f">{{ $fechaEv($ev->created_at) }}@if($ev->actor === 'cliente' && $ev->autor) · {{ $ev->autor }}@elseif($ev->actor === 'agencia') · Agencia Vandu @endif</div>
+                        @if($ev->detalle && in_array($ev->tipo, ['cambios', 'editada', 'vigencia'], true))<div class="d">{{ $ev->detalle }}</div>@endif
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+    @endif
+
+    @if($vigente && $puedeResponder)
+        <dialog class="modal" id="responder" aria-labelledby="resp-titulo">
+            <form method="post" action="{{ route('presupuesto.responder', $p->token) }}" novalidate>
+                @csrf
+                <input type="hidden" name="accion" value="aceptar">
+                <h3 id="resp-titulo">Aceptar cotización</h3>
+                <p class="sub" data-sub-aceptar>Confirma que estás de acuerdo con la cotización {{ $p->folio }} por <b>{{ $p->monto($p->modo_iva === 'desglosado' ? $p->total : $p->subtotal) }}</b>.</p>
+                <p class="sub" data-sub-cambios hidden>Cuéntanos qué te gustaría ajustar y te enviaremos una versión actualizada.</p>
+
+                <div data-solo-cambios hidden>
+                    <label for="r-mensaje">¿Qué cambios necesitas?</label>
+                    <textarea id="r-mensaje" name="mensaje" maxlength="3000" placeholder="Por ejemplo: agregar 5 fotos más, cambiar la fecha de grabación, ajustar el presupuesto a…"></textarea>
+                </div>
+
+                <div>
+                    <label for="r-nombre">Tu nombre</label>
+                    <input type="text" id="r-nombre" name="nombre" value="{{ $p->cliente_nombre }}" maxlength="120" autocomplete="name" required>
+                </div>
+
+                <div>
+                    <label for="r-codigo">Código de verificación</label>
+                    <input type="text" id="r-codigo" name="codigo" class="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="000 000" required>
+                    <div class="ayuda">Te lo enviamos junto con la cotización por correo o WhatsApp; vale 24 horas.
+                        @if($hayCorreo)<br>¿No lo tienes o ya venció? <button type="button" data-pedir-codigo>Enviarme un código a {{ \App\Support\Aceptacion::correoOculto($p->cliente->email) }}</button>
+                        @else<br>¿No lo tienes? <a href="https://wa.me/{{ $wa }}?text={{ rawurlencode('Hola, ¿me compartes el código de verificación de la cotización ' . $p->folio . '?') }}" target="_blank" rel="noopener" style="font-weight:600">Pídelo por WhatsApp</a>@endif
+                    </div>
+                    <div class="exito" data-codigo-ok hidden></div>
+                </div>
+
+                <label class="check" data-solo-aceptar><input type="checkbox" name="conforme" value="1"> <span>Acepto los conceptos, precios y condiciones de esta cotización.</span></label>
+
+                <div class="error" data-error role="alert" hidden></div>
+
+                <div class="pie-modal">
+                    <button type="button" class="btn btn-sec" data-cerrar>Cancelar</button>
+                    <button type="submit" class="btn btn-prim" data-enviar>Aceptar cotización</button>
+                </div>
+            </form>
+        </dialog>
     @endif
 
     <footer class="pie">
@@ -321,6 +464,62 @@
         catch (err) { window.prompt('Copia el dato:', b.dataset.copiar); return; }
         setTimeout(function () { b.textContent = 'Copiar'; }, 1600);
     });
+
+    // Aceptar o pedir cambios (con código de verificación)
+    var dlg = document.getElementById('responder');
+    if (dlg) {
+        var f = dlg.querySelector('form'), err = f.querySelector('[data-error]'), enviar = f.querySelector('[data-enviar]');
+        var mostrar = function (sel, si) { f.querySelectorAll(sel).forEach(function (e) { e.hidden = !si; }); };
+        var abrir = function (accion) {
+            f.accion.value = accion; err.hidden = true;
+            var cambios = accion === 'cambios';
+            dlg.querySelector('#resp-titulo').textContent = cambios ? 'Solicitar cambios' : 'Aceptar cotización';
+            enviar.textContent = cambios ? 'Enviar comentarios' : 'Aceptar cotización';
+            mostrar('[data-sub-aceptar], [data-solo-aceptar]', !cambios);
+            mostrar('[data-sub-cambios], [data-solo-cambios]', cambios);
+            dlg.showModal ? dlg.showModal() : dlg.setAttribute('open', '');
+            setTimeout(function () { (cambios ? f.mensaje : f.codigo).focus(); }, 50);
+        };
+        document.querySelectorAll('[data-responder]').forEach(function (b) { b.addEventListener('click', function () { abrir(b.dataset.responder); }); });
+        f.querySelector('[data-cerrar]').addEventListener('click', function () { dlg.close(); });
+        f.codigo.addEventListener('input', function () {
+            var v = f.codigo.value.replace(/\D/g, '').slice(0, 6);
+            f.codigo.value = v.length > 3 ? v.slice(0, 3) + ' ' + v.slice(3) : v;
+        });
+        var fallo = function (m, campo) { err.textContent = m; err.hidden = false; if (campo && f[campo]) f[campo].focus(); };
+        var pedir = f.querySelector('[data-pedir-codigo]');
+        if (pedir) pedir.addEventListener('click', async function () {
+            pedir.disabled = true; err.hidden = true;
+            var ok = f.querySelector('[data-codigo-ok]');
+            try {
+                var r = await fetch(@json(route('presupuesto.codigo', $p->token)), { method: 'POST', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': f._token.value } });
+                var d = await r.json();
+                if (d.ok) { ok.textContent = d.mensaje; ok.hidden = false; f.codigo.focus(); } else fallo(d.mensaje);
+            } catch (e) { fallo('No se pudo enviar el código. Intenta de nuevo.'); }
+            setTimeout(function () { pedir.disabled = false; }, 20000);
+        });
+        f.addEventListener('submit', async function (e) {
+            e.preventDefault(); err.hidden = true;
+            var cambios = f.accion.value === 'cambios';
+            if (cambios && f.mensaje.value.trim().length < 5) return fallo('Cuéntanos qué cambios necesitas.', 'mensaje');
+            if (!f.nombre.value.trim()) return fallo('Escribe tu nombre.', 'nombre');
+            if (f.codigo.value.replace(/\D/g, '').length !== 6) return fallo('El código tiene 6 dígitos.', 'codigo');
+            if (!cambios && !f.conforme.checked) return fallo('Marca la casilla para confirmar que estás de acuerdo.');
+            enviar.disabled = true;
+            try {
+                var r = await fetch(f.action, { method: 'POST', body: new FormData(f), headers: { 'Accept': 'application/json' } });
+                var d = await r.json().catch(function () { return {}; });
+                if (r.ok && d.ok) {
+                    f.innerHTML = '<h3>' + (cambios ? '¡Gracias por tus comentarios!' : '¡Cotización aceptada!') + '</h3><p class="sub" style="margin:0">' + d.mensaje + '</p>';
+                    setTimeout(function () { location.reload(); }, 2200);
+                    return;
+                }
+                var m = d.mensaje || (d.errors ? Object.values(d.errors)[0][0] : 'No se pudo enviar. Intenta de nuevo.');
+                fallo(m, d.campo || (d.errors ? Object.keys(d.errors)[0] : null));
+            } catch (e2) { fallo('Revisa tu conexión e intenta de nuevo.'); }
+            enviar.disabled = false;
+        });
+    }
 
     // Cuenta regresiva
     var bar = document.getElementById('vig'); if (!bar || bar.classList.contains('vencida') || bar.classList.contains('aceptada')) return;

@@ -27,6 +27,7 @@ class PlantillasCorreo
             '{concepto}'     => ['texto' => 'Concepto principal', 'ejemplo' => 'Video promocional 60 s', 'para' => ['presupuesto', 'proyecto']],
             '{monto}'        => ['texto' => 'Importe de la cotización', 'ejemplo' => '$20,000.00 + IVA', 'para' => ['presupuesto', 'proyecto']],
             '{vigencia}'     => ['texto' => 'Vigente hasta', 'ejemplo' => '24 de octubre', 'para' => ['presupuesto', 'proyecto']],
+            '{codigo}'       => ['texto' => 'Código para aceptar en línea (se genera al enviar, vale 24 h)', 'ejemplo' => '482 913', 'para' => ['presupuesto']],
             '{proyecto}'     => ['texto' => 'Nombre del proyecto', 'ejemplo' => 'Video corporativo', 'para' => ['proyecto']],
             '{siguiente}'    => ['texto' => 'Siguiente paso del proyecto', 'ejemplo' => 'grabación el 18 de octubre', 'para' => ['proyecto']],
             '{entregables}'  => ['texto' => 'Lo que se entrega', 'ejemplo' => '24 fotos y 2 videos', 'para' => ['proyecto']],

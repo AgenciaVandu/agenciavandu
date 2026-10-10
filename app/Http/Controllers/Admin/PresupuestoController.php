@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
+use App\Support\Aceptacion;
 use App\Models\Presupuesto;
 use App\Support\PresupuestoPdf;
 use Illuminate\Http\Request;
@@ -67,6 +68,7 @@ class PresupuestoController extends Controller
             $p->conceptos()->createMany($conceptos);
             // Ya se le está atendiendo: deja de aparecer como contacto nuevo
             if ($p->cliente_id) Cliente::whereKey($p->cliente_id)->where('nuevo', true)->update(['nuevo' => false]);
+            Aceptacion::registrar($p, 'creada', 'agencia', null, null, ['version' => 1] + Aceptacion::foto($p->fresh('conceptos')), false);
             return $p;
         });
 
@@ -87,10 +89,24 @@ class PresupuestoController extends Controller
     public function update(Request $request, Presupuesto $presupuesto)
     {
         DB::transaction(function () use ($request, $presupuesto) {
+            $antes = Aceptacion::foto($presupuesto);
+            $estadoAntes = $presupuesto->estado;
             [$datos, $conceptos] = $this->validar($request);
             $presupuesto->update($datos);
             $presupuesto->conceptos()->delete();
             $presupuesto->conceptos()->createMany($conceptos);
+
+            // Historial: versión nueva si cambió el contenido, y cambio de estado si lo hubo
+            $despues = Aceptacion::foto($presupuesto->fresh('conceptos'));
+            $cambios = Aceptacion::diferencias($antes, $despues, $presupuesto);
+            if ($cambios) {
+                $version = $presupuesto->eventos()->whereIn('tipo', ['creada', 'editada'])->count() + 1;
+                Aceptacion::registrar($presupuesto, 'editada', 'agencia', null, implode("\n", $cambios),
+                    ['version' => max(2, $version), 'antes' => $antes, 'despues' => $despues], $estadoAntes !== 'borrador');
+            }
+            if ($estadoAntes !== $presupuesto->estado) {
+                Aceptacion::registrar($presupuesto, 'estado', 'agencia', null, 'Cambio manual desde el panel', ['de' => $estadoAntes, 'a' => $presupuesto->estado], $presupuesto->estado !== 'borrador');
+            }
         });
 
         return back()->with('ok', 'Cambios guardados.');
@@ -117,6 +133,44 @@ class PresupuestoController extends Controller
         return PresupuestoPdf::ver($presupuesto);
     }
 
+    /**
+     * Enviar por WhatsApp: genera el código de verificación y abre WhatsApp con el mensaje ya escrito.
+     * (Si la cotización ya no se puede responder en línea, manda solo el enlace.)
+     */
+    public function whatsapp(Presupuesto $presupuesto)
+    {
+        $p = $presupuesto->load('cliente');
+        $wa = $p->cliente?->whatsapp;
+        abort_unless($wa, 404, 'El cliente no tiene WhatsApp registrado.');
+
+        $nombre = \App\Support\Correos::primerNombre($p->cliente_nombre);
+        $msg = "Hola {$nombre}, te comparto la cotización {$p->folio}: {$p->url_publica}";
+        if (Aceptacion::puedeResponder($p)) {
+            $c = Aceptacion::generarCodigo($p, 'whatsapp');
+            $msg .= "\n\nDesde el enlace puedes aceptarla o pedir cambios con tu código de verificación: *{$c['formateado']}*\n(válido hasta el " . Aceptacion::vigenciaTexto($c['expira']) . ')';
+            Aceptacion::registrar($p, 'codigo', 'agencia', null, 'Código enviado por WhatsApp · vence el ' . Aceptacion::vigenciaTexto($c['expira']), ['canal' => 'whatsapp'], false);
+        }
+        if ($p->estado === 'borrador') {
+            $p->update(['estado' => 'enviada']);
+        }
+        Aceptacion::registrar($p, 'enviada', 'agencia', null, 'Por WhatsApp', ['canal' => 'whatsapp']);
+
+        return redirect()->away('https://wa.me/' . $wa . '?text=' . rawurlencode($msg));
+    }
+
+    /** Generar un código a mano (por ejemplo, para dictarlo por teléfono) */
+    public function codigo(Presupuesto $presupuesto)
+    {
+        if (! Aceptacion::puedeResponder($presupuesto)) {
+            return back()->withErrors(['codigo' => 'Esta cotización ya no se puede responder en línea (está aceptada, rechazada o vencida).']);
+        }
+        $c = Aceptacion::generarCodigo($presupuesto, 'manual');
+        Aceptacion::registrar($presupuesto, 'codigo', 'agencia', null, 'Código generado a mano · vence el ' . Aceptacion::vigenciaTexto($c['expira']), ['canal' => 'manual'], false);
+
+        return back()->with('codigo_nuevo', ['formateado' => $c['formateado'], 'vence' => Aceptacion::vigenciaTexto($c['expira'])])
+            ->with('ok', "Código {$c['formateado']} generado. Vale 24 horas.");
+    }
+
     /** Cambios rápidos desde el listado: estado o extender vigencia */
     public function rapido(Request $request, Presupuesto $presupuesto)
     {
@@ -125,6 +179,7 @@ class PresupuestoController extends Controller
             'extender_dias'  => 'nullable|integer|min:1|max:365',
         ]);
 
+        $estadoAntes = $presupuesto->estado;
         if (! empty($data['estado'])) {
             $presupuesto->estado = $data['estado'];
         }
@@ -132,6 +187,13 @@ class PresupuestoController extends Controller
             $presupuesto->vigente_hasta = Presupuesto::finDeDiaEnDias((int) $data['extender_dias']);
         }
         $presupuesto->save();
+
+        if ($estadoAntes !== $presupuesto->estado) {
+            Aceptacion::registrar($presupuesto, 'estado', 'agencia', null, 'Cambio manual desde el panel', ['de' => $estadoAntes, 'a' => $presupuesto->estado], $presupuesto->estado !== 'borrador');
+        }
+        if (! empty($data['extender_dias'])) {
+            Aceptacion::registrar($presupuesto, 'vigencia', 'agencia', null, 'Vigente hasta el ' . Aceptacion::vigenciaTexto($presupuesto->vigente_hasta));
+        }
 
         return back()->with('ok', "{$presupuesto->folio} actualizada.");
     }
