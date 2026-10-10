@@ -141,6 +141,7 @@
         <section class="panel" id="facturacion">
             <div class="panel-head">
                 <h2>Facturación</h2>
+                <button type="button" class="btn btn-fantasma btn-sm ms-auto me-1" data-correo="factura"><i class="bi bi-receipt me-1"></i> Enviar factura</button>
                 @if($cliente->fiscales_completos)
                     <span class="estado estado-aceptada">Completos</span>
                 @elseif($cliente->rfc || $cliente->razon_social)

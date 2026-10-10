@@ -255,6 +255,11 @@
         .correo-previa { padding: 18px 22px; background: var(--sunken); border-left: 1px solid var(--line); border-radius: 0 0 0 0; display: flex; flex-direction: column; }
         .correo-previa iframe { width: 100%; flex: 1; min-height: 560px; border: 1px solid var(--line); border-radius: 12px; background: #EEF0F3; }
         .correo-pie { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 14px 22px; border-top: 1px solid var(--line); }
+        .correo-adjuntos { border: 1px dashed var(--line-strong); border-radius: 10px; padding: 10px 12px; }
+        .correo-adjuntos.pide { border-color: #E8B04B; background: #FFF9EC; }
+        .correo-archivos { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+        .correo-archivos li { display: flex; align-items: center; gap: 8px; font-size: 13.5px; background: var(--sunken); border-radius: 8px; padding: 4px 4px 4px 10px; }
+        .correo-archivos .n { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .correos-lista summary { cursor: pointer; list-style: none; }
         .correos-lista summary::-webkit-details-marker { display: none; }
         .correos-lista summary:hover { background: var(--sunken); }
@@ -553,6 +558,7 @@
             abierto: false, cargando: false, enviando: false, conCopia: false,
             clave: '', para: '', cc: '', asunto: '', titulo: '', cuerpo: '', boton: '',
             conBoton: false, resumen: false, banco: false, pdf: false, miniaturas: false, ultimo: '',
+            archivos: [], pideAdjuntos: false,
             init() {
                 // ?correo=recordatorio_pago abre la ventana con esa plantilla
                 const u = new URL(location.href), q = u.searchParams.get('correo');
@@ -564,6 +570,7 @@
             abrir(clave) {
                 const claves = Object.keys(this.plantillas);
                 const k = claves.find((c) => c === clave) || claves.find((c) => clave && c.startsWith(clave)) || claves[0];
+                this._lista = []; this.archivos = []; if (this.$refs.adjuntos) this.$refs.adjuntos.value = '';
                 this.usar(k, true);
                 this.abierto = true;
                 this.$nextTick(() => document.getElementById(this.para ? 'correo-asunto' : 'correo-para')?.focus());
@@ -575,12 +582,34 @@
                 this.asunto = pl.asunto; this.titulo = pl.titulo; this.cuerpo = pl.cuerpo;
                 this.boton = pl.boton || pl.boton_por_defecto || ''; this.conBoton = !!pl.boton;
                 this.resumen = !!pl.resumen; this.banco = !!pl.banco; this.pdf = !!pl.pdf; this.miniaturas = !!pl.miniaturas;
+                this.pideAdjuntos = !!pl.adjuntos;
                 this.$nextTick(() => this.previsualizar());
             },
             cerrar() { this.abierto = false; },
+            // Adjuntos: se pueden elegir en varias tandas y quitar uno por uno
+            elegirArchivos() {
+                const dt = new DataTransfer();
+                (this._lista || []).forEach((f) => dt.items.add(f));
+                [...this.$refs.adjuntos.files].forEach((f) => { if (!(this._lista || []).some((g) => g.name === f.name && g.size === f.size)) dt.items.add(f); });
+                this.$refs.adjuntos.files = dt.files; this._lista = [...dt.files]; this.pintarArchivos();
+            },
+            quitarArchivo(i) {
+                const dt = new DataTransfer();
+                this._lista.filter((_, j) => j !== i).forEach((f) => dt.items.add(f));
+                this.$refs.adjuntos.files = dt.files; this._lista = [...dt.files]; this.pintarArchivos();
+            },
+            pintarArchivos() {
+                const peso = (b) => b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+                const icono = (e) => ({ pdf: 'bi-file-earmark-pdf', xml: 'bi-filetype-xml', zip: 'bi-file-earmark-zip', png: 'bi-file-earmark-image', jpg: 'bi-file-earmark-image', jpeg: 'bi-file-earmark-image' })[e] || 'bi-file-earmark';
+                this.archivos = this._lista.map((f) => { const ext = (f.name.split('.').pop() || '').toLowerCase(); return { nombre: f.name, peso: peso(f.size), ext, icono: icono(ext) }; });
+            },
+            revisarAdjuntos(e) {
+                if (this.pideAdjuntos && !this.archivos.length && !confirm('No adjuntaste la factura. ¿Enviar el correo sin archivos?')) { e.preventDefault(); e.stopImmediatePropagation(); }
+            },
             async previsualizar() {
                 if (!this.abierto && !this.clave) return;
                 const datos = new FormData(this.$refs.form);
+                datos.delete('adjuntos[]'); // los archivos solo viajan al enviar
                 const firma = new URLSearchParams(datos).toString();
                 if (firma === this.ultimo) return;
                 this.ultimo = firma; this.cargando = true;

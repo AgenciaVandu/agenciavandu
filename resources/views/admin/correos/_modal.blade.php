@@ -12,8 +12,8 @@
 <div x-data="correoVandu({{ Js::from(['plantillas' => $plantillasCorreo, 'previa' => route('admin.correos.vista-previa')]) }})"
      @abrir-correo.window="abrir($event.detail)" @keydown.escape.window="abierto && cerrar()">
     <div class="correo-velo" x-show="abierto" x-cloak x-transition.opacity @click.self="cerrar()">
-        <form method="post" action="{{ route('admin.correos.enviar') }}" class="correo-ventana" x-ref="form" role="dialog" aria-modal="true" aria-labelledby="correo-titulo"
-              @input.debounce.500ms="previsualizar()" @change="previsualizar()">
+        <form method="post" action="{{ route('admin.correos.enviar') }}" enctype="multipart/form-data" class="correo-ventana" x-ref="form" role="dialog" aria-modal="true" aria-labelledby="correo-titulo"
+              @input.debounce.500ms="previsualizar()" @change="previsualizar()" @submit="revisarAdjuntos($event)">
             @csrf
             <input type="hidden" name="contexto_tipo" value="{{ $ctxTipo }}">
             <input type="hidden" name="contexto_id" value="{{ $ctxId }}">
@@ -79,6 +79,25 @@
                         @if($hayPdf)
                             <label class="form-check"><input type="checkbox" class="form-check-input" name="adjuntar_pdf" value="1" x-model="pdf"> <span class="form-check-label"><i class="bi bi-paperclip"></i> Adjuntar PDF de {{ $ctxCorreo['presupuesto']->folio }}</span></label>
                         @endif
+                    </div>
+
+                    <div class="correo-adjuntos" :class="pideAdjuntos && !archivos.length && 'pide'">
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <label class="btn btn-borde btn-sm mb-0"><i class="bi bi-paperclip me-1"></i> Adjuntar archivos
+                                <input type="file" name="adjuntos[]" multiple accept=".pdf,.xml,.zip,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx" class="d-none" x-ref="adjuntos" @change="elegirArchivos()">
+                            </label>
+                            <span class="secundario" style="font-size:12.5px" x-show="pideAdjuntos && !archivos.length">Adjunta el PDF y el XML de la factura</span>
+                            <span class="secundario" style="font-size:12.5px" x-show="!pideAdjuntos && !archivos.length">PDF, XML, imágenes… hasta 20 MB en total</span>
+                        </div>
+                        <ul class="correo-archivos" x-show="archivos.length" x-cloak>
+                            <template x-for="(a, i) in archivos" :key="a.nombre + i">
+                                <li><i class="bi" :class="a.icono"></i> <span class="n" x-text="a.nombre"></span> <span class="secundario num" x-text="a.peso"></span>
+                                    <button type="button" class="btn btn-fantasma btn-icono btn-sm" @click="quitarArchivo(i)" :aria-label="'Quitar ' + a.nombre"><i class="bi bi-x"></i></button></li>
+                            </template>
+                        </ul>
+                        <div class="secundario mt-1" style="font-size:12px" x-show="pideAdjuntos && archivos.length && !(archivos.some(a => a.ext === 'pdf') && archivos.some(a => a.ext === 'xml'))" x-cloak>
+                            <i class="bi bi-info-circle"></i> Normalmente la factura lleva el PDF <b>y</b> el XML.
+                        </div>
                     </div>
                 </div>
 

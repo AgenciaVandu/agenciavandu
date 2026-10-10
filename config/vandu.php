@@ -188,6 +188,13 @@ return [
                 'cuerpo' => "Hola {nombre},\n\nYa puedes ver y descargar {entregables} de {proyecto}. Preparamos una galería para que lo revises con calma desde tu computadora o tu celular.\n\nSi algo necesita un ajuste, respóndeme este correo y lo vemos.",
                 'boton'  => 'Ver mi entrega', 'enlace' => 'entrega', 'miniaturas' => true,
             ],
+            'factura' => [
+                'nombre' => 'Enviar factura', 'icono' => 'bi-receipt', 'para' => ['proyecto', 'presupuesto', 'cliente'],
+                'asunto' => 'Factura · {concepto}',
+                'titulo' => 'Tu factura está lista',
+                'cuerpo' => "Hola {nombre},\n\nTe comparto la factura correspondiente a {concepto}. Adjunto encontrarás el PDF y el XML para tu contabilidad.\n\nSi necesitas algún ajuste en los datos fiscales o que la enviemos a otro correo, respóndeme este mensaje y lo corregimos.\n\nGracias por tu confianza.",
+                'adjuntos' => true, 'para_factura' => true,
+            ],
             'libre' => [
                 'nombre' => 'En blanco', 'icono' => 'bi-pencil', 'para' => ['cliente', 'presupuesto', 'proyecto'],
                 'asunto' => '',

@@ -195,6 +195,7 @@
                                                 @unless($pg->pagado)
                                                     <li><button type="button" class="dropdown-item" data-correo="recordatorio_pago@{{ $pg->id }}"><i class="bi bi-envelope"></i> Enviar recordatorio por correo</button></li>
                                                 @endunless
+                                                <li><button type="button" class="dropdown-item" data-correo="factura"><i class="bi bi-receipt"></i> Enviar factura por correo</button></li>
                                                 @if($pg->pagado)
                                                     <li><form method="post" action="{{ route('admin.proyectos.pago', [$p, $pg]) }}">@csrf @method('patch')
                                                         <input type="hidden" name="accion" value="deshacer"><button class="dropdown-item"><i class="bi bi-arrow-counterclockwise"></i> Marcar como pendiente</button></form></li>

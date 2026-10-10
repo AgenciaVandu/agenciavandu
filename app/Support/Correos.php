@@ -85,6 +85,7 @@ class Correos
             'resumen' => ! empty($pl['resumen']),
             'banco'   => ! empty($pl['banco']),
             'miniaturas' => ! empty($pl['miniaturas']),
+            'adjuntos' => ! empty($pl['adjuntos']),
             'para'    => self::destinatario($ctx, $clave),
         ];
     }
@@ -109,7 +110,8 @@ class Correos
             '{nombre}'       => self::primerNombre($c?->nombre ?? $p?->cliente_nombre ?? ''),
             '{empresa}'      => $c?->empresa ?? $p?->cliente_empresa ?? '',
             '{folio}'        => $p?->folio ?? '',
-            '{concepto}'     => $p ? (Str::limit($p->conceptos->first()?->resumen ?? $p->titulo, 60)) : ($pr?->nombre ?? ''),
+            '{concepto}'     => $p ? (Str::limit($p->conceptos->first()?->resumen ?? $p->titulo, 60))
+                : ($pr?->nombre ?? (($u = $c?->presupuestos()->with('conceptos')->first()) ? Str::limit($u->conceptos->first()?->resumen ?? $u->titulo, 60) : 'nuestros servicios')),
             '{monto}'        => $p ? $p->monto($p->modo_iva === 'desglosado' ? $p->total : $p->subtotal) : '',
             '{vigencia}'     => $p ? $fecha($p->vigencia_local) : '',
             '{proyecto}'     => $pr?->nombre ?? '',
@@ -130,7 +132,8 @@ class Correos
     public static function destinatario(array $ctx, string $clave): string
     {
         $c = $ctx['cliente'];
-        if ($clave === 'recordatorio_pago' && $c?->email_factura) {
+        $pl = PlantillasCorreo::una(Str::before($clave, '@')) ?? [];
+        if (($clave === 'recordatorio_pago' || ! empty($pl['para_factura'])) && $c?->email_factura) {
             return $c->email_factura;
         }
         return (string) ($c?->email ?? '');

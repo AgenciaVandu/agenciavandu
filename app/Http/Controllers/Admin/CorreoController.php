@@ -72,6 +72,13 @@ class CorreoController extends Controller
             ];
         }
 
+        // Archivos que adjuntas al enviar (factura en PDF y XML, etc.)
+        if (! $vistaPrevia) {
+            foreach ((array) request()->file('adjuntos', []) as $f) {
+                $archivos[] = ['data' => file_get_contents($f->getRealPath()), 'nombre' => $f->getClientOriginalName(), 'mime' => $f->getClientMimeType() ?: 'application/octet-stream'];
+            }
+        }
+
         $url = Correos::enlace($ctx, $d['plantilla']);
         $correo = new CorreoVandu(
             asunto: $d['asunto'],
@@ -107,7 +114,15 @@ class CorreoController extends Controller
             'incluir_banco'   => 'nullable|boolean',
             'adjuntar_pdf'    => 'nullable|boolean',
             'incluir_miniaturas' => 'nullable|boolean',
+            'adjuntos'        => 'nullable|array|max:8',
+            'adjuntos.*'      => ['file', 'max:15360', function ($attr, $f, $fail) {
+                if (! in_array(strtolower($f->getClientOriginalExtension()), ['pdf', 'xml', 'zip', 'png', 'jpg', 'jpeg', 'doc', 'docx', 'xls', 'xlsx'], true)) {
+                    $fail('“' . $f->getClientOriginalName() . '”: solo se pueden adjuntar PDF, XML, ZIP, imágenes, Word o Excel.');
+                }
+            }],
         ], [
+            'adjuntos.max'    => 'Puedes adjuntar hasta 8 archivos.',
+            'adjuntos.*.max'  => 'Cada archivo puede pesar hasta 15 MB.',
             'para.required'   => 'Escribe a quién va el correo.',
             'asunto.required' => 'El correo necesita un asunto.',
             'cuerpo.required' => 'El correo necesita un mensaje.',
@@ -115,6 +130,10 @@ class CorreoController extends Controller
         $d['asunto'] = (string) ($d['asunto'] ?? '');
         $d['cuerpo'] = (string) ($d['cuerpo'] ?? '');
         $d['boton'] = $d['boton'] ?? null;
+        $total = collect((array) $request->file('adjuntos', []))->sum(fn ($f) => $f->getSize());
+        if ($total > 20 * 1024 * 1024) {
+            throw ValidationException::withMessages(['adjuntos' => 'Los adjuntos suman más de 20 MB; muchos correos los rechazan. Comparte los más pesados por enlace.']);
+        }
 
         return [Correos::contexto($d['contexto_tipo'], (int) $d['contexto_id']), $d];
     }

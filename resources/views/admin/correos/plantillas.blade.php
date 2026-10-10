@@ -180,7 +180,7 @@
                 @endunless
 
                 @if($pl['fabrica'])
-                    @php $extras = array_filter([! empty($pl['pdf']) ? 'el PDF de la cotización' : null, ! empty($pl['banco']) ? 'los datos bancarios' : null, ! empty($pl['miniaturas']) ? 'fotos de la galería' : null, ! empty($pl['resumen']) ? 'el recuadro de resumen' : null]); @endphp
+                    @php $extras = array_filter([! empty($pl['pdf']) ? 'el PDF de la cotización' : null, ! empty($pl['banco']) ? 'los datos bancarios' : null, ! empty($pl['miniaturas']) ? 'fotos de la galería' : null, ! empty($pl['resumen']) ? 'el recuadro de resumen' : null, ! empty($pl['adjuntos']) ? 'un espacio para adjuntar archivos al enviarla' : null, ! empty($pl['para_factura']) ? 'se manda al correo de facturación del cliente si lo tiene' : null]); @endphp
                     @if($extras)
                         <p class="secundario m-0" style="font-size:13.5px"><i class="bi bi-info-circle"></i> Además incluye {{ \Illuminate\Support\Arr::join($extras, ', ', ' y ') }}.</p>
                     @endif
