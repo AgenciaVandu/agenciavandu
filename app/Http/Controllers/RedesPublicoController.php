@@ -78,8 +78,8 @@ class RedesPublicoController extends Controller
             'codigo.required' => 'Escribe tu código de verificación.', 'nombre.required' => 'Escribe tu nombre.',
         ]);
         $ok = Redes::verificar($c, $d['codigo']);
-        if ($ok !== true) return response()->json(['ok' => false, 'mensaje' => $ok, 'campo' => 'codigo'], 422);
-        Redes::abrirSesion($c, trim($d['nombre']));
+        if (is_string($ok)) return response()->json(['ok' => false, 'mensaje' => $ok, 'campo' => 'codigo'], 422);
+        Redes::abrirSesion($c, trim($d['nombre']), $ok->expira_at);
         return response()->json(['ok' => true, 'nombre' => trim($d['nombre'])]);
     }
 
@@ -87,7 +87,7 @@ class RedesPublicoController extends Controller
     {
         $c = $this->cliente($token);
         if (! $c->email) return response()->json(['ok' => false, 'mensaje' => 'No tenemos un correo registrado. Pídenos tu código por WhatsApp.'], 422);
-        $k = Redes::generarCodigo($c, 'cliente');
+        $k = Redes::generarCodigo($c, 'cliente', '7d');
         try {
             Mail::to($c->email)->send(new CorreoVandu(
                 asunto: "Tu código de verificación: {$k['formateado']}",

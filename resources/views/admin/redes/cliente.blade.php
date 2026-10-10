@@ -22,6 +22,12 @@
 @push('head')
 @include('redes._previa-recursos', ['parte' => 'estilos'])
 <style>
+    .rd-acceso .panel-body { display: grid; gap: 12px; }
+    .ac-info { display: flex; gap: 12px; align-items: center; }
+    .ac-ico { width: 38px; height: 38px; border-radius: 10px; background: var(--sunken); display: grid; place-items: center; font-size: 17px; flex: none; }
+    .ac-codigo { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: var(--green-soft); border: 1px solid #BDF2D6; }
+    .ac-codigo .num { font-size: 24px; font-weight: 700; letter-spacing: .14em; }
+    .ac-acciones { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
     .rd-cab { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 16px; }
     .rd-mes { display: flex; align-items: center; gap: 6px; }
     .rd-mes h2 { font-size: 20px; font-weight: 600; margin: 0 6px; min-width: 150px; text-align: center; text-transform: capitalize; }
@@ -86,17 +92,17 @@
         <div class="dropdown">
             <button class="btn btn-borde dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-send me-1"></i> Enviar a revisión</button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li class="dropdown-header">Los borradores de {{ $mes->locale('es')->isoFormat('MMMM') }} pasan a revisión</li>
+                <li class="dropdown-header">Los borradores de {{ $mes->locale('es')->isoFormat('MMMM') }} pasan a revisión.<br>El código vale todo el mes.</li>
                 @if($cliente->email)
-                    <li><form method="post" action="{{ route('admin.redes.revision', $cliente) }}">@csrf<input type="hidden" name="mes" value="{{ $mes->format('Y-m') }}"><input type="hidden" name="canal" value="correo">
+                    <li><form method="post" action="{{ route('admin.redes.revision', $cliente) }}">@csrf<input type="hidden" name="mes" value="{{ $mes->format('Y-m') }}"><input type="hidden" name="canal" value="correo"><input type="hidden" name="vigencia" value="mes">
                         <button class="dropdown-item"><i class="bi bi-envelope"></i> Por correo a {{ $cliente->email }}</button></form></li>
                 @endif
                 @if($cliente->whatsapp)
-                    <li><form method="post" action="{{ route('admin.redes.revision', $cliente) }}" target="_blank">@csrf<input type="hidden" name="mes" value="{{ $mes->format('Y-m') }}"><input type="hidden" name="canal" value="whatsapp">
+                    <li><form method="post" action="{{ route('admin.redes.revision', $cliente) }}" target="_blank">@csrf<input type="hidden" name="mes" value="{{ $mes->format('Y-m') }}"><input type="hidden" name="canal" value="whatsapp"><input type="hidden" name="vigencia" value="mes">
                         <button class="dropdown-item" onclick="setTimeout(() => window.vanduRefrescar && vanduRefrescar(), 1500)"><i class="bi bi-whatsapp"></i> Por WhatsApp</button></form></li>
                 @endif
-                <li><form method="post" action="{{ route('admin.redes.revision', $cliente) }}">@csrf<input type="hidden" name="mes" value="{{ $mes->format('Y-m') }}"><input type="hidden" name="canal" value="enlace">
-                    <button class="dropdown-item"><i class="bi bi-shield-lock"></i> Solo generar código (lo comparto yo)</button></form></li>
+                <li><form method="post" action="{{ route('admin.redes.revision', $cliente) }}">@csrf<input type="hidden" name="mes" value="{{ $mes->format('Y-m') }}"><input type="hidden" name="canal" value="enlace"><input type="hidden" name="vigencia" value="mes">
+                    <button class="dropdown-item"><i class="bi bi-shield-lock"></i> Pasar a revisión y generar código (lo comparto yo)</button></form></li>
             </ul>
         </div>
         <form method="post" action="{{ route('admin.redes.crear', $cliente) }}">@csrf
@@ -150,10 +156,44 @@
     </div>
 </div>
 
-@if(session('codigo_redes'))
-    <div class="aviso aviso-ok"><i class="bi bi-shield-lock"></i> Código para el cliente: <b class="num ms-1" style="letter-spacing:.1em">{{ session('codigo_redes') }}</b> · vale 24 horas.
-        <button type="button" class="btn btn-borde btn-sm ms-auto" data-copiar="Revisa tu contenido aquí: {{ $url }}&#10;Tu código de verificación: {{ session('codigo_redes') }}">Copiar mensaje</button></div>
-@endif
+{{-- Acceso del cliente: enlace y código de verificación (el servicio es mensual: el código puede valer todo el mes) --}}
+@php $nuevoCodigo = session('codigo_redes'); @endphp
+<section class="panel rd-acceso mb-3" x-data="{ vigencia: 'mes' }">
+    <div class="panel-body">
+        <div class="ac-info">
+            <span class="ac-ico"><i class="bi bi-shield-lock"></i></span>
+            <div class="min-w-0">
+                <b>Acceso del cliente</b>
+                <div class="secundario" style="font-size:13px">
+                    @if($vigente)Código vigente hasta el {{ \App\Support\Aceptacion::vigenciaTexto($vigente->expira_at) }} · el cliente solo lo escribe una vez por dispositivo.
+                    @else Sin código vigente. Genera uno para que {{ \App\Support\Correos::primerNombre($cliente->nombre) }} pueda aprobar y comentar.@endif
+                </div>
+            </div>
+        </div>
+        @if($nuevoCodigo)
+            <div class="ac-codigo">
+                <span class="num">{{ $nuevoCodigo['codigo'] }}</span>
+                <span class="secundario" style="font-size:12.5px">Vale hasta el {{ $nuevoCodigo['vence'] }} · solo se muestra ahora</span>
+                <button type="button" class="btn btn-borde btn-sm ms-auto" data-copiar="Revisa tu contenido de redes aquí: {{ $url }}&#10;Tu código de verificación: {{ $nuevoCodigo['codigo'] }} (válido hasta el {{ $nuevoCodigo['vence'] }})"><i class="bi bi-clipboard me-1"></i> Copiar mensaje</button>
+            </div>
+        @endif
+        <div class="ac-acciones">
+            <select class="form-select form-select-sm" x-model="vigencia" aria-label="Vigencia del código" style="width:auto; padding-right:2.4rem">
+                @foreach(\App\Support\Redes::VIGENCIAS as $vk => $vl)<option value="{{ $vk }}">{{ $vk === 'mes' ? 'Vale todo ' . $mes->locale('es')->isoFormat('MMMM') : 'Vale ' . $vl }}</option>@endforeach
+            </select>
+            <form method="post" action="{{ route('admin.redes.codigo', $cliente) }}">@csrf<input type="hidden" name="mes" value="{{ $mes->format('Y-m') }}"><input type="hidden" name="vigencia" :value="vigencia"><input type="hidden" name="canal" value="manual">
+                <button class="btn btn-borde btn-sm"><i class="bi bi-key me-1"></i> Generar código</button></form>
+            @if($cliente->whatsapp)
+                <form method="post" action="{{ route('admin.redes.codigo', $cliente) }}" target="_blank">@csrf<input type="hidden" name="mes" value="{{ $mes->format('Y-m') }}"><input type="hidden" name="vigencia" :value="vigencia"><input type="hidden" name="canal" value="whatsapp">
+                    <button class="btn btn-borde btn-sm"><i class="bi bi-whatsapp me-1"></i> Mandar por WhatsApp</button></form>
+            @endif
+            @if($cliente->email)
+                <form method="post" action="{{ route('admin.redes.codigo', $cliente) }}">@csrf<input type="hidden" name="mes" value="{{ $mes->format('Y-m') }}"><input type="hidden" name="vigencia" :value="vigencia"><input type="hidden" name="canal" value="correo">
+                    <button class="btn btn-borde btn-sm"><i class="bi bi-envelope me-1"></i> Mandar por correo</button></form>
+            @endif
+        </div>
+    </div>
+</section>
 
 <div class="rd-cab">
     <div class="rd-mes">

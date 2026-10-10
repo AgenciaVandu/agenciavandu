@@ -98,6 +98,7 @@ class RedesController extends Controller
             'feed'     => $feed,
             'perfiles' => Redes::perfiles($cliente),
             'url'      => Redes::urlCliente($cliente, $mes->format('Y-m')),
+            'vigente'  => Redes::codigoVigente($cliente),
             'conteo'   => collect(RedesPost::ESTADOS)->map(fn ($e, $k) => $posts->where('estado', $k)->count()),
         ]);
     }
@@ -296,10 +297,48 @@ class RedesController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    /** Generar (y opcionalmente mandar) un código para el cliente, sin cambiar el estado de los posts */
+    public function codigo(Request $request, Cliente $cliente)
+    {
+        $d = $request->validate([
+            'canal'    => 'required|in:manual,whatsapp,correo',
+            'vigencia' => 'required|in:' . implode(',', array_keys(Redes::VIGENCIAS)),
+            'mes'      => 'nullable|date_format:Y-m',
+        ]);
+        $mes = Redes::mes($d['mes'] ?? null);
+        $c = Redes::generarCodigo($cliente, $d['canal'], $d['vigencia'], $mes);
+        $vence = Aceptacion::vigenciaTexto($c['expira']);
+        $url = Redes::urlCliente($cliente, $mes->format('Y-m'));
+        $nombre = Correos::primerNombre($cliente->nombre);
+
+        if ($d['canal'] === 'whatsapp') {
+            abort_unless($cliente->whatsapp, 422, 'El cliente no tiene WhatsApp registrado.');
+            $msg = "Hola {$nombre}, aquí puedes revisar tu contenido de redes: {$url}\n\nTu código de verificación: *{$c['formateado']}* (válido hasta el {$vence}).";
+            return redirect()->away('https://wa.me/' . $cliente->whatsapp . '?text=' . rawurlencode($msg));
+        }
+        if ($d['canal'] === 'correo') {
+            abort_unless($cliente->email, 422, 'El cliente no tiene correo registrado.');
+            try {
+                Mail::to($cliente->email)->send(new CorreoVandu(
+                    asunto: "Tu código para revisar tu contenido: {$c['formateado']}",
+                    titulo: 'Tu código de verificación',
+                    cuerpo: "Hola {$nombre},\n\nCon este código puedes aprobar y comentar tus publicaciones en redes. Solo lo escribes una vez en cada dispositivo.",
+                    boton: 'Revisar mi contenido', url: $url,
+                    codigo: ['formateado' => $c['formateado'], 'vigencia' => $vence],
+                ));
+            } catch (\Throwable $e) {
+                report($e);
+                return back()->withErrors(['correo' => 'No se pudo enviar el correo: ' . Str::limit($e->getMessage(), 140)]);
+            }
+            return back()->with('ok', "Código enviado a {$cliente->email}.")->with('codigo_redes', ['codigo' => $c['formateado'], 'vence' => $vence]);
+        }
+        return back()->with('codigo_redes', ['codigo' => $c['formateado'], 'vence' => $vence]);
+    }
+
     /** Manda el mes a revisión: los borradores pasan a "En revisión" y el cliente recibe su enlace con código */
     public function revision(Request $request, Cliente $cliente)
     {
-        $d = $request->validate(['mes' => 'required|date_format:Y-m', 'canal' => 'required|in:correo,whatsapp,enlace']);
+        $d = $request->validate(['mes' => 'required|date_format:Y-m', 'canal' => 'required|in:correo,whatsapp,enlace', 'vigencia' => 'nullable|in:' . implode(',', array_keys(Redes::VIGENCIAS))]);
         $mes = Redes::mes($d['mes']);
         $posts = RedesPost::where('cliente_id', $cliente->id)
             ->whereBetween('fecha', [$mes->copy()->setTimezone('UTC'), $mes->copy()->endOfMonth()->setTimezone('UTC')])
@@ -312,7 +351,7 @@ class RedesController extends Controller
             ->whereBetween('fecha', [$mes->copy()->setTimezone('UTC'), $mes->copy()->endOfMonth()->setTimezone('UTC')])->count();
 
         $url = Redes::urlCliente($cliente, $d['mes']);
-        $c = Redes::generarCodigo($cliente, $d['canal']);
+        $c = Redes::generarCodigo($cliente, $d['canal'], $d['vigencia'] ?? 'mes', $mes);
         $vence = Aceptacion::vigenciaTexto($c['expira']);
         $mesTexto = $mes->locale('es')->isoFormat('MMMM');
         $nombre = Correos::primerNombre($cliente->nombre);
@@ -338,7 +377,7 @@ class RedesController extends Controller
             }
             return back()->with('ok', "Contenido de {$mesTexto} enviado a revisión a {$cliente->email}.");
         }
-        return back()->with('ok', "{$posts->count()} posts pasaron a revisión. Código para el cliente: {$c['formateado']} (vale 24 h).")
-            ->with('codigo_redes', $c['formateado']);
+        return back()->with('ok', "{$posts->count()} posts pasaron a revisión.")
+            ->with('codigo_redes', ['codigo' => $c['formateado'], 'vence' => $vence]);
     }
 }

@@ -152,4 +152,30 @@ class RedesTest extends TestCase
         $this->assertSame(0, Cliente::where('email', 'demo-redes@agenciavandu.com')->count());
         $this->assertSame(0, RedesPost::count());
     }
+
+    public function test_codigo_desde_redes_vale_todo_el_mes_y_el_dispositivo_queda_recordado(): void
+    {
+        $p = $this->nuevoPost(['estado' => 'revision']);
+        $mes = $p->fecha_local->format('Y-m');
+        $this->actingAs($this->u)->post('/admin/redes/clientes/' . $this->c->id . '/codigo', ['canal' => 'correo', 'vigencia' => 'mes', 'mes' => $mes])
+            ->assertSessionHas('codigo_redes');
+        $this->assertSame('revision', $p->fresh()->estado); // no cambia estados
+        $codigo = null;
+        Mail::assertSent(CorreoVandu::class, function ($m) use (&$codigo) { $codigo = $m->codigo['formateado'] ?? null; return true; });
+        $vence = \App\Models\RedesCodigo::latest('id')->first()->expira_at->copy()->setTimezone(config('vandu.zona_horaria'));
+        $this->assertSame(\Illuminate\Support\Carbon::createFromFormat('Y-m', $mes, config('vandu.zona_horaria'))->endOfMonth()->toDateString(), $vence->toDateString());
+
+        auth()->logout();
+        $tok = $this->c->fresh()->redes_token;
+        $r = $this->postJson("/redes/$tok/verificar", ['nombre' => 'Ana', 'codigo' => $codigo])->assertOk();
+        $cookie = collect($r->headers->getCookies())->first(fn ($k) => $k->getName() === 'vandu_redes_' . $this->c->id);
+        $this->assertNotNull($cookie);
+
+        // Otro día, sin la sesión pero con su cookie: no le vuelve a pedir el código
+        $this->flushSession();
+        $this->withCredentials()->withCookie('vandu_redes_' . $this->c->id, json_encode(['nombre' => 'Ana', 'hasta' => $vence->copy()->setTimezone('UTC')->toIso8601String()]));
+        $this->postJson("/redes/$tok/posts/{$p->id}", ['accion' => 'aprobar'])->assertOk();
+
+        $this->get('/admin/redes/clientes/' . $this->c->id)->assertRedirect(); // sin sesión de admin
+    }
 }

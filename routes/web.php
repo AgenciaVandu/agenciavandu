@@ -123,6 +123,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::post('redes/clientes/{cliente}/posts', [Admin\RedesController::class, 'crear'])->name('redes.crear');
     Route::post('redes/clientes/{cliente}/mover', [Admin\RedesController::class, 'mover'])->name('redes.mover');
     Route::post('redes/clientes/{cliente}/revision', [Admin\RedesController::class, 'revision'])->name('redes.revision');
+    Route::post('redes/clientes/{cliente}/codigo', [Admin\RedesController::class, 'codigo'])->name('redes.codigo');
     Route::get('redes/posts/{post}', [Admin\RedesController::class, 'post'])->name('redes.post');
     Route::put('redes/posts/{post}', [Admin\RedesController::class, 'guardar'])->name('redes.guardar');
     Route::delete('redes/posts/{post}', [Admin\RedesController::class, 'borrar'])->name('redes.borrar');

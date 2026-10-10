@@ -104,11 +104,11 @@ class DemoRedes extends Command
             $n++;
         }
 
-        $k = Redes::generarCodigo($c, 'manual');
+        $k = Redes::generarCodigo($c, 'manual', 'mes', now(config('vandu.zona_horaria'))->addMonthNoOverflow());
         $this->info("Cliente de prueba creado: {$c->empresa} con $n posts.");
         $this->line('Panel:  ' . route('admin.redes.cliente', $c));
         $this->line('Vista del cliente:  ' . Redes::urlCliente($c));
-        $this->line("Código de verificación (24 h): {$k['formateado']}");
+        $this->line("Código de verificación: {$k['formateado']} (vale hasta el " . \App\Support\Aceptacion::vigenciaTexto($k['expira']) . ')');
         $this->line('Para borrarlo: php artisan vandu:demo-redes --borrar');
         return self::SUCCESS;
     }

@@ -23,9 +23,10 @@ use Illuminate\Support\Str;
  */
 class Redes
 {
-    public const HORAS_CODIGO = 24;
     public const INTENTOS = 5;
-    public const HORAS_SESION = 4;
+
+    /** Cuánto dura el código. Como el servicio es mensual, por defecto vale todo el mes que se revisa. */
+    public const VIGENCIAS = ['24h' => '24 horas', '7d' => '7 días', 'mes' => 'Todo el mes'];
 
     public static function redes(): array { return config('vandu.redes.redes'); }
 
@@ -172,36 +173,63 @@ class Redes
 
     // ---------- Verificación del cliente ----------
 
-    public static function generarCodigo(Cliente $c, string $canal): array
+    /** Fecha en que vence un código según la vigencia elegida (todo el mes = hasta el último día del mes revisado) */
+    public static function expiraPara(string $vigencia, ?Carbon $mes = null): Carbon
+    {
+        $tz = config('vandu.zona_horaria');
+        $fin = match ($vigencia) {
+            '7d'  => now()->addDays(7),
+            'mes' => ($mes ?? now($tz))->copy()->setTimezone($tz)->endOfMonth()->setTimezone('UTC'),
+            default => now()->addHours(24),
+        };
+        return $fin->lt(now()->addHours(24)) ? now()->addHours(24) : $fin; // mínimo 24 horas
+    }
+
+    public static function generarCodigo(Cliente $c, string $canal, string $vigencia = '24h', ?Carbon $mes = null): array
     {
         $codigo = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-        $r = RedesCodigo::create(['cliente_id' => $c->id, 'codigo_hash' => Hash::make($codigo), 'canal' => $canal, 'expira_at' => now()->addHours(self::HORAS_CODIGO)]);
+        $r = RedesCodigo::create(['cliente_id' => $c->id, 'codigo_hash' => Hash::make($codigo), 'canal' => $canal, 'expira_at' => self::expiraPara($vigencia, $mes)]);
         return ['codigo' => $codigo, 'formateado' => Aceptacion::formato($codigo), 'expira' => $r->expira_at];
     }
 
-    /** El código sirve varias veces durante sus 24 horas (el cliente revisa post por post) */
-    public static function verificar(Cliente $c, string $codigo): true|string
+    public static function codigoVigente(Cliente $c): ?RedesCodigo
+    {
+        return RedesCodigo::where('cliente_id', $c->id)->where('expira_at', '>', now())->where('intentos', '<', self::INTENTOS)->orderByDesc('expira_at')->first();
+    }
+
+    /** El código sirve varias veces mientras esté vigente (el cliente revisa post por post, en varios días) */
+    public static function verificar(Cliente $c, string $codigo): RedesCodigo|string
     {
         $codigo = preg_replace('/\D+/', '', $codigo);
         $vigentes = RedesCodigo::where('cliente_id', $c->id)->where('expira_at', '>', now())->where('intentos', '<', self::INTENTOS)->latest('id')->get();
         if ($vigentes->isEmpty()) return 'No hay un código vigente. Pide uno nuevo.';
         foreach ($vigentes as $r) {
-            if (strlen($codigo) === 6 && Hash::check($codigo, $r->codigo_hash)) return true;
+            if (strlen($codigo) === 6 && Hash::check($codigo, $r->codigo_hash)) return $r;
         }
         $vigentes->each->increment('intentos');
         $restan = self::INTENTOS - $vigentes->max('intentos');
         return $restan > 0 ? 'El código no es correcto. Te quedan ' . $restan . ($restan === 1 ? ' intento.' : ' intentos.') : 'Se superaron los intentos. Pide un código nuevo.';
     }
 
+    /**
+     * ¿Ya confirmó su identidad en este dispositivo? Se recuerda (cookie cifrada) mientras su código siga vigente,
+     * para que pueda revisar en varios días sin volver a escribirlo.
+     */
     public static function sesion(Cliente $c): ?array
     {
         $s = session('redes_ok.' . $c->id);
-        return ($s && Carbon::parse($s['hasta'])->isFuture()) ? $s : null;
+        if (! $s) {
+            $s = json_decode((string) request()->cookie('vandu_redes_' . $c->id), true) ?: null;
+        }
+        return ($s && ! empty($s['hasta']) && Carbon::parse($s['hasta'])->isFuture()) ? $s : null;
     }
 
-    public static function abrirSesion(Cliente $c, string $nombre): void
+    public static function abrirSesion(Cliente $c, string $nombre, ?Carbon $hasta = null): void
     {
-        session(['redes_ok.' . $c->id => ['nombre' => $nombre, 'hasta' => now()->addHours(self::HORAS_SESION)->toIso8601String()]]);
+        $hasta ??= now()->addHours(24);
+        $datos = ['nombre' => $nombre, 'hasta' => $hasta->toIso8601String()];
+        session(['redes_ok.' . $c->id => $datos]);
+        \Illuminate\Support\Facades\Cookie::queue('vandu_redes_' . $c->id, json_encode($datos), max(1, (int) now()->diffInMinutes($hasta)));
     }
 
     public static function comentar(RedesPost $p, string $tipo, string $actor, ?string $autor, ?string $texto): RedesComentario

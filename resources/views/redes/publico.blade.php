@@ -263,7 +263,7 @@
                 {{-- Verificación (una vez) --}}
                 <template x-if="!sesion">
                     <div class="verif">
-                        <div><b>Para aprobar o comentar, confirma que eres tú</b><div class="ayuda" style="font-size:13.5px">Usa el código que te enviamos por correo o WhatsApp (vale 24 horas).</div></div>
+                        <div><b>Para aprobar o comentar, confirma que eres tú</b><div class="ayuda" style="font-size:13.5px">Usa el código que te enviamos por correo o WhatsApp. Solo lo escribes una vez en este dispositivo.</div></div>
                         <div><label for="v-nombre">Tu nombre</label><input type="text" id="v-nombre" x-model="vNombre" autocomplete="name"></div>
                         <div><label for="v-codigo">Código de verificación</label><input type="text" id="v-codigo" class="codigo" x-model="vCodigo" @input="vCodigo = formatoCodigo(vCodigo)" inputmode="numeric" autocomplete="one-time-code" placeholder="000 000" maxlength="7"></div>
                         <div class="err" x-show="error" x-text="error"></div>
