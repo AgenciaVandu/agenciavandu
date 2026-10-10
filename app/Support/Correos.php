@@ -45,7 +45,7 @@ class Correos
     public static function plantillas(array $ctx): array
     {
         $lista = [];
-        foreach (config('vandu.correo.plantillas') as $clave => $pl) {
+        foreach (PlantillasCorreo::activas() as $clave => $pl) {
             if (! in_array($ctx['tipo'], $pl['para'], true)) {
                 continue;
             }
@@ -139,7 +139,7 @@ class Correos
     /** Enlace del botón: la vista del proyecto o la de la cotización */
     public static function enlace(array $ctx, ?string $clave = null): ?string
     {
-        $pl = $clave ? config('vandu.correo.plantillas.' . Str::before($clave, '@'), []) : [];
+        $pl = $clave ? (PlantillasCorreo::una(Str::before($clave, '@')) ?? []) : [];
         if ($ctx['proyecto'] && ($pl['enlace'] ?? null) === 'entrega') return $ctx['proyecto']->url_entrega;
         if ($ctx['proyecto']) return $ctx['proyecto']->url_publica;
         if ($ctx['presupuesto']) return $ctx['presupuesto']->url_publica;

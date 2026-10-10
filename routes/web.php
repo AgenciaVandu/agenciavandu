@@ -75,6 +75,12 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::patch('clientes/{cliente}/atendido', [Admin\ClienteController::class, 'atendido'])->name('clientes.atendido');
     Route::post('correos', [Admin\CorreoController::class, 'enviar'])->name('correos.enviar');
     Route::post('correos/vista-previa', [Admin\CorreoController::class, 'vistaPrevia'])->name('correos.vista-previa');
+    Route::get('correos/plantillas', [Admin\PlantillaCorreoController::class, 'index'])->name('correos.plantillas');
+    Route::post('correos/plantillas', [Admin\PlantillaCorreoController::class, 'store'])->name('correos.plantillas.store');
+    Route::put('correos/plantillas/{clave}', [Admin\PlantillaCorreoController::class, 'update'])->name('correos.plantillas.update');
+    Route::post('correos/plantillas/{clave}/previa', [Admin\PlantillaCorreoController::class, 'previa'])->name('correos.plantillas.previa');
+    Route::post('correos/plantillas/{clave}/restaurar', [Admin\PlantillaCorreoController::class, 'restaurar'])->name('correos.plantillas.restaurar');
+    Route::delete('correos/plantillas/{clave}', [Admin\PlantillaCorreoController::class, 'destroy'])->name('correos.plantillas.destroy');
     Route::post('clientes/{cliente}/constancias', [Admin\ClienteController::class, 'subirConstancia'])->name('clientes.constancias.store');
     Route::get('clientes/{cliente}/constancias/{constancia}', [Admin\ClienteController::class, 'verConstancia'])->name('clientes.constancias.show');
     Route::delete('clientes/{cliente}/constancias/{constancia}', [Admin\ClienteController::class, 'borrarConstancia'])->name('clientes.constancias.destroy');

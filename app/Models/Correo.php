@@ -17,7 +17,7 @@ class Correo extends Model
 
     public function getPlantillaNombreAttribute(): string
     {
-        return config("vandu.correo.plantillas.{$this->plantilla}.nombre", 'Correo');
+        return \App\Support\PlantillasCorreo::una((string) $this->plantilla)['nombre'] ?? 'Correo';
     }
 
     public function getEnviadoAttribute(): bool
