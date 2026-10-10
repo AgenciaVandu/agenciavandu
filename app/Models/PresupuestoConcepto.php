@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class PresupuestoConcepto extends Model
 {
+    use \App\Models\Concerns\DeCuenta;
+
     public const COPIABLES = ['titulo', 'descripcion', 'cantidad', 'precio', 'orden', 'costo_proveedor', 'gasolina', 'utilidad', 'utilidad_modo'];
 
     protected $fillable = self::COPIABLES;

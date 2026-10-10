@@ -1,6 +1,15 @@
 @php
     // Al enviar, el logo va incrustado en el correo; en la vista previa del panel, en base64
-    $logo = isset($message) && ! $vistaPrevia ? $message->embed(resource_path('img/logo-vandu-correo.png')) : \App\Support\Correos::logoDataUri();
+    $cuentaMail = \App\Support\Cuentas::esPrincipal() ? null : \App\Support\Cuentas::actual();
+    if ($cuentaMail) {
+        // Otro negocio: su logo (o su nombre si no ha subido uno)
+        $propio = $cuentaMail->logo(true);
+        $logo = $propio && isset($message) && ! $vistaPrevia
+            ? $message->embedData(base64_decode(explode(',', $propio, 2)[1]), 'logo', \Illuminate\Support\Str::between($propio, 'data:', ';'))
+            : $propio;
+    } else {
+        $logo = isset($message) && ! $vistaPrevia ? $message->embed(resource_path('img/logo-vandu-correo.png')) : \App\Support\Correos::logoDataUri();
+    }
     $font = "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif";
     $emisor = config('vandu.emisor');
 @endphp
@@ -40,7 +49,7 @@
             <td bgcolor="#13161D" class="px" style="background-color:#13161D; padding:28px 40px;">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                     <tr>
-                        <td align="left" valign="middle"><img src="{{ $logo }}" width="112" height="36" alt="Agencia Vandu" style="display:block; width:112px; height:auto;"></td>
+                        <td align="left" valign="middle">@if($logo)<img src="{{ $logo }}" width="112" height="36" alt="{{ config('vandu.marca.nombre') }}" style="display:block; width:{{ $cuentaMail ? 'auto' : '112px' }}; max-width:180px; max-height:44px; height:auto;">@else<span style="font-size:18px; font-weight:700; color:#FFFFFF;">{{ config('vandu.marca.nombre') }}</span>@endif</td>
                         <td align="right" valign="middle" class="ocultar-movil" style="font-family:{{ $font }}; font-size:12px; color:#9BA1AE; letter-spacing:.02em;">{{ $emisor['sitio'] }}</td>
                     </tr>
                 </table>
@@ -153,7 +162,7 @@
                 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-top:1px solid #E7E9EE;">
                     <tr><td style="padding-top:24px;">
                         <p style="margin:0; font-size:15px; line-height:22px; font-weight:700; color:#13161D;">{{ $emisor['nombre'] }}</p>
-                        <p style="margin:2px 0 0; font-size:14px; line-height:21px; color:#6B7180;">Agencia Vandu</p>
+                        <p style="margin:2px 0 0; font-size:14px; line-height:21px; color:#6B7180;">{{ config('vandu.marca.nombre') }}</p>
                         <p style="margin:8px 0 0; font-size:14px; line-height:21px; color:#6B7180;">
                             @if($emisor['telefono'])<a href="tel:{{ preg_replace('/\D/', '', $emisor['telefono']) }}" style="color:#13161D; text-decoration:none;">{{ $emisor['telefono'] }}</a> &nbsp;·&nbsp; @endif
                             <a href="https://{{ $emisor['sitio'] }}" style="color:#13161D; text-decoration:none;">{{ $emisor['sitio'] }}</a>

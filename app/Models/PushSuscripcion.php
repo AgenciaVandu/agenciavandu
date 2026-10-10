@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /** Un dispositivo (celular, compu) donde se activaron las notificaciones push */
 class PushSuscripcion extends Model
 {
+    use \App\Models\Concerns\DeCuenta;
+
     protected $table = 'push_suscripciones';
 
     protected $fillable = ['user_id', 'endpoint_hash', 'endpoint', 'p256dh', 'auth', 'dispositivo', 'eventos', 'ultimo_envio_at'];

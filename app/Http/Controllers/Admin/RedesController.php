@@ -48,7 +48,7 @@ class RedesController extends Controller
 
     public function activar(Request $request)
     {
-        $c = Cliente::findOrFail($request->validate(['cliente_id' => 'required|exists:clientes,id'])['cliente_id']);
+        $c = Cliente::findOrFail($request->validate(['cliente_id' => 'required|integer'])['cliente_id']);
         Redes::token($c);
         return redirect()->route('admin.redes.cliente', $c)->with('ok', 'Listo. Configura cómo se ven sus perfiles y empieza a planear su contenido.');
     }

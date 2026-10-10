@@ -10,6 +10,8 @@ use Illuminate\Support\Str;
 
 class Presupuesto extends Model
 {
+    use \App\Models\Concerns\DeCuenta;
+
     public const ESTADOS = [
         'borrador'  => 'Borrador',
         'enviada'     => 'Enviada',

@@ -65,7 +65,7 @@ class ArchivosController extends Controller
         $id = $this->id($request);
         $tam = $request->query('t') === 'g' ? 'w1024h768' : 'w256h256';
 
-        $jpg = Cache::remember("dropbox.mini.$tam." . md5($id), now()->addHours(12), function () use ($id, $tam) {
+        $jpg = Cache::remember(\App\Support\Cuentas::clave("dropbox.mini.$tam." . md5($id)), now()->addHours(12), function () use ($id, $tam) {
             try { return base64_encode(Dropbox::cliente()->miniatura($id, $tam)); } catch (DropboxError) { return ''; }
         });
         abort_if($jpg === '', 404);

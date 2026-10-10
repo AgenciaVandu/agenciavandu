@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Storage;
 
 class Cliente extends Model
 {
+    use \App\Models\Concerns\DeCuenta;
+
     protected $fillable = [
         'nombre', 'empresa', 'email', 'telefono',
         'rfc', 'razon_social', 'regimen_fiscal', 'cp_fiscal', 'uso_cfdi', 'metodo_pago', 'dias_credito', 'email_factura', 'notas',

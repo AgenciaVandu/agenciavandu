@@ -25,7 +25,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>{{ $p->titulo }} para {{ $p->cliente_empresa ?: $p->cliente_nombre }} | Agencia Vandu</title>
+    <title>{{ $p->titulo }} para {{ $p->cliente_empresa ?: $p->cliente_nombre }} | {{ config('vandu.marca.nombre') }}</title>
     <link rel="icon" href="/favi.svg" type="image/svg+xml">
     <link rel="preload" href="{{ route('vandu.fuente') }}" as="font" type="font/woff2" crossorigin>
     <style>
@@ -400,7 +400,7 @@
                     <li class="{{ $ev->tipo }}">
                         <span class="pt" aria-hidden="true"></span>
                         <div class="t">{{ $ev->titulo }}</div>
-                        <div class="f">{{ $fechaEv($ev->created_at) }}@if($ev->actor === 'cliente' && $ev->autor) · {{ $ev->autor }}@elseif($ev->actor === 'agencia') · Agencia Vandu @endif</div>
+                        <div class="f">{{ $fechaEv($ev->created_at) }}@if($ev->actor === 'cliente' && $ev->autor) · {{ $ev->autor }}@elseif($ev->actor === 'agencia') · {{ config('vandu.marca.nombre') }} @endif</div>
                         @if($ev->detalle && in_array($ev->tipo, ['cambios', 'editada', 'vigencia'], true))<div class="d">{{ $ev->detalle }}</div>@endif
                     </li>
                 @endforeach
@@ -451,7 +451,7 @@
 
     <footer class="pie">
         <span>Folio {{ $p->folio }}</span>
-        <span>Agencia Vandu, Mérida, Yucatán</span>
+        <span>{{ config('vandu.marca.nombre') }}{{ config('vandu.marca.ciudad') ? ', ' . config('vandu.marca.ciudad') : '' }}</span>
     </footer>
 </main>
 

@@ -22,6 +22,16 @@ class AdminAuth
         }
 
         $u = $request->user();
+
+        // Cada quien trabaja dentro de su negocio; la plataforma puede entrar a otro para dar soporte
+        $vista = $u->plataforma ? $request->session()->get('cuenta_vista') : null;
+        $cuenta = \App\Support\Cuentas::activar($vista ?: $u->cuenta_id) ?? \App\Support\Cuentas::activar($u->cuenta_id);
+        if (! $cuenta || (! $cuenta->activa && ! $u->plataforma)) {
+            Auth::logout();
+            $request->session()->invalidate();
+            return redirect()->route('login')->withErrors(['email' => 'La cuenta de tu negocio está suspendida. Escríbenos para reactivarla.']);
+        }
+
         if ($u->activo === false) {
             Auth::logout();
             $request->session()->invalidate();

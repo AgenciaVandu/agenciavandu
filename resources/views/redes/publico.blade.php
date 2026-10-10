@@ -17,7 +17,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Contenido de {{ $nombre }} · {{ $mesTxt }} | Agencia Vandu</title>
+    <title>Contenido de {{ $nombre }} · {{ $mesTxt }} | {{ config('vandu.marca.nombre') }}</title>
     <link rel="icon" href="/favi.svg" type="image/svg+xml">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
@@ -254,7 +254,7 @@
                 <ul class="hilo" x-show="post.comentarios.filter(c => c.texto).length">
                     <template x-for="(cm, i) in post.comentarios.filter(c => c.texto)" :key="i">
                         <li :class="[cm.actor, cm.tipo]">
-                            <div class="q"><b x-text="cm.actor === 'agencia' ? 'Agencia Vandu' : (cm.autor || 'Tú')"></b> · <span x-text="cm.fecha"></span></div>
+                            <div class="q"><b x-text="cm.actor === 'agencia' ? {{ Js::from(config('vandu.marca.nombre')) }} : (cm.autor || 'Tú')"></b> · <span x-text="cm.fecha"></span></div>
                             <div class="t" x-text="cm.texto"></div>
                         </li>
                     </template>

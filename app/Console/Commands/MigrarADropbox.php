@@ -12,11 +12,12 @@ use Illuminate\Support\Facades\Storage;
 /** Pasa a Dropbox los archivos que todavía están en el servidor (se puede correr varias veces) */
 class MigrarADropbox extends Command
 {
-    protected $signature = 'vandu:dropbox-migrar {--simular : Solo muestra qué se movería}';
+    protected $signature = 'vandu:dropbox-migrar {--simular : Solo muestra qué se movería} {--cuenta= : Número de cuenta (por defecto la principal)}';
     protected $description = 'Sube a Dropbox los archivos del panel que siguen en el servidor y libera el espacio';
 
     public function handle(): int
     {
+        if ($this->option('cuenta')) \App\Support\Cuentas::activar((int) $this->option('cuenta'));
         if (! Dropbox::conectado()) {
             $this->error('Dropbox no está conectado. Conéctalo primero en el panel (sección Dropbox).');
             return self::FAILURE;

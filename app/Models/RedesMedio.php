@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /** Foto o video de un post (en Dropbox o en el servidor) */
 class RedesMedio extends Model
 {
+    use \App\Models\Concerns\DeCuenta;
+
     protected $table = 'redes_medios';
 
     protected $fillable = ['post_id', 'orden', 'tipo', 'origen', 'ruta', 'nombre', 'ancho', 'alto', 'bytes'];

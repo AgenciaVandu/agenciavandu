@@ -40,7 +40,7 @@ class CrearUsuarioAdmin extends Command
         }
 
         // Quien se crea desde la terminal es super admin
-        User::updateOrCreate(['email' => $email], ['name' => $nombre, 'password' => $password, 'activo' => true, 'rol_id' => \App\Models\Rol::where('todo', true)->value('id')]);
+        User::updateOrCreate(['email' => $email], ['name' => $nombre, 'password' => $password, 'activo' => true, 'plataforma' => true, 'rol_id' => \App\Models\Rol::where('todo', true)->value('id')]);
 
         $this->info($existe ? "Contraseña actualizada para {$email}." : "Usuario {$email} creado. Ya puedes entrar en /admin/login.");
 

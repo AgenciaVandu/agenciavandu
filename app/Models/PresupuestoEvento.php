@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /** Un momento en la vida de la cotización: enviada, editada, cambios solicitados, aceptada… */
 class PresupuestoEvento extends Model
 {
+    use \App\Models\Concerns\DeCuenta;
+
     public const UPDATED_AT = null;
 
     public const TIPOS = [

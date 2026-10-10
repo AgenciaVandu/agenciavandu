@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /** Trabajo asignado a alguien del equipo, con su carpeta de Dropbox para entregar */
 class Tarea extends Model
 {
+    use \App\Models\Concerns\DeCuenta;
+
     public const ESTADOS = [
         'pendiente' => ['texto' => 'Pendiente',   'color' => '#9AA0AC', 'icono' => 'bi-circle'],
         'en_curso'  => ['texto' => 'En curso',    'color' => '#2557D6', 'icono' => 'bi-play-circle'],

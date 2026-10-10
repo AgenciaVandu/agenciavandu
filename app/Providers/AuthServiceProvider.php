@@ -21,6 +21,6 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \Illuminate\Support\Facades\Auth::provider('vandu', fn ($app, array $config) => new \App\Auth\ProveedorUsuarios($app['hash'], $config['model']));
     }
 }

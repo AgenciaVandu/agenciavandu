@@ -77,7 +77,7 @@ class Dropbox
             'account_id'    => $r->json('account_id'),
         ];
         $int = Integracion::updateOrCreate(['proveedor' => 'dropbox'], ['datos' => $datos]);
-        Cache::forget('dropbox.token');
+        Cache::forget(\App\Support\Cuentas::clave('dropbox.token'));
         $cuenta = $this->rpc('users/get_current_account', null);
         $int->update(['cuenta' => trim(($cuenta['name']['display_name'] ?? '') . ' · ' . ($cuenta['email'] ?? ''), ' ·')]);
         return $int;
@@ -87,7 +87,7 @@ class Dropbox
     {
         try { $this->rpc('auth/token/revoke', null); } catch (\Throwable) { /* ya no importa */ }
         Integracion::where('proveedor', 'dropbox')->delete();
-        Cache::forget('dropbox.token');
+        Cache::forget(\App\Support\Cuentas::clave('dropbox.token'));
     }
 
     /** Token de acceso vigente (se renueva solo) */
@@ -272,13 +272,13 @@ class Dropbox
         } catch (DropboxError $e) {
             if (! str_contains($e->resumen, 'not_found')) throw $e;
         }
-        Cache::forget('dropbox.enlace.' . md5($rutaOId));
+        Cache::forget(\App\Support\Cuentas::clave('dropbox.enlace.' . md5($rutaOId)));
     }
 
     /** Enlace directo que dura 4 horas: lo usamos para reproducir y descargar */
     public function enlaceTemporal(string $rutaOId): string
     {
-        return Cache::remember('dropbox.enlace.' . md5($rutaOId), now()->addMinutes(200), fn () =>
+        return Cache::remember(\App\Support\Cuentas::clave('dropbox.enlace.' . md5($rutaOId)), now()->addMinutes(200), fn () =>
             $this->rpc('files/get_temporary_link', ['path' => $rutaOId])['link']);
     }
 

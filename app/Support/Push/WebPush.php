@@ -23,12 +23,13 @@ class WebPush
         if (config('vandu.push.publica') && config('vandu.push.privada')) {
             return ['publica' => config('vandu.push.publica'), 'privada' => config('vandu.push.privada')];
         }
-        $i = Integracion::de('push');
+        // Las claves son de la plataforma (una sola app instalable), se guardan en la cuenta principal
+        $i = Integracion::sinCuenta()->where('cuenta_id', \App\Support\Cuentas::principalId())->where('proveedor', 'push')->first();
         if ($i && ! empty($i->datos['publica'])) {
             return $i->datos;
         }
         $nuevas = static::generarClaves();
-        Integracion::updateOrCreate(['proveedor' => 'push'], ['cuenta' => 'VAPID', 'datos' => $nuevas]);
+        Integracion::sinCuenta()->updateOrCreate(['cuenta_id' => \App\Support\Cuentas::principalId(), 'proveedor' => 'push'], ['cuenta' => 'VAPID', 'datos' => $nuevas]);
         return $nuevas;
     }
 

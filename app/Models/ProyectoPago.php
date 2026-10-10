@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProyectoPago extends Model
 {
+    use \App\Models\Concerns\DeCuenta;
+
     protected $fillable = ['clave', 'concepto', 'porcentaje', 'monto', 'antes_de', 'vence_el', 'orden', 'pagado_el', 'metodo', 'referencia'];
 
     protected $casts = [

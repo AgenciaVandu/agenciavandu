@@ -21,7 +21,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Entrega · {{ $p->nombre }} | Agencia Vandu</title>
+    <title>Entrega · {{ $p->nombre }} | {{ config('vandu.marca.nombre') }}</title>
     <link rel="icon" href="/favi.svg" type="image/svg+xml">
     <link rel="preload" href="{{ route('vandu.fuente') }}" as="font" type="font/woff2" crossorigin>
     <style>
@@ -182,7 +182,7 @@
 
 <footer class="pie ancho">
     <span>¿Algún ajuste? <a href="https://wa.me/{{ $wa }}?text={{ $waMsg }}" target="_blank" rel="noopener">Escríbenos por WhatsApp</a></span>
-    <span>Agencia Vandu, Mérida, Yucatán</span>
+    <span>{{ config('vandu.marca.nombre') }}{{ config('vandu.marca.ciudad') ? ', ' . config('vandu.marca.ciudad') : '' }}</span>
 </footer>
 
 @if($items->isNotEmpty())

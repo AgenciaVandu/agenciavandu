@@ -12,13 +12,12 @@ use Throwable;
  */
 class TiposProyecto
 {
-    private static ?array $fabrica = null;
-
     public const ICONOS = ['bi-kanban', 'bi-window-stack', 'bi-camera-reels', 'bi-printer', 'bi-grid-3x3-gap', 'bi-megaphone', 'bi-palette', 'bi-brush', 'bi-calendar-event', 'bi-mic', 'bi-bag', 'bi-lightbulb', 'bi-people', 'bi-graph-up-arrow', 'bi-box-seam', 'bi-stars'];
 
+    /** Los de fábrica del giro de la cuenta activa */
     public static function fabrica(): array
     {
-        return self::$fabrica ??= config('vandu.proyectos', []);
+        return Cuentas::proyectosDeFabrica();
     }
 
     public static function aplicar(): void

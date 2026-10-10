@@ -12,6 +12,8 @@ use Illuminate\Support\Str;
 
 class Proyecto extends Model
 {
+    use \App\Models\Concerns\DeCuenta;
+
     public const ESTADOS = ['activo' => 'Activo', 'pausado' => 'En pausa', 'terminado' => 'Terminado'];
 
     protected $fillable = [

@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProyectoEtapa extends Model
 {
+    use \App\Models\Concerns\DeCuenta;
+
     public const ESTADOS = ['pendiente' => 'Pendiente', 'en_curso' => 'En curso', 'completada' => 'Completada'];
 
     protected $fillable = ['clave', 'nombre', 'descripcion', 'orden', 'estado', 'es_fecha', 'dias', 'fecha_inicio', 'fecha_fin', 'completada_at'];

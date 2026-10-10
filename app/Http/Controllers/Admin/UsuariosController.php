@@ -26,7 +26,7 @@ class UsuariosController extends Controller
         return view('admin.usuarios.index', [
             'usuarios'  => $usuarios,
             'roles'     => Rol::withCount('usuarios')->orderBy('orden')->orderBy('id')->get(),
-            'secciones' => Permisos::SECCIONES,
+            'secciones' => Permisos::disponibles(),
             'tab'       => $request->query('tab') === 'roles' ? 'roles' : 'personas',
         ]);
     }
@@ -117,7 +117,7 @@ class UsuariosController extends Controller
             'email'    => ['required', 'email', 'max:190', Rule::unique('users', 'email')->ignore($u?->id)],
             'puesto'   => 'nullable|string|max:80',
             'telefono' => 'nullable|string|max:30',
-            'rol_id'   => 'required|exists:roles,id',
+            'rol_id'   => ['required', Rule::exists('roles', 'id')->where('cuenta_id', \App\Support\Cuentas::id())],
         ], [
             'name.required'  => 'Escribe su nombre.',
             'email.required' => 'Escribe su correo.',
@@ -135,15 +135,16 @@ class UsuariosController extends Controller
     private function conEnlace(Request $request, User $u, string $ok)
     {
         $url = $u->nuevoEnlace();
+        $marca = config('vandu.marca.nombre');
         $nuevo = $u->pendiente;
         $correo = false;
         if ($request->boolean('enviar_correo', true)) {
             try {
                 Mail::to($u->email, $u->name)->send(new CorreoVandu(
-                    asunto: $nuevo ? 'Te invitaron al panel de Agencia Vandu' : 'Crea una nueva contraseña para el panel',
+                    asunto: $nuevo ? "Te invitaron al panel de $marca" : 'Crea una nueva contraseña para el panel',
                     titulo: $nuevo ? "Hola, {$u->primer_nombre}" : 'Nueva contraseña',
                     cuerpo: ($nuevo
-                        ? "Ya tienes acceso al panel de Agencia Vandu" . ($u->puesto ? " como {$u->puesto}" : '') . ". Ahí verás tus tareas y podrás subir tu trabajo.\n\nCrea tu contraseña con el botón. El enlace sirve 7 días."
+                        ? "Ya tienes acceso al panel de $marca" . ($u->puesto ? " como {$u->puesto}" : '') . ". Ahí verás tus tareas y podrás subir tu trabajo.\n\nCrea tu contraseña con el botón. El enlace sirve 7 días."
                         : "Usa el botón para crear una nueva contraseña. El enlace sirve 7 días y deja de funcionar al usarlo."),
                     boton: $nuevo ? 'Crear mi contraseña' : 'Crear nueva contraseña',
                     url: $url,
@@ -153,7 +154,7 @@ class UsuariosController extends Controller
                 report($e);
             }
         }
-        $texto = ($nuevo ? "Hola {$u->primer_nombre}, ya tienes acceso al panel de Agencia Vandu. Crea tu contraseña aquí (sirve 7 días):" : "Hola {$u->primer_nombre}, aquí puedes crear tu nueva contraseña del panel de Agencia Vandu (sirve 7 días):") . "\n$url";
+        $texto = ($nuevo ? "Hola {$u->primer_nombre}, ya tienes acceso al panel de $marca. Crea tu contraseña aquí (sirve 7 días):" : "Hola {$u->primer_nombre}, aquí puedes crear tu nueva contraseña del panel de $marca (sirve 7 días):") . "\n$url";
 
         return redirect()->route('admin.usuarios.edit', $u)->with('ok', $ok . ($correo ? " Le enviamos el enlace a {$u->email}." : ''))->with('enlace', [
             'url'      => $url,

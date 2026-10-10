@@ -202,7 +202,7 @@ class PresupuestoController extends Controller
     private function validar(Request $request): array
     {
         $v = $request->validate([
-            'cliente_id'       => 'required|exists:clientes,id',
+            'cliente_id'       => ['required', \Illuminate\Validation\Rule::exists('clientes', 'id')->where('cuenta_id', \App\Support\Cuentas::id())],
             'cliente_nombre'   => 'required|string|max:255',
             'cliente_empresa'  => 'nullable|string|max:255',
             'fecha'            => 'required|date',

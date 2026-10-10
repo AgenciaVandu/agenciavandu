@@ -1,7 +1,8 @@
 @php
     /** @var \App\Models\Presupuesto $p */
     $font = fn ($w) => 'file://' . resource_path("fonts/Geist-$w.ttf");
-    $logo = 'file://' . resource_path('pdf/logo-vandu-blanco.png');
+    $cuentaPdf = \App\Support\Cuentas::esPrincipal() ? null : \App\Support\Cuentas::actual();
+    $logo = $cuentaPdf ? $cuentaPdf->logo(true) : 'file://' . resource_path('pdf/logo-vandu-blanco.png');
     $secciones = $p->consideraciones_limpias;
     $n = 0;
 @endphp
@@ -77,7 +78,7 @@
 <div class="pie"><span class="num"></span></div>
 
 <div class="hdr">
-    <img src="{{ $logo }}" alt="Vandu">
+    @if($logo)<img src="{{ $logo }}" alt="{{ config('vandu.marca.nombre') }}">@else<span style="color:#fff; font-size:20px; font-weight:bold">{{ config('vandu.marca.nombre') }}</span>@endif
     <div class="contacto">
         @if($p->emisor_nombre)<div class="b">{{ $p->emisor_nombre }}</div>@endif
         @if($p->emisor_telefono)<div class="b">{{ $p->emisor_telefono }}</div>@endif

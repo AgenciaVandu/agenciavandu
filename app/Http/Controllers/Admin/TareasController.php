@@ -228,7 +228,7 @@ class TareasController extends Controller
         try {
             if ($request->query('t')) {
                 $tam = $request->query('t') === 'g' ? 'w1024h768' : 'w256h256';
-                $jpg = Cache::remember("dropbox.mini.$tam." . md5($ruta), now()->addHours(12), function () use ($ruta, $tam) {
+                $jpg = Cache::remember(\App\Support\Cuentas::clave("dropbox.mini.$tam." . md5($ruta)), now()->addHours(12), function () use ($ruta, $tam) {
                     try { return base64_encode(Dropbox::cliente()->miniatura($ruta, $tam)); } catch (DropboxError) { return ''; }
                 });
                 abort_if($jpg === '', 404);
@@ -305,9 +305,9 @@ class TareasController extends Controller
         $d = $request->validate([
             'titulo'       => 'required|string|max:160',
             'descripcion'  => 'nullable|string|max:5000',
-            'cliente_id'   => 'nullable|exists:clientes,id',
-            'proyecto_id'  => 'nullable|exists:proyectos,id',
-            'asignada_a'   => ['nullable', Rule::exists('users', 'id')->where('activo', true)],
+            'cliente_id'   => ['nullable', Rule::exists('clientes', 'id')->where('cuenta_id', \App\Support\Cuentas::id())],
+            'proyecto_id'  => ['nullable', Rule::exists('proyectos', 'id')->where('cuenta_id', \App\Support\Cuentas::id())],
+            'asignada_a'   => ['nullable', Rule::exists('users', 'id')->where('activo', true)->where('cuenta_id', \App\Support\Cuentas::id())],
             'fecha_limite' => 'nullable|date',
             'carpeta'      => ['nullable', 'string', 'max:480', 'regex:/^\/[^\\\\<>:"|?*]*$/'],
         ], [

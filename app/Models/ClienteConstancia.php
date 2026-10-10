@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Storage;
 /** Constancia de Situación Fiscal guardada en el expediente del cliente (privada, solo panel) */
 class ClienteConstancia extends Model
 {
+    use \App\Models\Concerns\DeCuenta;
+
     protected $table = 'cliente_constancias';
 
     protected $fillable = ['nombre', 'ruta', 'origen', 'dropbox_id', 'mime', 'peso', 'emitida_el'];

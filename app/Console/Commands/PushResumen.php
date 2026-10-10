@@ -17,20 +17,28 @@ class PushResumen extends Command
 
     public function handle(): int
     {
+        // Cada negocio recibe su propio resumen
+        foreach (\App\Models\Cuenta::where('activa', true)->orderBy('id')->get() as $cuenta) {
+            \App\Support\Cuentas::como($cuenta, fn () => $this->resumenDeCuenta($cuenta));
+        }
+        return self::SUCCESS;
+    }
+
+    private function resumenDeCuenta(\App\Models\Cuenta $cuenta): void
+    {
         [$titulo, $cuerpo] = static::armar();
 
         if (! $cuerpo) {
-            $this->info('Nada pendiente hoy: no se envía nada.');
-            return self::SUCCESS;
+            $this->info("{$cuenta->nombre}: nada pendiente hoy, no se envía nada.");
+            return;
         }
 
-        $this->line($titulo);
+        $this->line("[{$cuenta->nombre}] $titulo");
         $this->line($cuerpo);
-        if ($this->option('mostrar')) return self::SUCCESS;
+        if ($this->option('mostrar')) return;
 
         $n = Notificar::ahora('resumen_diario', $titulo, $cuerpo, route('admin.resumen'), 'resumen-' . now(config('vandu.zona_horaria'))->toDateString());
         $this->info("Enviado a $n dispositivo(s).");
-        return self::SUCCESS;
     }
 
     /** @return array{0:string, 1:?string} */

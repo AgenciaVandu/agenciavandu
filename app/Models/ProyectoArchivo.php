@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Storage;
 
 class ProyectoArchivo extends Model
 {
+    use \App\Models\Concerns\DeCuenta;
+
     protected $fillable = ['etapa_id', 'grupo', 'origen', 'dropbox_id', 'nombre', 'ruta', 'mime', 'peso', 'vista', 'miniatura', 'ancho', 'alto', 'visible', 'orden'];
 
     protected $casts = ['visible' => 'boolean', 'peso' => 'integer'];

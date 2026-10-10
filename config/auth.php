@@ -61,7 +61,7 @@ return [
 
     'providers' => [
         'users' => [
-            'driver' => 'eloquent',
+            'driver' => 'vandu', // eloquent, buscando en todas las cuentas
             'model' => App\Models\User::class,
         ],
 

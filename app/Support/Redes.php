@@ -162,7 +162,7 @@ class Redes
         }
         try {
             if ($mini && $m->tipo === 'imagen') {
-                $jpg = Cache::remember('redes.mini.' . md5($m->ruta), now()->addHours(12), fn () => base64_encode(Dropbox::cliente()->miniatura($m->ruta, 'w640h480')));
+                $jpg = Cache::remember(\App\Support\Cuentas::clave('redes.mini.' . md5($m->ruta)), now()->addHours(12), fn () => base64_encode(Dropbox::cliente()->miniatura($m->ruta, 'w640h480')));
                 return response(base64_decode($jpg), 200, ['Content-Type' => 'image/jpeg', 'Cache-Control' => 'private, max-age=86400']);
             }
             return redirect()->away(Dropbox::cliente()->enlaceTemporal($m->ruta));

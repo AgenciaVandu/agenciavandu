@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Correo extends Model
 {
+    use \App\Models\Concerns\DeCuenta;
+
     protected $fillable = ['cliente_id', 'presupuesto_id', 'proyecto_id', 'plantilla', 'para', 'cc', 'asunto', 'cuerpo', 'adjuntos', 'estado', 'error'];
 
     protected $casts = ['adjuntos' => 'array'];

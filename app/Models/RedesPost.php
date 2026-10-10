@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /** Una publicación del calendario de contenido */
 class RedesPost extends Model
 {
+    use \App\Models\Concerns\DeCuenta;
+
     public const ESTADOS = [
         'borrador'  => ['texto' => 'Borrador',        'color' => '#8A90A0'],
         'revision'  => ['texto' => 'En revisión',     'color' => '#2F6FEB'],

@@ -6,6 +6,8 @@
     $activosNav = \App\Models\Proyecto::where('estado', 'activo')->count();
     try { $redesNav = \App\Models\RedesPost::where('estado', 'cambios')->count(); } catch (\Throwable $e) { $redesNav = 0; }
     try { $nuevosNav = \App\Models\Cliente::where('nuevo', true)->count(); } catch (\Throwable $e) { $nuevosNav = 0; } // antes de migrar
+    $cuentaNav = \App\Support\Cuentas::actual();
+    $viendoOtra = $usuario?->plataforma && $cuentaNav && $cuentaNav->id !== $usuario->cuenta_id;
     // Cada quien ve solo las secciones de su rol
     $puede = fn ($s) => $usuario?->puede($s) ?? false;
     try { $tareasNav = \App\Models\Tarea::where('asignada_a', $usuario?->id)->abiertas()->count(); } catch (\Throwable $e) { $tareasNav = 0; }
@@ -37,7 +39,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="robots" content="noindex, nofollow">
-    <title>@yield('titulo', 'Panel') · Vandu</title>
+    <title>@yield('titulo', 'Panel') · {{ \App\Support\Cuentas::esPrincipal() ? 'Vandu' : \App\Support\Cuentas::actual()?->nombre }}</title>
     <link rel="icon" href="/favi.svg" type="image/svg+xml">
     <link rel="manifest" href="{{ route('app.manifiesto') }}">
     <meta name="theme-color" content="#13161D">
@@ -384,9 +386,13 @@
             </a>
         @endforeach
     </nav>
-    <div class="side-label mt-4">Sitio</div>
+    <div class="side-label mt-4">Ajustes</div>
     <nav>
-        <a href="/" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> agenciavandu.com</a>
+        @if($cuentaNav && $cuentaNav->id === \App\Support\Cuentas::principalId())
+            <a href="/" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> {{ config('vandu.marca.sitio') }}</a>
+        @elseif(config('vandu.marca.sitio'))
+            <a href="https://{{ preg_replace('#^https?://#', '', config('vandu.marca.sitio')) }}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> {{ preg_replace('#^https?://#', '', config('vandu.marca.sitio')) }}</a>
+        @endif
         @php $dbxNav = \App\Support\Dropbox\Dropbox::conectado(); @endphp
         @if($puede('archivos'))
         <a href="{{ route('admin.archivos') }}" class="{{ request()->routeIs('admin.archivos*') ? 'activo' : '' }}">
@@ -405,9 +411,19 @@
             <i class="bi {{ request()->routeIs('admin.correos.plantillas*') ? 'bi-envelope-paper-fill' : 'bi-envelope-paper' }}"></i> Plantillas de correo
         </a>
         @endif
+        @if($puede('configuracion'))
+        <a href="{{ route('admin.negocio') }}" class="{{ request()->routeIs('admin.negocio*') ? 'activo' : '' }}">
+            <i class="bi bi-shop"></i> Mi negocio
+        </a>
+        @endif
         @if($puede('usuarios'))
         <a href="{{ route('admin.usuarios') }}" class="{{ request()->routeIs('admin.usuarios*') ? 'activo' : '' }}">
             <i class="bi {{ request()->routeIs('admin.usuarios*') ? 'bi-person-gear' : 'bi-person-gear' }}"></i> Usuarios
+        </a>
+        @endif
+        @if($usuario?->plataforma)
+        <a href="{{ route('admin.plataforma') }}" class="{{ request()->routeIs('admin.plataforma*') ? 'activo' : '' }}">
+            <i class="bi bi-buildings"></i> Plataforma
         </a>
         @endif
         <a href="{{ route('admin.notificaciones') }}" class="{{ request()->routeIs('admin.notificaciones*') ? 'activo' : '' }}">
@@ -433,6 +449,12 @@
 
 <div class="main">
     <main class="page">
+        @if($viendoOtra)
+            <div class="aviso" style="background:#EEF0FF; color:#2F3A8F; display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+                <i class="bi bi-eye"></i> <span>Estás viendo el panel de <b>{{ $cuentaNav->nombre }}</b>. Lo que hagas queda en su cuenta.</span>
+                <form method="post" action="{{ route('admin.plataforma.salir') }}" class="ms-auto">@csrf<button class="btn btn-sm btn-borde">Volver a mi cuenta</button></form>
+            </div>
+        @endif
         @if(session('ok'))
             <div class="aviso aviso-ok" role="status"><i class="bi bi-check-circle-fill"></i> {{ session('ok') }}</div>
         @endif

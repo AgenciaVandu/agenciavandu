@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /** Cómo se ve el perfil del cliente en una red (nombre, usuario, foto, biografía) */
 class RedesPerfil extends Model
 {
+    use \App\Models\Concerns\DeCuenta;
+
     protected $table = 'redes_perfiles';
 
     protected $fillable = ['cliente_id', 'red', 'usuario', 'nombre', 'bio', 'enlace', 'seguidores', 'seguidos', 'avatar', 'avatar_origen'];

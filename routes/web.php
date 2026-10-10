@@ -176,6 +176,13 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::post('roles', [Admin\UsuariosController::class, 'rolStore'])->name('roles.store');
     Route::put('roles/{rol}', [Admin\UsuariosController::class, 'rolUpdate'])->name('roles.update');
     Route::delete('roles/{rol}', [Admin\UsuariosController::class, 'rolDestroy'])->name('roles.destroy');
+    Route::get('negocio', [Admin\NegocioController::class, 'show'])->name('negocio');
+    Route::post('negocio', [Admin\NegocioController::class, 'update'])->name('negocio.update');
+    Route::get('plataforma', [Admin\PlataformaController::class, 'index'])->name('plataforma');
+    Route::post('plataforma', [Admin\PlataformaController::class, 'store'])->name('plataforma.store');
+    Route::put('plataforma/{cuenta}', [Admin\PlataformaController::class, 'update'])->name('plataforma.update');
+    Route::post('plataforma/{cuenta}/entrar', [Admin\PlataformaController::class, 'entrar'])->name('plataforma.entrar');
+    Route::post('plataforma/salir', [Admin\PlataformaController::class, 'salir'])->name('plataforma.salir');
     Route::get('cuenta', [Admin\CuentaController::class, 'show'])->name('cuenta');
     Route::put('cuenta', [Admin\CuentaController::class, 'update'])->name('cuenta.update');
 
@@ -191,7 +198,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
 
 // Vista pública para el cliente (enlace con token, vigente hasta la fecha de la cotización)
 // Contenido de redes para el cliente: ver, comentar y aprobar
-Route::prefix('/redes/{token}')->where(['token' => '[A-Za-z0-9]{32}'])->group(function () {
+Route::prefix('/redes/{token}')->where(['token' => '[A-Za-z0-9]{32}'])->middleware('cuenta.enlace:redes')->group(function () {
     Route::get('/', [App\Http\Controllers\RedesPublicoController::class, 'show'])->name('redes.publico');
     Route::get('/avatar/{red}', [App\Http\Controllers\RedesPublicoController::class, 'avatar'])->name('redes.avatar');
     Route::get('/medios/{medio}', [App\Http\Controllers\RedesPublicoController::class, 'medio'])->name('redes.medio');
@@ -202,23 +209,23 @@ Route::prefix('/redes/{token}')->where(['token' => '[A-Za-z0-9]{32}'])->group(fu
 });
 
 Route::get('/cotizacion/{token}', [PresupuestoPublicoController::class, 'show'])
-    ->where('token', '[A-Za-z0-9]{32}')->name('presupuesto.publico');
+    ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:presupuesto')->name('presupuesto.publico');
 Route::get('/cotizacion/{token}/descargar', [PresupuestoPublicoController::class, 'descargar'])
-    ->where('token', '[A-Za-z0-9]{32}')->middleware('throttle:30,1')->name('presupuesto.descargar');
+    ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:presupuesto')->middleware('throttle:30,1')->name('presupuesto.descargar');
 Route::post('/cotizacion/{token}/responder', [PresupuestoPublicoController::class, 'responder'])
-    ->where('token', '[A-Za-z0-9]{32}')->middleware('throttle:12,1')->name('presupuesto.responder');
+    ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:presupuesto')->middleware('throttle:12,1')->name('presupuesto.responder');
 Route::post('/cotizacion/{token}/codigo', [PresupuestoPublicoController::class, 'pedirCodigo'])
-    ->where('token', '[A-Za-z0-9]{32}')->middleware('throttle:4,10')->name('presupuesto.codigo');
+    ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:presupuesto')->middleware('throttle:4,10')->name('presupuesto.codigo');
 
 // Vista pública del proyecto para el cliente
 Route::get('/proyecto/{token}', [\App\Http\Controllers\ProyectoPublicoController::class, 'show'])
-    ->where('token', '[A-Za-z0-9]{32}')->name('proyecto.publico');
+    ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:proyecto')->name('proyecto.publico');
 Route::get('/proyecto/{token}/entrega', [\App\Http\Controllers\ProyectoPublicoController::class, 'entrega'])
-    ->where('token', '[A-Za-z0-9]{32}')->name('proyecto.entrega');
+    ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:proyecto')->name('proyecto.entrega');
 Route::get('/proyecto/{token}/archivos/{archivo}', [\App\Http\Controllers\ProyectoPublicoController::class, 'archivo'])
-    ->where('token', '[A-Za-z0-9]{32}')->name('proyecto.archivo');
+    ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:proyecto')->name('proyecto.archivo');
 Route::get('/proyecto/{token}/galeria.zip', [\App\Http\Controllers\ProyectoPublicoController::class, 'zip'])
-    ->where('token', '[A-Za-z0-9]{32}')->middleware('throttle:10,1')->name('proyecto.zip');
+    ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:proyecto')->middleware('throttle:10,1')->name('proyecto.zip');
 
 // Dropbox simulado: solo para pruebas locales (VANDU_DROPBOX_SIMULADO=true)
 if (config('vandu.dropbox.simulado') && app()->environment('local', 'testing')) {

@@ -24,6 +24,16 @@ class Permisos
         'usuarios'      => ['texto' => 'Usuarios y roles',      'icono' => 'bi-person-gear',       'ayuda' => 'Invitar personas, darles rol y puesto, y cambiar permisos'],
     ];
 
+    /** Secciones que solo existen en ciertos giros: sección => módulo del giro */
+    public const MODULOS = ['redes' => 'redes'];
+
+    /** Secciones disponibles para la cuenta activa (para armar roles) */
+    public static function disponibles(): array
+    {
+        $c = Cuentas::actual();
+        return array_filter(self::SECCIONES, fn ($s, $k) => ! isset(self::MODULOS[$k]) || ($c && $c->tiene(self::MODULOS[$k])), ARRAY_FILTER_USE_BOTH);
+    }
+
     /**
      * Ruta → sección(es). Basta con tener una. El primer patrón que coincide gana.
      * "*" = cualquiera del equipo con sesión.
@@ -50,6 +60,8 @@ class Permisos
         ['admin.tareas*', '*'],          // el controlador distingue "mis tareas" de gestionar
         ['admin.notificaciones*', '*'],
         ['admin.cuenta*', '*'],
+        ['admin.negocio*', 'configuracion'],
+        ['admin.plataforma*', '@plataforma'],   // solo quien administra la plataforma
     ];
 
     /** Secciones que pide una ruta; null = no está mapeada (solo super admin) */
@@ -64,8 +76,10 @@ class Permisos
 
     public static function puedeRuta(User $u, ?string $nombre): bool
     {
-        if ($u->esSuperAdmin()) return true;
         $s = self::deRuta($nombre);
+        if ($s === ['@plataforma']) return (bool) $u->plataforma;
+        if ($s !== null && $s !== ['*'] && ! array_filter($s, fn ($x) => ! isset(self::MODULOS[$x]) || Cuentas::actual()?->tiene(self::MODULOS[$x]))) return false;
+        if ($u->esSuperAdmin()) return true;
         if ($s === null) return false;
         if ($s === ['*']) return true;
         foreach ($s as $seccion) if ($u->puede($seccion)) return true;

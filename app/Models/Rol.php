@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /** Rol del equipo: qué secciones del panel puede ver. El super admin lo puede todo. */
 class Rol extends Model
 {
+    use \App\Models\Concerns\DeCuenta;
+
     protected $table = 'roles';
 
     protected $fillable = ['nombre', 'descripcion', 'permisos', 'todo', 'orden'];
@@ -26,7 +28,7 @@ class Rol extends Model
     public function getResumenAttribute(): string
     {
         if ($this->todo) return 'Todo el panel';
-        $n = collect($this->permisos ?? [])->map(fn ($p) => Permisos::SECCIONES[$p]['texto'] ?? null)->filter()->values();
+        $n = collect($this->permisos ?? [])->map(fn ($p) => Permisos::disponibles()[$p]['texto'] ?? null)->filter()->values();
         return $n->isEmpty() ? 'Solo sus tareas' : 'Sus tareas, ' . \Illuminate\Support\Arr::join($n->map(fn ($t) => mb_strtolower($t))->all(), ', ', ' y ');
     }
 }

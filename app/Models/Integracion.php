@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 /** Conexiones con servicios externos (p. ej. Dropbox). Los tokens se guardan cifrados. */
 class Integracion extends Model
 {
+    use \App\Models\Concerns\DeCuenta;
+
     protected $table = 'integraciones';
 
     protected $fillable = ['proveedor', 'cuenta', 'datos'];

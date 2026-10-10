@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TareaArchivo extends Model
 {
+    use \App\Models\Concerns\DeCuenta;
+
     protected $fillable = ['tarea_id', 'user_id', 'nombre', 'ruta', 'dropbox_id', 'tamano'];
 
     public function tarea(): BelongsTo { return $this->belongsTo(Tarea::class); }

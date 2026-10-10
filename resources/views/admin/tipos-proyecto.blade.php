@@ -69,7 +69,8 @@
     @media (max-width: 575.98px) {
         .tp-etapa { grid-template-columns: minmax(0, 1fr) auto; }
         .tp-etapa .num { display: none; }
-        .tp-etapa .campos { grid-template-columns: minmax(0, 1fr) 116px; }
+        .tp-etapa .campos { grid-template-columns: minmax(0, 1fr); }
+        .tp-etapa .campos .input-group { max-width: 160px; }
         .tp-cab-pago { display: none; }
         .tp-pago { grid-template-columns: minmax(0, 1fr) 110px 34px; padding: 10px; border: 1px solid var(--line); border-radius: 10px; }
         .tp-pago .antes { grid-column: 1 / 3; grid-row: 2; }

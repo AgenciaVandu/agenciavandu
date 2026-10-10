@@ -53,8 +53,10 @@ class NotificacionController extends Controller
             'keys.auth'   => ['required', 'string', 'max:60'],
         ]);
 
-        $s = PushSuscripcion::firstOrNew(['endpoint_hash' => hash('sha256', $datos['endpoint'])]);
+        // El dispositivo es de la persona y de su negocio (aunque la plataforma esté viendo otra cuenta)
+        $s = PushSuscripcion::sinCuenta()->firstOrNew(['endpoint_hash' => hash('sha256', $datos['endpoint'])]);
         $nueva = ! $s->exists;
+        $s->cuenta_id = $request->user()->cuenta_id;
         $s->fill([
             'user_id'     => $request->user()->id,
             'endpoint'    => $datos['endpoint'],

@@ -10,6 +10,123 @@
 
 return [
 
+    /*
+    |--------------------------------------------------------------------------
+    | Plataforma: varios negocios (cuentas), cada uno con su giro
+    |--------------------------------------------------------------------------
+    | La cuenta principal es la que usa el sitio web (formulario de contacto).
+    | Los datos de abajo (emisor, banco, marca…) son los de la cuenta principal;
+    | cada cuenta nueva los captura en "Mi negocio".
+    */
+    'plataforma' => [
+        'nombre' => env('VANDU_PLATAFORMA', 'Vandu'),
+    ],
+    'cuenta_principal' => (int) env('VANDU_CUENTA_PRINCIPAL', 1),
+
+    'marca' => [
+        'nombre' => 'Agencia Vandu',
+        'ciudad' => 'Mérida, Yucatán',
+        'sitio'  => 'agenciavandu.com',
+    ],
+
+    'giros' => [
+        'agencia' => [
+            'nombre'  => 'Agencia creativa',
+            'icono'   => 'bi-megaphone',
+            'modulos' => ['redes'],
+            'roles'   => [
+                ['nombre' => 'Project', 'descripcion' => 'Gestiona las tareas del equipo, los proyectos y el contenido de redes.', 'permisos' => ['proyectos', 'tareas', 'clientes', 'redes', 'archivos']],
+                ['nombre' => 'Fotógrafo', 'descripcion' => 'Ve sus tareas y sube fotos y videos a la carpeta de cada una.', 'permisos' => []],
+                ['nombre' => 'Diseñador', 'descripcion' => 'Ve sus tareas y sube sus diseños a la carpeta que le asignen.', 'permisos' => []],
+            ],
+        ],
+        'arquitectura' => [
+            'nombre'  => 'Arquitectura y construcción',
+            'icono'   => 'bi-buildings',
+            'modulos' => ['obra'],
+            'roles'   => [
+                ['nombre' => 'Arquitecto líder', 'descripcion' => 'Cotiza, lleva los proyectos y las obras, y coordina al equipo.', 'permisos' => ['cotizaciones', 'proyectos', 'tareas', 'clientes', 'archivos']],
+                ['nombre' => 'Residente de obra', 'descripcion' => 'Lleva el día a día de la obra: sus tareas, avances y fotos.', 'permisos' => []],
+                ['nombre' => 'Proyectista', 'descripcion' => 'Dibuja planos y renders; los sube a la carpeta de cada tarea.', 'permisos' => []],
+                ['nombre' => 'Administración', 'descripcion' => 'Cobros, finanzas y datos de los clientes.', 'permisos' => ['finanzas', 'clientes', 'cotizaciones']],
+            ],
+            // Tipos de proyecto de fábrica para este giro (cada estudio los ajusta en "Tipos de proyecto")
+            'proyectos' => [
+                'arquitectonico' => [
+                    'nombre' => 'Proyecto arquitectónico', 'icono' => 'bi-rulers',
+                    'pagos'  => [
+                        ['clave' => 'anticipo', 'concepto' => 'Anticipo', 'porcentaje' => 40, 'antes_de' => 'programa'],
+                        ['clave' => 'ejecutivo', 'concepto' => 'Al aprobar el anteproyecto', 'porcentaje' => 30, 'antes_de' => 'ejecutivo'],
+                        ['clave' => 'finiquito', 'concepto' => 'Finiquito', 'porcentaje' => 30, 'antes_de' => 'entrega'],
+                    ],
+                    'etapas' => [
+                        ['clave' => 'levantamiento', 'nombre' => 'Levantamiento del terreno', 'dias' => 1, 'fecha' => true, 'descripcion' => 'Visita, medidas y fotos del terreno o inmueble.'],
+                        ['clave' => 'programa', 'nombre' => 'Programa arquitectónico', 'dias' => 3, 'descripcion' => 'Necesidades, espacios y presupuesto objetivo.'],
+                        ['clave' => 'anteproyecto', 'nombre' => 'Anteproyecto', 'dias' => 10, 'descripcion' => 'Plantas, fachadas y volumetría para tu aprobación.'],
+                        ['clave' => 'ejecutivo', 'nombre' => 'Proyecto ejecutivo', 'dias' => 20, 'descripcion' => 'Planos constructivos, estructurales y de instalaciones.'],
+                        ['clave' => 'licencias', 'nombre' => 'Licencias y permisos', 'dias' => 30, 'descripcion' => 'Trámites ante el municipio para poder construir.'],
+                        ['clave' => 'entrega', 'nombre' => 'Entrega del proyecto', 'dias' => 1, 'fecha' => true, 'descripcion' => 'Juego completo de planos y archivos.'],
+                    ],
+                ],
+                'construccion' => [
+                    'nombre' => 'Construcción de obra', 'icono' => 'bi-cone-striped',
+                    'pagos'  => [
+                        ['clave' => 'anticipo', 'concepto' => 'Anticipo', 'porcentaje' => 30, 'antes_de' => 'preliminares'],
+                        ['clave' => 'avance', 'concepto' => 'Avance de obra', 'porcentaje' => 40, 'antes_de' => 'albanileria'],
+                        ['clave' => 'finiquito', 'concepto' => 'Finiquito', 'porcentaje' => 30, 'antes_de' => 'entrega'],
+                    ],
+                    'etapas' => [
+                        ['clave' => 'preliminares', 'nombre' => 'Preliminares', 'dias' => 5, 'descripcion' => 'Limpieza, trazo y nivelación del terreno.'],
+                        ['clave' => 'cimentacion', 'nombre' => 'Cimentación', 'dias' => 15, 'descripcion' => 'Excavación, zapatas, cadenas y firmes.'],
+                        ['clave' => 'estructura', 'nombre' => 'Estructura', 'dias' => 30, 'descripcion' => 'Columnas, muros de carga, trabes y losas.'],
+                        ['clave' => 'albanileria', 'nombre' => 'Albañilería', 'dias' => 25, 'descripcion' => 'Muros, aplanados y obra negra.'],
+                        ['clave' => 'instalaciones', 'nombre' => 'Instalaciones', 'dias' => 20, 'descripcion' => 'Eléctrica, hidráulica, sanitaria y especiales.'],
+                        ['clave' => 'acabados', 'nombre' => 'Acabados', 'dias' => 25, 'descripcion' => 'Pisos, recubrimientos, pintura, carpintería y cancelería.'],
+                        ['clave' => 'entrega', 'nombre' => 'Limpieza y entrega', 'dias' => 3, 'fecha' => true, 'descripcion' => 'Limpieza final, recorrido contigo y entrega de llaves.'],
+                    ],
+                ],
+                'remodelacion' => [
+                    'nombre' => 'Remodelación', 'icono' => 'bi-hammer',
+                    'pagos'  => [
+                        ['clave' => 'anticipo', 'concepto' => 'Anticipo', 'porcentaje' => 50, 'antes_de' => 'demolicion'],
+                        ['clave' => 'avance', 'concepto' => 'Avance', 'porcentaje' => 30, 'antes_de' => 'acabados'],
+                        ['clave' => 'finiquito', 'concepto' => 'Finiquito', 'porcentaje' => 20, 'antes_de' => 'entrega'],
+                    ],
+                    'etapas' => [
+                        ['clave' => 'levantamiento', 'nombre' => 'Levantamiento', 'dias' => 1, 'fecha' => true, 'descripcion' => 'Visita y medidas del espacio.'],
+                        ['clave' => 'proyecto', 'nombre' => 'Proyecto', 'dias' => 7, 'descripcion' => 'Propuesta, planos y presupuesto de obra.'],
+                        ['clave' => 'demolicion', 'nombre' => 'Demoliciones', 'dias' => 5, 'descripcion' => 'Retiro de lo que se va a cambiar.'],
+                        ['clave' => 'obra', 'nombre' => 'Obra', 'dias' => 30, 'descripcion' => 'Albañilería e instalaciones.'],
+                        ['clave' => 'acabados', 'nombre' => 'Acabados', 'dias' => 15, 'descripcion' => 'Pisos, pintura, muebles y detalles.'],
+                        ['clave' => 'entrega', 'nombre' => 'Entrega', 'dias' => 1, 'fecha' => true, 'descripcion' => 'Recorrido final y entrega.'],
+                    ],
+                ],
+                'interiores' => [
+                    'nombre' => 'Diseño de interiores', 'icono' => 'bi-lamp',
+                    'pagos'  => [
+                        ['clave' => 'anticipo', 'concepto' => 'Anticipo', 'porcentaje' => 50, 'antes_de' => 'concepto'],
+                        ['clave' => 'saldo', 'concepto' => 'Saldo', 'porcentaje' => 50, 'antes_de' => 'entrega'],
+                    ],
+                    'etapas' => [
+                        ['clave' => 'levantamiento', 'nombre' => 'Levantamiento', 'dias' => 1, 'fecha' => true, 'descripcion' => 'Medidas y fotos de cada espacio.'],
+                        ['clave' => 'concepto', 'nombre' => 'Concepto y moodboard', 'dias' => 5, 'descripcion' => 'Estilo, paleta de materiales y referencias.'],
+                        ['clave' => 'propuesta', 'nombre' => 'Propuesta en 3D', 'dias' => 10, 'descripcion' => 'Renders de cada espacio para tu aprobación.'],
+                        ['clave' => 'ejecutivo', 'nombre' => 'Proyecto ejecutivo', 'dias' => 10, 'descripcion' => 'Planos de mobiliario, iluminación y acabados.'],
+                        ['clave' => 'entrega', 'nombre' => 'Entrega', 'dias' => 1, 'fecha' => true, 'descripcion' => 'Proyecto completo y lista de compras.'],
+                    ],
+                ],
+                'supervision' => [
+                    'nombre' => 'Supervisión de obra', 'icono' => 'bi-clipboard-check',
+                    'pagos'  => [['clave' => 'mensualidad', 'concepto' => 'Mensualidad', 'porcentaje' => 100, 'antes_de' => 'visitas']],
+                    'etapas' => [
+                        ['clave' => 'visitas', 'nombre' => 'Visitas de supervisión', 'dias' => 28, 'descripcion' => 'Revisión de calidad y avance en obra.'],
+                        ['clave' => 'reporte', 'nombre' => 'Reporte del mes', 'dias' => 2, 'descripcion' => 'Avance, fotos y pendientes del mes.'],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'emisor' => [
         'nombre'   => env('VANDU_EMISOR_NOMBRE', 'Alvar Buenfil'),
         'telefono' => env('VANDU_EMISOR_TELEFONO', '(999) 146 0310'),
