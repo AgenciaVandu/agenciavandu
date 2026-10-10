@@ -37,10 +37,18 @@ class CotizarController extends Controller
             return response()->json(['success' => false, 'message' => 'Error validando reCAPTCHA.'], 500);
         }
 
-        // 3. Envío de correo
+        // 3. Aviso push al panel y envío de correo
+        $datos = $request->only(['name', 'lastname', 'phone', 'email', 'service']);
+        \App\Support\Push\Notificar::evento('mensaje_sitio', 'Nuevo mensaje desde agenciavandu.com',
+            trim($datos['name'] . ' ' . $datos['lastname']) . ' · ' . $datos['service'] . ' · ' . $datos['phone'],
+            route('admin.clientes.create', [
+                'nombre'   => trim($datos['name'] . ' ' . $datos['lastname']),
+                'email'    => $datos['email'],
+                'telefono' => $datos['phone'],
+                'notas'    => 'Llegó por el formulario del sitio · Interés: ' . $datos['service'],
+            ]), 'contacto-' . md5($datos['email']));
+
         try {
-            // Pasamos solo los datos limpios
-            $datos = $request->only(['name', 'lastname', 'phone', 'email', 'service']);
             
             Mail::to('proyectos@agenciavandu.com')->send(new CotizacionRecibida($datos));
 

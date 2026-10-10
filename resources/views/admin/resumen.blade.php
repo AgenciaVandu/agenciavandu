@@ -82,6 +82,12 @@
     </div>
 </div>
 
+<div class="aviso-push" x-data="avisoPush()" x-show="visible" x-cloak>
+    <i class="bi bi-bell"></i>
+    <div class="t"><b>Recibe avisos en este dispositivo</b><span>Te avisamos cuando un cliente abra su cotización o te escriban desde el sitio.</span></div>
+    <a href="{{ route('admin.notificaciones') }}" class="btn btn-primario btn-sm">Activar</a>
+    <button type="button" class="btn btn-fantasma btn-icono" @click="cerrar()" aria-label="Ahora no"><i class="bi bi-x-lg"></i></button>
+</div>
 @include('admin._este-mes', ['mes' => \App\Support\EsteMes::datos(true), 'conIva' => true, 'enlace' => route('admin.finanzas', ['periodo' => 'mes'])])
 
 <div class="kpis">

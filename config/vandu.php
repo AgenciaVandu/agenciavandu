@@ -116,6 +116,23 @@ return [
     |   {nombre} {empresa} {folio} {concepto} {monto} {vigencia} {proyecto}
     |   {pago} {monto_pago} {fecha_limite} {siguiente} {entregables} {firma}
     */
+    // Notificaciones push en el celular y la compu (las claves VAPID se crean solas si no se definen aquí)
+    'push' => [
+        'publica'  => env('VANDU_PUSH_PUBLICA'),
+        'privada'  => env('VANDU_PUSH_PRIVADA'),
+        'contacto' => env('VANDU_PUSH_CONTACTO', 'proyectos@agenciavandu.com'),
+        'resumen_hora' => env('VANDU_PUSH_RESUMEN', '08:50'),
+        // Cuánto esperar antes de volver a avisar que el mismo cliente abrió lo mismo
+        'repetir_vista_horas' => 3,
+        'eventos' => [
+            'cotizacion_abierta'    => ['texto' => 'Un cliente abre una cotización', 'ayuda' => 'La primera vez y cuando vuelve a abrirla después de unas horas', 'icono' => 'bi-eye'],
+            'cotizacion_descargada' => ['texto' => 'Un cliente descarga la cotización', 'ayuda' => 'Cuando baja el PDF desde su enlace', 'icono' => 'bi-file-earmark-arrow-down'],
+            'proyecto_visto'        => ['texto' => 'Un cliente revisa su proyecto', 'ayuda' => 'Abre su página de avance o de entrega', 'icono' => 'bi-kanban'],
+            'mensaje_sitio'         => ['texto' => 'Llega un mensaje desde el sitio', 'ayuda' => 'Alguien llenó el formulario de cotizar en agenciavandu.com', 'icono' => 'bi-chat-dots'],
+            'resumen_diario'        => ['texto' => 'Resumen de la mañana', 'ayuda' => 'Cobros vencidos o por vencer, etapas del día y cotizaciones a punto de vencer', 'icono' => 'bi-sunrise'],
+        ],
+    ],
+
     'correo' => [
         'desde'       => env('VANDU_CORREO_DESDE', 'proyectos@agenciavandu.com'),
         'nombre'      => env('VANDU_CORREO_NOMBRE', 'Agencia Vandu'),

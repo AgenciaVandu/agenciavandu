@@ -21,6 +21,7 @@ class ProyectoPublicoController extends Controller
         $p->load(['cliente', 'etapas.archivos' => fn ($q) => $q->where('visible', true), 'pagos']);
 
         if (! $request->boolean('vista_previa')) {
+            $this->avisarVisita($p, 'avance');
             $p->timestamps = false;
             $p->increment('vistas', 1, ['ultima_vista_at' => now()]);
         }
@@ -37,6 +38,7 @@ class ProyectoPublicoController extends Controller
         $p->load(['cliente', 'presupuesto', 'etapas.archivos' => fn ($q) => $q->where('visible', true)]);
 
         if (! $request->boolean('vista_previa')) {
+            $this->avisarVisita($p, 'entrega');
             $p->timestamps = false;
             $p->increment('vistas', 1, ['ultima_vista_at' => now()]);
         }
@@ -59,5 +61,15 @@ class ProyectoPublicoController extends Controller
     public function zip(string $token)
     {
         return ArchivosProyecto::zipGaleria($this->proyecto($token));
+    }
+
+    private function avisarVisita(Proyecto $p, string $que): void
+    {
+        if (auth()->check() || ! \App\Support\Push\Notificar::visitaNueva($p->ultima_vista_at)) return;
+        $quien = $p->cliente?->empresa ?: $p->cliente?->nombre ?: 'Tu cliente';
+        \App\Support\Push\Notificar::evento('proyecto_visto',
+            $que === 'entrega' ? "$quien abrió su entrega" : "$quien revisó el avance",
+            $p->nombre . ($que === 'entrega' ? ' · ya está viendo sus archivos' : ' · ' . $p->progreso . '% de avance'),
+            route('admin.proyectos.show', $p), 'proyecto-' . $p->id);
     }
 }

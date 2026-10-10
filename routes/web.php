@@ -99,6 +99,12 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::patch('proyectos/{proyecto}/etapas/{etapa}', [Admin\ProyectoController::class, 'etapa'])->name('proyectos.etapa');
     Route::patch('proyectos/{proyecto}/pagos/{pago}', [Admin\ProyectoController::class, 'pago'])->name('proyectos.pago');
     // Dropbox
+    Route::get('notificaciones', [Admin\NotificacionController::class, 'index'])->name('notificaciones');
+    Route::post('notificaciones/suscribir', [Admin\NotificacionController::class, 'suscribir'])->name('notificaciones.suscribir');
+    Route::patch('notificaciones/{suscripcion}', [Admin\NotificacionController::class, 'preferencias'])->name('notificaciones.preferencias');
+    Route::post('notificaciones/{suscripcion}/prueba', [Admin\NotificacionController::class, 'prueba'])->name('notificaciones.prueba');
+    Route::delete('notificaciones/{suscripcion}', [Admin\NotificacionController::class, 'destroy'])->name('notificaciones.destroy');
+
     Route::get('dropbox', [Admin\DropboxController::class, 'index'])->name('dropbox');
     Route::get('dropbox/conectar', [Admin\DropboxController::class, 'conectar'])->name('dropbox.conectar');
     Route::post('dropbox/desconectar', [Admin\DropboxController::class, 'desconectar'])->name('dropbox.desconectar');

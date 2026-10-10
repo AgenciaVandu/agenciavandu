@@ -12,7 +12,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Resumen de la mañana por notificación push (requiere el cron de "schedule:run" en el servidor)
+        $schedule->command('vandu:push-resumen')
+            ->dailyAt(config('vandu.push.resumen_hora', '08:50'))
+            ->timezone(config('vandu.zona_horaria'))
+            ->withoutOverlapping();
     }
 
     /**

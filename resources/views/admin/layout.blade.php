@@ -205,6 +205,13 @@
         .main, .page, .panel { min-width: 0; }
         .table-responsive { max-width: 100%; position: relative; } /* que lo oculto para lectores no se salga del scroll */
 
+        .aviso-push { display: flex; align-items: center; gap: 12px; padding: 12px 14px 12px 16px; border-radius: 12px; margin-bottom: 20px; background: var(--surface); border: 1px solid var(--line); }
+        .aviso-push > i { font-size: 20px; color: var(--ink); }
+        .aviso-push .t { flex: 1; min-width: 0; font-size: 14px; }
+        .aviso-push .t b { display: block; font-weight: 600; }
+        .aviso-push .t span { color: var(--muted); font-size: 13px; }
+        @media (max-width: 575.98px) { .aviso-push { flex-wrap: wrap; } .aviso-push .t { flex-basis: calc(100% - 80px); } .aviso-push .btn-primario { margin-left: 32px; } }
+
         /* ---------- Tablas en el celular: cada fila es una tarjeta, de 5 en 5 ---------- */
         .pager-m { display: none; }
         @media (max-width: 991.98px) {
@@ -351,6 +358,9 @@
             <i class="bi bi-dropbox"></i> Dropbox
             <span class="ms-auto" title="{{ $dbxNav ? 'Conectado' : 'Sin conectar' }}" style="width:8px;height:8px;border-radius:50%;background:{{ $dbxNav ? 'var(--green, #00C46A)' : '#E5484D' }}"></span>
         </a>
+        <a href="{{ route('admin.notificaciones') }}" class="{{ request()->routeIs('admin.notificaciones*') ? 'activo' : '' }}">
+            <i class="bi {{ request()->routeIs('admin.notificaciones*') ? 'bi-bell-fill' : 'bi-bell' }}"></i> Notificaciones
+        </a>
     </nav>
 
     <x-logo-vandu archivo="icono-vandu.svg" alt="" class="side-eco" aria-hidden="true" />
@@ -481,6 +491,17 @@
     }
     let promptInstalar = null;
     window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); promptInstalar = e; window.dispatchEvent(new Event('vandu-instalable')); });
+    // Invitación a activar notificaciones (solo si el dispositivo puede y aún no se ha decidido)
+    window.avisoPush = () => ({
+        visible: false,
+        init() {
+            let cerrado = false; try { cerrado = localStorage.getItem('vandu-aviso-push') === '1'; } catch {}
+            if (cerrado || !('PushManager' in window) || !('Notification' in window) || Notification.permission !== 'default') return;
+            this.visible = true;
+        },
+        cerrar() { this.visible = false; try { localStorage.setItem('vandu-aviso-push', '1'); } catch {} },
+    });
+
     window.avisoIos = () => ({
         visible: false, paso: 'safari',
         init() {

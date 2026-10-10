@@ -32,9 +32,11 @@ class ClienteController extends Controller
         return view('admin.clientes.index', compact('clientes', 'q'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('admin.clientes.form', ['cliente' => new Cliente()]);
+        // Prellenado desde una notificación de "nuevo mensaje del sitio"
+        $cliente = new Cliente(array_filter($request->only(['nombre', 'email', 'telefono', 'notas'])));
+        return view('admin.clientes.form', ['cliente' => $cliente]);
     }
 
     public function store(Request $request)

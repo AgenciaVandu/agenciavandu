@@ -8,7 +8,7 @@ namespace App\Http\Controllers;
  */
 class AppController extends Controller
 {
-    public const VERSION = '2026-10-09.3'; // súbela cuando cambien los archivos que guarda el service worker
+    public const VERSION = '2026-10-09.4'; // súbela cuando cambien los archivos que guarda el service worker
 
     public function manifiesto()
     {
