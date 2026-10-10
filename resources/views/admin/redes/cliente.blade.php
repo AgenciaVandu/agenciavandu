@@ -103,6 +103,17 @@
             <input type="hidden" name="fecha" value="{{ $mes->isSameMonth(now($tz)) ? now($tz)->addDay()->format('Y-m-d') : $mes->format('Y-m-d') }}">
             <button class="btn btn-primario"><i class="bi bi-plus-lg me-1"></i> Nuevo post</button>
         </form>
+        <div class="dropdown">
+            <button class="btn btn-fantasma btn-icono" data-bs-toggle="dropdown" aria-label="Más opciones"><i class="bi bi-three-dots"></i></button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{{ $url }}" target="_blank" rel="noopener"><i class="bi bi-eye"></i> Ver como cliente</a></li>
+                <li><a class="dropdown-item" href="{{ route('admin.clientes.show', $cliente) }}"><i class="bi bi-person"></i> Ficha del cliente</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><form method="post" action="{{ route('admin.redes.quitar', $cliente) }}"
+                          onsubmit="return confirm('¿Quitar a {{ addslashes($cliente->empresa ?: $cliente->nombre) }} del servicio de redes?\n\nSe borran su calendario, posts, comentarios y perfiles, y su enlace deja de funcionar. El cliente sigue en el panel y los archivos de Dropbox no se tocan.')">@csrf @method('delete')
+                    <button class="dropdown-item text-danger"><i class="bi bi-trash text-danger"></i> Quitar del servicio de redes</button></form></li>
+            </ul>
+        </div>
     </div>
 
     {{-- Perfiles: cómo se ve el cliente en cada red --}}

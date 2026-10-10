@@ -119,4 +119,37 @@ class RedesTest extends TestCase
         $tok = Redes::token($this->c);
         $this->postJson("/redes/$tok/verificar", ['nombre' => 'Ana', 'codigo' => $k['codigo']])->assertStatus(422);
     }
+
+    public function test_quitar_al_cliente_del_servicio_de_redes(): void
+    {
+        $p = $this->nuevoPost(['estado' => 'revision']);
+        $this->actingAs($this->u)->postJson('/admin/redes/posts/' . $p->id . '/medios', ['archivos' => [UploadedFile::fake()->image('a.jpg', 800, 800)]])->assertOk();
+        $ruta = $p->medios()->first()->ruta;
+        $tok = Redes::token($this->c);
+
+        $this->delete('/admin/redes/clientes/' . $this->c->id)->assertRedirect(route('admin.redes'));
+
+        $this->assertSame(0, RedesPost::count());
+        $this->assertNull($this->c->fresh()->redes_token);
+        $this->assertNotNull(Cliente::find($this->c->id)); // el cliente sigue
+        Storage::disk('local')->assertMissing($ruta);
+        auth()->logout();
+        $this->get('/redes/' . $tok)->assertNotFound();
+    }
+
+    public function test_cliente_de_prueba_se_crea_y_se_borra(): void
+    {
+        $this->artisan('vandu:demo-redes')->expectsOutputToContain('Cliente de prueba creado')->assertSuccessful();
+        $demo = Cliente::where('email', 'demo-redes@agenciavandu.com')->sole();
+        $this->assertSame(13, RedesPost::where('cliente_id', $demo->id)->count());
+        $this->assertGreaterThan(0, \App\Models\RedesMedio::count());
+        $this->get(Redes::urlCliente($demo))->assertOk()->assertSee('Café Itzá');
+
+        $this->artisan('vandu:demo-redes')->assertSuccessful(); // volver a correrlo no duplica
+        $this->assertSame(1, Cliente::where('email', 'demo-redes@agenciavandu.com')->count());
+
+        $this->artisan('vandu:demo-redes --borrar')->expectsOutputToContain('borrado')->assertSuccessful();
+        $this->assertSame(0, Cliente::where('email', 'demo-redes@agenciavandu.com')->count());
+        $this->assertSame(0, RedesPost::count());
+    }
 }

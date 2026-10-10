@@ -53,6 +53,29 @@ class RedesController extends Controller
         return redirect()->route('admin.redes.cliente', $c)->with('ok', 'Listo. Configura cómo se ven sus perfiles y empieza a planear su contenido.');
     }
 
+    /**
+     * Quitar al cliente del servicio de redes: se borran su calendario, posts, comentarios, perfiles y códigos,
+     * y su enlace deja de funcionar. El cliente sigue en el panel y lo que esté en Dropbox se queda ahí.
+     */
+    public function quitar(Cliente $cliente)
+    {
+        $posts = RedesPost::with('medios')->where('cliente_id', $cliente->id)->get();
+        $n = $posts->count();
+        foreach ($posts as $p) {
+            $p->medios->each(fn ($m) => Redes::borrar($m));
+            $p->delete();
+        }
+        RedesPerfil::where('cliente_id', $cliente->id)->get()->each(function ($pf) {
+            if ($pf->avatar_origen === 'local' && $pf->avatar) Storage::disk('local')->delete($pf->avatar);
+            $pf->delete();
+        });
+        \App\Models\RedesCodigo::where('cliente_id', $cliente->id)->delete();
+        Storage::disk('local')->deleteDirectory("redes/{$cliente->id}");
+        $cliente->forceFill(['redes_token' => null])->saveQuietly();
+
+        return redirect()->route('admin.redes')->with('ok', ($cliente->empresa ?: $cliente->nombre) . " ya no está en el servicio de redes ($n " . ($n === 1 ? 'post borrado' : 'posts borrados') . ').');
+    }
+
     public function cliente(Request $request, Cliente $cliente)
     {
         $mes = Redes::mes($request->query('mes'));

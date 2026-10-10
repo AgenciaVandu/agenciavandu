@@ -118,6 +118,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::get('redes', [Admin\RedesController::class, 'index'])->name('redes');
     Route::post('redes', [Admin\RedesController::class, 'activar'])->name('redes.activar');
     Route::get('redes/clientes/{cliente}', [Admin\RedesController::class, 'cliente'])->name('redes.cliente');
+    Route::delete('redes/clientes/{cliente}', [Admin\RedesController::class, 'quitar'])->name('redes.quitar');
     Route::put('redes/clientes/{cliente}/perfiles', [Admin\RedesController::class, 'perfiles'])->name('redes.perfiles');
     Route::post('redes/clientes/{cliente}/posts', [Admin\RedesController::class, 'crear'])->name('redes.crear');
     Route::post('redes/clientes/{cliente}/mover', [Admin\RedesController::class, 'mover'])->name('redes.mover');
