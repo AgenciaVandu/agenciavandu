@@ -17,6 +17,10 @@ class Kernel extends ConsoleKernel
             ->dailyAt(config('vandu.push.resumen_hora', '08:50'))
             ->timezone(config('vandu.zona_horaria'))
             ->withoutOverlapping();
+
+        // Latido: deja constancia de que el cron corre, para mostrarlo en Notificaciones
+        $schedule->call(fn () => \Illuminate\Support\Facades\Cache::forever('vandu.cron.latido', now()->timestamp))
+            ->everyMinute()->name('vandu-latido');
     }
 
     /**

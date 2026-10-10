@@ -20,7 +20,20 @@ class NotificacionController extends Controller
             'recientes'    => Notificacion::latest('id')->take(8)->get(),
             'clave'        => WebPush::claves()['publica'],
             'hora'         => config('vandu.push.resumen_hora'),
+            'cron'         => self::estadoCron(),
+            'ultimoResumen'=> Notificacion::where('evento', 'resumen_diario')->latest('id')->first(),
         ]);
+    }
+
+    /** ¿Está corriendo el cron del servidor? (el programador deja un "latido" cada minuto) */
+    public static function estadoCron(): array
+    {
+        $ultimo = \Illuminate\Support\Facades\Cache::get('vandu.cron.latido');
+        return [
+            'activo'  => $ultimo && $ultimo > now()->subMinutes(3)->timestamp,
+            'ultimo'  => $ultimo ? \Illuminate\Support\Carbon::createFromTimestamp($ultimo) : null,
+            'comando' => 'cd ' . base_path() . ' && php artisan schedule:run >> /dev/null 2>&1',
+        ];
     }
 
     /** Alta (o actualización) de este dispositivo. Conserva los avisos que ya había elegido. */

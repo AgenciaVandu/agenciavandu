@@ -106,6 +106,34 @@
 
     <div class="col-lg-5 d-grid gap-4 align-content-start">
         <section class="panel">
+            <div class="panel-head"><h2>Resumen de la mañana</h2>
+                @if($cron['activo'])<span class="estado estado-aceptada">Programado</span>@else<span class="estado estado-rechazada">Falta el cron</span>@endif
+            </div>
+            <div class="panel-body">
+                @if($cron['activo'])
+                    <p class="m-0">Todos los días a las <b>{{ \Illuminate\Support\Carbon::createFromFormat('H:i', $hora)->format('g:i a') }}</b> te llega lo pendiente del día. Si no hay nada pendiente, no te molesta.</p>
+                    <p class="secundario mt-2 mb-0" style="font-size:13px">
+                        @if($ultimoResumen) Último resumen: {{ $ultimoResumen->created_at->locale('es')->diffForHumans() }}. @endif
+                        El servidor revisa cada minuto (última vez {{ $cron['ultimo']->locale('es')->diffForHumans() }}).
+                    </p>
+                @else
+                    <p class="mt-0">Para que llegue el resumen de las {{ \Illuminate\Support\Carbon::createFromFormat('H:i', $hora)->format('g:i a') }}, el servidor necesita una tarea programada (cron). Los demás avisos funcionan sin ella.</p>
+                    <ol class="push-pasos mb-2">
+                        <li>En cPanel abre <b>Cron Jobs</b> (Trabajos de cron).</li>
+                        <li>En <b>Configuración común</b> elige <b>Una vez por minuto</b>.</li>
+                        <li>En <b>Comando</b> pega esto y dale <b>Agregar</b>:</li>
+                    </ol>
+                    <div class="input-group input-group-sm">
+                        <input class="form-control num" value="{{ $cron['comando'] }}" readonly aria-label="Comando del cron" onfocus="this.select()">
+                        <button type="button" class="btn btn-borde" data-copiar="{{ $cron['comando'] }}"><i class="bi bi-clipboard"></i> Copiar</button>
+                    </div>
+                    <p class="secundario mt-2 mb-0" style="font-size:13px">En 1 o 2 minutos esta tarjeta cambia a <b>Programado</b>.
+                        @if($cron['ultimo']) Lo último que vimos del cron fue {{ $cron['ultimo']->locale('es')->diffForHumans() }}. @endif</p>
+                @endif
+            </div>
+        </section>
+
+        <section class="panel">
             <div class="panel-head"><h2>Tus dispositivos</h2><span class="ayuda">{{ $dispositivos->count() }}</span></div>
             <div class="panel-body">
                 @if($dispositivos->isEmpty())
