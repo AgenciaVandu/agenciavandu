@@ -15,7 +15,8 @@ use Illuminate\Support\Collection;
  *  - Cotizado y perdido se cuentan por la fecha de la cotización.
  *  - Ganado se cuenta por la fecha en que se aceptó.
  *  - Cobrado se cuenta por la fecha de cada pago.
- *  - Con ?iva=sin (por defecto) todo se muestra antes de IVA, también los pagos.
+ *  - ?iva=sin|con elige si se muestra antes o después de IVA. Se recuerda (cookie) y el Resumen usa la misma
+ *    elección, para que "Cobrado en <mes>" diga lo mismo en ambos lados. Sin elegir nada: antes de IVA.
  */
 class FinanzasController extends Controller
 {
@@ -32,7 +33,10 @@ class FinanzasController extends Controller
     {
         $tz = config('vandu.zona_horaria');
         $periodo = array_key_exists($request->query('periodo'), self::PERIODOS) ? $request->query('periodo') : 'todo';
-        $conIva = $request->query('iva') === 'con';
+        $conIva = in_array($request->query('iva'), ['con', 'sin'], true) ? $request->query('iva') === 'con' : \App\Support\EsteMes::conIva();
+        if ($request->has('iva')) {
+            \Illuminate\Support\Facades\Cookie::queue('vandu_iva', $conIva ? 'con' : 'sin', 60 * 24 * 365 * 5);
+        }
         [$desde, $hasta] = $this->rango($periodo);
         $hoy = now($tz)->toDateString();
 
@@ -51,7 +55,7 @@ class FinanzasController extends Controller
         $perdida = fn (Presupuesto $p) => $p->perdida;
 
         $delPeriodo = $cotizaciones->filter(fn ($p) => $enRango($p->fecha->toDateString()));
-        $ganadas = $cotizaciones->filter(fn ($p) => $p->estado === 'aceptada' && $enRango(($p->aceptada_el ?? $p->updated_at->copy()->setTimezone($tz))->toDateString()));
+        $ganadas = $cotizaciones->filter(fn ($p) => $p->estado === 'aceptada' && $enRango(\App\Support\EsteMes::fechaAceptada($p)));
         $perdidas = $delPeriodo->filter($perdida);
         $resueltasPeriodo = $delPeriodo->filter(fn ($p) => $p->estado === 'aceptada' || $perdida($p));
         $abiertas = $cotizaciones->filter(fn ($p) => $p->abierta);
@@ -91,7 +95,7 @@ class FinanzasController extends Controller
             $antDesde = Carbon::parse($desde)->subDays($dias)->toDateString();
             $antHasta = Carbon::parse($desde)->subDay()->toDateString();
             $kpi['ganadoAnterior'] = round($cotizaciones->filter(fn ($p) => $p->estado === 'aceptada'
-                && ($f = ($p->aceptada_el ?? $p->updated_at->copy()->setTimezone($tz))->toDateString()) >= $antDesde && $f <= $antHasta)->sum($monto), 2);
+                && ($f = \App\Support\EsteMes::fechaAceptada($p)) >= $antDesde && $f <= $antHasta)->sum($monto), 2);
         }
 
         // Tendencia: últimos 12 meses (siempre, sin importar el periodo elegido)
@@ -103,7 +107,7 @@ class FinanzasController extends Controller
                 'completa' => ucfirst($m->locale('es')->isoFormat('MMMM YYYY')),
                 'actual'   => $i === 0,
                 'cotizado' => round($cotizaciones->filter(fn ($p) => $p->fecha->format('Y-m') === $ym)->sum($monto), 2),
-                'ganado'   => round($cotizaciones->filter(fn ($p) => $p->estado === 'aceptada' && ($p->aceptada_el ?? $p->updated_at)->format('Y-m') === $ym)->sum($monto), 2),
+                'ganado'   => round($cotizaciones->filter(fn ($p) => $p->estado === 'aceptada' && substr(\App\Support\EsteMes::fechaAceptada($p), 0, 7) === $ym)->sum($monto), 2),
                 'cobrado'  => round($pagos->filter(fn ($x) => $x->pago->pagado_el?->format('Y-m') === $ym)->sum('monto'), 2),
             ];
         });

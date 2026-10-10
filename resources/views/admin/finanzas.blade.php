@@ -9,7 +9,7 @@
         if ($n >= 1000) return '$' . rtrim(rtrim(number_format($n / 1000, 1), '0'), '.') . ' k';
         return '$' . number_format($n, 0);
     };
-    $q = fn (array $extra) => route('admin.finanzas', array_merge(['periodo' => $periodo, 'iva' => $conIva ? 'con' : null], $extra));
+    $q = fn (array $extra) => route('admin.finanzas', array_merge(['periodo' => $periodo, 'iva' => $conIva ? 'con' : 'sin'], $extra));
     $base = $conIva ? 'con IVA' : 'antes de IVA';
     $f = fn ($s) => $s ? ucfirst(\Illuminate\Support\Carbon::parse($s)->locale('es')->isoFormat('D MMM YYYY')) : null;
 
@@ -106,7 +106,7 @@
         @endforeach
     </nav>
     <nav class="segmento" aria-label="IVA">
-        <a href="{{ $q(['iva' => null]) }}" class="{{ ! $conIva ? 'activo' : '' }}">Sin IVA</a>
+        <a href="{{ $q(['iva' => 'sin']) }}" class="{{ ! $conIva ? 'activo' : '' }}">Sin IVA</a>
         <a href="{{ $q(['iva' => 'con']) }}" class="{{ $conIva ? 'activo' : '' }}">Con IVA</a>
     </nav>
     <span class="rango num">{{ $desde ? $f($desde) . ' – ' . $f($hasta) : 'Todo lo registrado' }}</span>

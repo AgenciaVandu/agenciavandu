@@ -47,7 +47,13 @@ class ResumenController extends Controller
         $sinAbrir = $vigentes->filter(fn ($p) => $p->estado === 'enviada' && ! $p->vistas)->take(5)->values();
 
         // Pagos pendientes de proyectos que no están en pausa
-        $pendientes = \App\Models\ProyectoPago::whereNull('pagado_el')->whereHas('proyecto', fn ($q) => $q->where('estado', '!=', 'pausado'))->get();
+        $pendientes = \App\Models\ProyectoPago::with('proyecto.presupuesto.conceptos')->whereNull('pagado_el')->whereHas('proyecto', fn ($q) => $q->where('estado', '!=', 'pausado'))->get();
+        // Con o sin IVA según lo último que elegiste en Finanzas, para que ambos digan lo mismo
+        $conIva = \App\Support\EsteMes::conIva();
+        $montoPago = function ($pg) use ($conIva) {
+            $p = $pg->proyecto?->presupuesto;
+            return (! $conIva && $p && $p->total > 0) ? round($pg->monto * $p->subtotal / $p->total, 2) : (float) $pg->monto;
+        };
 
         $actividad = $todas->whereNotNull('ultima_vista_at')->sortByDesc('ultima_vista_at')->take(6)->values();
 
@@ -61,7 +67,8 @@ class ResumenController extends Controller
                 'tasa'           => $tasa,
                 'resueltas'      => $resueltas->count(),
                 'clientes'       => Cliente::count(),
-                'porCobrar'      => round($pendientes->sum('monto'), 2),
+                'porCobrar'      => round($pendientes->sum($montoPago), 2),
+                'porCobrarIva'   => $conIva,
                 'pendientes'     => $pendientes->count(),
                 'vencidos'       => $pendientes->filter->vencido->count(),
             ],

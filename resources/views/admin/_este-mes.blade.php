@@ -13,7 +13,9 @@
         <div class="em-s num">
             {{ $mes['pagos'] }} {{ $mes['pagos'] === 1 ? 'pago recibido' : 'pagos recibidos' }}
             · {{ $conIva ? 'con IVA' : 'antes de IVA' }}
-            @if($conIva && $mes['cobradoSinIva'] != $mes['cobradoConIva']) <span class="em-tenue">({{ $d($mes['cobradoSinIva']) }} sin IVA)</span>@endif
+            @if($mes['cobradoSinIva'] != $mes['cobradoConIva'])
+                <span class="em-tenue">({{ $conIva ? $d($mes['cobradoSinIva']) . ' sin IVA' : $d($mes['cobradoConIva']) . ' con IVA' }})</span>
+            @endif
         </div>
     </div>
     <div class="em-lado">

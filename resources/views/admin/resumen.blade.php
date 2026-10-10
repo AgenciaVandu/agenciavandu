@@ -97,7 +97,8 @@
         <i class="bi bi-chevron-right" style="font-size:15px; color: var(--muted)"></i>
     </a>
 @endif
-@include('admin._este-mes', ['mes' => \App\Support\EsteMes::datos(true), 'conIva' => true, 'enlace' => route('admin.finanzas', ['periodo' => 'mes'])])
+@php $ivaResumen = \App\Support\EsteMes::conIva(); @endphp
+@include('admin._este-mes', ['mes' => \App\Support\EsteMes::datos($ivaResumen), 'conIva' => $ivaResumen, 'enlace' => route('admin.finanzas', ['periodo' => 'mes', 'iva' => $ivaResumen ? 'con' : 'sin'])])
 
 <div class="kpis">
     <a href="{{ route('admin.presupuestos.index', ['filtro' => 'vigentes']) }}" class="panel kpi text-decoration-none text-reset">
@@ -113,7 +114,7 @@
     <a href="{{ route('admin.finanzas') }}#por-cobrar" class="panel kpi text-decoration-none text-reset {{ $kpi['vencidos'] ? 'alerta' : '' }}">
         <div class="k"><i class="bi bi-cash-coin"></i> Por cobrar</div>
         <div class="v num">{{ $dinero($kpi['porCobrar']) }}</div>
-        <div class="d num">{{ $kpi['pendientes'] }} {{ $kpi['pendientes'] === 1 ? 'pago pendiente' : 'pagos pendientes' }}@if($kpi['vencidos']) · {{ $kpi['vencidos'] }} {{ $kpi['vencidos'] === 1 ? 'vencido' : 'vencidos' }}@endif, con IVA</div>
+        <div class="d num">{{ $kpi['pendientes'] }} {{ $kpi['pendientes'] === 1 ? 'pago pendiente' : 'pagos pendientes' }}@if($kpi['vencidos']) · {{ $kpi['vencidos'] }} {{ $kpi['vencidos'] === 1 ? 'vencido' : 'vencidos' }}@endif, {{ $kpi['porCobrarIva'] ? 'con IVA' : 'antes de IVA' }}</div>
     </a>
     <div class="panel kpi">
         <div class="k"><i class="bi bi-graph-up-arrow"></i> Tasa de aceptación</div>
