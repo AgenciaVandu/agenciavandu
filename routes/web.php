@@ -112,6 +112,11 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::post('notificaciones/{suscripcion}/prueba', [Admin\NotificacionController::class, 'prueba'])->name('notificaciones.prueba');
     Route::delete('notificaciones/{suscripcion}', [Admin\NotificacionController::class, 'destroy'])->name('notificaciones.destroy');
 
+    Route::get('archivos', [Admin\ArchivosController::class, 'index'])->name('archivos');
+    Route::get('archivos/listar', [Admin\ArchivosController::class, 'listar'])->name('archivos.listar');
+    Route::get('archivos/buscar', [Admin\ArchivosController::class, 'buscar'])->name('archivos.buscar');
+    Route::get('archivos/miniatura', [Admin\ArchivosController::class, 'miniatura'])->name('archivos.miniatura');
+    Route::get('archivos/ver', [Admin\ArchivosController::class, 'ver'])->name('archivos.ver');
     Route::get('dropbox', [Admin\DropboxController::class, 'index'])->name('dropbox');
     Route::get('dropbox/conectar', [Admin\DropboxController::class, 'conectar'])->name('dropbox.conectar');
     Route::post('dropbox/desconectar', [Admin\DropboxController::class, 'desconectar'])->name('dropbox.desconectar');

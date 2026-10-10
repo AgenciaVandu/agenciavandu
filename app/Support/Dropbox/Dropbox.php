@@ -204,6 +204,16 @@ class Dropbox
         return $entradas;
     }
 
+    /** Busca archivos y carpetas por nombre dentro de una ruta (máx. 100 resultados) */
+    public function buscar(string $texto, string $ruta = ''): array
+    {
+        $r = $this->rpc('files/search_v2', [
+            'query'   => $texto,
+            'options' => array_filter(['path' => $ruta === '/' ? null : $ruta, 'max_results' => 100, 'file_status' => 'active', 'filename_only' => true]),
+        ]);
+        return array_values(array_filter(array_map(fn ($m) => $m['metadata']['metadata'] ?? null, $r['matches'] ?? [])));
+    }
+
     /** Sube un archivo del servidor (en partes si es grande) */
     public function subirArchivo(string $rutaLocal, string $destino): array
     {

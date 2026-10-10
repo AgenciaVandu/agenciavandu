@@ -55,7 +55,7 @@ class DropboxSimulado extends Dropbox
         $f = $this->fisica($ruta);
         if (is_dir($f)) return ['.tag' => 'folder', 'name' => basename($ruta), 'path_display' => $ruta, 'path_lower' => mb_strtolower($ruta), 'id' => $this->idDe($ruta)];
         if (! is_file($f)) throw new DropboxError('not_found', 'path/not_found/');
-        return ['.tag' => 'file', 'name' => basename($ruta), 'path_display' => $ruta, 'path_lower' => mb_strtolower($ruta), 'id' => $this->idDe($ruta), 'size' => filesize($f)];
+        return ['.tag' => 'file', 'name' => basename($ruta), 'path_display' => $ruta, 'path_lower' => mb_strtolower($ruta), 'id' => $this->idDe($ruta), 'size' => filesize($f), 'server_modified' => gmdate('Y-m-d\\TH:i:s\\Z', filemtime($f))];
     }
 
     /** El navegador "sube" a esta ruta en pruebas (lo usa la prueba de Playwright) */
@@ -88,6 +88,12 @@ class DropboxSimulado extends Dropbox
             if ($recursivo && is_dir($this->fisica($r))) $out = array_merge($out, $this->listar($r, true));
         }
         return $out;
+    }
+
+    public function buscar(string $texto, string $ruta = ''): array
+    {
+        $t = mb_strtolower($texto);
+        return array_values(array_filter($this->listar($ruta ?: '/', true), fn ($e) => str_contains(mb_strtolower($e['name']), $t)));
     }
 
     private function destinoLibre(string $destino): string

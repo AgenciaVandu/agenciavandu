@@ -364,6 +364,9 @@
     <nav>
         <a href="/" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> agenciavandu.com</a>
         @php $dbxNav = \App\Support\Dropbox\Dropbox::conectado(); @endphp
+        <a href="{{ route('admin.archivos') }}" class="{{ request()->routeIs('admin.archivos*') ? 'activo' : '' }}">
+            <i class="bi {{ request()->routeIs('admin.archivos*') ? 'bi-folder-fill' : 'bi-folder2-open' }}"></i> Archivos
+        </a>
         <a href="{{ route('admin.dropbox') }}" class="{{ request()->routeIs('admin.dropbox*') ? 'activo' : '' }}">
             <i class="bi bi-dropbox"></i> Dropbox
             <span class="ms-auto" title="{{ $dbxNav ? 'Conectado' : 'Sin conectar' }}" style="width:8px;height:8px;border-radius:50%;background:{{ $dbxNav ? 'var(--green, #00C46A)' : '#E5484D' }}"></span>
@@ -640,7 +643,7 @@
          * el contenido. La barra lateral y la de abajo se quedan quietas (no "parpadea" todo).
          * Si algo no es una página del panel (PDF, descarga, Dropbox…), se navega normal.
          */
-        const NO_INTERCEPTAR = /\/(pdf|exportar|conectar|abrir|descargar|sw\.js|manifest\.webmanifest)(\/|\?|$)|\/archivos\/\d+|\/constancias\/\d+|\/logout/;
+        const NO_INTERCEPTAR = /\/(pdf|exportar|conectar|abrir|descargar|sw\.js|manifest\.webmanifest)(\/|\?|$)|\/archivos\/(\d+|ver|miniatura)|\/constancias\/\d+|\/logout/;
         const precargas = new Map();
         const esInterno = (a) => {
             if (!a || !a.href || a.hasAttribute('download') || a.hasAttribute('data-recargar') || a.hasAttribute('data-correo')) return false;
