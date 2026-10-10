@@ -22,5 +22,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Compatibilidad con MySQL/MariaDB del hosting (índices de máx. 1000 bytes)
         Schema::defaultStringLength(191);
+        // Tipos de proyecto con las etapas y pagos que definió la agencia
+        \App\Support\TiposProyecto::aplicar();
     }
 }

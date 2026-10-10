@@ -47,6 +47,9 @@ class Proyecto extends Model
             return $p->tipo;
         }
         $texto = Str::lower($p->conceptos->map(fn ($c) => $c->titulo . ' ' . $c->descripcion)->join(' '));
+        if (config('vandu.proyectos.redes') && Str::contains($texto, config('vandu.palabras_redes', []))) {
+            return 'redes';
+        }
         if (Str::contains($texto, config('vandu.palabras_audiovisual', []))) {
             return 'audiovisual';
         }
@@ -92,6 +95,7 @@ class Proyecto extends Model
                         'descripcion'   => $e['descripcion'] ?? null,
                         'orden'         => $i,
                         'es_fecha'      => $agendada,
+                        'dias'          => $e['dias'] ?? null,
                         'estado'        => 'completada',
                         'fecha_inicio'  => $agendada ? $finEtapa : $ini,
                         'fecha_fin'     => $agendada ? null : $finEtapa,
@@ -106,6 +110,7 @@ class Proyecto extends Model
                     'descripcion'  => $e['descripcion'] ?? null,
                     'orden'        => $i,
                     'es_fecha'     => $agendada,
+                    'dias'         => $e['dias'] ?? null,
                     'fecha_inicio' => $agendada ? null : $cursor->copy(),
                     'fecha_fin'    => $finEt,
                 ]);

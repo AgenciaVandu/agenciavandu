@@ -106,19 +106,24 @@ class ProyectoController extends Controller
                 'dias_credito'   => $credito ? (int) $request->input('dias_credito') : null,
                 'fecha_inicio'   => collect($etapas)->pluck('fecha_inicio')->filter()->min() ?? now(config('vandu.zona_horaria'))->toDateString(),
             ]);
-            foreach ($metodo['etapas'] as $i => $e) {
-                $proyecto->etapas()->create($etapas[$i] + [
-                    'clave' => $e['clave'], 'descripcion' => $e['descripcion'] ?? null, 'orden' => $i, 'es_fecha' => ! empty($e['fecha']),
-                ]);
+            // Las etapas son las que quedaron en pantalla: la agencia pudo agregar, quitar o reordenar
+            $claves = [];
+            foreach ($etapas as $i => $e) {
+                unset($e['id']);
+                $claves[] = $e['clave'];
+                $proyecto->etapas()->create($e + ['orden' => $i]);
             }
             // A crédito: un solo pago diferido que no frena ninguna etapa
             $plantilla = $credito ? [$this->pagoCredito((float) $request->input('monto_total'))] : $metodo['pagos'];
             foreach ($plantilla as $i => $pg) {
-                $proyecto->pagos()->create($pagos[$i] + [
+                $antes = $pg['antes_de'] ?? null;
+                $proyecto->pagos()->create(($pagos[$i] ?? ['monto' => 0]) + [
                     'clave' => $pg['clave'], 'concepto' => $pg['concepto'], 'porcentaje' => $pg['porcentaje'],
-                    'antes_de' => $pg['antes_de'] ?? null, 'orden' => $i,
+                    'antes_de' => in_array($antes, $claves, true) ? $antes : null, 'orden' => $i,
                 ]);
             }
+            // Gestión de redes: el cliente queda dado de alta en su calendario de contenido
+            if (! empty($metodo['redes']) && $presupuesto->cliente) \App\Support\Redes::token($presupuesto->cliente);
             if ($presupuesto->estado !== 'aceptada') {
                 $presupuesto->update(['estado' => 'aceptada', 'aceptada_el' => $presupuesto->aceptada_el ?? $proyecto->fecha_inicio]);
             }
@@ -153,7 +158,7 @@ class ProyectoController extends Controller
             'inicio'      => $proyecto->fecha_inicio?->toDateString(),
             'etapas'      => $proyecto->etapas->map(fn ($e) => [
                 'id' => $e->id, 'clave' => $e->clave, 'nombre' => $e->nombre, 'descripcion' => $e->descripcion,
-                'es_fecha' => $e->es_fecha, 'dias' => collect(config("vandu.proyectos.{$proyecto->tipo}.etapas"))->firstWhere('clave', $e->clave)['dias'] ?? 1,
+                'es_fecha' => $e->es_fecha, 'dias' => $e->dias ?? collect(config("vandu.proyectos.{$proyecto->tipo}.etapas"))->firstWhere('clave', $e->clave)['dias'] ?? 1,
                 'fecha_inicio' => $e->fecha_inicio?->toDateString() ?? '', 'fecha_fin' => $e->fecha_fin?->toDateString() ?? '',
                 'estado' => $e->estado, 'completada_el' => $e->completada_at?->timezone($tz)->toDateString() ?? '',
             ]),
@@ -179,11 +184,26 @@ class ProyectoController extends Controller
         }
         DB::transaction(function () use ($proyecto, $etapas, $pagos) {
             $proyecto->save();
-            foreach ($proyecto->etapas->values() as $i => $e) {
-                if (isset($etapas[$i])) $e->update($etapas[$i]);
+            // Sincroniza etapas: actualiza las que siguen, crea las nuevas y borra las que se quitaron
+            $existentes = $proyecto->etapas->keyBy('id');
+            $siguen = [];
+            foreach ($etapas as $i => $e) {
+                $id = $e['id'];
+                unset($e['id']);
+                if ($id && $existentes->has($id)) {
+                    $existentes[$id]->update($e + ['orden' => $i]);
+                    $siguen[] = $id;
+                } else {
+                    $siguen[] = $proyecto->etapas()->create($e + ['orden' => $i])->id;
+                }
             }
+            $quitadas = $existentes->except($siguen);
+            foreach ($quitadas as $e) $e->delete();
+            $claves = array_column($etapas, 'clave');
             foreach ($proyecto->pagos->values() as $i => $pg) {
-                if (isset($pagos[$i])) $pg->update($pagos[$i]);
+                if (isset($pagos[$i])) $pg->fill($pagos[$i]);
+                if ($pg->antes_de && ! in_array($pg->antes_de, $claves, true)) $pg->antes_de = null;
+                $pg->save();
             }
             $todas = $proyecto->etapas()->where('estado', '!=', 'completada')->doesntExist();
             if ($todas && $proyecto->estado === 'activo') $proyecto->update(['estado' => 'terminado']);
@@ -192,7 +212,7 @@ class ProyectoController extends Controller
             if ($inicio) $proyecto->update(['fecha_inicio' => $inicio]);
         });
 
-        return redirect()->route('admin.proyectos.show', $proyecto)->with('ok', 'Fechas guardadas.');
+        return redirect()->route('admin.proyectos.show', $proyecto)->with('ok', 'Etapas y fechas guardadas.');
     }
 
     /** @return array{0: array<int, array>, 1: array<int, array>} etapas y pagos listos para guardar */
@@ -205,6 +225,10 @@ class ProyectoController extends Controller
             'etapas.*.fecha_fin'     => 'nullable|date',
             'etapas.*.estado'        => ['required', Rule::in(array_keys(ProyectoEtapa::ESTADOS))],
             'etapas.*.completada_el' => 'nullable|date|before_or_equal:today',
+            'etapas.*.id'            => 'nullable|integer',
+            'etapas.*.clave'         => 'nullable|string|max:40',
+            'etapas.*.descripcion'   => 'nullable|string|max:300',
+            'etapas.*.dias'          => 'nullable|integer|min:1|max:365',
             'pagos'                  => 'array',
             'pagos.*.monto'          => 'required|numeric|min:0',
             'pagos.*.pagado_el'      => 'nullable|date|before_or_equal:today',
@@ -218,15 +242,29 @@ class ProyectoController extends Controller
 
         $tz = config('vandu.zona_horaria');
         $errores = [];
-        $etapas = collect($request->input('etapas'))->values()->map(function ($e, $i) use ($tz, &$errores) {
+        // Claves estables: las etapas existentes conservan la suya; las nuevas la sacan de su nombre
+        $actuales = $proyecto ? $proyecto->etapas->pluck('clave', 'id') : collect();
+        $usadas = [];
+        $etapas = collect($request->input('etapas'))->values()->map(function ($e, $i) use ($tz, &$errores, $actuales, &$usadas) {
+            $id = isset($e['id']) && $actuales->has((int) $e['id']) ? (int) $e['id'] : null;
+            $clave = $id ? $actuales[$id] : (string) ($e['clave'] ?? '');
+            if (! preg_match('/^[a-z0-9-]{1,40}$/', $clave) || in_array($clave, $usadas, true)) {
+                $clave = \App\Support\TiposProyecto::clave($e['nombre'], array_merge($usadas, $actuales->values()->all()));
+            }
+            $usadas[] = $clave;
             if (! empty($e['fecha_inicio']) && ! empty($e['fecha_fin']) && $e['fecha_fin'] < $e['fecha_inicio']) {
                 $errores["etapas.$i.fecha_fin"] = "En “{$e['nombre']}” la fecha final es antes del inicio.";
             }
             $completada = $e['estado'] === 'completada';
             $cuando = $e['completada_el'] ?? null ?: ($e['fecha_fin'] ?? null ?: ($e['fecha_inicio'] ?? null));
             return [
+                'id'            => $id,
+                'clave'         => $clave,
                 'nombre'        => $e['nombre'],
-                'fecha_inicio'  => $e['fecha_inicio'] ?: null,
+                'descripcion'   => trim((string) ($e['descripcion'] ?? '')) ?: null,
+                'es_fecha'      => ! empty($e['es_fecha']),
+                'dias'          => isset($e['dias']) && $e['dias'] !== '' ? (int) $e['dias'] : null,
+                'fecha_inicio'  => $e['fecha_inicio'] ?? null ?: null,
                 'fecha_fin'     => $e['fecha_fin'] ?? null ?: null,
                 'estado'        => $e['estado'],
                 'completada_at' => $completada
@@ -240,7 +278,7 @@ class ProyectoController extends Controller
 
         $pagos = collect($request->input('pagos', []))->values()->map(fn ($pg) => [
             'monto'      => $pg['monto'],
-            'pagado_el'  => $pg['pagado_el'] ?: null,
+            'pagado_el'  => $pg['pagado_el'] ?? null ?: null,
             'referencia' => $pg['referencia'] ?? null ?: null,
             'metodo'     => $pg['metodo'] ?? null ?: null,
             'vence_el'   => $pg['vence_el'] ?? null ?: null,

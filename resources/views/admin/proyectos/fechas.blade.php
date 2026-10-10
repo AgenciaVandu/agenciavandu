@@ -24,7 +24,7 @@
     ];
     $cancelar = $crear ? route('admin.presupuestos.edit', $presupuesto) : route('admin.proyectos.show', $proyecto);
 @endphp
-@section('titulo', $crear ? 'Nuevo proyecto' : 'Editar fechas')
+@section('titulo', $crear ? 'Nuevo proyecto' : 'Etapas y fechas')
 
 @push('head')
 <style>
@@ -37,6 +37,14 @@
     .fechas .nom { min-width: 200px; }
     .fechas .gate { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
     .fechas tr.completa td:first-child { box-shadow: inset 3px 0 0 var(--green-ink); }
+    .fechas .desc { color: var(--text-2); }
+    .enlace-mini { border: 0; background: none; padding: 0; margin-top: 4px; font-size: 12.5px; color: var(--muted); text-decoration: underline; text-underline-offset: 2px; display: block; }
+    .enlace-mini:hover { color: var(--text); }
+    .acc-etapa { white-space: nowrap; width: 1%; }
+    .acc-etapa button { border: 0; background: none; width: 30px; height: 30px; border-radius: 7px; color: var(--text-2); }
+    .acc-etapa button:hover:not(:disabled) { background: var(--sunken); color: var(--text); }
+    .acc-etapa button.quitar:hover:not(:disabled) { color: #B42318; }
+    .acc-etapa button:disabled { opacity: .3; }
     @media (max-width: 991.98px) {
         .fechas, .fechas tbody { display: block; }
         .fechas thead { display: none; }
@@ -48,6 +56,7 @@
         .fechas td[data-k]::before { content: attr(data-k); display: block; font-size: 12px; color: var(--muted); margin-bottom: 3px; }
         .fechas td.nom { grid-column: 1 / -1; }
         .fechas input[type=date] { min-width: 0; width: 100%; }
+        .fechas td.acc-etapa { grid-column: 1 / -1; width: auto; display: flex; justify-content: flex-end; gap: 4px; }
     }
     .chips { display: flex; flex-wrap: wrap; gap: 6px; }
     .chips button { border: 1px solid var(--line-strong); background: var(--surface); border-radius: 99px; padding: 4px 12px; font-size: 13.5px; color: var(--text-2); }
@@ -67,13 +76,13 @@
         <a href="{{ route('admin.presupuestos.edit', $presupuesto) }}">{{ $presupuesto->folio }}</a> <i class="bi bi-chevron-right small"></i> <span>Nuevo proyecto</span>
     @else
         <a href="{{ route('admin.proyectos.index') }}">Proyectos</a> <i class="bi bi-chevron-right small"></i>
-        <a href="{{ route('admin.proyectos.show', $proyecto) }}">{{ $proyecto->nombre }}</a> <i class="bi bi-chevron-right small"></i> <span>Fechas</span>
+        <a href="{{ route('admin.proyectos.show', $proyecto) }}">{{ $proyecto->nombre }}</a> <i class="bi bi-chevron-right small"></i> <span>Etapas y fechas</span>
     @endif
 </div>
 <div class="page-head">
     <div>
-        <h1>{{ $crear ? 'Nuevo proyecto' : 'Editar fechas' }}</h1>
-        <p class="sub">{{ $crear ? 'Revisa cada etapa y pago. Las fechas propuestas son solo un punto de partida: cámbialas como quieras.' : 'Ajusta las fechas, el estado de cada etapa y cuándo se recibió cada pago.' }}</p>
+        <h1>{{ $crear ? 'Nuevo proyecto' : 'Etapas y fechas' }}</h1>
+        <p class="sub">{{ $crear ? 'Revisa cada etapa y pago. Las fechas propuestas son solo un punto de partida: cámbialas como quieras.' : 'Ajusta las etapas de este proyecto, sus fechas y cuándo se recibió cada pago.' }}</p>
     </div>
 </div>
 
@@ -164,15 +173,20 @@
         </section>
 
         <section class="panel">
-            <div class="panel-head"><h2>Etapas</h2><span class="ayuda">Deja vacío lo que aún no tenga fecha</span></div>
+            <div class="panel-head"><h2>Etapas</h2><span class="ayuda">Cada cliente tiene su proceso: agrega, quita o reordena. Deja vacío lo que aún no tenga fecha.</span></div>
             <div class="table-responsive">
                 <table class="fechas">
-                    <thead><tr><th>Etapa</th><th>Inicio</th><th>Fin</th><th>Estado</th><th>Completada el</th></tr></thead>
+                    <thead><tr><th>Etapa</th><th>Inicio</th><th>Fin</th><th>Estado</th><th>Completada el</th><th><span class="visually-hidden">Ordenar o quitar</span></th></tr></thead>
                     <tbody>
-                        <template x-for="(e, i) in etapas" :key="i">
+                        <template x-for="(e, i) in etapas" :key="e._k">
                             <tr :class="{ completa: e.estado === 'completada' }">
                                 <td class="nom">
-                                    <input class="form-control fw-medium" :name="`etapas[${i}][nombre]`" x-model="e.nombre" required :aria-label="'Nombre de la etapa ' + (i + 1)">
+                                    <input type="hidden" :name="`etapas[${i}][id]`" :value="e.id || ''">
+                                    <input type="hidden" :name="`etapas[${i}][clave]`" :value="e.clave || ''">
+                                    <input type="hidden" :name="`etapas[${i}][es_fecha]`" :value="e.es_fecha ? 1 : ''">
+                                    <input type="hidden" :name="`etapas[${i}][dias]`" :value="e.dias || ''">
+                                    <input class="form-control fw-medium" :name="`etapas[${i}][nombre]`" x-model="e.nombre" required placeholder="Nombre de la etapa" :aria-label="'Nombre de la etapa ' + (i + 1)">
+                                    <input class="form-control form-control-sm desc mt-1" :name="`etapas[${i}][descripcion]`" x-model="e.descripcion" maxlength="300" placeholder="Qué pasa en esta etapa (lo ve tu cliente)" :aria-label="'Descripción de la etapa ' + (i + 1)">
                                     <div class="gate" x-show="bloqueos(e).length" x-text="'Requiere: ' + bloqueos(e).join(' y ')"></div>
                                 </td>
                                 <td data-k="Inicio">
@@ -181,6 +195,7 @@
                                 <td data-k="Fin">
                                     <template x-if="!e.es_fecha"><input type="date" class="form-control num" :name="`etapas[${i}][fecha_fin]`" x-model="e.fecha_fin" :min="e.fecha_inicio" @change="alCambiarFin(e)" :aria-label="'Fin de ' + e.nombre"></template>
                                     <template x-if="e.es_fecha"><span class="secundario">Un solo día</span></template>
+                                    <button type="button" class="enlace-mini" @click="e.es_fecha = !e.es_fecha; if (e.es_fecha) e.fecha_fin = ''" x-text="e.es_fecha ? 'Cambiar a varios días' : 'Es un solo día'"></button>
                                 </td>
                                 <td data-k="Estado">
                                     <select class="form-select" :name="`etapas[${i}][estado]`" x-model="e.estado" @change="if (e.estado === 'completada' && !e.completada_el) e.completada_el = e.fecha_fin || e.fecha_inicio || hoy" :aria-label="'Estado de ' + e.nombre">
@@ -190,10 +205,19 @@
                                 <td data-k="Completada el">
                                     <input type="date" class="form-control num" :name="`etapas[${i}][completada_el]`" x-model="e.completada_el" :max="hoy" :disabled="e.estado !== 'completada'" :aria-label="'Completada el, ' + e.nombre">
                                 </td>
+                                <td class="acc-etapa">
+                                    <button type="button" @click="moverEtapa(i, -1)" :disabled="i === 0" title="Subir" :aria-label="'Subir ' + e.nombre"><i class="bi bi-arrow-up"></i></button>
+                                    <button type="button" @click="moverEtapa(i, 1)" :disabled="i === etapas.length - 1" title="Bajar" :aria-label="'Bajar ' + e.nombre"><i class="bi bi-arrow-down"></i></button>
+                                    <button type="button" class="quitar" @click="quitarEtapa(i)" :disabled="etapas.length === 1" title="Quitar etapa" :aria-label="'Quitar ' + e.nombre"><i class="bi bi-trash"></i></button>
+                                </td>
                             </tr>
                         </template>
                     </tbody>
                 </table>
+            </div>
+            <div class="panel-body pt-3 d-flex flex-wrap gap-2 align-items-center" style="border-top: 1px solid var(--line)">
+                <button type="button" class="btn btn-borde btn-sm" @click="agregarEtapa()"><i class="bi bi-plus-lg me-1"></i> Agregar etapa</button>
+                <span class="secundario" style="font-size:13px">Solo cambia este proyecto. Para cambiar las etapas de todos los proyectos nuevos, ve a <a href="{{ route('admin.tipos', ['t' => $tipo]) }}">Tipos de proyecto</a>.</span>
             </div>
         </section>
 
@@ -245,8 +269,9 @@ function fechasProyecto(init) {
     const sumarHabiles = (d, n) => { const r = new Date(d); while (n > 0) { r.setDate(r.getDate() + 1); if (r.getDay() % 6) n--; } return r; };
     const habil = (d) => { const r = new Date(d); while (!(r.getDay() % 6)) r.setDate(r.getDate() + 1); return r; };
     return {
-        ...init, mensaje: '',
+        ...init, mensaje: '', _n: 0,
         init() {
+            this.etapas.forEach((e) => { e._k = ++this._n; e.es_fecha = !!(+e.es_fecha || e.es_fecha === true); });
             if (this.proponer) this.proponerFechas(true);
             // El vencimiento del crédito sigue a la fecha de entrega mientras no lo cambies a mano
             this.$watch('dias', () => this.calcularVence());
@@ -281,7 +306,19 @@ function fechasProyecto(init) {
         alCambiarFin(e) {
             if (e.estado === 'completada' && e.fecha_fin) e.completada_el = e.fecha_fin <= this.hoy ? e.fecha_fin : this.hoy;
         },
-        bloqueos(e) { return this.pagos.filter((p) => p.antes_de === e.clave).map((p) => p.concepto); },
+        agregarEtapa() {
+            this.etapas.push({ _k: ++this._n, id: null, clave: '', nombre: '', descripcion: '', es_fecha: false, dias: 3, fecha_inicio: '', fecha_fin: '', estado: 'pendiente', completada_el: '' });
+            this.$nextTick(() => { const f = this.$root.querySelectorAll('.fechas input[name$="[nombre]"]'); f[f.length - 1]?.focus(); });
+        },
+        quitarEtapa(i) {
+            const e = this.etapas[i];
+            if (e.id && !confirm('¿Quitar la etapa “' + (e.nombre || 'sin nombre') + '” de este proyecto? Sus archivos se quedan en el proyecto.')) return;
+            this.etapas.splice(i, 1);
+            this.pagos.forEach((p) => { if (e.clave && p.antes_de === e.clave) p.antes_de = null; });
+        },
+        moverEtapa(i, d) { const j = i + d; if (j < 0 || j >= this.etapas.length) return; const [e] = this.etapas.splice(i, 1); this.etapas.splice(j, 0, e); },
+        bloqueos(e) { if (!e.clave) return [];
+            return this.pagos.filter((p) => p.antes_de === e.clave).map((p) => p.concepto); },
         proponerFechas(silencioso = false) {
             if (!this.inicio) { this.mensaje = 'Pon la fecha de inicio.'; return; }
             const ini = leer(this.inicio);

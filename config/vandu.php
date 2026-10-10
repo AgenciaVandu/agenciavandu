@@ -87,6 +87,23 @@ return [
                 ['clave' => 'entrega',       'nombre' => 'Entrega',                    'dias' => 1, 'fecha' => true, 'descripcion' => 'El material final queda disponible en tu galería para verlo y descargarlo.'],
             ],
         ],
+        // Servicio mensual de redes: se liga al calendario de contenido del cliente (Redes sociales)
+        'redes' => [
+            'nombre' => 'Gestión de redes sociales',
+            'icono'  => 'bi-grid-3x3-gap',
+            'redes'  => true,
+            'pagos'  => [
+                ['clave' => 'mensualidad', 'concepto' => 'Mensualidad', 'porcentaje' => 100, 'antes_de' => 'produccion'],
+            ],
+            'etapas' => [
+                ['clave' => 'estrategia',  'nombre' => 'Estrategia del mes',       'dias' => 2,  'descripcion' => 'Objetivos, fechas importantes y temas del mes.'],
+                ['clave' => 'parrilla',    'nombre' => 'Parrilla de contenido',    'dias' => 3,  'descripcion' => 'Calendario con cada publicación, formato y red.'],
+                ['clave' => 'produccion',  'nombre' => 'Producción de contenido',  'dias' => 7,  'descripcion' => 'Diseño, fotografía, video y textos de cada publicación.'],
+                ['clave' => 'revision',    'nombre' => 'Revisión y aprobación',    'dias' => 3,  'descripcion' => 'Revisas cómo se ve cada post y lo apruebas en tu enlace.'],
+                ['clave' => 'publicacion', 'nombre' => 'Publicación y comunidad',  'dias' => 20, 'descripcion' => 'Publicamos según el calendario y atendemos comentarios y mensajes.'],
+                ['clave' => 'reporte',     'nombre' => 'Reporte del mes',          'dias' => 2,  'descripcion' => 'Resultados del mes y aprendizajes para el siguiente.'],
+            ],
+        ],
         // Impresión, instalación, rotulación, bordado y artículos publicitarios.
         // costeo => en la cotización cada concepto se calcula con proveedor + gasolina + utilidad.
         'produccion' => [
@@ -286,5 +303,6 @@ return [
     // Palabras que hacen sugerir "Producción e impresión"
     'palabras_produccion' => ['impres', 'lona', 'vinil', 'rotul', 'bordad', 'playera', 'gorra', 'taza', 'termo', 'pluma', 'promocional', 'publicitari', 'instalación', 'letrero', 'señalética', 'sticker', 'etiqueta', 'display', 'uniforme', 'caja'],
 
+    'palabras_redes' => ['redes sociales', 'community', 'social media', 'parrilla', 'gestión de redes', 'manejo de redes', 'publicaciones', 'instagram', 'facebook', 'tiktok', 'linkedin', 'contenido mensual'],
     'palabras_audiovisual' => ['foto', 'video', 'vídeo', 'grabación', 'sesión', 'dron', 'audiovisual', 'filmación', 'reel'],
 ];

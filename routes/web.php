@@ -108,6 +108,11 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::patch('proyectos/{proyecto}/etapas/{etapa}', [Admin\ProyectoController::class, 'etapa'])->name('proyectos.etapa');
     Route::patch('proyectos/{proyecto}/pagos/{pago}', [Admin\ProyectoController::class, 'pago'])->name('proyectos.pago');
     // Dropbox
+    Route::get('tipos-de-proyecto', [Admin\TiposProyectoController::class, 'index'])->name('tipos');
+    Route::post('tipos-de-proyecto', [Admin\TiposProyectoController::class, 'store'])->name('tipos.store');
+    Route::put('tipos-de-proyecto/{clave}', [Admin\TiposProyectoController::class, 'update'])->name('tipos.update');
+    Route::post('tipos-de-proyecto/{clave}/restaurar', [Admin\TiposProyectoController::class, 'restaurar'])->name('tipos.restaurar');
+    Route::delete('tipos-de-proyecto/{clave}', [Admin\TiposProyectoController::class, 'destroy'])->name('tipos.destroy');
     Route::get('notificaciones', [Admin\NotificacionController::class, 'index'])->name('notificaciones');
     Route::post('notificaciones/suscribir', [Admin\NotificacionController::class, 'suscribir'])->name('notificaciones.suscribir');
     Route::patch('notificaciones/{suscripcion}', [Admin\NotificacionController::class, 'preferencias'])->name('notificaciones.preferencias');

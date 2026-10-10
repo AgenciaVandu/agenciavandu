@@ -10,10 +10,11 @@ class ProyectoEtapa extends Model
 {
     public const ESTADOS = ['pendiente' => 'Pendiente', 'en_curso' => 'En curso', 'completada' => 'Completada'];
 
-    protected $fillable = ['clave', 'nombre', 'descripcion', 'orden', 'estado', 'es_fecha', 'fecha_inicio', 'fecha_fin', 'completada_at'];
+    protected $fillable = ['clave', 'nombre', 'descripcion', 'orden', 'estado', 'es_fecha', 'dias', 'fecha_inicio', 'fecha_fin', 'completada_at'];
 
     protected $casts = [
         'es_fecha'      => 'boolean',
+        'dias'          => 'integer',
         'fecha_inicio'  => 'date',
         'fecha_fin'     => 'date',
         'completada_at' => 'datetime',
