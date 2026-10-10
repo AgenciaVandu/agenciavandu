@@ -96,12 +96,15 @@ class TareasController extends Controller
     public function show(Request $request, Tarea $tarea)
     {
         abort_unless($tarea->puedeVer($request->user()), 403);
-        $tarea->load(['cliente', 'proyecto.cliente', 'responsable', 'autor', 'comentarios.user', 'archivos.user']);
+        $tarea->load(['cliente', 'proyecto.cliente', 'responsable', 'autor', 'aprobador', 'etapa', 'comentarios.user', 'archivos.user']);
         return view('admin.tareas.show', [
             't'          => $tarea,
             'gestiona'   => $request->user()->puede('tareas'),
             'mia'        => $tarea->asignada_a === $request->user()->id,
             'archivos'   => $this->archivos($tarea),
+            'incluidos'  => $tarea->archivos->whereNotNull('proyecto_archivo_id')->values(),
+            'etapasProyecto' => $tarea->proyecto?->etapas()->get() ?? collect(),
+            'destinos'   => Tarea::DESTINOS,
             'dropbox'    => Dropbox::conectado(),
             'parte'      => self::parte(),
         ]);
@@ -142,6 +145,8 @@ class TareasController extends Controller
         // Quien solo hace la tarea puede empezarla, entregarla o retomarla; terminarla la decide quien gestiona
         abort_if(! $gestiona && ($nuevo === 'terminada' || $tarea->estado === 'terminada'), 403, 'Quien gestiona las tareas es quien la da por terminada.');
 
+        // Pedir ajustes abre una nueva vuelta: lo que se suba después cuenta como la siguiente entrega
+        if ($tarea->estado === 'revision' && $nuevo === 'en_curso') $tarea->ronda++;
         $tarea->estado = $nuevo;
         if ($nuevo === 'revision') $tarea->entregada_at = now();
         $tarea->terminada_at = $nuevo === 'terminada' ? now() : null;
@@ -213,7 +218,7 @@ class TareasController extends Controller
 
         $a = $tarea->archivos()->create([
             'user_id' => $yo->id, 'nombre' => $meta['name'], 'ruta' => $meta['path_display'],
-            'dropbox_id' => $meta['id'] ?? null, 'tamano' => (int) ($meta['size'] ?? 0),
+            'dropbox_id' => $meta['id'] ?? null, 'tamano' => (int) ($meta['size'] ?? 0), 'ronda' => $tarea->ronda,
         ]);
         if ($tarea->estado === 'pendiente') $tarea->update(['estado' => 'en_curso']);
         Cache::forget('tarea.carpeta.' . $tarea->id);
@@ -258,6 +263,88 @@ class TareasController extends Controller
         return back()->with('ok', 'Archivo quitado (queda unos días en la papelera de Dropbox).');
     }
 
+    /**
+     * Aprobar: lo elegido de la carpeta de la tarea pasa al proyecto (galería o documentos de su etapa),
+     * la tarea se termina y, si así se pidió, la etapa del proyecto avanza.
+     */
+    public function aprobar(Request $request, Tarea $tarea)
+    {
+        $this->gestiona($request);
+        abort_if($tarea->estado === 'terminada', 422, 'La tarea ya está terminada.');
+        $yo = $request->user();
+        $d = $request->validate([
+            'ids'      => 'array|max:500',
+            'ids.*'    => 'string|starts_with:id:',
+            'publicar' => 'nullable|boolean',
+            'nota'     => 'nullable|string|max:2000',
+            'destino'  => ['nullable', Rule::in(array_keys(Tarea::DESTINOS))],
+            'etapa_id' => ['nullable', Rule::exists('proyecto_etapas', 'id')->where('proyecto_id', (int) $tarea->proyecto_id)],
+        ]);
+        // Al aprobar se puede ajustar a dónde va lo entregado
+        if ($tarea->proyecto_id && $request->has('destino')) {
+            $tarea->destino = $d['destino'] ?: null;
+            $tarea->etapa_id = $d['etapa_id'] ?? null;
+            $tarea->completar_etapa = $tarea->etapa_id && $request->boolean('completar_etapa');
+            $tarea->save();
+            $tarea->load('etapa');
+        }
+        $p = $tarea->proyecto;
+        $ids = array_values(array_unique($d['ids'] ?? []));
+        $incluidos = 0;
+        $errores = [];
+
+        if ($p && $tarea->destino && $ids) {
+            abort_unless(Dropbox::conectado(), 409, 'Dropbox no está conectado.');
+            $grupo = $tarea->destino === 'galeria' ? 'galeria' : 'documento';
+            $visible = $grupo !== 'galeria' || $request->boolean('publicar', true);
+            $etapa = $tarea->etapa;
+            $carpeta = $grupo === 'galeria'
+                ? ($visible ? ArchivosProyecto::carpetaGaleria($p) : ArchivosProyecto::carpetaOculta($p))
+                : ArchivosProyecto::carpetaDestino($p, 'documento', $etapa);
+            $dbx = Dropbox::cliente();
+            $dbx->crearCarpeta($carpeta);
+            foreach ($ids as $id) {
+                try {
+                    $ruta = $this->rutaEnCarpeta($tarea, $id);
+                    $meta = $dbx->mover($ruta, $carpeta . '/' . basename($ruta));
+                    $pa = ArchivosProyecto::registrarDropbox($p, $meta, $grupo, $grupo === 'documento' ? $etapa?->id : null, null, $visible);
+                    $registro = $tarea->archivos()->where('dropbox_id', $id)->first()
+                        ?? $tarea->archivos()->create(['user_id' => null, 'nombre' => $meta['name'], 'ruta' => $ruta, 'dropbox_id' => $id, 'tamano' => (int) ($meta['size'] ?? 0), 'ronda' => $tarea->ronda]);
+                    $registro->update(['proyecto_archivo_id' => $pa->id, 'ruta' => $meta['path_display']]);
+                    $incluidos++;
+                } catch (Throwable $e) {
+                    report($e);
+                    $errores[] = basename($id);
+                }
+            }
+            Cache::forget('tarea.carpeta.' . $tarea->id);
+            if ($errores && ! $incluidos) return back()->withErrors(['aprobar' => 'No se pudo pasar ningún archivo al proyecto. Revisa la conexión con Dropbox e intenta de nuevo.']);
+        }
+
+        $tarea->forceFill(['estado' => 'terminada', 'terminada_at' => now(), 'aprobada_por' => $yo->id, 'entregada_at' => $tarea->entregada_at ?? now()])->save();
+
+        // La etapa avanza sola, salvo que espere un pago
+        $etapaMsg = '';
+        if ($p && $tarea->completar_etapa && $tarea->etapa && $tarea->etapa->estado !== 'completada') {
+            $pendientes = $p->load('pagos')->pagosQueBloquean($tarea->etapa);
+            if ($pendientes->isEmpty()) {
+                $tarea->etapa->update(['estado' => 'completada', 'completada_at' => now()]);
+                $etapaMsg = " La etapa “{$tarea->etapa->nombre}” quedó completada.";
+                if ($p->etapas()->where('estado', '!=', 'completada')->doesntExist() && $p->estado === 'activo') $p->update(['estado' => 'terminado']);
+            } else {
+                $etapaMsg = " La etapa “{$tarea->etapa->nombre}” no se marcó completada porque espera el pago de " . $pendientes->pluck('concepto')->join(', ', ' y ') . '.';
+            }
+        }
+
+        $donde = $tarea->destino === 'galeria' ? 'a la galería' . ($request->boolean('publicar', true) ? '' : ' (sin publicar)') : ($tarea->etapa ? "a los documentos de “{$tarea->etapa->nombre}”" : 'a los documentos');
+        $resumen = $incluidos ? "Aprobada: $incluidos " . ($incluidos === 1 ? 'archivo pasó' : 'archivos pasaron') . " $donde del proyecto." : 'Tarea aprobada y terminada.';
+        $tarea->comentarios()->create(['user_id' => $yo->id, 'texto' => trim('✓ ' . $resumen . (! empty($d['nota']) ? "\n" . $d['nota'] : ''))]);
+        if ($tarea->asignada_a && $tarea->asignada_a !== $yo->id) {
+            $this->avisar([$tarea->asignada_a], 'tarea_comentario', "Aprobada: {$tarea->titulo}", $d['nota'] ?? ($incluidos ? "$incluidos archivos ya están en el proyecto. ¡Buen trabajo!" : '¡Buen trabajo!'), $tarea);
+        }
+        return redirect()->route('admin.tareas.show', $tarea)->with('ok', $resumen . $etapaMsg . ($errores ? ' ' . count($errores) . ' no se pudieron pasar; siguen en la carpeta de la tarea.' : ''));
+    }
+
     /** Crea una carpeta nueva dentro de otra (desde el selector de carpeta) */
     public function carpeta(Request $request)
     {
@@ -284,8 +371,17 @@ class TareasController extends Controller
     {
         $proyectos = Proyecto::with('cliente')->where('estado', 'activo')->orWhere('id', $t->proyecto_id)->latest()->get();
         $raiz = Dropbox::raiz();
+        $proyectos->load('etapas');
+        if (! $t->exists && $t->proyecto_id && ! $t->destino) {
+            $p = $proyectos->firstWhere('id', $t->proyecto_id);
+            $t->destino = $p && $p->tiene_galeria ? 'galeria' : 'documento';
+        }
         return view('admin.tareas.form', [
             't'         => $t,
+            'etapasPorProyecto' => $proyectos->mapWithKeys(fn ($p) => [$p->id => [
+                'galeria' => (bool) $p->tiene_galeria,
+                'etapas'  => $p->etapas->map(fn ($e) => ['id' => (string) $e->id, 'nombre' => $e->nombre, 'estado' => $e->estado])->values(),
+            ]]),
             'clientes'  => Cliente::orderByRaw("coalesce(nullif(empresa, ''), nombre)")->get(['id', 'nombre', 'empresa']),
             'proyectos' => $proyectos,
             'equipo'    => User::with('rol')->where('activo', true)->orderBy('name')->get(),
@@ -316,6 +412,14 @@ class TareasController extends Controller
         ]);
         $d['urgente'] = $request->boolean('urgente');
         if (! empty($d['proyecto_id']) && empty($d['cliente_id'])) $d['cliente_id'] = Proyecto::find($d['proyecto_id'])?->cliente_id;
+        // Qué pasa con lo entregado al aprobar: solo aplica si la tarea es de un proyecto
+        $extra = $request->validate([
+            'destino'  => ['nullable', Rule::in(array_keys(Tarea::DESTINOS))],
+            'etapa_id' => ['nullable', Rule::exists('proyecto_etapas', 'id')->where('proyecto_id', (int) ($d['proyecto_id'] ?? 0))],
+        ], ['etapa_id.exists' => 'Esa etapa no es del proyecto elegido.']);
+        $d['destino'] = ! empty($d['proyecto_id']) ? ($extra['destino'] ?? null) : null;
+        $d['etapa_id'] = ! empty($d['proyecto_id']) ? ($extra['etapa_id'] ?? null) : null;
+        $d['completar_etapa'] = $d['etapa_id'] ? $request->boolean('completar_etapa') : false;
         if (! empty($d['carpeta'])) $d['carpeta'] = rtrim(preg_replace('#/+#', '/', $d['carpeta']), '/') ?: null;
         return $d;
     }
@@ -331,7 +435,7 @@ class TareasController extends Controller
     {
         $propios = $t->archivos->keyBy('dropbox_id');
         if (! $t->carpeta || ! Dropbox::conectado()) {
-            return $t->archivos->map(fn ($a) => ['id' => $a->dropbox_id, 'nombre' => $a->nombre, 'peso' => $a->peso, 'tipo' => $a->tipo, 'quien' => $a->user?->primer_nombre, 'cuando' => $a->created_at, 'mio' => $a->user_id])->all();
+            return $t->archivos->whereNull('proyecto_archivo_id')->map(fn ($a) => ['id' => $a->dropbox_id, 'nombre' => $a->nombre, 'peso' => $a->peso, 'tipo' => $a->tipo, 'quien' => $a->user?->primer_nombre, 'cuando' => $a->created_at, 'mio' => $a->user_id, 'ronda' => $a->ronda])->values()->all();
         }
         try {
             $entradas = Cache::remember('tarea.carpeta.' . $t->id, now()->addSeconds(30), fn () => Dropbox::cliente()->listar($t->carpeta));
@@ -346,7 +450,7 @@ class TareasController extends Controller
                 return [
                     'id' => $e['id'], 'nombre' => $e['name'], 'peso' => $tmp->peso, 'tipo' => $tmp->tipo,
                     'quien' => $a?->user?->primer_nombre, 'cuando' => $a?->created_at ?? (isset($e['server_modified']) ? \Illuminate\Support\Carbon::parse($e['server_modified']) : null),
-                    'mio' => $a?->user_id,
+                    'mio' => $a?->user_id, 'ronda' => $a?->ronda ?? 1,
                 ];
             })->values()->all();
     }

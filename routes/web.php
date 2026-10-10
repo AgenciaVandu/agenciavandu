@@ -191,6 +191,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::resource('tareas', Admin\TareasController::class)->parameters(['tareas' => 'tarea']);
     Route::patch('tareas/{tarea}/estado', [Admin\TareasController::class, 'estado'])->name('tareas.estado');
     Route::post('tareas/{tarea}/comentar', [Admin\TareasController::class, 'comentar'])->name('tareas.comentar');
+    Route::post('tareas/{tarea}/aprobar', [Admin\TareasController::class, 'aprobar'])->name('tareas.aprobar');
     Route::post('tareas/{tarea}/subir', [Admin\TareasController::class, 'subir'])->name('tareas.subir');
     Route::get('tareas/{tarea}/archivos/{id}', [Admin\TareasController::class, 'verArchivo'])->where('id', 'id:[A-Za-z0-9_-]+')->name('tareas.archivo');
     Route::delete('tareas/{tarea}/archivos/{id}', [Admin\TareasController::class, 'quitarArchivo'])->where('id', 'id:[A-Za-z0-9_-]+')->name('tareas.archivo.quitar');

@@ -7,13 +7,15 @@
     $hayError = isset($archivos['error']);
     $lista = $hayError ? [] : $archivos;
     $estadoBtn = fn ($estado, $texto, $icono, $clase = 'btn-borde', $nota = false) => compact('estado', 'texto', 'icono', 'clase', 'nota');
+    // Quien gestiona revisa lo entregado; si la tarea es suya, puede aprobarla directo sin pasar por revisión
+    $revisa = $gestiona && ($t->estado === 'revision' || ($mia && in_array($t->estado, ['pendiente', 'en_curso'], true)));
     $acciones = [];
-    if ($t->estado === 'pendiente' && ($mia || $gestiona)) $acciones[] = $estadoBtn('en_curso', 'Empezar', 'bi-play-fill', 'btn-primario');
-    if ($t->estado === 'en_curso' && ($mia || $gestiona)) $acciones[] = $estadoBtn('revision', 'Entregar para revisión', 'bi-send', 'btn-primario', true);
-    if ($t->estado === 'revision' && $gestiona) { $acciones[] = $estadoBtn('terminada', 'Dar por terminada', 'bi-check2-circle', 'btn-primario'); $acciones[] = $estadoBtn('en_curso', 'Pedir ajustes', 'bi-arrow-counterclockwise', 'btn-borde', true); }
-    elseif ($t->estado === 'revision' && $mia) $acciones[] = $estadoBtn('en_curso', 'Seguir trabajando', 'bi-arrow-counterclockwise');
-    if ($gestiona && in_array($t->estado, ['pendiente', 'en_curso'], true)) $acciones[] = $estadoBtn('terminada', 'Terminar', 'bi-check2', 'btn-fantasma');
+    if ($t->estado === 'pendiente' && ($mia || $gestiona)) $acciones[] = $estadoBtn('en_curso', 'Empezar', 'bi-play-fill', $revisa ? 'btn-borde' : 'btn-primario');
+    if ($t->estado === 'en_curso' && $mia && ! $gestiona) $acciones[] = $estadoBtn('revision', 'Entregar para revisión', 'bi-send', 'btn-primario', true);
+    if ($t->estado === 'revision' && $mia && ! $gestiona) $acciones[] = $estadoBtn('en_curso', 'Seguir trabajando', 'bi-arrow-counterclockwise');
     if ($t->estado === 'terminada' && $gestiona) $acciones[] = $estadoBtn('en_curso', 'Reabrir', 'bi-arrow-counterclockwise');
+    if ($gestiona && ! $revisa && in_array($t->estado, ['pendiente', 'en_curso'], true)) $acciones[] = $estadoBtn('terminada', 'Cerrar sin entrega', 'bi-x-circle', 'btn-fantasma');
+    $pendientesRev = collect($lista);
 @endphp
 
 @push('head')
@@ -46,6 +48,23 @@
     .arch .info .s { color: var(--muted); }
     .arch .quitar { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; border-radius: 8px; border: 0; background: rgba(255,255,255,.92); color: var(--text-2); display: grid; place-items: center; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
     .arch .quitar:hover { color: var(--red); }
+    .revision { border-color: var(--ink); box-shadow: 0 6px 22px rgba(19,22,29,.07); }
+    .dest-op { display: flex; flex-wrap: wrap; gap: 8px; }
+    .dest-op label { display: inline-flex; gap: 8px; align-items: center; border: 1.5px solid var(--line-strong); border-radius: 10px; padding: 8px 12px; cursor: pointer; font-size: 14px; }
+    .dest-op label.sel { border-color: var(--ink); background: var(--sunken); }
+    .dest-op input { display: none; }
+    .dest-op b { font-weight: 500; }
+    .rev-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; max-height: 420px; overflow-y: auto; padding: 2px; }
+    .rev-a { position: relative; border: 2px solid var(--line); border-radius: 10px; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; background: var(--surface); }
+    .rev-a input { position: absolute; opacity: 0; pointer-events: none; }
+    .rev-a .mini { aspect-ratio: 1; background: var(--sunken); display: grid; place-items: center; color: var(--muted); font-size: 24px; overflow: hidden; }
+    .rev-a .mini img { width: 100%; height: 100%; object-fit: cover; }
+    .rev-a .n { font-size: 11.5px; padding: 4px 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rev-a .marca { position: absolute; top: 5px; right: 5px; font-size: 18px; color: var(--green-ink); background: #fff; border-radius: 50%; line-height: 1; }
+    .rev-a.on { border-color: var(--green-ink); }
+    .rev-a.off { opacity: .5; }
+    .rev-a.off .marca { color: #C9CCD3; }
+    .rev-a:has(input:focus-visible) { outline: 2px solid var(--ink); outline-offset: 2px; }
     .com { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
     .com li { display: flex; gap: 10px; }
     .com .avatar { width: 30px; height: 30px; font-size: 11px; flex: none; }
@@ -83,6 +102,99 @@
 
 <div class="ts-grid">
     <div class="d-grid gap-4">
+        @if($revisa)
+            <section class="panel revision" x-data="revisionTarea({{ Js::from(['ids' => $pendientesRev->pluck('id')->values(), 'destino' => (string) ($t->destino ?? ($t->proyecto ? ($t->proyecto->tiene_galeria ? 'galeria' : 'documento') : '')), 'etapa' => (string) ($t->etapa_id ?? ''), 'completar' => (bool) $t->completar_etapa]) }})">
+                <div class="panel-head">
+                    <h2 class="d-flex align-items-center gap-2"><i class="bi bi-clipboard-check"></i> {{ $t->estado === 'revision' ? 'Revisa la entrega' . ($t->ronda > 1 ? ' ' . $t->ronda : '') : '¿Ya quedó? Apruébala' }}</h2>
+                    <span class="ayuda">@if($t->estado === 'revision' && $t->responsable) Entregada por {{ $t->responsable->primer_nombre }} {{ $t->entregada_at?->locale('es')->diffForHumans() }} @else Es tuya: no necesita pasar por revisión @endif</span>
+                </div>
+                <form method="post" action="{{ route('admin.tareas.aprobar', $t) }}" class="panel-body d-grid gap-3" id="form-aprobar">
+                    @csrf
+                    @if($t->proyecto)
+                        <input type="hidden" name="destino" :value="destino">
+                        <div>
+                            <span class="form-label d-block">Incluir en <b>{{ $t->proyecto->nombre }}</b> como</span>
+                            <div class="dest-op">
+                                @foreach($destinos as $dk => $dd)
+                                    <label :class="destino === '{{ $dk }}' && 'sel'"><input type="radio" value="{{ $dk }}" x-model="destino"><i class="bi {{ $dd['icono'] }}"></i><span><b>{{ $dd['texto'] }}</b></span></label>
+                                @endforeach
+                                <label :class="destino === '' && 'sel'"><input type="radio" value="" x-model="destino"><i class="bi bi-slash-circle"></i><span><b>No incluir</b></span></label>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-3 align-items-end" x-show="destino !== ''">
+                            <div style="min-width: 240px">
+                                <label class="form-label" for="ap-etapa">Etapa</label>
+                                <select id="ap-etapa" name="etapa_id" class="form-select" x-model="etapa">
+                                    <option value="">Ninguna en particular</option>
+                                    @foreach($etapasProyecto as $ep)<option value="{{ $ep->id }}">{{ $ep->nombre }}{{ $ep->estado === 'completada' ? ' · completada' : '' }}</option>@endforeach
+                                </select>
+                            </div>
+                            <label class="form-check m-0" x-show="etapa"><input type="checkbox" class="form-check-input" name="completar_etapa" value="1" x-model="completar"> <span class="form-check-label">Marcar la etapa como completada</span></label>
+                            <label class="form-check m-0" x-show="destino === 'galeria'"><input type="hidden" name="publicar" value="0"><input type="checkbox" class="form-check-input" name="publicar" value="1" checked> <span class="form-check-label">Publicar para el cliente</span></label>
+                        </div>
+                    @endif
+
+                    @if($pendientesRev->isNotEmpty())
+                        <div x-show="{{ $t->proyecto ? "destino !== ''" : 'false' }}">
+                            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                <b style="font-size:14px">Elige qué pasa al proyecto</b>
+                                <span class="secundario" style="font-size:13px" x-text="sel.length + ' de ' + ids.length"></span>
+                                <button type="button" class="btn btn-link btn-sm p-0 ms-auto" @click="sel = [...ids]">Todos</button>
+                                <button type="button" class="btn btn-link btn-sm p-0" @click="sel = []">Ninguno</button>
+                            </div>
+                            <div class="rev-grid">
+                                @foreach($pendientesRev as $a)
+                                    <label class="rev-a" :class="sel.includes({{ Js::from($a['id']) }}) ? 'on' : 'off'">
+                                        <input type="checkbox" name="ids[]" value="{{ $a['id'] }}" x-model="sel">
+                                        <span class="mini">@if($a['tipo'] === 'foto')<img src="{{ route('admin.tareas.archivo', [$t, $a['id']]) }}?t=p" alt="" loading="lazy">@else<i class="bi {{ $a['tipo'] === 'video' ? 'bi-camera-video' : 'bi-file-earmark' }}"></i>@endif</span>
+                                        <span class="n" title="{{ $a['nombre'] }}">{{ $a['nombre'] }}</span>
+                                        <i class="bi bi-check-circle-fill marca"></i>
+                                    </label>
+                                @endforeach
+                            </div>
+                            <p class="secundario m-0 mt-2" style="font-size:12.5px">Lo que no elijas se queda en la carpeta de la tarea.</p>
+                        </div>
+                    @elseif($t->proyecto && $t->carpeta)
+                        <p class="secundario m-0" style="font-size:13.5px" x-show="destino !== ''">No hay archivos nuevos en la carpeta. Puedes aprobarla igual.</p>
+                    @endif
+
+                    <textarea name="nota" class="form-control" rows="2" maxlength="2000" placeholder="Un comentario para {{ $mia ? 'el historial' : ($t->responsable?->primer_nombre ?? 'el equipo') }} (opcional)" aria-label="Comentario de aprobación"></textarea>
+                    <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <button class="btn btn-primario">
+                            <i class="bi bi-check2-circle me-1"></i>
+                            <span x-text="destino !== '' && sel.length ? 'Aprobar e incluir ' + sel.length + (sel.length === 1 ? ' archivo' : ' archivos') + ' en el proyecto' : 'Aprobar y terminar'"></span>
+                        </button>
+                        @if($t->estado === 'revision')
+                            <button type="button" class="btn btn-borde" @click="ajustes = !ajustes"><i class="bi bi-arrow-counterclockwise me-1"></i> Pedir ajustes</button>
+                        @endif
+                    </div>
+                </form>
+                @if($t->estado === 'revision')
+                    <form method="post" action="{{ route('admin.tareas.estado', $t) }}" class="panel-body pt-0 d-grid gap-2" x-show="ajustes" x-cloak>
+                        @csrf @method('patch')
+                        <input type="hidden" name="estado" value="en_curso">
+                        <label class="form-label m-0" for="ap-ajustes">¿Qué hay que ajustar?</label>
+                        <textarea id="ap-ajustes" name="nota" class="form-control" rows="3" maxlength="2000" required placeholder="Ej. Faltan las fotos de la alberca y la 12 salió movida."></textarea>
+                        <div><button class="btn btn-primario btn-sm"><i class="bi bi-send me-1"></i> Mandar observaciones a {{ $t->responsable?->primer_nombre ?? 'quien la tiene' }}</button>
+                            <span class="secundario ms-2" style="font-size:12.5px">La tarea regresa a “en curso” y no se termina.</span></div>
+                    </form>
+                @endif
+            </section>
+        @endif
+
+        @if($incluidos->isNotEmpty())
+            <section class="panel">
+                <div class="panel-head"><h2>Ya en el proyecto</h2>
+                    @if($t->proyecto && auth()->user()->puede('proyectos'))<a href="{{ route('admin.proyectos.show', $t->proyecto) }}" class="btn btn-borde btn-sm"><i class="bi bi-kanban me-1"></i> Ver proyecto</a>@endif
+                </div>
+                <div class="panel-body">
+                    <p class="secundario m-0" style="font-size:13.5px"><i class="bi bi-check-circle-fill" style="color:var(--green-ink)"></i>
+                        {{ $incluidos->count() }} {{ $incluidos->count() === 1 ? 'archivo aprobado' : 'archivos aprobados' }}@if($t->aprobador) por {{ $t->aprobador->primer_nombre }}@endif
+                        · {{ $incluidos->take(4)->pluck('nombre')->implode(', ') }}{{ $incluidos->count() > 4 ? '…' : '' }}</p>
+                </div>
+            </section>
+        @endif
+
         @if($t->descripcion)
             <section class="panel"><div class="panel-body ts-desc">{{ $t->descripcion }}</div></section>
         @endif
@@ -134,7 +246,7 @@
                                     </a>
                                     <div class="info">
                                         <a href="{{ route('admin.tareas.archivo', [$t, $a['id']]) }}" target="_blank" rel="noopener" class="n" title="{{ $a['nombre'] }}">{{ $a['nombre'] }}</a>
-                                        <span class="s">{{ $a['peso'] }}@if($a['quien']) · {{ $a['quien'] }}@endif @if($a['cuando']) · {{ $a['cuando']->locale('es')->diffForHumans(null, true) }}@endif</span>
+                                        <span class="s">@if(($a['ronda'] ?? 1) > 1)<b style="color:var(--amber)">Vuelta {{ $a['ronda'] }}</b> · @endif{{ $a['peso'] }}@if($a['quien']) · {{ $a['quien'] }}@endif @if($a['cuando']) · {{ $a['cuando']->locale('es')->diffForHumans(null, true) }}@endif</span>
                                     </div>
                                     @if($gestiona || ($a['mio'] && $a['mio'] === auth()->id()))
                                         <form method="post" action="{{ route('admin.tareas.archivo.quitar', [$t, $a['id']]) }}" onsubmit="return confirm('¿Quitar {{ addslashes($a['nombre']) }}? Se manda a la papelera de Dropbox.')">@csrf @method('delete')
@@ -190,6 +302,8 @@
 
 @push('scripts')
 <script>
+window.revisionTarea = (cfg) => ({ ...cfg, sel: [...cfg.ids], ajustes: false });
+
 // Sube cada archivo en partes al panel; el panel las pasa a Dropbox
 window.subidaTarea = (cfg) => ({
     ...cfg, subidas: [], sobre: false, aviso: '', _n: 0, corriendo: false,

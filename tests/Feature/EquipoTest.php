@@ -203,4 +203,87 @@ class EquipoTest extends TestCase
         $this->assertSame([$this->admin->id], $quien);
         $this->assertTrue(\App\Support\Push\Notificar::puedeRecibir($foto, 'tarea_asignada'));
     }
+
+    private function proyectoConEtapas(): \App\Models\Proyecto
+    {
+        $c = Cliente::create(['nombre' => 'Ana', 'empresa' => 'Tatich Maya']);
+        $pr = \App\Models\Proyecto::create(['cliente_id' => $c->id, 'nombre' => 'Sesión de fotos', 'tipo' => 'audiovisual', 'estado' => 'activo', 'monto_total' => 1000]);
+        $pr->etapas()->create(['clave' => 'levantamiento', 'nombre' => 'Grabación', 'orden' => 0, 'es_fecha' => true, 'estado' => 'en_curso']);
+        $pr->etapas()->create(['clave' => 'entrega', 'nombre' => 'Entrega', 'orden' => 1, 'es_fecha' => true]);
+        return $pr;
+    }
+
+    private function subirA(Tarea $t, string $nombre, string $contenido = 'JPG'): void
+    {
+        $this->post("/admin/tareas/{$t->id}/subir", ['accion' => 'iniciar', 'nombre' => $nombre, 'parte' => UploadedFile::fake()->createWithContent('blob', $contenido)])->assertOk();
+    }
+
+    public function test_aprobar_incluye_lo_elegido_en_la_galeria_del_proyecto_y_avanza_la_etapa(): void
+    {
+        $pr = $this->proyectoConEtapas();
+        $etapa = $pr->etapas()->where('clave', 'levantamiento')->first();
+        $foto = $this->persona('Fotógrafo', ['name' => 'Luis Pech']);
+        $t = $this->tarea($foto, ['proyecto_id' => $pr->id, 'cliente_id' => $pr->cliente_id, 'destino' => 'galeria', 'etapa_id' => $etapa->id, 'completar_etapa' => true]);
+
+        $this->actingAs($foto);
+        foreach (['alberca.jpg', 'lobby.jpg', 'movida.jpg'] as $n) $this->subirA($t, $n);
+        $this->patch("/admin/tareas/{$t->id}/estado", ['estado' => 'revision'])->assertRedirect();
+        $this->post("/admin/tareas/{$t->id}/aprobar", [])->assertForbidden(); // solo quien gestiona aprueba
+
+        $this->actingAs($this->admin);
+        $this->get("/admin/tareas/{$t->id}")->assertOk()->assertSee('Revisa la entrega')->assertSee('Pedir ajustes');
+        $ids = $t->archivos()->whereIn('nombre', ['alberca.jpg', 'lobby.jpg'])->pluck('dropbox_id')->all();
+        $this->post("/admin/tareas/{$t->id}/aprobar", ['ids' => $ids, 'publicar' => 1, 'destino' => 'galeria', 'etapa_id' => $etapa->id, 'completar_etapa' => 1])
+            ->assertRedirect()->assertSessionHas('ok', fn ($m) => str_contains($m, '2 archivos pasaron a la galería') && str_contains($m, 'quedó completada'));
+
+        $this->assertSame('terminada', $t->fresh()->estado);
+        $this->assertSame($this->admin->id, $t->fresh()->aprobada_por);
+        $this->assertSame('completada', $etapa->fresh()->estado);
+        $galeria = $pr->archivos()->where('grupo', 'galeria')->pluck('nombre')->sort()->values()->all();
+        $this->assertSame(['alberca.jpg', 'lobby.jpg'], $galeria);
+        $this->assertTrue($pr->archivos()->first()->visible);
+        $base = DropboxSimulado::base() . \App\Support\ArchivosProyecto::carpetaGaleria($pr->fresh());
+        $this->assertFileExists("$base/alberca.jpg");
+        $this->assertFileExists(DropboxSimulado::base() . '/PruebaEquipo/Clientes/Tatich Maya/Fotos/movida.jpg'); // la no elegida se queda
+        $this->assertSame(2, $t->archivos()->whereNotNull('proyecto_archivo_id')->count());
+        $this->get("/admin/tareas/{$t->id}")->assertSee('Ya en el proyecto');
+    }
+
+    public function test_pedir_ajustes_no_termina_y_abre_otra_vuelta(): void
+    {
+        $pr = $this->proyectoConEtapas();
+        $foto = $this->persona('Fotógrafo');
+        $t = $this->tarea($foto, ['proyecto_id' => $pr->id, 'destino' => 'galeria']);
+        $this->actingAs($foto);
+        $this->subirA($t, 'uno.jpg');
+        $this->patch("/admin/tareas/{$t->id}/estado", ['estado' => 'revision']);
+
+        $this->actingAs($this->admin)->patch("/admin/tareas/{$t->id}/estado", ['estado' => 'en_curso', 'nota' => 'Faltan las de la alberca'])->assertRedirect();
+        $t->refresh();
+        $this->assertSame('en_curso', $t->estado);
+        $this->assertSame(2, $t->ronda);
+        $this->assertSame('Faltan las de la alberca', $t->comentarios()->latest('id')->value('texto'));
+        $this->assertSame(0, $pr->archivos()->count());
+
+        $this->actingAs($foto);
+        $this->subirA($t, 'dos.jpg');
+        $this->assertSame(2, $t->archivos()->where('nombre', 'dos.jpg')->value('ronda'));
+    }
+
+    public function test_si_la_tarea_es_mia_la_apruebo_directo_a_documentos_de_una_etapa(): void
+    {
+        $pr = $this->proyectoConEtapas();
+        $etapa = $pr->etapas()->where('clave', 'entrega')->first();
+        $t = $this->tarea($this->admin, ['proyecto_id' => $pr->id]); // sin destino definido al crearla
+        $this->actingAs($this->admin);
+        $this->subirA($t, 'logo.pdf', '%PDF');
+        $this->get("/admin/tareas/{$t->id}")->assertSee('¿Ya quedó? Apruébala')->assertDontSee('Entregar para revisión');
+        $id = $t->archivos()->value('dropbox_id');
+        $this->post("/admin/tareas/{$t->id}/aprobar", ['ids' => [$id], 'destino' => 'documento', 'etapa_id' => $etapa->id])->assertRedirect();
+        $a = $pr->archivos()->first();
+        $this->assertSame('documento', $a->grupo);
+        $this->assertSame($etapa->id, $a->etapa_id);
+        $this->assertSame('terminada', $t->fresh()->estado);
+        $this->assertSame('pendiente', $etapa->fresh()->estado); // no se pidió completarla
+    }
 }

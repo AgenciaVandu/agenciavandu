@@ -19,11 +19,18 @@ class Tarea extends Model
         'terminada' => ['texto' => 'Terminada',   'color' => '#047A4B', 'icono' => 'bi-check-circle-fill'],
     ];
 
-    protected $fillable = ['titulo', 'descripcion', 'cliente_id', 'proyecto_id', 'asignada_a', 'creada_por', 'fecha_limite', 'urgente', 'estado', 'carpeta', 'entregada_at', 'terminada_at'];
+    protected $fillable = ['titulo', 'descripcion', 'cliente_id', 'proyecto_id', 'asignada_a', 'creada_por', 'fecha_limite', 'urgente', 'estado', 'carpeta', 'destino', 'etapa_id', 'completar_etapa', 'ronda', 'entregada_at', 'terminada_at', 'aprobada_por'];
+
+    /** A dónde va lo entregado al aprobar la tarea */
+    public const DESTINOS = [
+        'galeria'   => ['texto' => 'Galería del proyecto', 'ayuda' => 'Fotos y videos que el cliente ve en su página de entrega', 'icono' => 'bi-images'],
+        'documento' => ['texto' => 'Documentos de una etapa', 'ayuda' => 'Diseños, planos, PDFs o archivos de trabajo', 'icono' => 'bi-file-earmark-text'],
+    ];
 
     protected $casts = [
         'fecha_limite' => 'date',
         'urgente'      => 'boolean',
+        'completar_etapa' => 'boolean',
         'entregada_at' => 'datetime',
         'terminada_at' => 'datetime',
     ];
@@ -32,6 +39,8 @@ class Tarea extends Model
     public function proyecto(): BelongsTo { return $this->belongsTo(Proyecto::class); }
     public function responsable(): BelongsTo { return $this->belongsTo(User::class, 'asignada_a'); }
     public function autor(): BelongsTo { return $this->belongsTo(User::class, 'creada_por'); }
+    public function aprobador(): BelongsTo { return $this->belongsTo(User::class, 'aprobada_por'); }
+    public function etapa(): BelongsTo { return $this->belongsTo(ProyectoEtapa::class); }
     public function archivos(): HasMany { return $this->hasMany(TareaArchivo::class)->latest('id'); }
     public function comentarios(): HasMany { return $this->hasMany(TareaComentario::class)->oldest('id'); }
 

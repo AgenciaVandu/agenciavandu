@@ -9,10 +9,11 @@ class TareaArchivo extends Model
 {
     use \App\Models\Concerns\DeCuenta;
 
-    protected $fillable = ['tarea_id', 'user_id', 'nombre', 'ruta', 'dropbox_id', 'tamano'];
+    protected $fillable = ['tarea_id', 'user_id', 'nombre', 'ruta', 'dropbox_id', 'tamano', 'ronda', 'proyecto_archivo_id'];
 
     public function tarea(): BelongsTo { return $this->belongsTo(Tarea::class); }
     public function user(): BelongsTo { return $this->belongsTo(User::class); }
+    public function proyectoArchivo(): BelongsTo { return $this->belongsTo(ProyectoArchivo::class); }
 
     public function getTipoAttribute(): string
     {

@@ -13,6 +13,10 @@
         'explorar' => route('admin.dropbox.explorar'),
         'crear'    => route('admin.tareas.carpeta'),
         'dropbox'  => $dropbox,
+        'destino'  => (string) old('destino', $t->destino ?? ''),
+        'etapa'    => (string) old('etapa_id', $t->etapa_id ?? ''),
+        'completar'=> (bool) old('completar_etapa', $t->completar_etapa),
+        'porProyecto' => $etapasPorProyecto,
     ];
 @endphp
 
@@ -23,6 +27,14 @@
     .tf-grid textarea { min-height: 120px; }
     .carpeta-campo { display: flex; gap: 8px; }
     .carpeta-campo input { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13.5px; }
+    .dest-op { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .dest-op label { display: flex; gap: 10px; align-items: flex-start; border: 1.5px solid var(--line-strong); border-radius: 12px; padding: 12px; cursor: pointer; }
+    .dest-op label:has(input:checked) { border-color: var(--ink); background: var(--sunken); }
+    .dest-op input { display: none; }
+    .dest-op i { font-size: 18px; margin-top: 1px; }
+    .dest-op b { display: block; font-weight: 600; font-size: 14px; }
+    .dest-op small { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.35; }
+    @media (max-width: 767.98px) { .dest-op { grid-template-columns: minmax(0, 1fr); } }
     .selector { border: 1px solid var(--line-strong); border-radius: 12px; margin-top: 10px; overflow: hidden; }
     .selector .migas-d { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; padding: 10px 12px; background: var(--sunken); border-bottom: 1px solid var(--line); font-size: 13.5px; }
     .selector .migas-d button { border: 0; background: none; padding: 2px 4px; border-radius: 6px; color: var(--text-2); }
@@ -114,6 +126,29 @@
             </div>
         </div>
 
+        <div class="ancho tf-destino" x-show="proyecto" x-cloak>
+            <span class="form-label d-block">Al aprobar la tarea, lo entregado se incluye en el proyecto como</span>
+            <div class="dest-op">
+                @foreach(\App\Models\Tarea::DESTINOS as $dk => $dd)
+                    <label><input type="radio" name="destino" value="{{ $dk }}" x-model="destino"><i class="bi {{ $dd['icono'] }}"></i><span><b>{{ $dd['texto'] }}</b><small>{{ $dd['ayuda'] }}</small></span></label>
+                @endforeach
+                <label><input type="radio" name="destino" value="" x-model="destino"><i class="bi bi-slash-circle"></i><span><b>No incluir</b><small>Se queda solo en la carpeta de la tarea</small></span></label>
+            </div>
+            <div class="row g-3 mt-1" x-show="destino !== '' || etapa">
+                <div class="col-md-6">
+                    <label class="form-label" for="tf-etapa">Etapa del proyecto <span class="secundario fw-normal">(opcional)</span></label>
+                    <select id="tf-etapa" name="etapa_id" class="form-select" x-model="etapa">
+                        <option value="">Ninguna en particular</option>
+                        <template x-for="e in etapasDe()" :key="e.id"><option :value="e.id" x-text="e.nombre + (e.estado === 'completada' ? ' · completada' : '')" :selected="e.id === etapa"></option></template>
+                    </select>
+                    <div class="form-text" x-show="destino === 'documento'">Los archivos van a los documentos de esa etapa.</div>
+                </div>
+                <div class="col-md-6 d-flex align-items-end" x-show="etapa">
+                    <label class="form-check m-0"><input type="checkbox" class="form-check-input" name="completar_etapa" value="1" x-model="completar"> <span class="form-check-label">Al aprobar, marcar esa etapa como completada</span></label>
+                </div>
+            </div>
+        </div>
+
         <label class="form-check m-0"><input type="checkbox" class="form-check-input" name="urgente" value="1" @checked(old('urgente', $t->urgente))> <span class="form-check-label">Es urgente</span></label>
         <label class="form-check m-0"><input type="hidden" name="correo" value="0"><input type="checkbox" class="form-check-input" name="correo" value="1" checked> <span class="form-check-label">Avisarle también por correo</span></label>
     </div>
@@ -139,8 +174,13 @@ window.formTarea = (cfg) => ({
     alElegirProyecto() {
         const p = this.proyectos.find((x) => x.id === this.proyecto);
         if (p && p.cliente) this.cliente = p.cliente;
+        // Por defecto: a la galería si el proyecto tiene galería; si no, a sus documentos
+        const info = this.porProyecto[this.proyecto];
+        if (info && !this.destino) this.destino = info.galeria ? 'galeria' : 'documento';
+        if (!this.etapasDe().find((e) => e.id === this.etapa)) { this.etapa = ''; this.completar = false; }
         this.sugerir();
     },
+    etapasDe() { return (this.porProyecto[this.proyecto] || {}).etapas || []; },
     limpio(t) { return (t || '').replace(/[\\/<>:"|?*\x00-\x1F]+/g, '-').replace(/\s+/g, ' ').trim().replace(/^[ .-]+|[ .-]+$/g, '').slice(0, 90); },
     sugerir() {
         if (this.manual) return;
