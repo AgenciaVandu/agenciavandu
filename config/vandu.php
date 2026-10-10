@@ -116,6 +116,24 @@ return [
     |   {nombre} {empresa} {folio} {concepto} {monto} {vigencia} {proyecto}
     |   {pago} {monto_pago} {fecha_limite} {siguiente} {entregables} {firma}
     */
+    // Redes sociales: calendario de contenido, vistas previas y aprobación del cliente
+    'redes' => [
+        'redes' => [
+            'instagram' => ['nombre' => 'Instagram', 'icono' => 'bi-instagram', 'color' => '#E1306C', 'formatos' => ['post', 'carrusel', 'reel', 'historia']],
+            'facebook'  => ['nombre' => 'Facebook',  'icono' => 'bi-facebook',  'color' => '#1877F2', 'formatos' => ['post', 'carrusel', 'reel', 'historia']],
+            'tiktok'    => ['nombre' => 'TikTok',    'icono' => 'bi-tiktok',    'color' => '#111111', 'formatos' => ['video', 'carrusel']],
+            'linkedin'  => ['nombre' => 'LinkedIn',  'icono' => 'bi-linkedin',  'color' => '#0A66C2', 'formatos' => ['post', 'carrusel', 'video']],
+        ],
+        'formatos' => [
+            'post'     => ['nombre' => 'Publicación', 'icono' => 'bi-image'],
+            'carrusel' => ['nombre' => 'Carrusel',    'icono' => 'bi-collection'],
+            'reel'     => ['nombre' => 'Reel',        'icono' => 'bi-film'],
+            'historia' => ['nombre' => 'Historia',    'icono' => 'bi-phone'],
+            'video'    => ['nombre' => 'Video',       'icono' => 'bi-play-btn'],
+        ],
+        'max_mb' => (int) env('VANDU_REDES_MAX_MB', 200),
+    ],
+
     // Notificaciones push en el celular y la compu (las claves VAPID se crean solas si no se definen aquí)
     'push' => [
         'publica'  => env('VANDU_PUSH_PUBLICA'),
@@ -128,6 +146,8 @@ return [
             'cotizacion_abierta'    => ['texto' => 'Un cliente abre una cotización', 'ayuda' => 'La primera vez y cuando vuelve a abrirla después de unas horas', 'icono' => 'bi-eye'],
             'cotizacion_aceptada'   => ['texto' => 'Un cliente acepta su cotización', 'ayuda' => 'La aceptó en línea con su código de verificación', 'icono' => 'bi-check-circle'],
             'cambios_solicitados'   => ['texto' => 'Un cliente pide cambios', 'ayuda' => 'Escribió qué quiere ajustar en su cotización', 'icono' => 'bi-chat-left-text'],
+            'redes_aprobado'        => ['texto' => 'Un cliente aprueba su contenido', 'ayuda' => 'Aprobó uno o varios posts de su calendario', 'icono' => 'bi-check2-square'],
+            'redes_cambios'         => ['texto' => 'Un cliente comenta un post', 'ayuda' => 'Pidió un cambio o dejó una observación en su contenido', 'icono' => 'bi-chat-square-dots'],
             'cotizacion_descargada' => ['texto' => 'Un cliente descarga la cotización', 'ayuda' => 'Cuando baja el PDF desde su enlace', 'icono' => 'bi-file-earmark-arrow-down'],
             'proyecto_visto'        => ['texto' => 'Un cliente revisa su proyecto', 'ayuda' => 'Abre su página de avance o de entrega', 'icono' => 'bi-kanban'],
             'mensaje_sitio'         => ['texto' => 'Llega un mensaje desde el sitio', 'ayuda' => 'Alguien llenó el formulario de cotizar en agenciavandu.com', 'icono' => 'bi-chat-dots'],

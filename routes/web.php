@@ -114,6 +114,25 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::post('notificaciones/{suscripcion}/prueba', [Admin\NotificacionController::class, 'prueba'])->name('notificaciones.prueba');
     Route::delete('notificaciones/{suscripcion}', [Admin\NotificacionController::class, 'destroy'])->name('notificaciones.destroy');
 
+    // Redes sociales
+    Route::get('redes', [Admin\RedesController::class, 'index'])->name('redes');
+    Route::post('redes', [Admin\RedesController::class, 'activar'])->name('redes.activar');
+    Route::get('redes/clientes/{cliente}', [Admin\RedesController::class, 'cliente'])->name('redes.cliente');
+    Route::put('redes/clientes/{cliente}/perfiles', [Admin\RedesController::class, 'perfiles'])->name('redes.perfiles');
+    Route::post('redes/clientes/{cliente}/posts', [Admin\RedesController::class, 'crear'])->name('redes.crear');
+    Route::post('redes/clientes/{cliente}/mover', [Admin\RedesController::class, 'mover'])->name('redes.mover');
+    Route::post('redes/clientes/{cliente}/revision', [Admin\RedesController::class, 'revision'])->name('redes.revision');
+    Route::get('redes/posts/{post}', [Admin\RedesController::class, 'post'])->name('redes.post');
+    Route::put('redes/posts/{post}', [Admin\RedesController::class, 'guardar'])->name('redes.guardar');
+    Route::delete('redes/posts/{post}', [Admin\RedesController::class, 'borrar'])->name('redes.borrar');
+    Route::post('redes/posts/{post}/duplicar', [Admin\RedesController::class, 'duplicar'])->name('redes.duplicar');
+    Route::post('redes/posts/{post}/medios', [Admin\RedesController::class, 'subir'])->name('redes.subir');
+    Route::post('redes/posts/{post}/medios/dropbox', [Admin\RedesController::class, 'dropbox'])->name('redes.dropbox');
+    Route::post('redes/posts/{post}/medios/orden', [Admin\RedesController::class, 'ordenar'])->name('redes.ordenar');
+    Route::post('redes/posts/{post}/comentar', [Admin\RedesController::class, 'comentar'])->name('redes.comentar');
+    Route::delete('redes/medios/{medio}', [Admin\RedesController::class, 'quitarMedio'])->name('redes.medio.quitar');
+    Route::get('redes/medios/{medio}', [Admin\RedesController::class, 'medio'])->name('redes.medio');
+
     Route::get('archivos', [Admin\ArchivosController::class, 'index'])->name('archivos');
     Route::get('archivos/listar', [Admin\ArchivosController::class, 'listar'])->name('archivos.listar');
     Route::get('archivos/buscar', [Admin\ArchivosController::class, 'buscar'])->name('archivos.buscar');
@@ -139,6 +158,17 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
 });
 
 // Vista pública para el cliente (enlace con token, vigente hasta la fecha de la cotización)
+// Contenido de redes para el cliente: ver, comentar y aprobar
+Route::prefix('/redes/{token}')->where(['token' => '[A-Za-z0-9]{32}'])->group(function () {
+    Route::get('/', [App\Http\Controllers\RedesPublicoController::class, 'show'])->name('redes.publico');
+    Route::get('/avatar/{red}', [App\Http\Controllers\RedesPublicoController::class, 'avatar'])->name('redes.avatar');
+    Route::get('/medios/{medio}', [App\Http\Controllers\RedesPublicoController::class, 'medio'])->name('redes.medio');
+    Route::post('/verificar', [App\Http\Controllers\RedesPublicoController::class, 'verificar'])->middleware('throttle:10,1')->name('redes.verificar');
+    Route::post('/codigo', [App\Http\Controllers\RedesPublicoController::class, 'codigo'])->middleware('throttle:4,10')->name('redes.codigo');
+    Route::post('/posts/{post}', [App\Http\Controllers\RedesPublicoController::class, 'responder'])->middleware('throttle:60,1')->name('redes.responder');
+    Route::post('/aprobar-todo', [App\Http\Controllers\RedesPublicoController::class, 'aprobarTodo'])->middleware('throttle:10,1')->name('redes.aprobar-todo');
+});
+
 Route::get('/cotizacion/{token}', [PresupuestoPublicoController::class, 'show'])
     ->where('token', '[A-Za-z0-9]{32}')->name('presupuesto.publico');
 Route::get('/cotizacion/{token}/descargar', [PresupuestoPublicoController::class, 'descargar'])
