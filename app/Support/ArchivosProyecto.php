@@ -26,8 +26,9 @@ class ArchivosProyecto
 {
     private const DISCO = 'local';
 
-    public static function guardar(Proyecto $p, UploadedFile $archivo, string $grupo, ?int $etapaId = null): ProyectoArchivo
+    public static function guardar(Proyecto $p, UploadedFile $archivo, string $grupo, ?int $etapaId = null, ?int $seccionId = null): ProyectoArchivo
     {
+        if ($grupo === 'galeria' && ! $seccionId) $seccionId = Galeria::porDefecto($p)?->id;
         $ext = strtolower($archivo->getClientOriginalExtension() ?: $archivo->guessExtension() ?: 'bin');
         $base = (string) Str::uuid();
         $ruta = $archivo->storeAs("{$p->carpeta}/originales", "$base.$ext", self::DISCO);
@@ -35,6 +36,7 @@ class ArchivosProyecto
 
         $datos = [
             'etapa_id' => $etapaId,
+            'seccion_id' => $grupo === 'galeria' ? $seccionId : null,
             'grupo'    => $grupo,
             'nombre'   => Str::limit($archivo->getClientOriginalName(), 250, ''),
             'ruta'     => $ruta,
@@ -50,7 +52,7 @@ class ArchivosProyecto
         // Con Dropbox conectado, el original se va a Dropbox y aquí solo quedan las vistas previas
         if (Dropbox::conectado()) {
             $etapa = $etapaId ? $p->etapas()->find($etapaId) : null;
-            $meta = Dropbox::cliente()->subirArchivo(Storage::disk(self::DISCO)->path($ruta), self::carpetaDestino($p, $grupo, $etapa) . '/' . self::nombreArchivo($datos['nombre']));
+            $meta = Dropbox::cliente()->subirArchivo(Storage::disk(self::DISCO)->path($ruta), self::carpetaDestino($p, $grupo, $etapa, $seccionId) . '/' . self::nombreArchivo($datos['nombre']));
             Storage::disk(self::DISCO)->delete($ruta);
             $datos['origen'] = 'dropbox';
             $datos['dropbox_id'] = $meta['id'];
@@ -87,10 +89,10 @@ class ArchivosProyecto
     public static function carpetaOculta(Proyecto $p): string { return self::carpetaProyecto($p) . '/No publicado'; }
 
     /** Dónde va un archivo nuevo según su grupo (y etapa, para documentos). Crea la carpeta si no existe. */
-    public static function carpetaDestino(Proyecto $p, string $grupo, ?ProyectoEtapa $etapa = null): string
+    public static function carpetaDestino(Proyecto $p, string $grupo, ?ProyectoEtapa $etapa = null, ?int $seccionId = null): string
     {
         $c = $grupo === 'galeria'
-            ? self::carpetaGaleria($p)
+            ? Galeria::carpeta($p, $seccionId ? $p->secciones()->find($seccionId) : Galeria::porDefecto($p))
             : self::carpetaProyecto($p) . '/Documentos' . ($etapa ? '/' . Dropbox::nombreSeguro(($etapa->orden + 1) . '. ' . $etapa->nombre) : '');
         Dropbox::cliente()->crearCarpeta($c);
         return $c;
@@ -112,14 +114,16 @@ class ArchivosProyecto
      * Da de alta un archivo que ya está en Dropbox (subido desde el navegador, importado o sincronizado)
      * y genera sus vistas previas. $poster: cuadro del video capturado en el navegador.
      */
-    public static function registrarDropbox(Proyecto $p, array $meta, string $grupo, ?int $etapaId = null, ?string $poster = null, bool $visible = true): ProyectoArchivo
+    public static function registrarDropbox(Proyecto $p, array $meta, string $grupo, ?int $etapaId = null, ?string $poster = null, bool $visible = true, ?int $seccionId = null): ProyectoArchivo
     {
+        if ($grupo === 'galeria' && ! $seccionId) $seccionId = Galeria::porDefecto($p)?->id;
         $existente = $p->archivos()->where('dropbox_id', $meta['id'])->first();
         if ($existente) return $existente;
 
         $nombre = $meta['name'] ?? basename($meta['path_display']);
         $a = $p->archivos()->create([
             'etapa_id'   => $etapaId,
+            'seccion_id' => $grupo === 'galeria' ? $seccionId : null,
             'grupo'      => $grupo,
             'origen'     => 'dropbox',
             'dropbox_id' => $meta['id'],
@@ -173,13 +177,14 @@ class ArchivosProyecto
     {
         if ($a->origen === 'dropbox' && $a->grupo === 'galeria' && $a->visible !== $visible) {
             $p = $a->proyecto;
-            $destino = $visible ? self::carpetaGaleria($p) : self::carpetaOculta($p);
+            $destino = Galeria::carpeta($p, $a->seccion, $visible);
             Dropbox::cliente()->crearCarpeta($destino);
             $meta = Dropbox::cliente()->mover($a->dropbox_id, $destino . '/' . basename($a->ruta));
             $a->ruta = $meta['path_display'] ?? $a->ruta;
         }
         $a->visible = $visible;
         $a->save();
+        $a->seccion?->forceFill(['zip_url' => null])->saveQuietly();
     }
 
     /**
@@ -195,16 +200,28 @@ class ArchivosProyecto
         try { $dbx->metadata(self::carpetaGaleria($p)); $existe = true; } catch (\Throwable) { $existe = false; }
         $vistos = [];
         $nuevos = 0;
+        // Cada subcarpeta es una sección (si alguien creó una en Dropbox, aparece como sección nueva)
+        $secciones = $p->secciones()->get()->keyBy(fn ($s) => mb_strtolower($s->carpeta));
+        $seccionDe = function (string $carpeta, string $ruta) use ($p, &$secciones) {
+            $resto = trim(mb_substr($ruta, mb_strlen($carpeta)), '/');
+            if (! str_contains($resto, '/')) return null; // en la raíz
+            $sub = explode('/', $resto)[0];
+            return $secciones[mb_strtolower($sub)] ??= \App\Models\GaleriaSeccion::create([
+                'proyecto_id' => $p->id, 'nombre' => $sub, 'carpeta' => $sub, 'orden' => (int) $p->secciones()->max('orden') + 1,
+            ]);
+        };
         foreach ($carpetas as $carpeta => $visible) {
-            foreach ($dbx->listar($carpeta) as $e) {
+            foreach ($dbx->listar($carpeta, true) as $e) {
                 if (($e['.tag'] ?? '') !== 'file' || str_starts_with($e['name'], '.')) continue;
                 $vistos[$e['id']] = true;
+                $seccion = $seccionDe($carpeta, $e['path_display']);
                 $a = $p->archivos()->where('dropbox_id', $e['id'])->first();
                 if (! $a) {
-                    self::registrarDropbox($p, $e, 'galeria', null, null, $visible);
+                    self::registrarDropbox($p, $e, 'galeria', null, null, $visible, $seccion?->id ?? 0);
+                    $p->archivos()->where('dropbox_id', $e['id'])->update(['seccion_id' => $seccion?->id]);
                     $nuevos++;
-                } elseif ($a->visible !== $visible || $a->ruta !== $e['path_display']) {
-                    $a->forceFill(['visible' => $visible, 'ruta' => $e['path_display']])->save();
+                } elseif ($a->visible !== $visible || $a->ruta !== $e['path_display'] || $a->seccion_id !== $seccion?->id) {
+                    $a->forceFill(['visible' => $visible, 'ruta' => $e['path_display'], 'seccion_id' => $seccion?->id])->save();
                 }
             }
         }
@@ -333,15 +350,22 @@ class ArchivosProyecto
     }
 
     /** ZIP con los originales de la galería visibles para el cliente */
-    public static function zipGaleria(Proyecto $p, bool $soloVisibles = true): Response
+    public static function zipGaleria(Proyecto $p, bool $soloVisibles = true, ?\App\Models\GaleriaSeccion $seccion = null): Response
     {
         abort_unless(class_exists(ZipArchive::class), 501, 'El servidor no tiene la extensión zip.');
 
-        $archivos = $p->archivos()->where('grupo', 'galeria')->when($soloVisibles, fn ($q) => $q->where('visible', true))->get();
+        $archivos = $p->archivos()->where('grupo', 'galeria')->when($soloVisibles, fn ($q) => $q->where('visible', true))
+            ->when($seccion, fn ($q) => $q->where('seccion_id', $seccion->id))->get();
         abort_if($archivos->isEmpty(), 404);
 
-        // En Dropbox: el ZIP lo arma Dropbox con la carpeta Galería (solo tiene lo visible)
+        // En Dropbox: el ZIP lo arma Dropbox con la carpeta Galería o la de la sección (solo tienen lo visible)
         if ($archivos->contains('origen', 'dropbox')) {
+            if ($seccion) {
+                if (! $seccion->zip_url) {
+                    $seccion->forceFill(['zip_url' => Dropbox::cliente()->enlaceCarpeta(Galeria::carpeta($p, $seccion))])->saveQuietly();
+                }
+                return redirect()->away($seccion->zip_url);
+            }
             if (! $p->dropbox_zip_url) {
                 $p->forceFill(['dropbox_zip_url' => Dropbox::cliente()->enlaceCarpeta(self::carpetaGaleria($p))])->saveQuietly();
             }
@@ -362,7 +386,7 @@ class ArchivosProyecto
         }
         $zip->close();
 
-        $nombreZip = Str::slug($p->cliente?->empresa ?: $p->cliente?->nombre ?: 'proyecto') . '-entregables.zip';
+        $nombreZip = Str::slug($p->cliente?->empresa ?: $p->cliente?->nombre ?: 'proyecto') . ($seccion ? '-' . Str::slug($seccion->nombre) : '-entregables') . '.zip';
 
         return response()->streamDownload(function () use ($tmp) {
             readfile($tmp);

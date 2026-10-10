@@ -243,7 +243,7 @@ class EquipoTest extends TestCase
         $this->assertSame(['alberca.jpg', 'lobby.jpg'], $galeria);
         $this->assertTrue($pr->archivos()->first()->visible);
         $base = DropboxSimulado::base() . \App\Support\ArchivosProyecto::carpetaGaleria($pr->fresh());
-        $this->assertFileExists("$base/alberca.jpg");
+        $this->assertFileExists("$base/Cargar contenido Tatich Maya/alberca.jpg"); // en la sección de esa entrega
         $this->assertFileExists(DropboxSimulado::base() . '/PruebaEquipo/Clientes/Tatich Maya/Fotos/movida.jpg'); // la no elegida se queda
         $this->assertSame(2, $t->archivos()->whereNotNull('proyecto_archivo_id')->count());
         $this->get("/admin/tareas/{$t->id}")->assertSee('Ya en el proyecto');
@@ -295,5 +295,55 @@ class EquipoTest extends TestCase
         preg_match('#https://wa\.me/529991234567\?text=([^"]+)#', $html, $m);
         $this->assertNotEmpty($m, 'No hay botón de WhatsApp');
         $this->assertStringContainsString($pr->url_publica, rawurldecode(html_entity_decode($m[1])));
+    }
+
+    public function test_cada_entrega_queda_en_su_seccion_y_el_cliente_ve_la_mas_nueva_arriba(): void
+    {
+        $pr = $this->proyectoConEtapas();
+        $this->actingAs($this->admin);
+        // Ya había 2 fotos sueltas en la galería (antes de las secciones)
+        $dbx = Dropbox::cliente();
+        foreach (['vieja-1.jpg', 'vieja-2.jpg'] as $n) {
+            $m = $dbx->subirContenido('JPG', \App\Support\ArchivosProyecto::carpetaGaleria($pr) . "/$n");
+            \App\Support\ArchivosProyecto::registrarDropbox($pr, $m, 'galeria');
+        }
+        $this->assertSame(2, $pr->archivos()->whereNull('seccion_id')->count());
+
+        // Primera tarea aprobada → sección "Primera entrega"; lo viejo pasa a "Entrega principal"
+        $t1 = $this->tarea($this->admin, ['proyecto_id' => $pr->id, 'destino' => 'galeria', 'titulo' => 'Primera entrega', 'carpeta' => '/PruebaEquipo/Tareas/Uno']);
+        $this->subirA($t1, 'a.jpg');
+        $this->post("/admin/tareas/{$t1->id}/aprobar", ['ids' => $t1->archivos()->pluck('dropbox_id')->all(), 'destino' => 'galeria', 'seccion' => 'nueva', 'seccion_nombre' => 'Primera entrega'])->assertRedirect();
+        $this->assertSame(['Primera entrega', 'Entrega principal'], $pr->secciones()->pluck('nombre')->all());
+        $this->assertSame(0, $pr->archivos()->whereNull('seccion_id')->count());
+        $gal = DropboxSimulado::base() . \App\Support\ArchivosProyecto::carpetaGaleria($pr->fresh());
+        $this->assertFileExists("$gal/Entrega principal/vieja-1.jpg");
+        $this->assertFileExists("$gal/Primera entrega/a.jpg");
+
+        // Fotos adicionales: otra tarea, otra sección, va hasta arriba
+        $t2 = $this->tarea($this->admin, ['proyecto_id' => $pr->id, 'destino' => 'galeria', 'titulo' => 'Fotos adicionales', 'carpeta' => '/PruebaEquipo/Tareas/Dos']);
+        $this->subirA($t2, 'b.jpg');
+        $this->post("/admin/tareas/{$t2->id}/aprobar", ['ids' => $t2->archivos()->pluck('dropbox_id')->all(), 'destino' => 'galeria'])->assertRedirect();
+        $this->assertSame(['Fotos adicionales', 'Primera entrega', 'Entrega principal'], $pr->secciones()->pluck('nombre')->all());
+
+        auth()->logout();
+        $html = $this->get($pr->fresh()->url_entrega)->assertOk()->getContent();
+        $this->assertTrue(strpos($html, 'Fotos adicionales') < strpos($html, 'Primera entrega') && strpos($html, 'Primera entrega') < strpos($html, 'Entrega principal'));
+        $this->assertStringContainsString('Descargar esta sección', $html);
+
+        // Renombrar, reordenar y mover entre secciones desde el proyecto
+        $this->actingAs($this->admin);
+        $adic = $pr->secciones()->where('nombre', 'Fotos adicionales')->first();
+        $this->patch("/admin/proyectos/{$pr->id}/secciones/{$adic->id}", ['nombre' => 'Extras de la sesión'])->assertRedirect();
+        $this->assertFileExists("$gal/Extras de la sesión/b.jpg");
+        $this->patch("/admin/proyectos/{$pr->id}/secciones/{$adic->id}", ['mover' => 'abajo'])->assertRedirect();
+        $this->assertSame(['Primera entrega', 'Extras de la sesión', 'Entrega principal'], $pr->secciones()->pluck('nombre')->all());
+        $foto = $pr->archivos()->where('nombre', 'vieja-2.jpg')->first();
+        $this->patch("/admin/proyectos/{$pr->id}/archivos/{$foto->id}/seccion", ['seccion_id' => $adic->id])->assertRedirect();
+        $this->assertSame($adic->id, $foto->fresh()->seccion_id);
+        $this->assertFileExists("$gal/Extras de la sesión/vieja-2.jpg");
+        // Ocultar al cliente conserva la sección
+        $this->patch("/admin/proyectos/{$pr->id}/archivos/{$foto->id}", ['visible' => 0])->assertRedirect();
+        $this->assertFileExists(DropboxSimulado::base() . \App\Support\ArchivosProyecto::carpetaOculta($pr->fresh()) . '/Extras de la sesión/vieja-2.jpg');
+        $this->get("/admin/proyectos/{$pr->id}")->assertOk()->assertSee('el cliente la ve primero');
     }
 }

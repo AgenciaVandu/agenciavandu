@@ -292,8 +292,10 @@ class ProyectoController extends Controller
         $proyecto->load(['cliente', 'presupuesto', 'etapas.archivos', 'pagos', 'archivos']);
 
         return view('admin.proyectos.show', [
-            'p'       => $proyecto,
-            'galeria' => $proyecto->archivos->where('grupo', 'galeria')->values(),
+            'p'         => $proyecto,
+            'galeria'   => $proyecto->archivos->where('grupo', 'galeria')->values(),
+            'grupos'    => \App\Support\Galeria::agrupada($proyecto, false),
+            'secciones' => $proyecto->secciones()->get(),
         ]);
     }
 
@@ -417,6 +419,7 @@ class ProyectoController extends Controller
         $data = $request->validate([
             'grupo'      => 'required|in:documento,galeria',
             'etapa_id'   => ['nullable', Rule::exists('proyecto_etapas', 'id')->where('proyecto_id', $proyecto->id)],
+            'seccion_id' => ['nullable', Rule::exists('galeria_secciones', 'id')->where('proyecto_id', $proyecto->id)],
             'archivos'   => 'required|array|min:1|max:50',
             'archivos.*' => 'file|max:' . (int) config('vandu.max_archivo_mb', 512) * 1024,
         ], [
@@ -427,7 +430,7 @@ class ProyectoController extends Controller
 
         try {
             foreach ($request->file('archivos') as $f) {
-                ArchivosProyecto::guardar($proyecto, $f, $data['grupo'], $data['etapa_id'] ?? null);
+                ArchivosProyecto::guardar($proyecto, $f, $data['grupo'], $data['etapa_id'] ?? null, $data['seccion_id'] ?? null);
             }
         } catch (\App\Support\Dropbox\DropboxError $e) {
             return $request->expectsJson() ? response()->json(['message' => $e->getMessage()], 502) : back()->withErrors(['dropbox' => $e->getMessage()]);
@@ -451,6 +454,53 @@ class ProyectoController extends Controller
         }
 
         return back()->with('ok', $archivo->visible ? 'Ahora el cliente puede verlo.' : 'Oculto para el cliente.');
+    }
+
+    /* ---------------- Secciones de la galería ---------------- */
+
+    public function nuevaSeccion(Request $request, Proyecto $proyecto)
+    {
+        $d = $request->validate(['nombre' => 'required|string|max:120'], ['nombre.required' => 'Ponle nombre a la sección.']);
+        try {
+            $s = \App\Support\Galeria::nueva($proyecto, $d['nombre']);
+        } catch (\App\Support\Dropbox\DropboxError $e) {
+            return back()->withErrors(['dropbox' => $e->getMessage()]);
+        }
+        return back()->with('ok', "Sección “{$s->nombre}” lista: lo que subas ahora cae ahí.");
+    }
+
+    public function seccion(Request $request, Proyecto $proyecto, \App\Models\GaleriaSeccion $seccion)
+    {
+        abort_unless($seccion->proyecto_id === $proyecto->id, 404);
+        $d = $request->validate(['nombre' => 'nullable|string|max:120', 'mover' => 'nullable|in:arriba,abajo']);
+        try {
+            if (! empty($d['mover'])) \App\Support\Galeria::reordenar($seccion, $d['mover'] === 'arriba' ? 1 : -1);
+            if (! empty($d['nombre'])) \App\Support\Galeria::renombrar($seccion, $d['nombre']);
+        } catch (\App\Support\Dropbox\DropboxError $e) {
+            return back()->withErrors(['dropbox' => $e->getMessage()]);
+        }
+        return back()->with('ok', ! empty($d['nombre']) ? 'Sección renombrada.' : 'Orden de las secciones actualizado.');
+    }
+
+    public function borrarSeccion(Proyecto $proyecto, \App\Models\GaleriaSeccion $seccion)
+    {
+        abort_unless($seccion->proyecto_id === $proyecto->id, 404);
+        if ($seccion->archivos()->exists()) return back()->withErrors(['seccion' => 'Solo se pueden quitar secciones vacías. Mueve o elimina sus archivos primero.']);
+        $seccion->delete();
+        return back()->with('ok', "Se quitó la sección “{$seccion->nombre}”.");
+    }
+
+    public function moverArchivo(Request $request, Proyecto $proyecto, ProyectoArchivo $archivo)
+    {
+        abort_unless($archivo->proyecto_id === $proyecto->id && $archivo->grupo === 'galeria', 404);
+        $d = $request->validate(['seccion_id' => ['required', Rule::exists('galeria_secciones', 'id')->where('proyecto_id', $proyecto->id)]]);
+        $s = $proyecto->secciones()->findOrFail($d['seccion_id']);
+        try {
+            \App\Support\Galeria::mover($archivo, $s);
+        } catch (\App\Support\Dropbox\DropboxError $e) {
+            return back()->withErrors(['dropbox' => $e->getMessage()]);
+        }
+        return back()->with('ok', "Movido a “{$s->nombre}”.");
     }
 
     public function borrarArchivo(Proyecto $proyecto, ProyectoArchivo $archivo)

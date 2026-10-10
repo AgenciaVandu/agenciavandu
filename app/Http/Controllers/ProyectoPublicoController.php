@@ -26,9 +26,10 @@ class ProyectoPublicoController extends Controller
             $p->increment('vistas', 1, ['ultima_vista_at' => now()]);
         }
 
-        $galeria = $p->archivos()->where('grupo', 'galeria')->where('visible', true)->get();
+        $grupos = \App\Support\Galeria::agrupada($p, true);
+        $galeria = $grupos->flatMap(fn ($g) => $g['archivos'])->values();
 
-        return response()->view('proyectos.publico', compact('p', 'galeria'))->header('X-Robots-Tag', 'noindex, nofollow');
+        return response()->view('proyectos.publico', compact('p', 'galeria', 'grupos'))->header('X-Robots-Tag', 'noindex, nofollow');
     }
 
     /** Página de entrega: solo los entregables, pensada para enviarse por correo */
@@ -43,10 +44,11 @@ class ProyectoPublicoController extends Controller
             $p->increment('vistas', 1, ['ultima_vista_at' => now()]);
         }
 
-        $galeria = $p->archivos()->where('grupo', 'galeria')->where('visible', true)->get();
+        $grupos = \App\Support\Galeria::agrupada($p, true);
+        $galeria = $grupos->flatMap(fn ($g) => $g['archivos'])->values();
         $documentos = $p->etapas->flatMap->archivos->values();
 
-        return response()->view('proyectos.entrega', compact('p', 'galeria', 'documentos'))->header('X-Robots-Tag', 'noindex, nofollow');
+        return response()->view('proyectos.entrega', compact('p', 'galeria', 'grupos', 'documentos'))->header('X-Robots-Tag', 'noindex, nofollow');
     }
 
     public function archivo(Request $request, string $token, ProyectoArchivo $archivo)
@@ -58,9 +60,11 @@ class ProyectoPublicoController extends Controller
         return ArchivosProyecto::responder($archivo, $version, $request->boolean('descargar'));
     }
 
-    public function zip(string $token)
+    public function zip(Request $request, string $token)
     {
-        return ArchivosProyecto::zipGaleria($this->proyecto($token));
+        $p = $this->proyecto($token);
+        $s = $request->filled('seccion') ? $p->secciones()->findOrFail($request->integer('seccion')) : null;
+        return ArchivosProyecto::zipGaleria($p, true, $s);
     }
 
     private function avisarVisita(Proyecto $p, string $que): void

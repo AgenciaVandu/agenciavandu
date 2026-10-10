@@ -130,6 +130,14 @@
                                 </select>
                             </div>
                             <label class="form-check m-0" x-show="etapa"><input type="checkbox" class="form-check-input" name="completar_etapa" value="1" x-model="completar"> <span class="form-check-label">Marcar la etapa como completada</span></label>
+                            <div x-show="destino === 'galeria'" style="min-width: 260px" x-data="{ sec: 'nueva' }">
+                                <label class="form-label" for="ap-sec">Sección de la galería</label>
+                                <select id="ap-sec" name="seccion" class="form-select" x-model="sec">
+                                    <option value="nueva">Nueva sección…</option>
+                                    @foreach($seccionesProyecto as $sx)<option value="{{ $sx->id }}">{{ $sx->nombre }}</option>@endforeach
+                                </select>
+                                <input name="seccion_nombre" class="form-control mt-2" x-show="sec === 'nueva'" value="{{ $t->titulo }}" maxlength="120" aria-label="Nombre de la sección nueva">
+                            </div>
                             <label class="form-check m-0" x-show="destino === 'galeria'"><input type="hidden" name="publicar" value="0"><input type="checkbox" class="form-check-input" name="publicar" value="1" checked> <span class="form-check-label">Publicar para el cliente</span></label>
                         </div>
                     @endif

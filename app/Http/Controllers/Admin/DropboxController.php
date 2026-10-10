@@ -94,9 +94,10 @@ class DropboxController extends Controller
         $d = $request->validate([
             'grupo'    => 'required|in:documento,galeria',
             'etapa_id' => ['nullable', Rule::exists('proyecto_etapas', 'id')->where('proyecto_id', $proyecto->id)],
+            'seccion_id' => ['nullable', Rule::exists('galeria_secciones', 'id')->where('proyecto_id', $proyecto->id)],
         ]);
         $etapa = ! empty($d['etapa_id']) ? $proyecto->etapas()->find($d['etapa_id']) : null;
-        return response()->json(['carpeta' => ArchivosProyecto::carpetaDestino($proyecto, $d['grupo'], $etapa)]);
+        return response()->json(['carpeta' => ArchivosProyecto::carpetaDestino($proyecto, $d['grupo'], $etapa, $d['seccion_id'] ?? null)]);
     }
 
     /** El navegador terminó de subir un archivo a Dropbox: lo damos de alta en el panel */
@@ -107,13 +108,14 @@ class DropboxController extends Controller
             'etapa_id'   => ['nullable', Rule::exists('proyecto_etapas', 'id')->where('proyecto_id', $proyecto->id)],
             'dropbox_id' => 'required|string|max:120|starts_with:id:',
             'poster'     => 'nullable|file|mimes:jpg,jpeg,png,webp|max:8192',
+            'seccion_id' => ['nullable', Rule::exists('galeria_secciones', 'id')->where('proyecto_id', $proyecto->id)],
         ]);
         $meta = Dropbox::cliente()->metadata($d['dropbox_id']);
         // Solo aceptamos archivos que estén dentro de la carpeta de este proyecto
         abort_unless(str_starts_with(mb_strtolower($meta['path_display']), mb_strtolower(ArchivosProyecto::carpetaProyecto($proyecto) . '/')), 422, 'El archivo no está en la carpeta del proyecto.');
 
         $a = ArchivosProyecto::registrarDropbox($proyecto, $meta, $d['grupo'], $d['etapa_id'] ?? null,
-            $request->hasFile('poster') ? file_get_contents($request->file('poster')->getRealPath()) : null);
+            $request->hasFile('poster') ? file_get_contents($request->file('poster')->getRealPath()) : null, true, $d['seccion_id'] ?? null);
 
         return response()->json(['ok' => true, 'id' => $a->id]);
     }
@@ -173,9 +175,11 @@ class DropboxController extends Controller
     /** Mueve archivos de otra carpeta de Dropbox a la Galería del proyecto y los da de alta (en tandas) */
     public function importar(Request $request, Proyecto $proyecto)
     {
-        $d = $request->validate(['ids' => 'required|array|min:1|max:10', 'ids.*' => 'string|starts_with:id:']);
+        $d = $request->validate(['ids' => 'required|array|min:1|max:10', 'ids.*' => 'string|starts_with:id:',
+            'seccion_id' => ['nullable', Rule::exists('galeria_secciones', 'id')->where('proyecto_id', $proyecto->id)]]);
         $dbx = Dropbox::cliente();
-        $galeria = ArchivosProyecto::carpetaDestino($proyecto, 'galeria');
+        $seccionId = $d['seccion_id'] ?? \App\Support\Galeria::porDefecto($proyecto)?->id;
+        $galeria = ArchivosProyecto::carpetaDestino($proyecto, 'galeria', null, $seccionId);
         $hechos = 0;
         $errores = [];
         foreach ($d['ids'] as $id) {
@@ -184,7 +188,7 @@ class DropboxController extends Controller
                 if (! str_starts_with(mb_strtolower($meta['path_display']), mb_strtolower($galeria . '/'))) {
                     $meta = $dbx->mover($id, $galeria . '/' . $meta['name']);
                 }
-                ArchivosProyecto::registrarDropbox($proyecto, $meta, 'galeria');
+                ArchivosProyecto::registrarDropbox($proyecto, $meta, 'galeria', null, null, true, $seccionId);
                 $hechos++;
             } catch (\Throwable $e) {
                 report($e);

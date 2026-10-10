@@ -89,6 +89,27 @@
     .g-acc button, .g-acc a { width: 30px; height: 30px; border-radius: 8px; border: 0; background: rgba(255,255,255,.95); color: var(--text); display: grid; place-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
     .g-item.oculto img, .g-item.oculto video { opacity: .35; }
     .g-item .marca-dbx { position: absolute; left: 6px; top: 6px; width: 22px; height: 22px; border-radius: 6px; background: rgba(255,255,255,.95); color: #0061FE; display: grid; place-items: center; font-size: 12px; }
+    .sec-subir { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-bottom: 12px; }
+    .sec-nueva summary { list-style: none; }
+    .sec-nueva summary::-webkit-details-marker { display: none; }
+    .sec-cab { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--line); }
+    .sec-cab b { font-weight: 600; font-size: 15px; margin-right: 8px; }
+    .sec-cab .secundario { font-size: 13px; }
+    .sec-acc { display: flex; gap: 2px; align-items: center; flex-wrap: wrap; }
+    .sec-acc button, .sec-acc summary { border: 0; background: none; width: 30px; height: 30px; border-radius: 7px; color: var(--text-2); display: grid; place-items: center; list-style: none; cursor: pointer; }
+    .sec-acc summary::-webkit-details-marker { display: none; }
+    .sec-acc button:hover:not(:disabled), .sec-acc summary:hover { background: var(--sunken); color: var(--text); }
+    .sec-acc button:disabled { opacity: .3; }
+    .sec-ren[open] { flex-basis: 100%; order: 9; }
+    .sec-ren[open] form { margin-top: 6px; }
+    .g-mover { position: relative; }
+    .g-mover summary { width: 30px; height: 30px; border-radius: 8px; background: rgba(255,255,255,.95); color: var(--text); display: grid; place-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.2); list-style: none; cursor: pointer; }
+    .g-mover summary::-webkit-details-marker { display: none; }
+    .g-mover form { position: absolute; right: 0; top: 34px; z-index: 5; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.14); padding: 4px; min-width: 180px; display: grid; }
+    .g-mover form button { width: auto; height: auto; box-shadow: none; background: none; text-align: left; padding: 7px 10px; border-radius: 7px; font-size: 13px; display: block; }
+    .g-mover form button:hover { background: var(--sunken); }
+    .g-item:has(.g-mover[open]) .g-acc { opacity: 1; }
+    .g-item:has(.g-mover[open]) { overflow: visible; z-index: 3; }
     .dbx-barra { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; padding: 10px 14px; margin-bottom: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--sunken); font-size: 13.5px; }
     .dbx-barra .ruta { color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1 1 220px; }
     .dbx-barra .ruta i { color: #0061FE; }
@@ -348,10 +369,53 @@
                             </form>
                         </div>
                     @endif
+                    <div class="sec-subir">
+                        @if($secciones->isNotEmpty())
+                            <label for="gal-seccion" class="secundario" style="font-size:13px">Subir a</label>
+                            <select id="gal-seccion" class="form-select form-select-sm" style="width:auto; max-width: 240px">
+                                @foreach($secciones as $sx)<option value="{{ $sx->id }}">{{ $sx->nombre }}</option>@endforeach
+                            </select>
+                        @endif
+                        <details class="sec-nueva">
+                            <summary class="btn btn-borde btn-sm"><i class="bi bi-plus-lg me-1"></i> Nueva sección</summary>
+                            <form method="post" action="{{ route('admin.proyectos.secciones.store', $p) }}" class="d-flex gap-2 mt-2">@csrf
+                                <input name="nombre" class="form-control form-control-sm" placeholder="Fotos adicionales" maxlength="120" required aria-label="Nombre de la sección nueva">
+                                <button class="btn btn-primario btn-sm text-nowrap">Crear</button>
+                            </form>
+                        </details>
+                        <span class="secundario" style="font-size:12.5px">@if($secciones->isEmpty() && $galeria->isNotEmpty())Al crear la primera, lo que ya está queda como “Entrega principal”.@else Cada entrega en su sección; el cliente ve la más nueva arriba.@endif</span>
+                    </div>
                     @include('admin.proyectos._subir', ['grupo' => 'galeria', 'texto' => 'Subir fotos o videos', 'accept' => 'image/*,video/*,.zip,.pdf', 'grande' => true])
-                    @if($galeria->isNotEmpty())
-                        <div class="galeria mt-3">
-                            @foreach($galeria as $a)
+                    @if($galeria->isNotEmpty() || $secciones->isNotEmpty())
+                        @foreach($grupos as $gi => $g)
+                            @if($secciones->isNotEmpty())
+                                <div class="sec-cab">
+                                    <div class="min-w-0">
+                                        <b>{{ $g['nombre'] }}</b>
+                                        <span class="secundario num">{{ $g['archivos']->count() }} {{ $g['archivos']->count() === 1 ? 'archivo' : 'archivos' }} · {{ $g['fecha'] ? ucfirst($g['fecha']->locale('es')->isoFormat('D MMM YYYY')) : '' }}@if($gi === 0) · <span style="color:var(--green-ink)">el cliente la ve primero</span>@endif</span>
+                                    </div>
+                                    @if($g['seccion'])
+                                        @php $sx = $g['seccion']; @endphp
+                                        <div class="sec-acc">
+                                            <form method="post" action="{{ route('admin.proyectos.secciones.update', [$p, $sx]) }}">@csrf @method('patch')<button name="mover" value="arriba" @disabled($gi === 0) title="Subir" aria-label="Subir {{ $sx->nombre }}"><i class="bi bi-arrow-up"></i></button></form>
+                                            <form method="post" action="{{ route('admin.proyectos.secciones.update', [$p, $sx]) }}">@csrf @method('patch')<button name="mover" value="abajo" @disabled($gi === $grupos->count() - 1 || ! $grupos[$gi + 1]['seccion']) title="Bajar" aria-label="Bajar {{ $sx->nombre }}"><i class="bi bi-arrow-down"></i></button></form>
+                                            <details class="sec-ren"><summary title="Renombrar" aria-label="Renombrar {{ $sx->nombre }}"><i class="bi bi-pencil"></i></summary>
+                                                <form method="post" action="{{ route('admin.proyectos.secciones.update', [$p, $sx]) }}" class="d-flex gap-2">@csrf @method('patch')
+                                                    <input name="nombre" class="form-control form-control-sm" value="{{ $sx->nombre }}" maxlength="120" required aria-label="Nombre de la sección"><button class="btn btn-primario btn-sm">Guardar</button>
+                                                </form>
+                                            </details>
+                                            @if($g['archivos']->isEmpty())
+                                                <form method="post" action="{{ route('admin.proyectos.secciones.destroy', [$p, $sx]) }}">@csrf @method('delete')<button title="Quitar sección vacía" aria-label="Quitar {{ $sx->nombre }}"><i class="bi bi-trash"></i></button></form>
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
+                            @if($g['archivos']->isEmpty())
+                                <p class="secundario mb-0 mt-1" style="font-size:13px">Sin archivos todavía.</p>
+                            @else
+                            <div class="galeria mt-2">
+                                @foreach($g['archivos'] as $a)
                                 <div class="g-item {{ $a->visible ? '' : 'oculto' }}">
                                     @if($a->es_imagen)
                                         <img src="{{ route('admin.proyectos.archivo.ver', [$p, $a]) }}?v=miniatura" alt="{{ $a->nombre }}" loading="lazy">
@@ -372,13 +436,22 @@
                                             <input type="hidden" name="visible" value="{{ $a->visible ? 0 : 1 }}">
                                             <button title="{{ $a->visible ? 'Ocultar al cliente' : 'Mostrar al cliente' }}" aria-label="{{ $a->visible ? 'Ocultar al cliente' : 'Mostrar al cliente' }}"><i class="bi {{ $a->visible ? 'bi-eye' : 'bi-eye-slash' }}"></i></button>
                                         </form>
+                                        @if($secciones->count() > 1)
+                                            <details class="g-mover"><summary title="Mover a otra sección" aria-label="Mover {{ $a->nombre }} a otra sección"><i class="bi bi-folder-symlink"></i></summary>
+                                                <form method="post" action="{{ route('admin.proyectos.archivo.seccion', [$p, $a]) }}">@csrf @method('patch')
+                                                    @foreach($secciones->where('id', '!=', $a->seccion_id) as $sx)<button name="seccion_id" value="{{ $sx->id }}">{{ $sx->nombre }}</button>@endforeach
+                                                </form>
+                                            </details>
+                                        @endif
                                         <form method="post" action="{{ route('admin.proyectos.archivo.borrar', [$p, $a]) }}" onsubmit="return confirm('¿Eliminar este archivo de la galería?')">@csrf @method('delete')
                                             <button class="text-danger" title="Eliminar" aria-label="Eliminar {{ $a->nombre }}"><i class="bi bi-trash"></i></button>
                                         </form>
                                     </div>
                                 </div>
-                            @endforeach
-                        </div>
+                                @endforeach
+                            </div>
+                            @endif
+                        @endforeach
                     @endif
                 </div>
             </section>
@@ -565,7 +638,8 @@ function subidor(url, grupo, etapaId) {
             let listos = 0;
             try {
                 const cred = await (await fetch(VANDU_DBX.token, { headers: { Accept: 'application/json' }, credentials: 'same-origin' })).json();
-                const q = new URLSearchParams({ grupo, ...(etapaId ? { etapa_id: etapaId } : {}) });
+                const sec = grupo === 'galeria' ? (document.getElementById('gal-seccion')?.value || '') : '';
+                const q = new URLSearchParams({ grupo, ...(etapaId ? { etapa_id: etapaId } : {}), ...(sec ? { seccion_id: sec } : {}) });
                 const r = await fetch(VANDU_DBX.destino + '?' + q, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
                 if (!r.ok) throw new Error('No se pudo preparar la carpeta del proyecto en Dropbox.');
                 const { carpeta } = await r.json();
@@ -576,6 +650,7 @@ function subidor(url, grupo, etapaId) {
                     const fd = new FormData();
                     fd.append('_token', VANDU_DBX.csrf); fd.append('grupo', grupo); fd.append('dropbox_id', meta.id);
                     if (etapaId) fd.append('etapa_id', etapaId);
+                    if (sec) fd.append('seccion_id', sec);
                     if (f.type.startsWith('video/')) { const portada = await portadaDeVideo(f); if (portada) fd.append('poster', portada, 'portada.jpg'); }
                     const reg = await fetch(VANDU_DBX.registrar, { method: 'POST', body: fd, headers: { Accept: 'application/json' }, credentials: 'same-origin' });
                     if (!reg.ok) { let m = ''; try { m = (await reg.json()).message; } catch {} throw new Error('Se subió a Dropbox, pero no se pudo registrar en el panel' + (m ? ': ' + m : '.')); }
@@ -594,6 +669,7 @@ function subidor(url, grupo, etapaId) {
             fd.append('_token', '{{ csrf_token() }}');
             fd.append('grupo', grupo);
             if (etapaId) fd.append('etapa_id', etapaId);
+            if (grupo === 'galeria' && document.getElementById('gal-seccion')?.value) fd.append('seccion_id', document.getElementById('gal-seccion').value);
             [...lista].forEach((f) => fd.append('archivos[]', f));
             this.cuantos = lista.length; this.pct = 0; this.error = ''; this.subiendo = true;
 

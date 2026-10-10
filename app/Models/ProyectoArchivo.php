@@ -10,7 +10,7 @@ class ProyectoArchivo extends Model
 {
     use \App\Models\Concerns\DeCuenta;
 
-    protected $fillable = ['etapa_id', 'grupo', 'origen', 'dropbox_id', 'nombre', 'ruta', 'mime', 'peso', 'vista', 'miniatura', 'ancho', 'alto', 'visible', 'orden'];
+    protected $fillable = ['etapa_id', 'seccion_id', 'grupo', 'origen', 'dropbox_id', 'nombre', 'ruta', 'mime', 'peso', 'vista', 'miniatura', 'ancho', 'alto', 'visible', 'orden'];
 
     protected $casts = ['visible' => 'boolean', 'peso' => 'integer'];
 
@@ -31,6 +31,7 @@ class ProyectoArchivo extends Model
 
     public function proyecto(): BelongsTo { return $this->belongsTo(Proyecto::class); }
     public function etapa(): BelongsTo { return $this->belongsTo(ProyectoEtapa::class, 'etapa_id'); }
+    public function seccion(): BelongsTo { return $this->belongsTo(GaleriaSeccion::class, 'seccion_id'); }
 
     /** Recorte cuadrado para correos (se genera al pedirlo) */
     public function getRutaCorreoAttribute(): string

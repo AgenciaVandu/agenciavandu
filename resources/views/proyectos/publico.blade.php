@@ -119,6 +119,11 @@
         .btn.sec { background: #fff; color: var(--ink); }
         .btn.sec:hover { background: var(--mist); }
         .btn svg { width: 18px; height: 18px; }
+        .sec-top { display: flex; align-items: baseline; gap: 10px; margin: 22px 0 10px; }
+        .sec-top b { font-size: 16px; font-weight: 600; }
+        .sec-top span { color: var(--muted); font-size: 13px; }
+        .sec-top a { margin-left: auto; font-size: 13px; color: inherit; font-weight: 600; }
+        .galeria + .sec-top { margin-top: 28px; }
         .galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
         .galeria button { position: relative; border: 0; padding: 0; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--mist); cursor: zoom-in; }
         .galeria img, .galeria video { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .25s; }
@@ -266,8 +271,15 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg> Descargar todo
             </a>
         </div>
-        <div class="galeria">
-            @foreach($galeria as $i => $a)
+        @php $n = 0; $varios = $grupos->count() > 1; @endphp
+        @foreach($grupos as $g)
+            @if($varios)
+                <div class="sec-top"><b>{{ $g['nombre'] }}</b><span class="num">{{ $g['archivos']->count() }} · {{ ucfirst($g['fecha']->locale('es')->isoFormat('D MMM')) }}</span>
+                    @if($g['seccion'])<a href="{{ route('proyecto.zip', [$p->token, 'seccion' => $g['seccion']->id]) }}">Descargar</a>@endif</div>
+            @endif
+            <div class="galeria">
+                @foreach($g['archivos'] as $a)
+                    @php $i = $n++; @endphp
                 <button type="button" data-i="{{ $i }}" aria-label="Ver {{ $a->nombre }}">
                     @if($a->es_imagen)
                         <img src="{{ $ruta($a, 'miniatura') }}" alt="" loading="lazy" @if($a->ancho) width="{{ $a->ancho }}" height="{{ $a->alto }}" @endif>
@@ -281,8 +293,9 @@
                         <span class="arch">{{ \Illuminate\Support\Str::limit($a->nombre, 30) }}</span>
                     @endif
                 </button>
-            @endforeach
-        </div>
+                @endforeach
+            </div>
+        @endforeach
 
         <div class="visor" id="visor" role="dialog" aria-modal="true" aria-label="Visor de entregables">
             <div class="barra-v">

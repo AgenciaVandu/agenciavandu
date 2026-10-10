@@ -160,6 +160,10 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::post('proyectos/{proyecto}/dropbox/sincronizar', [Admin\DropboxController::class, 'sincronizar'])->name('proyectos.dropbox.sincronizar');
 
     Route::post('proyectos/{proyecto}/archivos', [Admin\ProyectoController::class, 'subir'])->name('proyectos.subir');
+    Route::post('proyectos/{proyecto}/secciones', [Admin\ProyectoController::class, 'nuevaSeccion'])->name('proyectos.secciones.store');
+    Route::patch('proyectos/{proyecto}/secciones/{seccion}', [Admin\ProyectoController::class, 'seccion'])->name('proyectos.secciones.update');
+    Route::delete('proyectos/{proyecto}/secciones/{seccion}', [Admin\ProyectoController::class, 'borrarSeccion'])->name('proyectos.secciones.destroy');
+    Route::patch('proyectos/{proyecto}/archivos/{archivo}/seccion', [Admin\ProyectoController::class, 'moverArchivo'])->name('proyectos.archivo.seccion');
     Route::patch('proyectos/{proyecto}/archivos/{archivo}', [Admin\ProyectoController::class, 'archivo'])->name('proyectos.archivo');
     Route::delete('proyectos/{proyecto}/archivos/{archivo}', [Admin\ProyectoController::class, 'borrarArchivo'])->name('proyectos.archivo.borrar');
     Route::get('proyectos/{proyecto}/archivos/{archivo}', [Admin\ProyectoController::class, 'verArchivo'])->name('proyectos.archivo.ver');

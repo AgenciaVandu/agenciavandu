@@ -39,6 +39,8 @@ class Proyecto extends Model
     public function etapas(): HasMany { return $this->hasMany(ProyectoEtapa::class)->orderBy('orden'); }
     public function pagos(): HasMany { return $this->hasMany(ProyectoPago::class)->orderBy('orden'); }
     public function archivos(): HasMany { return $this->hasMany(ProyectoArchivo::class)->orderBy('orden')->orderBy('id'); }
+    /** Secciones de la galería: la más nueva primero */
+    public function secciones(): HasMany { return $this->hasMany(GaleriaSeccion::class)->orderByDesc('orden')->orderByDesc('id'); }
 
     /* ---------------- Crear desde una cotización ---------------- */
 

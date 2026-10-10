@@ -104,6 +104,7 @@ class TareasController extends Controller
             'archivos'   => $this->archivos($tarea),
             'incluidos'  => $tarea->archivos->whereNotNull('proyecto_archivo_id')->values(),
             'etapasProyecto' => $tarea->proyecto?->etapas()->get() ?? collect(),
+            'seccionesProyecto' => $tarea->proyecto?->secciones()->get() ?? collect(),
             'destinos'   => Tarea::DESTINOS,
             'dropbox'    => Dropbox::conectado(),
             'parte'      => self::parte(),
@@ -279,6 +280,8 @@ class TareasController extends Controller
             'nota'     => 'nullable|string|max:2000',
             'destino'  => ['nullable', Rule::in(array_keys(Tarea::DESTINOS))],
             'etapa_id' => ['nullable', Rule::exists('proyecto_etapas', 'id')->where('proyecto_id', (int) $tarea->proyecto_id)],
+            'seccion'  => 'nullable|string|max:20',
+            'seccion_nombre' => 'nullable|string|max:120',
         ]);
         // Al aprobar se puede ajustar a dónde va lo entregado
         if ($tarea->proyecto_id && $request->has('destino')) {
@@ -298,8 +301,15 @@ class TareasController extends Controller
             $grupo = $tarea->destino === 'galeria' ? 'galeria' : 'documento';
             $visible = $grupo !== 'galeria' || $request->boolean('publicar', true);
             $etapa = $tarea->etapa;
+            // En la galería, cada entrega va a su sección (por defecto una nueva con el nombre de la tarea)
+            $seccion = null;
+            if ($grupo === 'galeria') {
+                $elegida = (string) ($d['seccion'] ?? 'nueva');
+                $seccion = $elegida !== 'nueva' && ctype_digit($elegida) ? $p->secciones()->find((int) $elegida) : null;
+                $seccion ??= \App\Support\Galeria::nueva($p, ($d['seccion_nombre'] ?? '') ?: $tarea->titulo);
+            }
             $carpeta = $grupo === 'galeria'
-                ? ($visible ? ArchivosProyecto::carpetaGaleria($p) : ArchivosProyecto::carpetaOculta($p))
+                ? \App\Support\Galeria::carpeta($p, $seccion, $visible)
                 : ArchivosProyecto::carpetaDestino($p, 'documento', $etapa);
             $dbx = Dropbox::cliente();
             $dbx->crearCarpeta($carpeta);
@@ -307,7 +317,7 @@ class TareasController extends Controller
                 try {
                     $ruta = $this->rutaEnCarpeta($tarea, $id);
                     $meta = $dbx->mover($ruta, $carpeta . '/' . basename($ruta));
-                    $pa = ArchivosProyecto::registrarDropbox($p, $meta, $grupo, $grupo === 'documento' ? $etapa?->id : null, null, $visible);
+                    $pa = ArchivosProyecto::registrarDropbox($p, $meta, $grupo, $grupo === 'documento' ? $etapa?->id : null, null, $visible, $seccion?->id);
                     $registro = $tarea->archivos()->where('dropbox_id', $id)->first()
                         ?? $tarea->archivos()->create(['user_id' => null, 'nombre' => $meta['name'], 'ruta' => $ruta, 'dropbox_id' => $id, 'tamano' => (int) ($meta['size'] ?? 0), 'ronda' => $tarea->ronda]);
                     $registro->update(['proyecto_archivo_id' => $pa->id, 'ruta' => $meta['path_display']]);
@@ -336,7 +346,7 @@ class TareasController extends Controller
             }
         }
 
-        $donde = $tarea->destino === 'galeria' ? 'a la galería' . ($request->boolean('publicar', true) ? '' : ' (sin publicar)') : ($tarea->etapa ? "a los documentos de “{$tarea->etapa->nombre}”" : 'a los documentos');
+        $donde = $tarea->destino === 'galeria' ? 'a la galería' . (isset($seccion) && $seccion ? " (sección “{$seccion->nombre}”)" : '') . ($request->boolean('publicar', true) ? '' : ' sin publicar') : ($tarea->etapa ? "a los documentos de “{$tarea->etapa->nombre}”" : 'a los documentos');
         $resumen = $incluidos ? "Aprobada: $incluidos " . ($incluidos === 1 ? 'archivo pasó' : 'archivos pasaron') . " $donde del proyecto." : 'Tarea aprobada y terminada.';
         $tarea->comentarios()->create(['user_id' => $yo->id, 'texto' => trim('✓ ' . $resumen . (! empty($d['nota']) ? "\n" . $d['nota'] : ''))]);
         if ($tarea->asignada_a && $tarea->asignada_a !== $yo->id) {

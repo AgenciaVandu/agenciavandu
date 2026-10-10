@@ -109,6 +109,7 @@
             .visor .lienzo { grid-template-columns: minmax(0, 1fr); padding: 0 0 8px; } .visor .lienzo .ctl { display: none; }
         }
         @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+            .bajar-sec { color: inherit; font-weight: 600; text-underline-offset: 3px; }
     </style>
 </head>
 <body>
@@ -139,10 +140,16 @@
 
 <main class="ancho">
     @if($items->isNotEmpty())
+        @php $n = 0; $varios = $grupos->count() > 1; @endphp
+        @foreach($grupos as $g)
         <section class="seccion">
-            <div class="seccion-top"><h2>Galería</h2><span>Toca cualquier archivo para verlo en grande y descargarlo.</span></div>
+            <div class="seccion-top">
+                <h2>{{ $varios ? $g['nombre'] : 'Galería' }}</h2>
+                <span>@if($varios){{ $g['archivos']->count() }} {{ $g['archivos']->count() === 1 ? 'archivo' : 'archivos' }} · {{ ucfirst($g['fecha']->locale('es')->isoFormat('D [de] MMMM')) }}@if($g['seccion']) · <a href="{{ route('proyecto.zip', [$p->token, 'seccion' => $g['seccion']->id]) }}" class="bajar-sec">Descargar esta sección</a>@endif @else Toca cualquier archivo para verlo en grande y descargarlo.@endif</span>
+            </div>
             <div class="mosaico">
-                @foreach($galeria as $i => $a)
+                @foreach($g['archivos'] as $a)
+                    @php $i = $n++; @endphp
                     <button type="button" data-i="{{ $i }}" aria-label="Ver {{ $a->nombre }}">
                         @if($a->es_imagen)
                             <img src="{{ $ruta($a, 'miniatura') }}" alt="" loading="lazy" @if($a->ancho) width="{{ $a->ancho }}" height="{{ $a->alto }}" @endif>
@@ -159,6 +166,7 @@
                 @endforeach
             </div>
         </section>
+        @endforeach
     @endif
 
     @if($documentos->isNotEmpty())
