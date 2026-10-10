@@ -58,6 +58,9 @@ class PortalClienteTest extends TestCase
         $this->assertStringNotContainsString('Borrador secreto', $html);
         $this->assertStringNotContainsString('Proyecto de otro', $html);
         $this->assertNotNull($this->c->fresh()->portal_visto_at);
+        $this->get($this->c->portal_url)->assertOk(); // la segunda visita también (ya tiene fecha de última vista)
+        $this->travel(4)->hours();
+        $this->get($this->c->portal_url)->assertOk();
         $this->get('/cliente/' . str_repeat('a', 32))->assertNotFound();
 
         // Desde el proyecto y la cotización se regresa al espacio

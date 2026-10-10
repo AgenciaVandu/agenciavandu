@@ -93,6 +93,7 @@ class Notificar
     /** Hay que avisar de esta visita: primera vez, o la anterior fue hace rato */
     public static function visitaNueva($ultimaVista): bool
     {
+        if (is_string($ultimaVista)) $ultimaVista = \Illuminate\Support\Carbon::parse($ultimaVista); // por si llega sin convertir
         return ! $ultimaVista || $ultimaVista->lt(now()->subHours(config('vandu.push.repetir_vista_horas', 3)));
     }
 }

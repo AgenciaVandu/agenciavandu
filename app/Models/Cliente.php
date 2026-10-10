@@ -16,7 +16,7 @@ class Cliente extends Model
         'origen', 'nuevo', 'interes', 'contacto_at',
     ];
 
-    protected $casts = ['nuevo' => 'boolean', 'contacto_at' => 'datetime'];
+    protected $casts = ['nuevo' => 'boolean', 'contacto_at' => 'datetime', 'portal_visto_at' => 'datetime'];
 
     protected static function booted(): void
     {
