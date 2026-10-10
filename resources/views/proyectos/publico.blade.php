@@ -157,6 +157,9 @@
             .gal-top .btn { width: 100%; }
         }
         @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+            .ver-mas { display: block; margin: 14px auto 0; border: 1.5px solid var(--line); background: #fff; color: var(--ink); font: inherit; font-weight: 600; font-size: 15px; padding: 11px 26px; border-radius: 99px; cursor: pointer; }
+        .ver-mas:hover { border-color: var(--ink); }
+        [data-mas][hidden] { display: none !important; }
     </style>
 </head>
 <body>
@@ -171,7 +174,15 @@
         </div>
     </header>
 
-    @if($p->presupuesto)
+    @if($c)
+        <div style="display:flex; flex-wrap:wrap; gap:8px">
+            <a class="atras" href="{{ $c->portal_url }}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg>
+                Todos mis proyectos
+            </a>
+            @if($p->presupuesto)<a class="atras" href="{{ $p->presupuesto->url_publica }}">Ver mi cotización</a>@endif
+        </div>
+    @elseif($p->presupuesto)
         <a class="atras" href="{{ $p->presupuesto->url_publica }}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg>
             Volver a mi cotización
@@ -271,7 +282,7 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16"/></svg> Descargar todo
             </a>
         </div>
-        @php $n = 0; $varios = $grupos->count() > 1; @endphp
+        @php $n = 0; $varios = $grupos->count() > 1; $porPagina = 10; @endphp
         @foreach($grupos as $g)
             @if($varios)
                 <div class="sec-top"><b>{{ $g['nombre'] }}</b><span class="num">{{ $g['archivos']->count() }} · {{ ucfirst($g['fecha']->locale('es')->isoFormat('D MMM')) }}</span>
@@ -279,15 +290,15 @@
             @endif
             <div class="galeria">
                 @foreach($g['archivos'] as $a)
-                    @php $i = $n++; @endphp
-                <button type="button" data-i="{{ $i }}" aria-label="Ver {{ $a->nombre }}">
+                    @php $i = $n++; $mas = $loop->index >= $porPagina; $src = $mas ? 'data-src' : 'src'; @endphp
+                <button type="button" data-i="{{ $i }}" aria-label="Ver {{ $a->nombre }}" @if($mas) hidden data-mas @endif>
                     @if($a->es_imagen)
-                        <img src="{{ $ruta($a, 'miniatura') }}" alt="" loading="lazy" @if($a->ancho) width="{{ $a->ancho }}" height="{{ $a->alto }}" @endif>
+                        <img {{ $src }}="{{ $ruta($a, 'miniatura') }}" alt="" loading="lazy" decoding="async" @if($a->ancho) width="{{ $a->ancho }}" height="{{ $a->alto }}" @endif>
                     @elseif($a->es_video && $a->miniatura)
-                        <img src="{{ $ruta($a, 'miniatura') }}" alt="" loading="lazy">
+                        <img {{ $src }}="{{ $ruta($a, 'miniatura') }}" alt="" loading="lazy" decoding="async">
                         <span class="play"><i><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></i></span>
                     @elseif($a->es_video)
-                        <video src="{{ $ruta($a) }}#t=0.5" preload="metadata" muted playsinline></video>
+                        <video {{ $src }}="{{ $ruta($a) }}#t=0.5" preload="metadata" muted playsinline></video>
                         <span class="play"><i><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></i></span>
                     @else
                         <span class="arch">{{ \Illuminate\Support\Str::limit($a->nombre, 30) }}</span>
@@ -295,6 +306,9 @@
                 </button>
                 @endforeach
             </div>
+            @if($g['archivos']->count() > $porPagina)
+                <button type="button" class="ver-mas" data-ver-mas>Ver más <span class="num">({{ $g['archivos']->count() - $porPagina }})</span></button>
+            @endif
         @endforeach
 
         <div class="visor" id="visor" role="dialog" aria-modal="true" aria-label="Visor de entregables">
@@ -360,6 +374,18 @@
     medio.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, { passive: true });
     medio.addEventListener('touchend', function (e) { if (x0 === null) return; var dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 50) mostrar(actual + (dx < 0 ? 1 : -1)); x0 = null; });
 })();
+</script>
+<script>
+document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-ver-mas]'); if (!b) return;
+    var grid = b.previousElementSibling, ocultos = grid.querySelectorAll('[data-mas][hidden]');
+    for (var k = 0; k < Math.min(10, ocultos.length); k++) {
+        ocultos[k].querySelectorAll('[data-src]').forEach(function (m) { m.setAttribute('src', m.getAttribute('data-src')); m.removeAttribute('data-src'); });
+        ocultos[k].hidden = false;
+    }
+    var resta = ocultos.length - 10;
+    if (resta > 0) b.querySelector('span').textContent = '(' + resta + ')'; else b.remove();
+});
 </script>
 </body>
 </html>

@@ -200,6 +200,10 @@
             .vig, .acciones, .copiar, .resp, .hist-sec, dialog { display: none !important; }
             .doc { padding-top: 0; }
         }
+            .mi-espacio { display: inline-flex; align-items: center; gap: 8px; margin: 18px 0 0; padding: 8px 14px; border: 1.5px solid #E3E4E8; border-radius: 10px; text-decoration: none; font-weight: 500; font-size: 15px; color: #13161D; background: #fff; }
+        .mi-espacio:hover { border-color: #13161D; }
+        .mi-espacio svg { width: 17px; height: 17px; }
+        @media print { .mi-espacio { display: none; } }
     </style>
 </head>
 <body>
@@ -237,6 +241,10 @@
             @if($p->emisor_email)<a href="mailto:{{ $p->emisor_email }}">{{ $p->emisor_email }}</a>@endif
         </div>
     </header>
+
+    @if($p->cliente && ! request()->boolean('pdf'))
+        <a class="mi-espacio" href="{{ $p->cliente->portal_url }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> Ver todos mis proyectos y cotizaciones</a>
+    @endif
 
     <section class="partes">
         <div><b>{{ $p->cliente_nombre }}</b><span>{{ $p->cliente_empresa }}</span></div>

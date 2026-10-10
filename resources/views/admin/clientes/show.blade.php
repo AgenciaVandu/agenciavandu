@@ -123,6 +123,21 @@
                 </ul>
             </section>
         @endif
+        @php $portal = $cliente->portal_url; @endphp
+        <section class="panel">
+            <div class="panel-head"><h2>Espacio del cliente</h2><span class="ayuda">@if($cliente->portal_visto_at)Lo abrió {{ $cliente->portal_visto_at->locale('es')->diffForHumans() }}@else Aún no lo abre @endif</span></div>
+            <div class="panel-body d-grid gap-2">
+                <p class="secundario m-0" style="font-size:13.5px">Un solo enlace con todas sus cotizaciones, proyectos y entregas. Siempre está al día.</p>
+                <div class="d-flex gap-2">
+                    <input class="form-control" style="font-size:13px" value="{{ $portal }}" readonly onclick="this.select()" aria-label="Enlace del espacio del cliente">
+                    <button type="button" class="btn btn-primario text-nowrap" data-copiar="{{ $portal }}"><i class="bi bi-copy"></i></button>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    @if($cliente->whatsapp)<a class="btn btn-borde btn-sm" target="_blank" rel="noopener" href="https://wa.me/{{ $cliente->whatsapp }}?text={{ rawurlencode('Hola ' . \App\Support\Correos::primerNombre((string) $cliente->nombre) . ', aquí puedes ver todos tus proyectos y cotizaciones con nosotros: ' . $portal) }}"><i class="bi bi-whatsapp me-1"></i> WhatsApp</a>@endif
+                    <a class="btn btn-borde btn-sm" target="_blank" rel="noopener" href="{{ $portal }}?vista_previa=1"><i class="bi bi-eye me-1"></i> Ver como cliente</a>
+                </div>
+            </div>
+        </section>
         <section class="panel">
             <div class="panel-head"><h2>Contacto</h2></div>
             <dl class="panel-body datos mb-0">

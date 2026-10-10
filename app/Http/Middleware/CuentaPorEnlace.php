@@ -20,6 +20,7 @@ class CuentaPorEnlace
             'presupuesto' => Presupuesto::sinCuenta()->where('token', $token)->value('cuenta_id'),
             'proyecto'    => Proyecto::sinCuenta()->where('token', $token)->value('cuenta_id'),
             'redes'       => Cliente::sinCuenta()->where('redes_token', $token)->value('cuenta_id'),
+            'cliente'     => Cliente::sinCuenta()->where('portal_token', $token)->value('cuenta_id'),
             default       => null,
         };
         if ($cuenta) {

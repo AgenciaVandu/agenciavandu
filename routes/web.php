@@ -222,6 +222,10 @@ Route::post('/cotizacion/{token}/responder', [PresupuestoPublicoController::clas
 Route::post('/cotizacion/{token}/codigo', [PresupuestoPublicoController::class, 'pedirCodigo'])
     ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:presupuesto')->middleware('throttle:4,10')->name('presupuesto.codigo');
 
+// Portal del cliente: un solo enlace con todas sus cotizaciones y proyectos
+Route::get('/cliente/{token}', [\App\Http\Controllers\ClientePortalController::class, 'show'])
+    ->where('token', '[A-Za-z0-9]{32}')->middleware(['cuenta.enlace:cliente', 'throttle:60,1'])->name('cliente.portal');
+
 // Vista pública del proyecto para el cliente
 Route::get('/proyecto/{token}', [\App\Http\Controllers\ProyectoPublicoController::class, 'show'])
     ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:proyecto')->name('proyecto.publico');

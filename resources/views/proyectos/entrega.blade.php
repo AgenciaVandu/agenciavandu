@@ -110,6 +110,9 @@
         }
         @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
             .bajar-sec { color: inherit; font-weight: 600; text-underline-offset: 3px; }
+            .ver-mas { display: block; margin: 14px auto 0; border: 1.5px solid var(--line); background: #fff; color: var(--ink); font: inherit; font-weight: 600; font-size: 15px; padding: 11px 26px; border-radius: 99px; cursor: pointer; }
+        .ver-mas:hover { border-color: var(--ink); }
+        [data-mas][hidden] { display: none !important; }
     </style>
 </head>
 <body>
@@ -130,6 +133,7 @@
                     Descargar todo
                 </a>
             @endif
+            @if($p->cliente)<a class="btn btn-fant" href="{{ $p->cliente->portal_url }}">Todos mis proyectos</a>@endif
             <a class="btn btn-fant" href="{{ $p->url_publica }}">
                 Ver mi proyecto
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
@@ -140,7 +144,7 @@
 
 <main class="ancho">
     @if($items->isNotEmpty())
-        @php $n = 0; $varios = $grupos->count() > 1; @endphp
+        @php $n = 0; $varios = $grupos->count() > 1; $porPagina = 10; @endphp
         @foreach($grupos as $g)
         <section class="seccion">
             <div class="seccion-top">
@@ -149,15 +153,15 @@
             </div>
             <div class="mosaico">
                 @foreach($g['archivos'] as $a)
-                    @php $i = $n++; @endphp
-                    <button type="button" data-i="{{ $i }}" aria-label="Ver {{ $a->nombre }}">
+                    @php $i = $n++; $mas = $loop->index >= $porPagina; $src = $mas ? 'data-src' : 'src'; @endphp
+                    <button type="button" data-i="{{ $i }}" aria-label="Ver {{ $a->nombre }}" @if($mas) hidden data-mas @endif>
                         @if($a->es_imagen)
-                            <img src="{{ $ruta($a, 'miniatura') }}" alt="" loading="lazy" @if($a->ancho) width="{{ $a->ancho }}" height="{{ $a->alto }}" @endif>
+                            <img {{ $src }}="{{ $ruta($a, 'miniatura') }}" alt="" loading="lazy" decoding="async" @if($a->ancho) width="{{ $a->ancho }}" height="{{ $a->alto }}" @endif>
                         @elseif($a->es_video && $a->miniatura)
-                            <img src="{{ $ruta($a, 'miniatura') }}" alt="" loading="lazy" @if($a->ancho) width="{{ $a->ancho }}" height="{{ $a->alto }}" @endif>
+                            <img {{ $src }}="{{ $ruta($a, 'miniatura') }}" alt="" loading="lazy" decoding="async" @if($a->ancho) width="{{ $a->ancho }}" height="{{ $a->alto }}" @endif>
                             <span class="play"><i><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></i></span>
                         @elseif($a->es_video)
-                            <video src="{{ $ruta($a) }}#t=0.5" preload="metadata" muted playsinline></video>
+                            <video {{ $src }}="{{ $ruta($a) }}#t=0.5" preload="metadata" muted playsinline></video>
                             <span class="play"><i><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></i></span>
                         @else
                             <span class="arch"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg>{{ \Illuminate\Support\Str::limit($a->nombre, 34) }}</span>
@@ -165,6 +169,9 @@
                     </button>
                 @endforeach
             </div>
+            @if($g['archivos']->count() > $porPagina)
+                <button type="button" class="ver-mas" data-ver-mas>Ver más <span class="num">({{ $g['archivos']->count() - $porPagina }})</span></button>
+            @endif
         </section>
         @endforeach
     @endif
@@ -241,5 +248,17 @@
     })();
     </script>
 @endif
+<script>
+document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-ver-mas]'); if (!b) return;
+    var grid = b.previousElementSibling, ocultos = grid.querySelectorAll('[data-mas][hidden]');
+    for (var k = 0; k < Math.min(10, ocultos.length); k++) {
+        ocultos[k].querySelectorAll('[data-src]').forEach(function (m) { m.setAttribute('src', m.getAttribute('data-src')); m.removeAttribute('data-src'); });
+        ocultos[k].hidden = false;
+    }
+    var resta = ocultos.length - 10;
+    if (resta > 0) b.querySelector('span').textContent = '(' + resta + ')'; else b.remove();
+});
+</script>
 </body>
 </html>

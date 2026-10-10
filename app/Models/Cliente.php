@@ -111,6 +111,15 @@ class Cliente extends Model
         return $this->hasMany(Proyecto::class)->latest();
     }
 
+    /** Enlace único del cliente con todas sus cotizaciones y proyectos (se crea la primera vez que se pide) */
+    public function getPortalUrlAttribute(): string
+    {
+        if (! $this->portal_token) {
+            $this->forceFill(['portal_token' => \Illuminate\Support\Str::random(32)])->saveQuietly();
+        }
+        return route('cliente.portal', $this->portal_token);
+    }
+
     /** Teléfono solo con dígitos y lada 52 para wa.me */
     public function getWhatsappAttribute(): ?string
     {

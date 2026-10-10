@@ -470,6 +470,9 @@
                     <a class="btn btn-borde w-100 mt-2" target="_blank" href="https://wa.me/{{ $wa }}?text={{ rawurlencode($msgWa) }}"><i class="bi bi-whatsapp me-1"></i> Enviar por WhatsApp</a>
                 @endif
                 <button type="button" class="btn btn-borde w-100 mt-2" data-correo="inicio_proyecto"><i class="bi bi-envelope me-1"></i> Enviar por correo</button>
+                @if($p->cliente)
+                    <button type="button" class="btn btn-fantasma btn-sm w-100 mt-2" data-copiar="{{ $p->cliente->portal_url }}" title="Un solo enlace con todos sus proyectos y cotizaciones"><i class="bi bi-person-badge me-1"></i> Copiar su espacio con todo</button>
+                @endif
                 <p class="secundario mt-3 mb-0">{{ $p->vistas ? "Abierto {$p->vistas} " . ($p->vistas === 1 ? 'vez' : 'veces') . ', la última ' . $p->ultima_vista_at->locale('es')->diffForHumans() . '.' : 'El cliente aún no lo abre.' }}</p>
             </div>
         </section>
