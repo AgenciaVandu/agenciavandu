@@ -16,6 +16,8 @@ class ClienteController extends Controller
     public function index(Request $request)
     {
         $q = trim((string) $request->query('q'));
+        $soloNuevos = $request->query('ver') === 'nuevos';
+        $nuevos = Cliente::where('nuevo', true)->count();
 
         $clientes = Cliente::query()
             ->withCount(['presupuestos', 'presupuestos as vigentes_count' => fn ($w) => $w->where('vigente_hasta', '>', now())])
@@ -25,11 +27,22 @@ class ClienteController extends Controller
                 ->orWhere('empresa', 'like', "%$q%")
                 ->orWhere('email', 'like', "%$q%")
                 ->orWhere('telefono', 'like', "%$q%")))
+            ->when($soloNuevos, fn ($query) => $query->where('nuevo', true))
+            ->orderByDesc('nuevo')
+            ->orderByRaw('CASE WHEN nuevo = 1 THEN contacto_at END DESC')
             ->orderBy('nombre')
             ->paginate(25)
             ->withQueryString();
 
-        return view('admin.clientes.index', compact('clientes', 'q'));
+        return view('admin.clientes.index', compact('clientes', 'q', 'nuevos', 'soloNuevos'));
+    }
+
+    /** Marcar un contacto nuevo como atendido (o volver a marcarlo como nuevo) */
+    public function atendido(Request $request, Cliente $cliente)
+    {
+        $cliente->update(['nuevo' => $request->boolean('nuevo')]);
+
+        return back()->with('ok', $cliente->nuevo ? 'Marcado como nuevo.' : (($cliente->empresa ?: $cliente->nombre) . ' ya no aparece como nuevo.'));
     }
 
     public function create(Request $request)

@@ -20,6 +20,11 @@
     .mini > div + div { border-left: 1px solid var(--line); }
     .mini .v { font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
     .mini .k { font-size: 13px; color: var(--muted); }
+    .contacto-nuevo { border-color: #BDF2D6; background: linear-gradient(0deg, var(--green-soft), var(--green-soft)); }
+    .contacto-nuevo .ico { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: var(--surface); color: var(--green-ink); font-size: 19px; }
+    .msj-sitio { list-style: none; margin: 0; padding: 0; }
+    .msj-sitio li { padding: 10px 0; border-top: 1px solid var(--line); font-size: 14px; }
+    .msj-sitio li:first-child { border-top: 0; padding-top: 0; }
     @media (max-width: 991.98px) { .ficha { grid-template-columns: minmax(0, 1fr); } }
     @media (max-width: 575.98px) { .mini { grid-template-columns: minmax(0, 1fr); } .mini > div + div { border-left: 0; border-top: 1px solid var(--line); } }
 </style>
@@ -32,7 +37,7 @@
         @include('admin._avatar', ['nombre' => $cliente->empresa ?: $cliente->nombre])
         <div>
             <h1>{{ $cliente->empresa ?: $cliente->nombre }}</h1>
-            <p class="sub">{{ $cliente->empresa ? $cliente->nombre : 'Cliente' }} · desde {{ $cliente->created_at->locale('es')->isoFormat('MMMM YYYY') }}</p>
+            <p class="sub">{{ $cliente->empresa ? $cliente->nombre : 'Cliente' }} · desde {{ $cliente->created_at->locale('es')->isoFormat('MMMM YYYY') }}@if($cliente->origen === 'sitio') · llegó por el sitio @endif</p>
         </div>
     </div>
     <div class="d-flex gap-2">
@@ -41,6 +46,26 @@
         <a href="{{ route('admin.presupuestos.create', ['cliente' => $cliente->id]) }}" class="btn btn-primario"><i class="bi bi-plus-lg me-1"></i> Nueva cotización</a>
     </div>
 </div>
+
+@if($cliente->nuevo)
+    <section class="panel contacto-nuevo mb-4">
+        <div class="panel-body d-flex flex-wrap gap-3 align-items-center">
+            <div class="ico"><i class="bi bi-inbox-fill"></i></div>
+            <div class="flex-grow-1" style="min-width: 220px">
+                <b>Contacto nuevo desde agenciavandu.com</b>
+                <div class="secundario">{{ $cliente->interes ? 'Le interesa: ' . $cliente->interes . ' · ' : '' }}{{ ($cliente->contacto_at ?? $cliente->created_at)->copy()->setTimezone(config('vandu.zona_horaria'))->locale('es')->isoFormat('D [de] MMMM, h:mm a') }}</div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                @if($cliente->whatsapp)
+                    <a href="https://wa.me/{{ $cliente->whatsapp }}?text={{ rawurlencode('Hola ' . \Illuminate\Support\Str::before($cliente->nombre, ' ') . ', gracias por escribirnos a Agencia Vandu. ') }}" target="_blank" rel="noopener" class="btn btn-borde"><i class="bi bi-whatsapp me-1"></i> WhatsApp</a>
+                @endif
+                <form method="post" action="{{ route('admin.clientes.atendido', $cliente) }}">@csrf @method('patch')
+                    <button class="btn btn-borde"><i class="bi bi-check2-circle me-1"></i> Marcar como atendido</button>
+                </form>
+            </div>
+        </div>
+    </section>
+@endif
 
 <div class="ficha">
     <div class="d-grid gap-4">
@@ -177,6 +202,21 @@
         </section>
 
         @include('admin.correos._historial', ['correos' => \App\Models\Correo::where('cliente_id', $cliente->id)->latest()->take(10)->get(), 'plantilla' => 'bienvenida'])
+
+        @php $mensajes = $cliente->mensajes()->take(10)->get(); @endphp
+        @if($mensajes->isNotEmpty())
+            <section class="panel">
+                <div class="panel-head"><h2>Mensajes desde el sitio</h2><span class="ayuda">{{ $mensajes->count() }}</span></div>
+                <div class="panel-body">
+                    <ul class="msj-sitio">
+                        @foreach($mensajes as $m)
+                            <li><b class="fw-medium">{{ $m->servicio ?: 'Sin servicio' }}</b>
+                                <div class="secundario">{{ $m->created_at->copy()->setTimezone(config('vandu.zona_horaria'))->locale('es')->isoFormat('D MMM YYYY, h:mm a') }} · {{ $m->datos['phone'] ?? '' }}</div></li>
+                        @endforeach
+                    </ul>
+                </div>
+            </section>
+        @endif
 
         @if($cliente->notas)
             <section class="panel">

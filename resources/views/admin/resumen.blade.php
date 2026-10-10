@@ -88,6 +88,15 @@
     <a href="{{ route('admin.notificaciones') }}" class="btn btn-primario btn-sm">Activar</a>
     <button type="button" class="btn btn-fantasma btn-icono" @click="cerrar()" aria-label="Ahora no"><i class="bi bi-x-lg"></i></button>
 </div>
+@php $contactosNuevos = \App\Models\Cliente::where('nuevo', true)->orderByDesc('contacto_at')->get(['id', 'nombre', 'empresa', 'interes', 'contacto_at']); @endphp
+@if($contactosNuevos->isNotEmpty())
+    <a href="{{ $contactosNuevos->count() === 1 ? route('admin.clientes.show', $contactosNuevos->first()) : route('admin.clientes.index', ['ver' => 'nuevos']) }}" class="aviso-push aviso-contactos text-reset text-decoration-none">
+        <i class="bi bi-inbox-fill"></i>
+        <div class="t"><b>{{ $contactosNuevos->count() === 1 ? '1 contacto nuevo desde el sitio' : $contactosNuevos->count() . ' contactos nuevos desde el sitio' }}</b>
+            <span>{{ $contactosNuevos->take(3)->map(fn ($c) => ($c->empresa ?: $c->nombre) . ($c->interes ? ' · ' . $c->interes : ''))->implode(' — ') }}</span></div>
+        <i class="bi bi-chevron-right" style="font-size:15px; color: var(--muted)"></i>
+    </a>
+@endif
 @include('admin._este-mes', ['mes' => \App\Support\EsteMes::datos(true), 'conIva' => true, 'enlace' => route('admin.finanzas', ['periodo' => 'mes'])])
 
 <div class="kpis">

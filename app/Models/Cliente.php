@@ -11,7 +11,10 @@ class Cliente extends Model
     protected $fillable = [
         'nombre', 'empresa', 'email', 'telefono',
         'rfc', 'razon_social', 'regimen_fiscal', 'cp_fiscal', 'uso_cfdi', 'metodo_pago', 'dias_credito', 'email_factura', 'notas',
+        'origen', 'nuevo', 'interes', 'contacto_at',
     ];
+
+    protected $casts = ['nuevo' => 'boolean', 'contacto_at' => 'datetime'];
 
     protected static function booted(): void
     {
@@ -20,6 +23,40 @@ class Cliente extends Model
             $c->constancias->each->delete(); // las de Dropbox van a su papelera
             Storage::disk('local')->deleteDirectory("clientes/{$c->id}");
         });
+    }
+
+    public function mensajes(): HasMany
+    {
+        return $this->hasMany(ClienteMensaje::class)->latest('id');
+    }
+
+    /**
+     * Registra un mensaje del formulario del sitio: si ya existe (mismo correo o teléfono) lo actualiza
+     * sin borrar lo que ya tenías; si no, lo crea. En ambos casos queda marcado como "Nuevo".
+     */
+    public static function desdeFormulario(array $d): self
+    {
+        $nombre = trim(($d['name'] ?? '') . ' ' . ($d['lastname'] ?? ''));
+        $email = mb_strtolower(trim((string) ($d['email'] ?? '')));
+        $tel = preg_replace('/\D+/', '', (string) ($d['phone'] ?? ''));
+
+        $c = static::query()
+            ->when($email, fn ($q) => $q->whereRaw('LOWER(email) = ?', [$email]))
+            ->first();
+        if (! $c && strlen($tel) >= 8) {
+            $c = static::all(['id', 'telefono'])->first(fn ($x) => substr(preg_replace('/\D+/', '', (string) $x->telefono), -10) === substr($tel, -10));
+            $c = $c ? static::find($c->id) : null;
+        }
+
+        $c ??= new static(['origen' => 'sitio']);
+        $c->nombre = $c->nombre ?: ($nombre ?: $email);
+        $c->email = $c->email ?: $email;
+        $c->telefono = $c->telefono ?: ($d['phone'] ?? null);
+        $c->fill(['nuevo' => true, 'interes' => $d['service'] ?? null, 'contacto_at' => now()])->save();
+
+        $c->mensajes()->create(['servicio' => $d['service'] ?? null, 'datos' => $d]);
+
+        return $c;
     }
 
     public function constancias(): HasMany

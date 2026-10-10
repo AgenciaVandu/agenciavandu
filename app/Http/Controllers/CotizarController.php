@@ -37,33 +37,36 @@ class CotizarController extends Controller
             return response()->json(['success' => false, 'message' => 'Error validando reCAPTCHA.'], 500);
         }
 
-        // 3. Aviso push al panel y envío de correo
+        // 3. Se guarda en el panel como contacto "Nuevo" (aunque el correo falle, no se pierde)
         $datos = $request->only(['name', 'lastname', 'phone', 'email', 'service']);
-        \App\Support\Push\Notificar::evento('mensaje_sitio', 'Nuevo mensaje desde agenciavandu.com',
-            trim($datos['name'] . ' ' . $datos['lastname']) . ' · ' . $datos['service'] . ' · ' . $datos['phone'],
-            route('admin.clientes.create', [
-                'nombre'   => trim($datos['name'] . ' ' . $datos['lastname']),
-                'email'    => $datos['email'],
-                'telefono' => $datos['phone'],
-                'notas'    => 'Llegó por el formulario del sitio · Interés: ' . $datos['service'],
-            ]), 'contacto-' . md5($datos['email']));
-
+        $cliente = null;
         try {
-            
-            Mail::to('proyectos@agenciavandu.com')->send(new CotizacionRecibida($datos));
+            $cliente = \App\Models\Cliente::desdeFormulario($datos);
+            \App\Support\Push\Notificar::evento('mensaje_sitio', 'Nuevo contacto desde agenciavandu.com',
+                trim($datos['name'] . ' ' . $datos['lastname']) . ' · ' . $datos['service'] . ' · ' . $datos['phone'],
+                route('admin.clientes.show', $cliente), 'contacto-' . $cliente->id);
+        } catch (\Throwable $e) {
+            \Log::error('No se pudo guardar el contacto del sitio: ' . $e->getMessage());
+        }
 
-            return response()->json([
-                'success' => true,
-                'message' => '¡Genial! Hemos recibido tu información.'
-            ]);
+        // 4. Envío de correo
+        try {
+            Mail::to('proyectos@agenciavandu.com')->send(new CotizacionRecibida($datos));
         } catch (\Exception $e) {
             // Log para que revises en storage/logs/laravel.log
             \Log::error("Error Mail: " . $e->getMessage());
 
-            return response()->json([
-                'success' => false, 
-                'message' => 'El servidor de correo falló, pero tu mensaje se intentó enviar.'
-            ], 500);
+            if (! $cliente) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El servidor de correo falló, pero tu mensaje se intentó enviar.'
+                ], 500);
+            }
         }
+
+        return response()->json([
+            'success' => true,
+            'message' => '¡Genial! Hemos recibido tu información.'
+        ]);
     }
 }

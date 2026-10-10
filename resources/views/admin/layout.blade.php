@@ -4,11 +4,12 @@
     $vigentesNav = \App\Models\Presupuesto::where(fn ($q) => $q->where('estado', 'negociacion')
         ->orWhere(fn ($q2) => $q2->where('vigente_hasta', '>', now())->whereNotIn('estado', ['aceptada', 'rechazada'])))->count();
     $activosNav = \App\Models\Proyecto::where('estado', 'activo')->count();
+    try { $nuevosNav = \App\Models\Cliente::where('nuevo', true)->count(); } catch (\Throwable $e) { $nuevosNav = 0; } // antes de migrar
     $nav = [
         ['ruta' => 'admin.resumen',             'activo' => 'admin.resumen',          'icono' => 'bi-grid-1x2',        'texto' => 'Resumen'],
         ['ruta' => 'admin.presupuestos.index',  'activo' => 'admin.presupuestos.*',   'icono' => 'bi-file-earmark-text','texto' => 'Cotizaciones', 'cuenta' => $vigentesNav],
         ['ruta' => 'admin.proyectos.index',     'activo' => 'admin.proyectos.*',      'icono' => 'bi-kanban',          'texto' => 'Proyectos', 'cuenta' => $activosNav],
-        ['ruta' => 'admin.clientes.index',      'activo' => 'admin.clientes.*',       'icono' => 'bi-people',          'texto' => 'Clientes'],
+        ['ruta' => 'admin.clientes.index',      'activo' => 'admin.clientes.*',       'icono' => 'bi-people',          'texto' => 'Clientes', 'cuenta' => $nuevosNav, 'nuevos' => true],
         ['ruta' => 'admin.finanzas',            'activo' => 'admin.finanzas*',        'icono' => 'bi-graph-up-arrow',  'texto' => 'Finanzas'],
     ];
 @endphp
@@ -75,6 +76,7 @@
         .side nav a.activo { background: var(--ink-3); color: #fff; }
         .side nav a.activo i { color: var(--green); }
         .side nav a.activo::before { content: ''; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--green); }
+        .side nav .cuenta.nuevos { background: var(--green); color: var(--ink); font-weight: 600; }
         .side nav .cuenta { margin-left: auto; font-size: 12px; padding: 1px 8px; border-radius: 99px; background: var(--ink-line); color: #E4E6EB; }
         .side-foot { margin-top: auto; padding: 14px 16px; border-top: 1px solid var(--ink-line); display: flex; align-items: center; gap: 10px; position: relative; z-index: 1; }
         .side-foot .yo { min-width: 0; flex: 1; line-height: 1.25; }
@@ -207,6 +209,9 @@
 
         .aviso-push { display: flex; align-items: center; gap: 12px; padding: 12px 14px 12px 16px; border-radius: 12px; margin-bottom: 20px; background: var(--surface); border: 1px solid var(--line); }
         .aviso-push > i { font-size: 20px; color: var(--ink); }
+        .aviso-contactos { border-color: #BDF2D6; background: var(--green-soft); }
+        .aviso-contactos > i:first-child { color: var(--green-ink); }
+        .aviso-contactos:hover { border-color: var(--green-ink); }
         .aviso-push .t { flex: 1; min-width: 0; font-size: 14px; }
         .aviso-push .t b { display: block; font-weight: 600; }
         .aviso-push .t span { color: var(--muted); font-size: 13px; }
@@ -346,7 +351,7 @@
             <a href="{{ route($item['ruta']) }}" class="{{ request()->routeIs($item['activo']) ? 'activo' : '' }}"
                @if(request()->routeIs($item['activo'])) aria-current="page" @endif>
                 <i class="bi {{ $item['icono'] }}"></i> {{ $item['texto'] }}
-                @if(! empty($item['cuenta']))<span class="cuenta num">{{ $item['cuenta'] }}</span>@endif
+                @if(! empty($item['cuenta']))<span class="cuenta num {{ ! empty($item['nuevos']) ? 'nuevos' : '' }}" @if(! empty($item['nuevos'])) title="{{ $item['cuenta'] }} {{ $item['cuenta'] === 1 ? 'contacto nuevo' : 'contactos nuevos' }}" @endif>{{ ! empty($item['nuevos']) ? $item['cuenta'] . ' ' . ($item['cuenta'] === 1 ? 'nuevo' : 'nuevos') : $item['cuenta'] }}</span>@endif
             </a>
         @endforeach
     </nav>

@@ -65,6 +65,8 @@ class PresupuestoController extends Controller
             [$datos, $conceptos] = $this->validar($request);
             $p = Presupuesto::create($datos);
             $p->conceptos()->createMany($conceptos);
+            // Ya se le está atendiendo: deja de aparecer como contacto nuevo
+            if ($p->cliente_id) Cliente::whereKey($p->cliente_id)->where('nuevo', true)->update(['nuevo' => false]);
             return $p;
         });
 

@@ -72,6 +72,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::get('/', [Admin\ResumenController::class, 'index'])->name('resumen');
 
     Route::resource('clientes', Admin\ClienteController::class);
+    Route::patch('clientes/{cliente}/atendido', [Admin\ClienteController::class, 'atendido'])->name('clientes.atendido');
     Route::post('correos', [Admin\CorreoController::class, 'enviar'])->name('correos.enviar');
     Route::post('correos/vista-previa', [Admin\CorreoController::class, 'vistaPrevia'])->name('correos.vista-previa');
     Route::post('clientes/{cliente}/constancias', [Admin\ClienteController::class, 'subirConstancia'])->name('clientes.constancias.store');
