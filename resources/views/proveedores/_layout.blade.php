@@ -96,5 +96,8 @@
         @if($wa = config('vandu.whatsapp'))<span>¿Dudas? <a href="https://wa.me/{{ $wa }}?text={{ rawurlencode('Hola, soy ' . $p->empresa . ', tengo una duda.') }}" target="_blank" rel="noopener">Escríbenos por WhatsApp</a></span>@endif
     </footer>
 </main>
+@isset($version)
+    @include('partials.auto-actualizar', ['url' => route('proveedor.version', isset($o) ? [$p->portal_token, 'orden' => $o->id] : [$p->portal_token]), 'version' => $version])
+@endisset
 </body>
 </html>

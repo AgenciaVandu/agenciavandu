@@ -61,7 +61,7 @@ class OrdenCompraController extends Controller
     public function show(OrdenCompra $orden)
     {
         $orden->load(['proveedor', 'proyecto.cliente', 'conceptos', 'archivos.user', 'comentarios.user', 'autor']);
-        return view('admin.ordenes.show', ['o' => $orden]);
+        return view('admin.ordenes.show', ['o' => $orden, 'version' => OrdenCompra::firma([$orden->id])]);
     }
 
     public function edit(OrdenCompra $orden)
@@ -127,6 +127,12 @@ class OrdenCompraController extends Controller
             return redirect()->away('https://wa.me/' . $p->whatsapp . '?text=' . rawurlencode($texto));
         }
         return back()->with('ok', "Orden {$orden->folio} marcada como enviada.");
+    }
+
+    /** ¿Cambió algo? La orden abierta lo pregunta cada 30 s */
+    public function version(OrdenCompra $orden)
+    {
+        return response()->json(['v' => OrdenCompra::firma([$orden->id])])->header('Cache-Control', 'no-store');
     }
 
     public function pdf(Request $request, OrdenCompra $orden)

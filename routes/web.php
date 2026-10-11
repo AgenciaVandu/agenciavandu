@@ -102,6 +102,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::patch('ordenes/{orden}/estado', [Admin\OrdenCompraController::class, 'estado'])->name('ordenes.estado');
     Route::post('ordenes/{orden}/enviar', [Admin\OrdenCompraController::class, 'enviar'])->name('ordenes.enviar');
     Route::get('ordenes/{orden}/pdf', [Admin\OrdenCompraController::class, 'pdf'])->name('ordenes.pdf');
+    Route::get('ordenes/{orden}/version', [Admin\OrdenCompraController::class, 'version'])->name('ordenes.version');
     Route::post('ordenes/{orden}/archivos', [Admin\OrdenCompraController::class, 'subir'])->name('ordenes.subir');
     Route::get('ordenes/{orden}/archivos/{archivo}', [Admin\OrdenCompraController::class, 'verArchivo'])->name('ordenes.archivo');
     Route::delete('ordenes/{orden}/archivos/{archivo}', [Admin\OrdenCompraController::class, 'borrarArchivo'])->name('ordenes.archivo.borrar');
@@ -241,6 +242,7 @@ Route::get('/cliente/{token}', [\App\Http\Controllers\ClientePortalController::c
 // Espacio del proveedor: sus órdenes de compra, facturas, archivos y comentarios
 Route::prefix('/proveedor/{token}')->where(['token' => '[A-Za-z0-9]{32}', 'orden' => '[0-9]+'])->middleware(['cuenta.enlace:proveedor', 'throttle:60,1'])->group(function () {
     Route::get('/', [\App\Http\Controllers\ProveedorPortalController::class, 'show'])->name('proveedor.portal');
+    Route::get('/version', [\App\Http\Controllers\ProveedorPortalController::class, 'version'])->name('proveedor.version');
     Route::get('/orden/{orden}', [\App\Http\Controllers\ProveedorPortalController::class, 'orden'])->name('proveedor.orden');
     Route::get('/orden/{orden}/pdf', [\App\Http\Controllers\ProveedorPortalController::class, 'pdf'])->name('proveedor.pdf');
     Route::post('/orden/{orden}/archivos', [\App\Http\Controllers\ProveedorPortalController::class, 'subir'])->middleware('throttle:20,1')->name('proveedor.subir');

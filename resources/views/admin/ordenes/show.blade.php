@@ -212,4 +212,6 @@
         </div>
     </div>
 </div>
+
+@include('partials.auto-actualizar', ['url' => route('admin.ordenes.version', $o), 'version' => $version])
 @endsection

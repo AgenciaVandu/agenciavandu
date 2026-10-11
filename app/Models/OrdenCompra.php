@@ -136,6 +136,23 @@ class OrdenCompra extends Model
         return $this->folio . '-' . Str::slug($this->proveedor?->empresa ?: 'proveedor') . '.pdf';
     }
 
+    /**
+     * Huella de lo que se ve de estas órdenes (estado, datos, archivos, comentarios).
+     * Si cambia, la página abierta sabe que hay novedades y se actualiza sola.
+     */
+    public static function firma(iterable $ids): string
+    {
+        $ids = collect($ids)->values()->all();
+        if (! $ids) return 'vacio';
+        $partes = [
+            static::whereIn('id', $ids)->orderBy('id')->get(['id', 'estado', 'updated_at'])->map(fn ($o) => $o->id . $o->estado . $o->updated_at?->timestamp)->implode(','),
+            OrdenCompraArchivo::whereIn('orden_compra_id', $ids)->selectRaw('count(*) as n, max(id) as m')->first()?->only(['n', 'm']),
+            OrdenCompraComentario::whereIn('orden_compra_id', $ids)->selectRaw('count(*) as n, max(id) as m')->first()?->only(['n', 'm']),
+            OrdenCompraConcepto::whereIn('orden_compra_id', $ids)->selectRaw('count(*) as n, max(id) as m')->first()?->only(['n', 'm']),
+        ];
+        return substr(md5(json_encode($partes)), 0, 16);
+    }
+
     public function getResumenAttribute(): string
     {
         $n = $this->conceptos->count();

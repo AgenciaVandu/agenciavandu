@@ -22,13 +22,14 @@ class ProveedorPortalController extends Controller
         $p = $this->proveedor($token);
         $ordenes = $p->ordenes()->visibles()->with(['conceptos', 'archivos:id,orden_compra_id,tipo,autor', 'comentarios:id,orden_compra_id,autor,created_at'])->get();
         $ordenes->each->setRelation('proveedor', $p);
+        $version = OrdenCompra::firma($ordenes->pluck('id'));
 
         if ($this->esVisita($request)) {
             $p->timestamps = false;
             $p->forceFill(['portal_visto_at' => now()])->save();
         }
 
-        return $this->vista('proveedores.portal', compact('p', 'ordenes'));
+        return $this->vista('proveedores.portal', compact('p', 'ordenes', 'version'));
     }
 
     public function orden(Request $request, string $token, int $orden)
@@ -45,7 +46,19 @@ class ProveedorPortalController extends Controller
             $o->forceFill(['vista_at' => now()])->save();
         }
 
-        return $this->vista('proveedores.orden', compact('p', 'o'));
+        $version = OrdenCompra::firma([$o->id]);
+
+        return $this->vista('proveedores.orden', compact('p', 'o', 'version'));
+    }
+
+    /** ¿Cambió algo? La página lo pregunta cada 30 s (no cuenta como visita ni manda avisos) */
+    public function version(Request $request, string $token)
+    {
+        $p = $this->proveedor($token);
+        $ids = $request->filled('orden')
+            ? [$this->ordenDe($p, (int) $request->query('orden'))->id]
+            : $p->ordenes()->visibles()->pluck('id');
+        return response()->json(['v' => OrdenCompra::firma($ids)])->header('Cache-Control', 'no-store');
     }
 
     public function pdf(Request $request, string $token, int $orden)

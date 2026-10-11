@@ -225,4 +225,37 @@ class ProveedoresTest extends TestCase
             File::deleteDirectory(DropboxSimulado::base() . '/PruebaProveedores');
         }
     }
+
+    public function test_las_paginas_saben_cuando_hay_novedades_para_actualizarse_solas(): void
+    {
+        $o = $this->orden();
+        $this->post("/admin/ordenes/{$o->id}/enviar")->assertRedirect();
+        $admin = $this->get("/admin/ordenes/{$o->id}")->assertOk()->assertSee('Hay novedades en esta página');
+        $v0 = $this->getJson("/admin/ordenes/{$o->id}/version")->assertOk()->json('v');
+
+        $this->app['auth']->forgetGuards();
+        $portal = $this->bordados->portal_url;
+        $this->get("$portal/orden/{$o->id}")->assertOk()->assertSee(json_encode(route('proveedor.version', [$this->bordados->portal_token, 'orden' => $o->id])), false);
+        $lista0 = $this->getJson("$portal/version")->assertOk()->json('v');
+        $vistaAntes = $o->fresh()->vista_at;
+
+        // Preguntar no cambia nada ni cuenta como visita
+        $this->assertSame($v0, $this->getJson("$portal/version?orden={$o->id}")->json('v'));
+        $this->assertEquals($vistaAntes, $o->fresh()->vista_at);
+
+        // El proveedor comenta → cambia la huella de la orden y la de su lista
+        $this->post("$portal/orden/{$o->id}/comentar", ['texto' => 'Listo el ponchado.'])->assertRedirect();
+        $this->assertNotSame($v0, $this->getJson("$portal/version?orden={$o->id}")->json('v'));
+        $this->assertNotSame($lista0, $this->getJson("$portal/version")->json('v'));
+
+        // Cambio de estado desde el panel también
+        $v1 = $this->actingAs($this->admin)->getJson("/admin/ordenes/{$o->id}/version")->json('v');
+        $this->patch("/admin/ordenes/{$o->id}/estado", ['estado' => 'en_proceso']);
+        $this->assertNotSame($v1, $this->getJson("/admin/ordenes/{$o->id}/version")->json('v'));
+
+        // Otro proveedor no puede preguntar por esta orden
+        $this->app['auth']->forgetGuards();
+        $otro = Proveedor::create(['empresa' => 'Imprenta Sol'])->portal_url;
+        $this->getJson("$otro/version?orden={$o->id}")->assertNotFound();
+    }
 }
