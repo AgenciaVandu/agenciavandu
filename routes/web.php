@@ -95,6 +95,18 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::patch('presupuestos/{presupuesto}/rapido', [Admin\PresupuestoController::class, 'rapido'])->name('presupuestos.rapido');
     Route::get('presupuestos/{presupuesto}/whatsapp', [Admin\PresupuestoController::class, 'whatsapp'])->name('presupuestos.whatsapp');
     Route::post('presupuestos/{presupuesto}/codigo', [Admin\PresupuestoController::class, 'codigo'])->name('presupuestos.codigo');
+    // Proveedores y órdenes de compra
+    Route::resource('proveedores', Admin\ProveedorController::class)->parameters(['proveedores' => 'proveedor']);
+    Route::resource('ordenes', Admin\OrdenCompraController::class)->parameters(['ordenes' => 'orden']);
+    Route::post('ordenes/{orden}/duplicar', [Admin\OrdenCompraController::class, 'duplicar'])->name('ordenes.duplicar');
+    Route::patch('ordenes/{orden}/estado', [Admin\OrdenCompraController::class, 'estado'])->name('ordenes.estado');
+    Route::post('ordenes/{orden}/enviar', [Admin\OrdenCompraController::class, 'enviar'])->name('ordenes.enviar');
+    Route::get('ordenes/{orden}/pdf', [Admin\OrdenCompraController::class, 'pdf'])->name('ordenes.pdf');
+    Route::post('ordenes/{orden}/archivos', [Admin\OrdenCompraController::class, 'subir'])->name('ordenes.subir');
+    Route::get('ordenes/{orden}/archivos/{archivo}', [Admin\OrdenCompraController::class, 'verArchivo'])->name('ordenes.archivo');
+    Route::delete('ordenes/{orden}/archivos/{archivo}', [Admin\OrdenCompraController::class, 'borrarArchivo'])->name('ordenes.archivo.borrar');
+    Route::post('ordenes/{orden}/comentar', [Admin\OrdenCompraController::class, 'comentar'])->name('ordenes.comentar');
+
     // Finanzas
     Route::get('finanzas', [Admin\FinanzasController::class, 'index'])->name('finanzas');
     Route::get('finanzas/exportar', [Admin\FinanzasController::class, 'exportar'])->name('finanzas.exportar');
@@ -225,6 +237,17 @@ Route::post('/cotizacion/{token}/codigo', [PresupuestoPublicoController::class, 
 // Portal del cliente: un solo enlace con todas sus cotizaciones y proyectos
 Route::get('/cliente/{token}', [\App\Http\Controllers\ClientePortalController::class, 'show'])
     ->where('token', '[A-Za-z0-9]{32}')->middleware(['cuenta.enlace:cliente', 'throttle:60,1'])->name('cliente.portal');
+
+// Espacio del proveedor: sus órdenes de compra, facturas, archivos y comentarios
+Route::prefix('/proveedor/{token}')->where(['token' => '[A-Za-z0-9]{32}', 'orden' => '[0-9]+'])->middleware(['cuenta.enlace:proveedor', 'throttle:60,1'])->group(function () {
+    Route::get('/', [\App\Http\Controllers\ProveedorPortalController::class, 'show'])->name('proveedor.portal');
+    Route::get('/orden/{orden}', [\App\Http\Controllers\ProveedorPortalController::class, 'orden'])->name('proveedor.orden');
+    Route::get('/orden/{orden}/pdf', [\App\Http\Controllers\ProveedorPortalController::class, 'pdf'])->name('proveedor.pdf');
+    Route::post('/orden/{orden}/archivos', [\App\Http\Controllers\ProveedorPortalController::class, 'subir'])->middleware('throttle:20,1')->name('proveedor.subir');
+    Route::get('/orden/{orden}/archivos/{archivo}', [\App\Http\Controllers\ProveedorPortalController::class, 'archivo'])->name('proveedor.archivo');
+    Route::delete('/orden/{orden}/archivos/{archivo}', [\App\Http\Controllers\ProveedorPortalController::class, 'quitar'])->middleware('throttle:20,1')->name('proveedor.quitar');
+    Route::post('/orden/{orden}/comentar', [\App\Http\Controllers\ProveedorPortalController::class, 'comentar'])->middleware('throttle:20,1')->name('proveedor.comentar');
+});
 
 // Vista pública del proyecto para el cliente
 Route::get('/proyecto/{token}', [\App\Http\Controllers\ProyectoPublicoController::class, 'show'])

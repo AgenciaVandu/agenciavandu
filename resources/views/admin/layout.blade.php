@@ -18,6 +18,7 @@
         ['ruta' => 'admin.proyectos.index',     'activo' => 'admin.proyectos.*',      'icono' => 'bi-kanban',          'texto' => 'Proyectos', 'cuenta' => $activosNav, 'seccion' => 'proyectos'],
         ['ruta' => 'admin.redes',               'activo' => 'admin.redes*',           'icono' => 'bi-grid-3x3-gap',    'texto' => 'Redes sociales', 'cuenta' => $redesNav ?? 0, 'seccion' => 'redes'],
         ['ruta' => 'admin.clientes.index',      'activo' => 'admin.clientes.*',       'icono' => 'bi-people',          'texto' => 'Clientes', 'cuenta' => $nuevosNav, 'nuevos' => true, 'seccion' => 'clientes'],
+        ['ruta' => 'admin.proveedores.index',   'activo' => ['admin.proveedores.*', 'admin.ordenes.*'], 'icono' => 'bi-truck', 'texto' => 'Proveedores', 'seccion' => 'proveedores'],
         ['ruta' => 'admin.finanzas',            'activo' => 'admin.finanzas*',        'icono' => 'bi-graph-up-arrow',  'texto' => 'Finanzas', 'seccion' => 'finanzas'],
     ], fn ($i) => $i['seccion'] === null || $puede($i['seccion'])));
     $inicioNav = $usuario ? \App\Support\Permisos::inicio($usuario) : route('admin.resumen');
@@ -172,6 +173,11 @@
         .estado-aceptada { background: var(--green-soft); color: var(--green-ink); }
         .estado-rechazada { background: var(--red-soft); color: var(--red); }
         .estado-negociacion { background: #F3E8FD; color: #6E32B5; }
+        /* Órdenes de compra */
+        .estado-en_proceso { background: var(--amber-soft); color: var(--amber); }
+        .estado-entregada, .estado-facturada { background: var(--green-soft); color: var(--green-ink); }
+        .estado-pagada { background: #13161D; color: #fff; }
+        .estado-cancelada { background: #EEF0F3; color: #4E5463; text-decoration: line-through; }
         .vig { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; white-space: nowrap; }
         .vig-ok { color: var(--text-2); } .vig-ok i { color: var(--green-ink); }
         .vig-pronto { color: var(--amber); }

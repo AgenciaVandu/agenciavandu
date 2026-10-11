@@ -479,6 +479,10 @@
 
         @include('admin.correos._historial', ['correos' => \App\Models\Correo::where('proyecto_id', $p->id)->latest()->take(8)->get(), 'plantilla' => 'inicio_proyecto'])
 
+        @if(auth()->user()?->puede('proveedores'))
+            @include('admin.proyectos._ordenes')
+        @endif
+
         <section class="panel">
             <div class="panel-head"><h2>Datos del proyecto</h2></div>
             <form method="post" action="{{ route('admin.proyectos.update', $p) }}" class="panel-body d-grid gap-3">

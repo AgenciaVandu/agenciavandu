@@ -10,7 +10,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-/** Enlaces del cliente (cotización, proyecto, redes): se abren con los datos y la marca del negocio que los mandó */
+/** Enlaces del cliente (cotización, proyecto, redes) y del proveedor: se abren con los datos y la marca del negocio que los mandó */
 class CuentaPorEnlace
 {
     public function handle(Request $request, Closure $next, string $tipo): Response
@@ -21,6 +21,7 @@ class CuentaPorEnlace
             'proyecto'    => Proyecto::sinCuenta()->where('token', $token)->value('cuenta_id'),
             'redes'       => Cliente::sinCuenta()->where('redes_token', $token)->value('cuenta_id'),
             'cliente'     => Cliente::sinCuenta()->where('portal_token', $token)->value('cuenta_id'),
+            'proveedor'   => \App\Models\Proveedor::sinCuenta()->where('portal_token', $token)->value('cuenta_id'),
             default       => null,
         };
         if ($cuenta) {

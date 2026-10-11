@@ -158,6 +158,7 @@ return [
 
     // Prefijo del folio: CT-0001, CT-0002…
     'folio_prefijo' => 'CT-',
+    'folio_orden_compra' => 'OC-',
 
     'consideraciones' => [
         ['titulo' => 'Tiempos de entrega', 'items' => ['3 días hábiles después de la recepción del pago.']],
@@ -284,6 +285,7 @@ return [
             'redes_cambios'         => ['seccion' => 'redes', 'texto' => 'Un cliente comenta un post', 'ayuda' => 'Pidió un cambio o dejó una observación en su contenido', 'icono' => 'bi-chat-square-dots'],
             'cotizacion_descargada' => ['seccion' => 'cotizaciones', 'texto' => 'Un cliente descarga la cotización', 'ayuda' => 'Cuando baja el PDF desde su enlace', 'icono' => 'bi-file-earmark-arrow-down'],
             'proyecto_visto'        => ['seccion' => 'proyectos', 'texto' => 'Un cliente revisa su proyecto', 'ayuda' => 'Abre su página de avance o de entrega', 'icono' => 'bi-kanban'],
+            'proveedor_actividad'   => ['seccion' => 'proveedores', 'texto' => 'Un proveedor sube algo o comenta', 'ayuda' => 'Abre una orden de compra, sube su factura o archivos, o deja un comentario', 'icono' => 'bi-truck'],
             'mensaje_sitio'         => ['seccion' => 'clientes', 'texto' => 'Llega un mensaje desde el sitio', 'ayuda' => 'Alguien llenó el formulario de cotizar en agenciavandu.com', 'icono' => 'bi-chat-dots'],
             'resumen_diario'        => ['seccion' => 'resumen', 'texto' => 'Resumen de la mañana', 'ayuda' => 'Cobros vencidos o por vencer, etapas del día y cotizaciones a punto de vencer', 'icono' => 'bi-sunrise'],
             // Tareas: llegan solo a las personas involucradas
