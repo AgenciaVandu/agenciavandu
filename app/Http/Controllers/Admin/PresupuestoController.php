@@ -114,9 +114,16 @@ class PresupuestoController extends Controller
 
     public function destroy(Presupuesto $presupuesto)
     {
-        $presupuesto->delete();
+        // Si ya era proyecto, se va con ella: sus pagos dejan de contar como cobrado o por cobrar
+        $proyecto = $presupuesto->proyecto;
+        \Illuminate\Support\Facades\DB::transaction(function () use ($presupuesto, $proyecto) {
+            $proyecto?->eliminarCompleto();
+            $presupuesto->delete();
+        });
 
-        return redirect()->route('admin.presupuestos.index')->with('ok', 'Cotización eliminada.');
+        return redirect()->route('admin.presupuestos.index')->with('ok', $proyecto
+            ? "Cotización {$presupuesto->folio} eliminada junto con su proyecto y sus pagos; ya no cuentan en tus ingresos."
+            : 'Cotización eliminada.');
     }
 
     public function duplicar(Presupuesto $presupuesto)

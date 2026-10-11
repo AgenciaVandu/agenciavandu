@@ -557,7 +557,7 @@
     <form id="convertir" method="get" action="{{ route('admin.proyectos.create', $p) }}"></form>
     <form id="duplicar" method="post" action="{{ route('admin.presupuestos.duplicar', $p) }}">@csrf</form>
     <form id="generar-codigo" method="post" action="{{ route('admin.presupuestos.codigo', $p) }}">@csrf</form>
-    <form id="eliminar" method="post" action="{{ route('admin.presupuestos.destroy', $p) }}" onsubmit="return confirm('¿Eliminar {{ $p->folio }}? El enlace del cliente dejará de funcionar.')">@csrf @method('delete')</form>
+    <form id="eliminar" method="post" action="{{ route('admin.presupuestos.destroy', $p) }}" onsubmit="return confirm({{ Js::from($p->proyecto ? '¿Eliminar ' . $p->folio . '? También se elimina su proyecto «' . $p->proyecto->nombre . '» con sus pagos y entregas, y deja de contar en tus ingresos. El enlace del cliente dejará de funcionar.' : '¿Eliminar ' . $p->folio . '? El enlace del cliente dejará de funcionar.') }})">@csrf @method('delete')</form>
     @include('admin.correos._modal', ['ctxTipo' => 'presupuesto', 'ctxId' => $p->id])
 @endunless
 @endsection

@@ -32,6 +32,23 @@ class Proyecto extends Model
         static::creating(fn (Proyecto $p) => $p->token ??= Str::random(32));
     }
 
+    /**
+     * Borra el proyecto con todo lo suyo: etapas, pagos (dejan de contar en cobrado y por cobrar) y archivos.
+     * La carpeta de Dropbox va completa a la papelera de Dropbox (se puede recuperar).
+     */
+    public function eliminarCompleto(): void
+    {
+        if ($this->dropbox_carpeta && \App\Support\Dropbox\Dropbox::conectado()) {
+            try { \App\Support\Dropbox\Dropbox::cliente()->borrar($this->dropbox_carpeta); } catch (\Throwable $e) { report($e); }
+            $this->archivos()->where('origen', 'dropbox')->get()->each->deleteQuietly();
+        }
+        foreach ($this->archivos()->get() as $a) {
+            $a->delete(); // borra también los archivos del disco
+        }
+        \Illuminate\Support\Facades\Storage::disk('local')->deleteDirectory($this->carpeta);
+        $this->delete();
+    }
+
     /* ---------------- Relaciones ---------------- */
 
     public function cliente(): BelongsTo { return $this->belongsTo(Cliente::class); }

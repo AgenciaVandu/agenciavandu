@@ -314,16 +314,7 @@ class ProyectoController extends Controller
 
     public function destroy(Proyecto $proyecto)
     {
-        // La carpeta del proyecto en Dropbox va completa a la papelera de Dropbox (se puede recuperar)
-        if ($proyecto->dropbox_carpeta && \App\Support\Dropbox\Dropbox::conectado()) {
-            try { \App\Support\Dropbox\Dropbox::cliente()->borrar($proyecto->dropbox_carpeta); } catch (\Throwable $e) { report($e); }
-            $proyecto->archivos()->where('origen', 'dropbox')->get()->each->deleteQuietly();
-        }
-        foreach ($proyecto->archivos()->get() as $a) {
-            $a->delete(); // borra también los archivos del disco
-        }
-        \Illuminate\Support\Facades\Storage::disk('local')->deleteDirectory($proyecto->carpeta);
-        $proyecto->delete();
+        $proyecto->eliminarCompleto();
 
         return redirect()->route('admin.proyectos.index')->with('ok', 'Proyecto eliminado. La cotización sigue disponible.');
     }

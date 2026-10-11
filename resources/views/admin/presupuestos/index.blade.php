@@ -127,7 +127,7 @@
                                         </form>
                                     </li>
                                     <li>
-                                        <form method="post" action="{{ route('admin.presupuestos.destroy', $p) }}" onsubmit="return confirm('¿Eliminar {{ $p->folio }}? El enlace del cliente dejará de funcionar.')">@csrf @method('delete')
+                                        <form method="post" action="{{ route('admin.presupuestos.destroy', $p) }}" onsubmit="return confirm({{ Js::from($p->proyecto ? '¿Eliminar ' . $p->folio . '? También se elimina su proyecto «' . $p->proyecto->nombre . '» con sus pagos y entregas, y deja de contar en tus ingresos. El enlace del cliente dejará de funcionar.' : '¿Eliminar ' . $p->folio . '? El enlace del cliente dejará de funcionar.') }})">@csrf @method('delete')
                                             <button class="dropdown-item text-danger"><i class="bi bi-trash text-danger"></i> Eliminar</button>
                                         </form>
                                     </li>
