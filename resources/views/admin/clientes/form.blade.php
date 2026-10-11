@@ -31,11 +31,11 @@
         <div class="panel panel-body row g-3 mx-0">
             <div class="col-md-6">
                 <label class="form-label" for="nombre">Nombre de contacto</label>
-                <input name="nombre" id="nombre" class="form-control" value="{{ old('nombre', $cliente->nombre) }}" required autofocus placeholder="Jessica Estefani">
+                <input name="nombre" id="nombre" class="form-control" value="{{ old('nombre', $cliente->nombre) }}" required autofocus>
             </div>
             <div class="col-md-6">
                 <label class="form-label" for="empresa">Empresa <span class="text-secondary fw-normal">(opcional)</span></label>
-                <input name="empresa" id="empresa" class="form-control" value="{{ old('empresa', $cliente->empresa) }}" placeholder="Corporativo C&S">
+                <input name="empresa" id="empresa" class="form-control" value="{{ old('empresa', $cliente->empresa) }}">
             </div>
             <div class="col-md-6">
                 <label class="form-label" for="email">Correo</label>
