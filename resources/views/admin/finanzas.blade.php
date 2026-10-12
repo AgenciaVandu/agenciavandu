@@ -9,7 +9,7 @@
         if ($n >= 1000) return '$' . rtrim(rtrim(number_format($n / 1000, 1), '0'), '.') . ' k';
         return '$' . number_format($n, 0);
     };
-    $q = fn (array $extra) => route('admin.finanzas', array_merge(['periodo' => $periodo, 'iva' => $conIva ? 'con' : 'sin'], $extra));
+    $q = fn (array $extra) => route('admin.finanzas', array_merge(['seccion' => $seccion === 'resumen' ? null : $seccion, 'periodo' => $periodo, 'iva' => $conIva ? 'con' : 'sin'], $extra));
     $base = $conIva ? 'con IVA' : 'antes de IVA';
     $f = fn ($s) => $s ? ucfirst(\Illuminate\Support\Carbon::parse($s)->locale('es')->isoFormat('D MMM YYYY')) : null;
 
@@ -80,8 +80,26 @@
     .hbar .val small { display: block; color: var(--muted); font-size: 12.5px; }
     .tasa-embudo { font-size: 12.5px; color: var(--muted); grid-column: 2 / 3; margin-top: -6px; }
 
+    /* Submenú de Finanzas */
+    .subnav { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: -4px 0 20px; overflow-x: auto; scrollbar-width: none; }
+    .subnav::-webkit-scrollbar { display: none; }
+    .subnav a { display: inline-flex; align-items: center; gap: 7px; padding: 10px 14px; color: var(--muted); text-decoration: none; font-weight: 500; font-size: 14.5px;
+                border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+    .subnav a:hover { color: var(--text); }
+    .subnav a.activo { color: var(--text); border-bottom-color: var(--ink); }
+    .subnav a.activo i { color: var(--green-ink); }
+    .kpi.bueno .v { color: var(--green-ink); }
+    .barra-rent { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: #F1F2F4; margin: 10px 0 8px; }
+    .barra-rent span { display: block; height: 100%; }
+    .leyenda-rent { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--text-2); }
+    .leyenda-rent span { display: inline-flex; gap: 6px; align-items: center; }
+    .aviso-suave { background: var(--amber-soft); color: var(--amber); border-radius: 12px; padding: 12px 16px; font-size: 14px; margin-bottom: 14px; display: flex; gap: 10px; align-items: flex-start; }
+    .aviso-suave a { color: inherit; font-weight: 600; }
+    .margen-bajo { color: var(--red); } .margen-ok { color: var(--green-ink); }
+
     @media (max-width: 1199.98px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .rejilla { grid-template-columns: minmax(0, 1fr); } }
-    @media (max-width: 575.98px) { .kpi .v { font-size: 22px; } .hbar { grid-template-columns: 1fr auto; } .hbar .pista { grid-column: 1 / -1; order: 3; } .tasa-embudo { grid-column: 1 / -1; }
+    @media (max-width: 575.98px) { .kpi .v { font-size: 22px; } .hbar { grid-template-columns: 1fr auto; grid-auto-flow: row dense; gap: 4px 12px; } .hbar .pista { grid-column: 1 / -1; margin-bottom: 8px; }
+        .subnav { flex-wrap: wrap; border-bottom: 0; gap: 6px; } .subnav a { border: 1px solid var(--line); border-radius: 99px; padding: 6px 12px; font-size: 13.5px; margin: 0; } .subnav a.activo { background: var(--ink); color: #fff; border-color: var(--ink); } .subnav a.activo i { color: var(--green); } .tasa-embudo { grid-column: 1 / -1; }
         .graf .barra { width: 5px; } .meses span { font-size: 10.5px; } }
 </style>
 @endpush
@@ -90,12 +108,11 @@
 <div class="page-head">
     <div>
         <h1>Finanzas</h1>
-        <p class="sub">Ventas, cobranza y conversión. Montos {{ $base }}.</p>
+        <p class="sub">{{ ['resumen' => 'Cómo va el negocio de un vistazo', 'ventas' => 'Cotizado, ganado, perdido y conversión', 'cobranza' => 'Lo que ya cobraste y lo que falta', 'rentabilidad' => 'Costos, utilidad y margen de lo que vendiste', 'proveedores' => 'Lo que le compras a tus proveedores y lo que les debes'][$seccion] }}. Montos {{ $seccion === 'rentabilidad' ? 'antes de IVA' : $base }}.</p>
     </div>
     <a href="{{ route('admin.finanzas.exportar', ['periodo' => $periodo]) }}" class="btn btn-borde" data-recargar><i class="bi bi-download me-1"></i> Exportar CSV</a>
 </div>
 
-@include('admin._este-mes', ['mes' => \App\Support\EsteMes::datos($conIva), 'conIva' => $conIva, 'enlace' => $periodo !== 'mes' ? $q(['periodo' => 'mes']) : null, 'textoEnlace' => 'Ver el detalle de este mes'])
 
 <div class="controles">
     <nav class="segmento" aria-label="Periodo">
@@ -105,12 +122,19 @@
                title="{{ $rd ? $f($rd) . ' – ' . $f($rh) : 'Todo lo registrado, sin límite de fechas' }}">{{ $label }}</a>
         @endforeach
     </nav>
+    @unless($seccion === 'rentabilidad')
     <nav class="segmento" aria-label="IVA">
         <a href="{{ $q(['iva' => 'sin']) }}" class="{{ ! $conIva ? 'activo' : '' }}">Sin IVA</a>
         <a href="{{ $q(['iva' => 'con']) }}" class="{{ $conIva ? 'activo' : '' }}">Con IVA</a>
     </nav>
+    @endunless
     <span class="rango num">{{ $desde ? $f($desde) . ' – ' . $f($hasta) : 'Todo lo registrado' }}</span>
 </div>
+
+@include('admin.finanzas._submenu')
+
+@if($seccion === 'resumen')
+@include('admin._este-mes', ['mes' => \App\Support\EsteMes::datos($conIva), 'conIva' => $conIva, 'enlace' => $periodo !== 'mes' ? $q(['periodo' => 'mes']) : null, 'textoEnlace' => 'Ver el detalle de este mes'])
 
 {{-- ================= Indicadores ================= --}}
 <div class="kpis">
@@ -129,7 +153,7 @@
         <div class="v num">{{ $d($kpi['cobrado']) }}</div>
         <div class="s num">{{ $kpi['cobros'] }} {{ $kpi['cobros'] === 1 ? 'pago recibido' : 'pagos recibidos' }}</div>
     </div>
-    <a href="#por-cobrar" class="panel kpi text-reset text-decoration-none {{ $kpi['porCobrar'] > 0 ? 'alerta' : '' }}">
+    <a href="{{ $q(['seccion' => 'cobranza']) }}#por-cobrar" class="panel kpi text-reset text-decoration-none {{ $kpi['porCobrar'] > 0 ? 'alerta' : '' }}">
         <div class="k"><i class="bi bi-hourglass-split"></i> Por cobrar</div>
         <div class="v num">{{ $d($kpi['porCobrar']) }}</div>
         <div class="s num">{{ $kpi['pendientes'] }} {{ $kpi['pendientes'] === 1 ? 'pago pendiente' : 'pagos pendientes' }} · hoy</div>
@@ -140,28 +164,7 @@
         <div class="s num">{{ $kpi['abiertas'] }} {{ $kpi['abiertas'] === 1 ? 'abierta' : 'abiertas' }}@if($kpi['negociacion']) · {{ $kpi['negociacion'] }} en negociación ({{ $d($kpi['negociacionMonto']) }})@endif</div>
     </a>
 </div>
-<div class="kpis">
-    <div class="panel kpi">
-        <div class="k"><i class="bi bi-file-earmark-text"></i> Cotizado</div>
-        <div class="v num">{{ $d($kpi['cotizado']) }}</div>
-        <div class="s num">{{ $kpi['cotizadas'] }} {{ $kpi['cotizadas'] === 1 ? 'cotización' : 'cotizaciones' }}</div>
-    </div>
-    <a href="#perdidas" class="panel kpi text-reset text-decoration-none {{ $kpi['perdido'] > 0 ? 'malo' : '' }}">
-        <div class="k"><i class="bi bi-x-octagon"></i> Perdido</div>
-        <div class="v num">{{ $d($kpi['perdido']) }}</div>
-        <div class="s num">{{ $kpi['perdidas'] }} rechazadas o vencidas</div>
-    </a>
-    <div class="panel kpi">
-        <div class="k"><i class="bi bi-bullseye"></i> Conversión</div>
-        <div class="v num">{{ $kpi['conversion'] === null ? '—' : $kpi['conversion'] . '%' }}</div>
-        <div class="s num">{{ $kpi['conversionMonto'] === null ? 'Sin cotizaciones resueltas' : $kpi['conversionMonto'] . '% del dinero cotizado' }}</div>
-    </div>
-    <div class="panel kpi">
-        <div class="k"><i class="bi bi-receipt"></i> Ticket promedio</div>
-        <div class="v num">{{ $kpi['ticket'] === null ? '—' : $d($kpi['ticket']) }}</div>
-        <div class="s num">{{ $kpi['diasCierre'] === null ? 'Por venta ganada' : 'Cierran en ' . $kpi['diasCierre'] . ' ' . ($kpi['diasCierre'] === 1 ? 'día' : 'días') . ' en promedio' }}</div>
-    </div>
-</div>
+@include('admin.finanzas._resumen-extra')
 
 {{-- ================= Tendencia ================= --}}
 <section class="panel mt-4">
@@ -195,6 +198,32 @@
         </table>
     </div>
 </section>
+
+@endif
+
+@if($seccion === 'ventas')
+<div class="kpis">
+    <div class="panel kpi">
+        <div class="k"><i class="bi bi-file-earmark-text"></i> Cotizado</div>
+        <div class="v num">{{ $d($kpi['cotizado']) }}</div>
+        <div class="s num">{{ $kpi['cotizadas'] }} {{ $kpi['cotizadas'] === 1 ? 'cotización' : 'cotizaciones' }}</div>
+    </div>
+    <a href="#perdidas" class="panel kpi text-reset text-decoration-none {{ $kpi['perdido'] > 0 ? 'malo' : '' }}">
+        <div class="k"><i class="bi bi-x-octagon"></i> Perdido</div>
+        <div class="v num">{{ $d($kpi['perdido']) }}</div>
+        <div class="s num">{{ $kpi['perdidas'] }} rechazadas o vencidas</div>
+    </a>
+    <div class="panel kpi">
+        <div class="k"><i class="bi bi-bullseye"></i> Conversión</div>
+        <div class="v num">{{ $kpi['conversion'] === null ? '—' : $kpi['conversion'] . '%' }}</div>
+        <div class="s num">{{ $kpi['conversionMonto'] === null ? 'Sin cotizaciones resueltas' : $kpi['conversionMonto'] . '% del dinero cotizado' }}</div>
+    </div>
+    <div class="panel kpi">
+        <div class="k"><i class="bi bi-receipt"></i> Ticket promedio</div>
+        <div class="v num">{{ $kpi['ticket'] === null ? '—' : $d($kpi['ticket']) }}</div>
+        <div class="s num">{{ $kpi['diasCierre'] === null ? 'Por venta ganada' : 'Cierran en ' . $kpi['diasCierre'] . ' ' . ($kpi['diasCierre'] === 1 ? 'día' : 'días') . ' en promedio' }}</div>
+    </div>
+</div>
 
 <div class="rejilla">
     {{-- ================= Embudo ================= --}}
@@ -252,6 +281,35 @@
     </div>
 </div>
 
+<section class="panel mt-4" id="perdidas">
+    <div class="panel-head"><div><h2>Cotizaciones perdidas</h2><span class="ayuda">Rechazadas o vencidas sin aceptar · {{ F::PERIODOS[$periodo] }}</span></div>
+        <span class="num fw-semibold">{{ $d($kpi['perdido']) }}</span></div>
+    @if($perdidas->isEmpty())
+        <div class="vacio"><div class="ico"><i class="bi bi-emoji-smile"></i></div><h3>Nada perdido</h3><p>Ninguna cotización rechazada o vencida en este periodo.</p></div>
+    @else
+        <div class="table-responsive">
+            <table class="tabla">
+                <thead><tr><th>Cliente</th><th>Folio</th><th>Motivo</th><th>Vistas</th><th class="text-end">Monto</th></tr></thead>
+                <tbody>
+                @foreach($perdidas as $p)
+                    @php $quien = $p->cliente_empresa ?: $p->cliente_nombre; @endphp
+                    <tr>
+                        <td style="min-width:200px"><div class="persona">@include('admin._avatar', ['nombre' => $quien])<div><div class="principal text-truncate">{{ $quien }}</div><div class="secundario text-truncate">{{ \Illuminate\Support\Str::limit($p->conceptos->first()?->resumen, 40) }}</div></div></div></td>
+                        <td class="num"><a href="{{ route('admin.presupuestos.edit', $p) }}" class="text-reset">{{ $p->folio }}</a><div class="secundario">{{ $p->fecha->locale('es')->isoFormat('D MMM') }}</div></td>
+                        <td>@if($p->estado === 'rechazada')<span class="estado estado-rechazada">Rechazada</span>@else<span class="estado estado-borrador">Venció sin respuesta</span>@endif</td>
+                        <td class="num">{!! $p->vistas ? '<i class="bi bi-eye text-secondary"></i> ' . $p->vistas : '<span class="secundario">No la abrió</span>' !!}</td>
+                        <td class="text-end num fw-medium">{{ $d($monto($p)) }}</td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+</section>
+@endif
+
+@if($seccion === 'cobranza')
+@include('admin.finanzas._cobranza-kpis')
 {{-- ================= Pendientes de cobro ================= --}}
 <section class="panel mt-4" id="por-cobrar">
     <div class="panel-head"><div><h2>Pendientes de cobro</h2><span class="ayuda">Pagos sin registrar de proyectos activos o terminados</span></div>
@@ -287,29 +345,13 @@
 </section>
 
 {{-- ================= Perdidas ================= --}}
-<section class="panel mt-4" id="perdidas">
-    <div class="panel-head"><div><h2>Cotizaciones perdidas</h2><span class="ayuda">Rechazadas o vencidas sin aceptar · {{ F::PERIODOS[$periodo] }}</span></div>
-        <span class="num fw-semibold">{{ $d($kpi['perdido']) }}</span></div>
-    @if($perdidas->isEmpty())
-        <div class="vacio"><div class="ico"><i class="bi bi-emoji-smile"></i></div><h3>Nada perdido</h3><p>Ninguna cotización rechazada o vencida en este periodo.</p></div>
-    @else
-        <div class="table-responsive">
-            <table class="tabla">
-                <thead><tr><th>Cliente</th><th>Folio</th><th>Motivo</th><th>Vistas</th><th class="text-end">Monto</th></tr></thead>
-                <tbody>
-                @foreach($perdidas as $p)
-                    @php $quien = $p->cliente_empresa ?: $p->cliente_nombre; @endphp
-                    <tr>
-                        <td style="min-width:200px"><div class="persona">@include('admin._avatar', ['nombre' => $quien])<div><div class="principal text-truncate">{{ $quien }}</div><div class="secundario text-truncate">{{ \Illuminate\Support\Str::limit($p->conceptos->first()?->resumen, 40) }}</div></div></div></td>
-                        <td class="num"><a href="{{ route('admin.presupuestos.edit', $p) }}" class="text-reset">{{ $p->folio }}</a><div class="secundario">{{ $p->fecha->locale('es')->isoFormat('D MMM') }}</div></td>
-                        <td>@if($p->estado === 'rechazada')<span class="estado estado-rechazada">Rechazada</span>@else<span class="estado estado-borrador">Venció sin respuesta</span>@endif</td>
-                        <td class="num">{!! $p->vistas ? '<i class="bi bi-eye text-secondary"></i> ' . $p->vistas : '<span class="secundario">No la abrió</span>' !!}</td>
-                        <td class="text-end num fw-medium">{{ $d($monto($p)) }}</td>
-                    </tr>
-                @endforeach
-                </tbody>
-            </table>
-        </div>
-    @endif
-</section>
+@endif
+
+@if($seccion === 'rentabilidad')
+    @include('admin.finanzas._rentabilidad')
+@endif
+
+@if($seccion === 'proveedores')
+    @include('admin.finanzas._proveedores')
+@endif
 @endsection

@@ -227,8 +227,12 @@ class PresupuestoController extends Controller
             'conceptos.*.descripcion' => 'nullable|string|max:5000',
             'conceptos.*.cantidad'    => 'required|numeric|min:0',
             'conceptos.*.precio'      => 'required|numeric|min:0',
-            'conceptos.*.costo_proveedor' => 'nullable|numeric|min:0',
-            'conceptos.*.gasolina'        => 'nullable|numeric|min:0',
+            'conceptos.*.costos'          => 'nullable|array|max:30',
+            'conceptos.*.costos.*.clave'  => 'nullable|string|max:40',
+            'conceptos.*.costos.*.nombre' => 'nullable|string|max:80',
+            'conceptos.*.costos.*.modo'   => 'nullable|in:unidad,fijo',
+            'conceptos.*.costos.*.clase'  => 'nullable|in:tercero,operativo',
+            'conceptos.*.costos.*.monto'  => 'nullable|numeric|min:0',
             'conceptos.*.utilidad'        => 'nullable|numeric',
             'conceptos.*.utilidad_modo'   => 'nullable|in:pct,monto',
 
@@ -255,27 +259,34 @@ class PresupuestoController extends Controller
             'conceptos.*.titulo.required_without' => 'Cada concepto necesita un título o una descripción.',
         ]);
 
-        $costeo = (bool) config('vandu.proyectos.' . ($v['tipo'] ?? '') . '.costeo');
         $num = fn ($x) => ($x === null || $x === '') ? null : (float) $x;
 
-        $conceptos = collect($v['conceptos'])->values()->map(function ($c, $i) use ($costeo, $num) {
+        $conceptos = collect($v['conceptos'])->values()->map(function ($c, $i) use ($num) {
             $fila = [
                 'titulo'          => trim((string) ($c['titulo'] ?? '')) ?: null,
                 'descripcion'     => (string) ($c['descripcion'] ?? ''),
                 'cantidad'        => $c['cantidad'],
                 'precio'          => $c['precio'],
                 'orden'           => $i,
-                'costo_proveedor' => null, 'gasolina' => null, 'utilidad' => null, 'utilidad_modo' => 'pct',
+                'costos'          => null, 'utilidad' => null, 'utilidad_modo' => 'pct',
+                'costo_proveedor' => null, 'gasolina' => null,   // costeo viejo: ya va dentro de "costos"
             ];
-            $prov = $num($c['costo_proveedor'] ?? null);
-            $gas = $num($c['gasolina'] ?? null);
-            if ($costeo && ($prov !== null || $gas !== null)) {
-                $fila['costo_proveedor'] = $prov;
-                $fila['gasolina'] = $gas;
+            // Solo los costos con monto; cada uno guarda su nombre y cómo se calcula (copia del componente del negocio)
+            $costos = collect($c['costos'] ?? [])->filter(fn ($x) => $num($x['monto'] ?? null) !== null && filled($x['nombre'] ?? null))
+                ->map(fn ($x) => [
+                    'clave'  => \Illuminate\Support\Str::limit((string) ($x['clave'] ?? \Illuminate\Support\Str::slug($x['nombre'], '_')), 40, ''),
+                    'nombre' => trim($x['nombre']),
+                    'modo'   => ($x['modo'] ?? 'fijo') === 'unidad' ? 'unidad' : 'fijo',
+                    'clase'  => ($x['clase'] ?? 'operativo') === 'tercero' ? 'tercero' : 'operativo',
+                    'monto'  => round($num($x['monto']), 2),
+                ])->values()->all();
+            if ($costos) {
+                $fila['costos'] = $costos;
                 $fila['utilidad'] = $num($c['utilidad'] ?? null);
                 $fila['utilidad_modo'] = ($c['utilidad_modo'] ?? 'pct') === 'monto' ? 'monto' : 'pct';
                 // El precio al cliente sale del costeo (misma fórmula que el editor)
-                $fila['precio'] = \App\Models\PresupuestoConcepto::precioDesdeCosteo((float) $c['cantidad'], $prov, $gas, $fila['utilidad'], $fila['utilidad_modo']);
+                $costo = collect($costos)->sum(fn ($x) => \App\Support\Costeo::importe($x, (float) $c['cantidad']));
+                $fila['precio'] = \App\Models\PresupuestoConcepto::precioDesdeCosteo((float) $c['cantidad'], $costo, $fila['utilidad'], $fila['utilidad_modo']);
             }
             return $fila;
         })->all();

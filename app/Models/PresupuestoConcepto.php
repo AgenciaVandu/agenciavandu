@@ -8,29 +8,47 @@ class PresupuestoConcepto extends Model
 {
     use \App\Models\Concerns\DeCuenta;
 
-    public const COPIABLES = ['titulo', 'descripcion', 'cantidad', 'precio', 'orden', 'costo_proveedor', 'gasolina', 'utilidad', 'utilidad_modo'];
+    public const COPIABLES = ['titulo', 'descripcion', 'cantidad', 'precio', 'orden', 'costos', 'utilidad', 'utilidad_modo', 'costo_proveedor', 'gasolina'];
 
     protected $fillable = self::COPIABLES;
 
     protected $casts = [
         'cantidad'        => 'float',
         'precio'          => 'float',
+        'costos'          => 'array',
         'costo_proveedor' => 'float',
         'gasolina'        => 'float',
         'utilidad'        => 'float',
     ];
 
-    /* ---------- Costeo interno (proveedor + gasolina + utilidad) ---------- */
+    /* ---------- Costeo interno (componentes del negocio + utilidad). El cliente nunca lo ve ---------- */
+
+    /** Costos capturados: [{clave, nombre, modo, clase, monto}] (incluye el costeo viejo de proveedor + gasolina) */
+    public function getCostosListaAttribute(): array
+    {
+        $lista = array_values(array_filter((array) $this->costos, fn ($c) => isset($c['monto']) && $c['monto'] !== '' && $c['monto'] !== null));
+        if (! $lista && ($this->costo_proveedor !== null || $this->gasolina !== null)) {
+            if ($this->costo_proveedor !== null) $lista[] = ['clave' => 'proveedor', 'nombre' => 'Proveedor o maquila', 'modo' => 'unidad', 'clase' => 'tercero', 'monto' => $this->costo_proveedor];
+            if ($this->gasolina !== null) $lista[] = ['clave' => 'gasolina', 'nombre' => 'Gasolina y traslados', 'modo' => 'fijo', 'clase' => 'operativo', 'monto' => $this->gasolina];
+        }
+        return $lista;
+    }
 
     public function getTieneCosteoAttribute(): bool
     {
-        return $this->costo_proveedor !== null || $this->gasolina !== null;
+        return (bool) $this->costos_lista;
     }
 
-    /** Lo que te cuesta a ti: proveedor por pieza × cantidad + gasolina del concepto */
+    /** Lo que te cuesta a ti: cada componente × cantidad (por cantidad) o una vez (monto fijo) */
     public function getCostoAttribute(): float
     {
-        return round($this->cantidad * (float) $this->costo_proveedor + (float) $this->gasolina, 2);
+        return round(collect($this->costos_lista)->sum(fn ($c) => \App\Support\Costeo::importe($c, $this->cantidad)), 2);
+    }
+
+    /** Costo de una clase: tercero (proveedores, maquila…) u operativo (tiempo, traslados…) */
+    public function costoDe(string $clase): float
+    {
+        return round(collect($this->costos_lista)->where('clase', $clase)->sum(fn ($c) => \App\Support\Costeo::importe($c, $this->cantidad)), 2);
     }
 
     /** Utilidad real según el precio que quedó (importe − costo) */
@@ -41,11 +59,10 @@ class PresupuestoConcepto extends Model
 
     /**
      * Precio unitario que resulta del costeo. La misma fórmula que el editor:
-     * (cantidad × proveedor + gasolina) + utilidad (% sobre el costo o monto fijo), entre la cantidad.
+     * costo total + utilidad (% sobre el costo o monto fijo), entre la cantidad.
      */
-    public static function precioDesdeCosteo(float $cantidad, ?float $proveedor, ?float $gasolina, ?float $utilidad, string $modo = 'pct'): float
+    public static function precioDesdeCosteo(float $cantidad, float $costo, ?float $utilidad, string $modo = 'pct'): float
     {
-        $costo = $cantidad * (float) $proveedor + (float) $gasolina;
         $total = $modo === 'monto' ? $costo + (float) $utilidad : $costo * (1 + (float) $utilidad / 100);
         return $cantidad > 0 ? round($total / $cantidad, 2) : 0.0;
     }

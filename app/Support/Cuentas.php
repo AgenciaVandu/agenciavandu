@@ -17,6 +17,7 @@ class Cuentas
     private static ?array $base = null;          // config('vandu') como la deja la cuenta principal
     private static ?int $aplicada = null;        // cuenta cuyos datos están puestos en la config
     private static ?array $fabrica = null;       // tipos de proyecto del archivo de config, sin cambios
+    private static ?array $costeoFabrica = null; // componentes de costeo del archivo de config, sin cambios
 
     /** Lo que cambia de una cuenta a otra dentro de config('vandu') */
     private const PROPIOS = ['marca', 'emisor', 'whatsapp', 'pago', 'folio_prefijo', 'vigencia_dias', 'zona_horaria', 'titulo', 'giro', 'proyectos', 'consideraciones', 'correo.nombre', 'correo.pie', 'correo.responder_a', 'correo.plantillas', 'dropbox.carpeta'];
@@ -28,6 +29,7 @@ class Cuentas
         self::$cuenta = null;
         self::$base = config('vandu');
         self::$fabrica = config('vandu.proyectos');
+        self::$costeoFabrica = config('vandu.costeo');
     }
 
     /** Ajustes que cada negocio captura en "Mi negocio" y a qué parte de config('vandu') van */
@@ -56,6 +58,14 @@ class Cuentas
         return self::id() === self::principalId();
     }
 
+    /** Costeo del archivo de config (el de la agencia) */
+    public static function costeoDeFabrica(?Cuenta $c = null): array
+    {
+        self::$costeoFabrica ??= config('vandu.costeo');
+        $giro = $c?->giro;
+        return ($giro ? config("vandu.giros.$giro.costeo") : null) ?? self::$costeoFabrica;
+    }
+
     /** Tipos de proyecto de fábrica según el giro de la cuenta activa */
     public static function proyectosDeFabrica(?Cuenta $c = null): array
     {
@@ -69,6 +79,7 @@ class Cuentas
         if (is_int($c)) $c = Cuenta::find($c);
         if (! $c) return null;
         self::$fabrica ??= config('vandu.proyectos');
+        self::$costeoFabrica ??= config('vandu.costeo');
         $v = config('vandu');
         if (self::$aplicada !== null && self::$aplicada !== self::principalId() && self::$base) {
             // Venimos de otra cuenta: regresa sus datos a los de la principal antes de aplicar la nueva
@@ -113,6 +124,8 @@ class Cuentas
         $principal = $c->id === ($v['cuenta_principal'] ?? 1);
         $giro = $v['giros'][$c->giro] ?? $v['giros']['agencia'];
         $v['proyectos'] = $giro['proyectos'] ?? self::$fabrica ?? $v['proyectos'];
+        // Costeo: el que guardó el negocio, o el de fábrica de su giro
+        $v['costeo'] = ! empty($a['costeo']['componentes']) ? $a['costeo'] : ($giro['costeo'] ?? self::costeoDeFabrica());
         $v['giro'] = $c->giro;
 
         // Una cuenta nueva no hereda los datos de contacto ni bancarios de la principal

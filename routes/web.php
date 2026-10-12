@@ -111,8 +111,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::post('ordenes/{orden}/comentar', [Admin\OrdenCompraController::class, 'comentar'])->name('ordenes.comentar');
 
     // Finanzas
-    Route::get('finanzas', [Admin\FinanzasController::class, 'index'])->name('finanzas');
     Route::get('finanzas/exportar', [Admin\FinanzasController::class, 'exportar'])->name('finanzas.exportar');
+    Route::get('finanzas/{seccion?}', [Admin\FinanzasController::class, 'index'])->where('seccion', 'resumen|ventas|cobranza|rentabilidad|proveedores')->name('finanzas');
 
     // Proyectos
     Route::get('proyectos', [Admin\ProyectoController::class, 'index'])->name('proyectos.index');
@@ -126,6 +126,9 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::patch('proyectos/{proyecto}/etapas/{etapa}', [Admin\ProyectoController::class, 'etapa'])->name('proyectos.etapa');
     Route::patch('proyectos/{proyecto}/pagos/{pago}', [Admin\ProyectoController::class, 'pago'])->name('proyectos.pago');
     // Dropbox
+    Route::get('costeo', [Admin\CosteoController::class, 'show'])->name('costeo');
+    Route::put('costeo', [Admin\CosteoController::class, 'update'])->name('costeo.update');
+    Route::post('costeo/restaurar', [Admin\CosteoController::class, 'restaurar'])->name('costeo.restaurar');
     Route::get('tipos-de-proyecto', [Admin\TiposProyectoController::class, 'index'])->name('tipos');
     Route::post('tipos-de-proyecto', [Admin\TiposProyectoController::class, 'store'])->name('tipos.store');
     Route::put('tipos-de-proyecto/{clave}', [Admin\TiposProyectoController::class, 'update'])->name('tipos.update');

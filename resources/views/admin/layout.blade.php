@@ -82,7 +82,9 @@
 
         /* ===================== Shell ===================== */
         .side { position: fixed; inset: 0 auto 0 0; width: var(--side); background: var(--ink); color: #C9CDD6;
-                display: flex; flex-direction: column; z-index: 1040; overflow: hidden; }
+                display: flex; flex-direction: column; z-index: 1040; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
+                -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: var(--ink-line) transparent; }
+        .side > * { flex-shrink: 0; } /* con muchas secciones el menú hace su propio scroll en vez de apretarse */
         .side-brand { padding: 22px 22px 18px; display: flex; align-items: center; justify-content: space-between; }
         .side-brand img { height: 26px; width: auto; }
         .side-cta { margin: 6px 16px 18px; }
@@ -301,7 +303,8 @@
 
         /* ===================== Móvil ===================== */
         @media (max-width: 991.98px) {
-            .side { transform: translateX(-100%); transition: transform .2s ease; box-shadow: 0 0 40px rgba(0,0,0,.3); }
+            .side { transform: translateX(-100%); transition: transform .2s ease; box-shadow: 0 0 40px rgba(0,0,0,.3); height: 100dvh; bottom: auto;
+                    padding-bottom: env(safe-area-inset-bottom); }
             .side.abierta { transform: none; }
             .velo { position: fixed; inset: 0; background: rgba(19,22,29,.45); z-index: 1035; }
             .main { margin-left: 0; }
@@ -376,7 +379,7 @@
     </style>
     @stack('head')
 </head>
-<body x-data="{ menu: false }" @keydown.escape="menu = false">
+<body x-data="{ menu: false }" @keydown.escape="menu = false" x-effect="document.documentElement.style.overflow = menu ? 'hidden' : ''">
 <div class="cargando-barra" id="cargando" aria-hidden="true"></div>
 
 {{-- iPhone: cómo instalar la app (Apple no deja mostrar un botón de "Instalar") --}}
@@ -445,6 +448,9 @@
         </a>
         <a href="{{ route('admin.tipos') }}" class="{{ request()->routeIs('admin.tipos*') ? 'activo' : '' }}">
             <i class="bi bi-diagram-3"></i> Tipos de proyecto
+        </a>
+        <a href="{{ route('admin.costeo') }}" class="{{ request()->routeIs('admin.costeo*') ? 'activo' : '' }}">
+            <i class="bi bi-calculator"></i> Costeo
         </a>
         <a href="{{ route('admin.correos.plantillas') }}" class="{{ request()->routeIs('admin.correos.plantillas*') ? 'activo' : '' }}">
             <i class="bi {{ request()->routeIs('admin.correos.plantillas*') ? 'bi-envelope-paper-fill' : 'bi-envelope-paper' }}"></i> Plantillas de correo

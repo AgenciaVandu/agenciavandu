@@ -54,6 +54,7 @@ class Permisos
         ['admin.redes*', 'redes'],
         ['admin.archivos*', 'archivos'],
         ['admin.tipos*', 'configuracion'],
+        ['admin.costeo*', 'configuracion'],
         ['admin.dropbox.explorar', ['proyectos', 'redes', 'archivos', 'tareas', 'configuracion']],
         ['admin.dropbox.token', ['proyectos', 'redes', 'configuracion']],
         ['admin.dropbox.abrir', ['proyectos', 'archivos', 'configuracion']],

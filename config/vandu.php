@@ -44,6 +44,16 @@ return [
             'nombre'  => 'Arquitectura y construcción',
             'icono'   => 'bi-buildings',
             'modulos' => ['obra'],
+            'costeo'  => [
+                'utilidad'    => 25,
+                'componentes' => [
+                    ['clave' => 'materiales',   'nombre' => 'Materiales',            'modo' => 'fijo',   'clase' => 'tercero'],
+                    ['clave' => 'mano_obra',    'nombre' => 'Mano de obra',          'modo' => 'fijo',   'clase' => 'tercero'],
+                    ['clave' => 'subcontratos', 'nombre' => 'Subcontratos',          'modo' => 'fijo',   'clase' => 'tercero'],
+                    ['clave' => 'horas',        'nombre' => 'Horas de proyecto',     'modo' => 'fijo',   'clase' => 'operativo'],
+                    ['clave' => 'viaticos',     'nombre' => 'Viáticos y traslados',  'modo' => 'fijo',   'clase' => 'operativo'],
+                ],
+            ],
             'roles'   => [
                 ['nombre' => 'Arquitecto líder', 'descripcion' => 'Cotiza, lleva los proyectos y las obras, y coordina al equipo.', 'permisos' => ['cotizaciones', 'proyectos', 'tareas', 'clientes', 'archivos']],
                 ['nombre' => 'Residente de obra', 'descripcion' => 'Lleva el día a día de la obra: sus tareas, avances y fotos.', 'permisos' => []],
@@ -159,6 +169,23 @@ return [
     // Prefijo del folio: CT-0001, CT-0002…
     'folio_prefijo' => 'CT-',
     'folio_orden_compra' => 'OC-',
+
+    /*
+    | Costeo de las cotizaciones: los costos que se capturan en cada concepto para sacar el precio y la utilidad.
+    | Cada negocio los ajusta en Configuración → Costeo. modo: unidad (× cantidad del concepto) o fijo (una vez por concepto).
+    | clase: tercero (le pagas a alguien más) u operativo (lo pones tú: tiempo, traslados, herramientas).
+    | utilidad: % sobre el costo que se propone al costear un concepto.
+    */
+    'costeo' => [
+        'utilidad'    => 30,
+        'componentes' => [
+            ['clave' => 'proveedor', 'nombre' => 'Proveedor o maquila', 'modo' => 'unidad', 'clase' => 'tercero'],
+            ['clave' => 'freelance', 'nombre' => 'Freelance o terceros', 'modo' => 'fijo',   'clase' => 'tercero'],
+            ['clave' => 'horas',     'nombre' => 'Horas del equipo',     'modo' => 'fijo',   'clase' => 'operativo'],
+            ['clave' => 'gasolina',  'nombre' => 'Gasolina y traslados', 'modo' => 'fijo',   'clase' => 'operativo'],
+            ['clave' => 'licencias', 'nombre' => 'Licencias y software', 'modo' => 'fijo',   'clase' => 'operativo'],
+        ],
+    ],
 
     'consideraciones' => [
         ['titulo' => 'Tiempos de entrega', 'items' => ['3 días hábiles después de la recepción del pago.']],

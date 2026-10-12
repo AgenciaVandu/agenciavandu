@@ -199,7 +199,7 @@
                 <div class="tp-sec">
                     <h3>Opciones</h3>
                     <label class="form-check"><input type="checkbox" class="form-check-input" x-model="galeria"> <span class="form-check-label">Entrega con galería de fotos y videos para el cliente</span></label>
-                    <label class="form-check"><input type="checkbox" class="form-check-input" x-model="costeo"> <span class="form-check-label">Costear cada concepto de la cotización (proveedor + gasolina + utilidad)</span></label>
+                    <label class="form-check"><input type="checkbox" class="form-check-input" x-model="costeo"> <span class="form-check-label">Abrir el costeo en cada concepto nuevo (costos del negocio + utilidad)</span></label>
                 </div>
             @endunless
 

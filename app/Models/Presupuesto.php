@@ -154,10 +154,29 @@ class Presupuesto extends Model
         return array_values(array_filter(array_map('trim', preg_split('/\R/', (string) $this->observaciones)), fn ($l) => $l !== ''));
     }
 
-    /** El tipo de servicio usa costeo (proveedor + gasolina + utilidad) */
+    /** Algún concepto se calculó con costos */
     public function getUsaCosteoAttribute(): bool
     {
-        return (bool) config("vandu.proyectos.{$this->tipo}.costeo");
+        return $this->conceptos->contains(fn ($c) => $c->tiene_costeo);
+    }
+
+    /** Lo que se vendió en los conceptos con costeo (antes de IVA): la base del margen */
+    public function getVentaCosteadaAttribute(): float
+    {
+        return round($this->conceptos->filter->tiene_costeo->sum(fn ($c) => $c->importe), 2);
+    }
+
+    /** Costo de una clase de gasto: tercero u operativo */
+    public function costoDe(string $clase): float
+    {
+        return round($this->conceptos->sum(fn ($c) => $c->costoDe($clase)), 2);
+    }
+
+    /** Margen: qué parte de lo vendido (con costeo) es utilidad, en % */
+    public function getMargenAttribute(): ?float
+    {
+        $venta = $this->venta_costeada;
+        return $venta > 0 ? round($this->utilidad / $venta * 100, 1) : null;
     }
 
     /** Costo interno de los conceptos que tienen costeo */
