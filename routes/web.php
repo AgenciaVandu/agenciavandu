@@ -73,6 +73,7 @@ Route::post('/admin/invitacion/{token}', [App\Http\Controllers\InvitacionControl
 
 Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(function () {
     Route::get('/', [Admin\ResumenController::class, 'index'])->name('resumen');
+    Route::get('buscar', [Admin\BuscarController::class, 'index'])->middleware('throttle:120,1')->name('buscar');
 
     Route::resource('clientes', Admin\ClienteController::class);
     Route::patch('clientes/{cliente}/atendido', [Admin\ClienteController::class, 'atendido'])->name('clientes.atendido');

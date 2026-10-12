@@ -60,6 +60,7 @@ class Permisos
         ['admin.dropbox*', 'configuracion'],
         ['admin.usuarios*', 'usuarios'],
         ['admin.roles*', 'usuarios'],
+        ['admin.buscar', '*'],           // cada quien solo ve resultados de sus secciones
         ['admin.tareas*', '*'],          // el controlador distingue "mis tareas" de gestionar
         ['admin.notificaciones*', '*'],
         ['admin.cuenta*', '*'],

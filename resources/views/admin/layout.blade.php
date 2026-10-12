@@ -341,6 +341,38 @@
         .instalar:hover { border-color: var(--green); color: #fff; }
         .instalar i { color: var(--green); font-size: 18px; }
         @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+        /* Buscador de todo el panel */
+        .side-buscar { display: flex; align-items: center; gap: 10px; width: calc(100% - 32px); margin: 0 16px 16px; height: 38px; padding: 0 12px;
+                       border-radius: 10px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); color: #b9bdc6; font-size: 14px; text-align: left; }
+        .side-buscar:hover { border-color: rgba(255,255,255,.3); color: #fff; }
+        .side-buscar kbd { margin-left: auto; background: rgba(255,255,255,.1); color: #cfd2d8; font-size: 11px; padding: 2px 6px; border-radius: 5px; font-family: inherit; }
+        .bus-velo { position: fixed; inset: 0; z-index: 1090; background: rgba(19,22,29,.45); backdrop-filter: blur(2px); display: none; }
+        .bus-velo.abierto { display: block; }
+        .bus-caja { position: absolute; left: 50%; top: 9vh; transform: translateX(-50%); width: min(640px, calc(100vw - 32px)); max-height: 78vh;
+                    background: var(--surface, #fff); border-radius: 16px; box-shadow: 0 24px 64px rgba(0,0,0,.25); display: flex; flex-direction: column; overflow: hidden; }
+        .bus-campo { display: flex; align-items: center; gap: 10px; padding: 0 14px 0 18px; border-bottom: 1px solid var(--line); }
+        .bus-campo i { color: var(--muted); font-size: 18px; }
+        .bus-campo input { flex: 1; border: 0; outline: 0; height: 58px; font-size: 17px; background: transparent; color: inherit; min-width: 0; }
+        .bus-campo input::-webkit-search-cancel-button { display: none; }
+        .bus-campo button { border: 0; background: #F3F4F6; border-radius: 8px; font-size: 13px; padding: 5px 10px; color: var(--muted); }
+        .bus-res { overflow-y: auto; overscroll-behavior: contain; padding: 6px 0 10px; }
+        .bus-grupo { padding: 10px 18px 4px; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; display: flex; justify-content: space-between; }
+        .bus-item { display: flex; gap: 12px; align-items: center; padding: 9px 18px; text-decoration: none; color: inherit; }
+        .bus-item.sel, .bus-item:hover { background: #F3F4F6; }
+        .bus-item .ic { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: #EEF0F3; flex: none; font-size: 15px; }
+        .bus-item.sel .ic { background: #13161D; color: var(--green); }
+        .bus-item .tx { min-width: 0; flex: 1; }
+        .bus-item .t { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .bus-item .s { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .bus-item .eti { font-size: 12px; color: var(--muted); white-space: nowrap; }
+        .bus-nota { padding: 22px 18px; color: var(--muted); font-size: 14.5px; text-align: center; }
+        .bus-todos { display: block; margin: 6px 18px 0; padding: 10px; text-align: center; border-radius: 10px; border: 1px solid var(--line); text-decoration: none; color: inherit; font-weight: 500; font-size: 14px; }
+        .bus-pie { padding: 8px 18px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); display: flex; gap: 14px; }
+        @media (max-width: 991.98px) {
+            .bus-caja { top: 0; left: 0; transform: none; width: 100vw; height: 100dvh; max-height: none; border-radius: 0; padding-top: env(safe-area-inset-top); }
+            .bus-campo input { height: 56px; font-size: 16px; }
+            .bus-pie { display: none; }
+        }
     </style>
     @stack('head')
 </head>
@@ -364,7 +396,7 @@
 <header class="topbar-m">
     <button type="button" @click="menu = true" aria-label="Abrir menú"><i class="bi bi-list"></i></button>
     <a href="{{ $inicioNav }}"><x-logo-vandu alt="Vandu" height="22" /></a>
-    <span style="width:40px"></span>
+    <button type="button" data-buscar aria-label="Buscar en todo el panel"><i class="bi bi-search"></i></button>
 </header>
 <div class="velo" x-show="menu" x-cloak @click="menu = false"></div>
 
@@ -382,6 +414,7 @@
             <a href="{{ route('admin.tareas.create') }}"><i class="bi bi-plus-lg"></i> Nueva tarea</a>
         </div>
     @endif
+    <button type="button" class="side-buscar" data-buscar><i class="bi bi-search"></i> Buscar… <kbd>⌘K</kbd></button>
     <div class="side-label">Panel</div>
     <nav>
         @foreach($nav as $item)
@@ -485,6 +518,19 @@
             @if(! empty($tab['cuenta']))<span class="burbuja num">{{ $tab['cuenta'] }}</span>@endif</a>
     @endforeach
 </nav>
+
+{{-- Buscador de todo el panel (lupa arriba en el celular, en el menú o con ⌘K / Ctrl+K) --}}
+<div class="bus-velo" id="buscador" role="dialog" aria-modal="true" aria-label="Buscar en el panel">
+    <div class="bus-caja">
+        <form class="bus-campo" action="{{ route('admin.buscar') }}" method="get" role="search">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input type="search" name="q" id="buscador-q" placeholder="Busca clientes, proyectos, proveedores, folios…" autocomplete="off" enterkeyhint="search" aria-label="Buscar" aria-controls="buscador-res">
+            <button type="button" data-cerrar>Cerrar</button>
+        </form>
+        <div class="bus-res" id="buscador-res" role="listbox"><div class="bus-nota">Escribe un nombre, empresa, folio o teléfono.</div></div>
+        <div class="bus-pie"><span>↑↓ para moverte</span><span>Enter para abrir</span><span>Esc para cerrar</span></div>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script id="vandu-base">
@@ -868,6 +914,84 @@
             }
         });
     })();
+</script>
+<script id="vandu-buscador">
+(() => {
+    if (window.vanduBuscador) return; // la navegación sin recargar vuelve a correr este script
+    window.vanduBuscador = true;
+    const url = @json(route('admin.buscar'));
+    const velo = document.getElementById('buscador'), input = document.getElementById('buscador-q'), res = document.getElementById('buscador-res');
+    const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const inicial = res.innerHTML;
+    // En Windows el atajo es Ctrl+K
+    if (! /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)) document.querySelectorAll('.side-buscar kbd').forEach((k) => k.textContent = 'Ctrl K');
+    let sel = -1, pedido = 0, espera;
+
+    const abrir = () => {
+        velo.classList.add('abierto'); document.body.style.overflow = 'hidden';
+        try { if (window.Alpine) Alpine.$data(document.body).menu = false; } catch (e) {}
+        input.focus(); input.select(); // en el mismo toque: así el iPhone abre el teclado
+    };
+    const cerrar = () => { velo.classList.remove('abierto'); document.body.style.overflow = ''; };
+    const items = () => [...res.querySelectorAll('.bus-item')];
+    const marcar = (i) => {
+        const l = items(); if (! l.length) return;
+        sel = (i + l.length) % l.length;
+        l.forEach((a, k) => a.classList.toggle('sel', k === sel));
+        l[sel].scrollIntoView({ block: 'nearest' });
+    };
+
+    const pintar = (d) => {
+        if (! d.grupos.length) {
+            res.innerHTML = `<div class="bus-nota">Nada coincide con “${esc(d.q)}”.<br>Prueba solo el apellido, el folio o los últimos dígitos del teléfono.</div>`;
+            sel = -1; return;
+        }
+        let h = '', mas = false;
+        for (const g of d.grupos) {
+            h += `<div class="bus-grupo"><span>${esc(g.titulo)}</span><span>${g.total}</span></div>`;
+            for (const it of g.items) {
+                h += `<a class="bus-item" role="option" href="${esc(it.url)}"><span class="ic"><i class="bi ${esc(g.icono)}"></i></span>`
+                   + `<span class="tx"><span class="t d-block">${esc(it.titulo)}</span><span class="s d-block">${esc(it.sub)}</span></span>`
+                   + (it.etiqueta ? `<span class="eti">${esc(it.etiqueta)}</span>` : '') + `</a>`;
+            }
+            if (g.total > g.items.length) mas = true;
+        }
+        if (mas) h += `<a class="bus-todos" href="${url}?q=${encodeURIComponent(d.q)}">Ver todos los resultados</a>`;
+        res.innerHTML = h; sel = -1; marcar(0);
+    };
+
+    const buscar = async () => {
+        const q = input.value.trim();
+        if (q.length < 2) { res.innerHTML = inicial; sel = -1; return; }
+        const yo = ++pedido;
+        try {
+            const r = await fetch(`${url}?q=${encodeURIComponent(q)}`, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' });
+            if (! r.ok) throw r;
+            const d = await r.json();
+            if (yo === pedido) pintar(d);
+        } catch (e) {
+            if (yo === pedido) res.innerHTML = '<div class="bus-nota">No se pudo buscar. Revisa tu conexión.</div>';
+        }
+    };
+
+    input.addEventListener('input', () => { clearTimeout(espera); espera = setTimeout(buscar, 180); });
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') { e.preventDefault(); marcar(sel + 1); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); marcar(sel - 1); }
+        else if (e.key === 'Enter' && sel >= 0 && items()[sel]) { e.preventDefault(); items()[sel].click(); }
+    });
+    velo.addEventListener('click', (e) => {
+        if (e.target === velo || e.target.closest('[data-cerrar]')) cerrar();
+        else if (e.target.closest('.bus-item, .bus-todos')) cerrar(); // la navegación sin recargar se encarga del enlace
+    });
+    document.addEventListener('click', (e) => { if (e.target.closest('[data-buscar]')) { e.preventDefault(); abrir(); } });
+    velo.querySelector('form').addEventListener('submit', (e) => { if (input.value.trim().length < 2) e.preventDefault(); else cerrar(); });
+    document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); velo.classList.contains('abierto') ? cerrar() : abrir(); }
+        else if (e.key === 'Escape' && velo.classList.contains('abierto')) cerrar();
+        else if (e.key === '/' && ! e.target.closest('input, textarea, select, [contenteditable]')) { e.preventDefault(); abrir(); }
+    });
+})();
 </script>
 @stack('scripts')
 </body>
