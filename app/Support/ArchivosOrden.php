@@ -21,6 +21,46 @@ class ArchivosOrden
 
     public const EXTENSIONES = 'pdf,xml,jpg,jpeg,png,webp,heic,gif,svg,ai,eps,psd,cdr,dst,pes,exp,jef,emb,zip,rar,7z,doc,docx,xls,xlsx,csv,txt,mp4,mov';
 
+    /** Subcarpeta de Dropbox con lo que adjuntamos (de ahí sale el ZIP) */
+    public const CARPETA_AGENCIA = 'Para producir';
+
+    /** Todos los archivos que adjuntamos, en un ZIP (en Dropbox lo arma Dropbox con su carpeta) */
+    public static function zipAdjuntos(OrdenCompra $o): Response
+    {
+        $archivos = $o->archivos()->where('autor', 'agencia')->whereIn('tipo', OrdenCompra::TIPOS_AGENCIA)->get();
+        abort_if($archivos->isEmpty(), 404);
+
+        if ($archivos->contains('origen', 'dropbox')) {
+            try {
+                return redirect()->away(Dropbox::cliente()->enlaceCarpeta($o->carpeta_dropbox . '/' . self::CARPETA_AGENCIA));
+            } catch (DropboxError $e) {
+                abort(404, $e->getMessage());
+            }
+        }
+
+        abort_unless(class_exists(\ZipArchive::class), 501, 'El servidor no tiene la extensión zip.');
+        $tmp = tempnam(sys_get_temp_dir(), 'oc');
+        $zip = new \ZipArchive();
+        $zip->open($tmp, \ZipArchive::OVERWRITE);
+        $usados = [];
+        foreach ($archivos as $a) {
+            $ruta = Storage::disk('local')->path($a->ruta);
+            if (! is_file($ruta)) continue;
+            $nombre = $a->nombre;
+            for ($i = 1; isset($usados[$nombre]); $i++) {
+                $nombre = pathinfo($a->nombre, PATHINFO_FILENAME) . " ($i)." . pathinfo($a->nombre, PATHINFO_EXTENSION);
+            }
+            $usados[$nombre] = true;
+            $zip->addFile($ruta, $nombre);
+        }
+        $zip->close();
+
+        return response()->streamDownload(function () use ($tmp) {
+            readfile($tmp);
+            @unlink($tmp);
+        }, $o->folio . '-archivos.zip', ['Content-Type' => 'application/zip', 'Content-Length' => filesize($tmp)]);
+    }
+
     public static function reglas(array $tipos): array
     {
         return [
@@ -66,7 +106,7 @@ class ArchivosOrden
 
         if (Dropbox::conectado()) {
             $dbx = Dropbox::cliente();
-            $carpeta = $o->carpeta_dropbox . '/' . ($tipo === 'factura' ? 'Facturas' : ($autor === 'agencia' ? 'Enviados' : 'Del proveedor'));
+            $carpeta = $o->carpeta_dropbox . '/' . ($tipo === 'factura' ? 'Facturas' : ($autor === 'agencia' ? self::CARPETA_AGENCIA : 'Del proveedor'));
             try {
                 $dbx->crearCarpeta($carpeta);
                 $meta = $dbx->subirArchivo($archivo->getRealPath(), $carpeta . '/' . ArchivosProyecto::nombreArchivo($nombre));

@@ -27,6 +27,7 @@ class OrdenCompra extends Model
 
     /** Lo que sube el proveedor (y nosotros: diseños y referencias) */
     public const TIPOS_ARCHIVO = [
+        'produccion' => ['texto' => 'Para producción', 'icono' => 'bi-printer'],
         'factura'  => ['texto' => 'Factura',      'icono' => 'bi-receipt'],
         'muestra'  => ['texto' => 'Muestra',      'icono' => 'bi-image'],
         'catalogo' => ['texto' => 'Catálogo',     'icono' => 'bi-journal-richtext'],
@@ -63,6 +64,16 @@ class OrdenCompra extends Model
     public function conceptos(): HasMany { return $this->hasMany(OrdenCompraConcepto::class)->orderBy('orden')->orderBy('id'); }
     public function archivos(): HasMany { return $this->hasMany(OrdenCompraArchivo::class)->latest('id'); }
     public function comentarios(): HasMany { return $this->hasMany(OrdenCompraComentario::class)->oldest('id'); }
+
+    /** Lo que nosotros adjuntamos (archivos para producción, diseños): siempre arriba */
+    public const TIPOS_AGENCIA = ['produccion', 'diseno'];
+
+    /** Archivos que le mandamos al proveedor, primero los de producción */
+    public function getAdjuntosAttribute()
+    {
+        return $this->archivos->where('autor', 'agencia')->whereIn('tipo', self::TIPOS_AGENCIA)
+            ->sortBy(fn ($a) => [$a->tipo === 'produccion' ? 0 : 1, $a->id])->values();
+    }
 
     /** Las que el proveedor puede ver (todo menos borradores) */
     public function scopeVisibles(Builder $q): Builder { return $q->where('estado', '!=', 'borrador'); }

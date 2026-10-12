@@ -126,6 +126,13 @@
     <div class="ind">{!! nl2br(e(trim($o->indicaciones))) !!}</div>
 @endif
 
+@php $adjPdf = $o->archivos()->where('autor', 'agencia')->whereIn('tipo', \App\Models\OrdenCompra::TIPOS_AGENCIA)->orderByRaw("tipo = 'produccion' desc")->orderBy('id')->get(); @endphp
+@if($adjPdf->isNotEmpty())
+    <h2>Archivos adjuntos</h2>
+    <div class="ind">@foreach($adjPdf as $a)• {{ $a->nombre }} <span class="gris">({{ $a->tipo_texto }})</span><br>@endforeach</div>
+    <p class="gris" style="margin-top:5pt; font-size:9pt">Descárgalos desde el enlace de esta orden.</p>
+@endif
+
 <p class="nota">Sube tu factura (PDF y XML) y tus archivos en el enlace que te compartimos con esta orden. Cita el folio {{ $o->folio }} en tu factura.</p>
 
 </body>

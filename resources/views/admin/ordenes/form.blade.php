@@ -31,7 +31,7 @@
 @endpush
 
 @section('contenido')
-<form method="post" action="{{ $nuevo ? route('admin.ordenes.store') : route('admin.ordenes.update', $o) }}"
+<form method="post" enctype="multipart/form-data" action="{{ $nuevo ? route('admin.ordenes.store') : route('admin.ordenes.update', $o) }}"
       x-data="ordenCompra({{ Js::from($estado) }})" @keydown.ctrl.s.prevent="$el.requestSubmit()" @keydown.meta.s.prevent="$el.requestSubmit()">
     @csrf
     @unless($nuevo) @method('put') @endunless
@@ -136,12 +136,43 @@
                 </div>
             </section>
 
+            <section class="panel" x-data="{ n: 0, nombres: [] }">
+                <div class="panel-head"><h2>Archivos para el proveedor</h2><span class="ayuda">Le aparecen hasta arriba en su enlace</span></div>
+                <div class="panel-body d-grid gap-3">
+                    @if(! $nuevo && $o->adjuntos->isNotEmpty())
+                        <ul class="list-unstyled m-0 d-grid gap-1" style="font-size: 14px">
+                            @foreach($o->adjuntos as $a)
+                                <li class="d-flex gap-2 align-items-center"><i class="bi {{ $a->icono }}"></i><span class="text-truncate">{{ $a->nombre }}</span><span class="secundario text-nowrap">· {{ $a->tipo_texto }} · {{ $a->peso_texto }}</span></li>
+                            @endforeach
+                        </ul>
+                    @endif
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label" for="tipo-adjunto">Tipo</label>
+                            <select name="tipo" id="tipo-adjunto" class="form-select">
+                                <option value="produccion">Para producción (impresión, bordado…)</option>
+                                <option value="diseno">Diseño o referencia</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label" for="archivos">{{ ! $nuevo && $o->adjuntos->isNotEmpty() ? 'Agregar más archivos' : 'Archivos' }} <span class="text-secondary fw-normal">(hasta 10, de 50 MB c/u)</span></label>
+                            <input type="file" name="archivos[]" id="archivos" class="form-control @error('archivos') is-invalid @enderror @error('archivos.*') is-invalid @enderror" multiple
+                                   @change="nombres = [...$event.target.files].map(f => f.name)">
+                            @error('archivos')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            @error('archivos.*')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+                    <div class="secundario" style="font-size: 12.5px" x-show="nombres.length" x-text="'Se subirán al guardar: ' + nombres.join(', ')"></div>
+                    <div class="secundario" style="font-size: 12.5px" x-show="! nombres.length">PDF, AI, PSD, CDR, ponchados (DST, PES…), imágenes o ZIP. Se guardan en la carpeta de la orden en tu Dropbox.</div>
+                </div>
+            </section>
+
             <section class="panel">
                 <div class="panel-head"><h2>Indicaciones</h2><span class="ayuda">Aparecen en el PDF y en su enlace</span></div>
                 <div class="panel-body">
                     <label class="form-label visually-hidden" for="indicaciones">Indicaciones</label>
                     <textarea name="indicaciones" id="indicaciones" rows="6" class="form-control">{{ old('indicaciones', $o->indicaciones) }}</textarea>
-                    <div class="secundario mt-2" style="font-size: 12.5px">Tallas, colores, técnica, ubicación del logo, acabados… Los diseños y referencias los adjuntas después de guardar.</div>
+                    <div class="secundario mt-2" style="font-size: 12.5px">Tallas, colores, técnica, ubicación del logo, acabados… Los archivos de impresión o diseño los adjuntas arriba.</div>
                 </div>
             </section>
         </div>

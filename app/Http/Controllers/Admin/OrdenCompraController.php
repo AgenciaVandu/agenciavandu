@@ -55,7 +55,8 @@ class OrdenCompraController extends Controller
             $o->conceptos()->createMany($conceptos);
             return $o;
         });
-        return redirect()->route('admin.ordenes.show', $o)->with('ok', "Orden {$o->folio} guardada. Revísala y envíasela al proveedor.");
+        $n = $this->adjuntar($request, $o);
+        return redirect()->route('admin.ordenes.show', $o)->with('ok', "Orden {$o->folio} guardada" . ($n ? " con $n " . ($n === 1 ? 'archivo' : 'archivos') : '') . '. Revísala y envíasela al proveedor.');
     }
 
     public function show(OrdenCompra $orden)
@@ -66,7 +67,7 @@ class OrdenCompraController extends Controller
 
     public function edit(OrdenCompra $orden)
     {
-        return $this->formulario($orden->load('conceptos'));
+        return $this->formulario($orden->load(['conceptos', 'archivos']));
     }
 
     public function update(Request $request, OrdenCompra $orden)
@@ -77,6 +78,7 @@ class OrdenCompraController extends Controller
             $orden->conceptos()->delete();
             $orden->conceptos()->createMany($conceptos);
         });
+        $this->adjuntar($request, $orden);
         return redirect()->route('admin.ordenes.show', $orden)->with('ok', 'Orden actualizada.' . ($orden->estado !== 'borrador' ? ' El proveedor ya ve los cambios en su enlace.' : ''));
     }
 
@@ -148,6 +150,11 @@ class OrdenCompraController extends Controller
         return back()->with('ok', $n === 1 ? 'Archivo agregado.' : "$n archivos agregados.");
     }
 
+    public function zip(OrdenCompra $orden)
+    {
+        return ArchivosOrden::zipAdjuntos($orden);
+    }
+
     public function verArchivo(Request $request, OrdenCompra $orden, OrdenCompraArchivo $archivo)
     {
         abort_unless($archivo->orden_compra_id === $orden->id, 404);
@@ -168,6 +175,14 @@ class OrdenCompraController extends Controller
         return redirect(route('admin.ordenes.show', $orden) . '#comentarios')->with('ok', 'Comentario enviado. El proveedor lo ve en su enlace.');
     }
 
+    /** Archivos elegidos en el formulario de la orden (opcional) */
+    private function adjuntar(Request $request, OrdenCompra $o): int
+    {
+        if (! $request->hasFile('archivos')) return 0;
+        $request->validate(ArchivosOrden::reglas(OrdenCompra::TIPOS_AGENCIA), ArchivosOrden::mensajes());
+        return count(ArchivosOrden::guardar($o, $request, 'agencia', $request->user()?->id));
+    }
+
     private function formulario(OrdenCompra $o)
     {
         $proveedores = Proveedor::orderBy('empresa')->get(['id', 'empresa', 'nombre', 'rubro']);
@@ -183,6 +198,9 @@ class OrdenCompraController extends Controller
     /** @return array{0: array, 1: array} datos de la orden y sus conceptos */
     private function validar(Request $request): array
     {
+        if ($request->hasFile('archivos')) {
+            $request->validate(ArchivosOrden::reglas(OrdenCompra::TIPOS_AGENCIA), ArchivosOrden::mensajes());
+        }
         $d = $request->validate([
             'proveedor_id'            => 'required|integer|exists:proveedores,id',
             'proyecto_id'             => 'nullable|integer|exists:proyectos,id',

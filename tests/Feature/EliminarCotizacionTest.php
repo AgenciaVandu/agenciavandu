@@ -23,7 +23,7 @@ class EliminarCotizacionTest extends TestCase
         $p->save();
         $p->conceptos()->create(['descripcion' => $nombre, 'cantidad' => 1, 'precio' => 10000, 'orden' => 0]);
         $pr = Proyecto::create(['cliente_id' => $c->id, 'presupuesto_id' => $p->id, 'nombre' => $nombre, 'tipo' => 'audiovisual', 'estado' => 'activo', 'monto_total' => $cobrado + $pendiente]);
-        $pr->pagos()->create(['clave' => 'anticipo', 'concepto' => 'Anticipo', 'porcentaje' => 50, 'monto' => $cobrado, 'orden' => 0, 'pagado_el' => now()]);
+        $pr->pagos()->create(['clave' => 'anticipo', 'concepto' => 'Anticipo', 'porcentaje' => 50, 'monto' => $cobrado, 'orden' => 0, 'pagado_el' => now(config('vandu.zona_horaria'))->toDateString()]);
         $pr->pagos()->create(['clave' => 'saldo', 'concepto' => 'Saldo', 'porcentaje' => 50, 'monto' => $pendiente, 'orden' => 1]);
         return $p->fresh('proyecto');
     }

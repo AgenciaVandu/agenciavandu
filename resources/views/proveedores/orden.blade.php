@@ -5,8 +5,9 @@
     $token = $p->portal_token;
     $din = fn ($v) => \App\Models\OrdenCompra::dinero($v);
     $facturas = $o->archivos->where('tipo', 'factura');
-    $deAgencia = $o->archivos->where('autor', 'agencia')->where('tipo', '!=', 'factura');
+    $deAgencia = $o->adjuntos;
     $suyos = $o->archivos->where('autor', 'proveedor')->where('tipo', '!=', 'factura');
+    $paraProducir = $deAgencia->where('tipo', 'produccion');
     $tz = config('vandu.zona_horaria');
     $cuando = fn ($f) => $f->copy()->setTimezone($tz)->locale('es')->isoFormat('D MMM, h:mm a');
     $puedeSubir = $o->estado !== 'cancelada';
@@ -21,6 +22,10 @@
 @section('titulo', $o->folio . ' · ' . $o->titulo)
 
 @section('estilos')
+    .prioridad { margin-top: 18px; border: 2px solid var(--ink); }
+    .prioridad .cab { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 16px 20px; background: var(--green-soft); border-bottom: 1px solid #BDF2D6; }
+    .prioridad .cab h2 { margin: 0; font-size: 18px; }
+    .prioridad .cab p { margin: 2px 0 0; font-size: 14px; color: var(--green-ink); }
     .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; align-items: start; margin-top: 18px; }
     .lat { display: grid; gap: 14px; }
     .k { font-size: 13px; color: var(--muted); }
@@ -75,6 +80,26 @@
 @endsection
 
 @section('contenido')
+@if($deAgencia->isNotEmpty())
+    <section class="caja prioridad" id="adjuntos" aria-labelledby="titulo-adjuntos">
+        <div class="cab">
+            <div>
+                <h2 id="titulo-adjuntos">📌 {{ $paraProducir->isNotEmpty() ? 'Archivos para producir' : 'Archivos de la orden' }}</h2>
+                <p>{{ $deAgencia->count() === 1 ? 'Descárgalo antes de empezar.' : 'Son ' . $deAgencia->count() . ' archivos. Descárgalos antes de empezar.' }}</p>
+            </div>
+            @if($deAgencia->count() > 1)<a class="btn prim" href="{{ route('proveedor.zip', [$token, $o->id]) }}">Descargar todos</a>@endif
+        </div>
+        @foreach($deAgencia as $a)
+            <div class="arch">
+                <span class="ic" aria-hidden="true">{{ $a->tipo === 'produccion' ? '🖨️' : '🎨' }}</span>
+                <div style="min-width: 0"><a class="n" href="{{ route('proveedor.archivo', [$token, $o->id, $a->id]) }}" target="_blank" rel="noopener">{{ $a->nombre }}</a>
+                    <div class="s">{{ $a->tipo_texto }} · {{ $a->extension }} · {{ $a->peso_texto }}</div></div>
+                <a class="btn chico" href="{{ route('proveedor.archivo', [$token, $o->id, $a->id]) }}?descargar=1">Descargar</a>
+            </div>
+        @endforeach
+    </section>
+@endif
+
 <div class="grid2">
     <div>
         <div class="caja">
@@ -100,19 +125,6 @@
             <div class="caja"><div class="cuerpo"><div class="k" style="margin-bottom: 6px">Indicaciones</div><div class="indicaciones">{{ $o->indicaciones }}</div></div></div>
         @endif
 
-        @if($deAgencia->isNotEmpty())
-            <div class="caja">
-                <div class="titulo-caja"><h3>Archivos que te compartimos</h3><span>Diseños y referencias</span></div>
-                @foreach($deAgencia as $a)
-                    <div class="arch">
-                        <span class="ic" aria-hidden="true">{{ $icono($a) }}</span>
-                        <div style="min-width: 0"><a class="n" href="{{ route('proveedor.archivo', [$token, $o->id, $a->id]) }}" target="_blank" rel="noopener">{{ $a->nombre }}</a>
-                            <div class="s">{{ $a->tipo_texto }} · {{ $a->peso_texto }}</div></div>
-                        <a class="btn chico" href="{{ route('proveedor.archivo', [$token, $o->id, $a->id]) }}?descargar=1">Descargar</a>
-                    </div>
-                @endforeach
-            </div>
-        @endif
 
         <h2 id="facturas">Tu factura</h2>
         <div class="caja {{ $facturas->isEmpty() && $puedeSubir && $o->estado !== 'pagada' ? 'destacada' : '' }}">

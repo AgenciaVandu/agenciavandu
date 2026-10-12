@@ -4,7 +4,8 @@
 @php
     $p = $o->proveedor;
     $facturas = $o->archivos->where('tipo', 'factura');
-    $otros = $o->archivos->where('tipo', '!=', 'factura');
+    $adjuntos = $o->adjuntos;
+    $otros = $o->archivos->where('tipo', '!=', 'factura')->reject(fn ($a) => $adjuntos->contains('id', $a->id));
     $tz = config('vandu.zona_horaria');
     $cuando = fn ($f) => $f->copy()->setTimezone($tz)->locale('es')->isoFormat('D MMM, h:mm a');
 @endphp
@@ -31,6 +32,8 @@
     .msj.yo { justify-self: end; background: #13161D; color: #fff; }
     .msj .quien { font-size: 12px; opacity: .7; margin-bottom: 2px; }
     .msj .texto { white-space: pre-line; overflow-wrap: anywhere; }
+    .adjuntos { border: 1.5px solid #13161D; }
+    .adjuntos .panel-head h2 i { color: var(--green-ink); }
     .estados { display: flex; flex-wrap: wrap; gap: 6px; }
     .estados button { border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 4px 12px; font-size: 13px; }
     .estados button.activo { background: #13161D; color: #fff; border-color: #13161D; }
@@ -79,6 +82,34 @@
 
 <div class="ficha">
     <div class="d-grid gap-4">
+        <section class="panel adjuntos" id="adjuntos">
+            <div class="panel-head">
+                <h2><i class="bi bi-pin-angle-fill me-1"></i> Archivos para el proveedor</h2>
+                @if($adjuntos->count() > 1)<a href="{{ route('admin.ordenes.zip', $o) }}" class="btn btn-fantasma btn-sm"><i class="bi bi-file-zip me-1"></i> Descargar todos</a>@endif
+            </div>
+            @foreach($adjuntos as $a)
+                @include('admin.ordenes._archivo', ['a' => $a])
+            @endforeach
+            <form method="post" action="{{ route('admin.ordenes.subir', $o) }}" enctype="multipart/form-data" class="panel-body {{ $adjuntos->isNotEmpty() ? 'border-top' : '' }} d-flex flex-wrap gap-2 align-items-end">
+                @csrf
+                <div style="min-width: 190px">
+                    <label class="form-label" for="tipo-archivo">Tipo</label>
+                    <select name="tipo" id="tipo-archivo" class="form-select">
+                        <option value="produccion">Para producción</option>
+                        <option value="diseno">Diseño o referencia</option>
+                    </select>
+                </div>
+                <div class="flex-grow-1" style="min-width: 220px">
+                    <label class="form-label" for="archivos-agencia">{{ $adjuntos->isEmpty() ? 'Archivos para imprimir, bordar o fabricar' : 'Agregar más' }} <span class="text-secondary fw-normal">(hasta 50 MB c/u)</span></label>
+                    <input type="file" name="archivos[]" id="archivos-agencia" class="form-control" multiple required>
+                </div>
+                <button class="btn btn-primario"><i class="bi bi-upload me-1"></i> Subir</button>
+            </form>
+            @if($adjuntos->isNotEmpty() && $o->estado !== 'borrador')
+                <div class="panel-body border-top secundario py-2" style="font-size: 12.5px"><i class="bi bi-eye me-1"></i> El proveedor los ve hasta arriba de su orden, con botón para descargarlos todos.</div>
+            @endif
+        </section>
+
         <section class="panel">
             <div class="panel-head"><h2>Qué se pidió</h2><span class="ayuda">{{ $o->conceptos->count() }} {{ $o->conceptos->count() === 1 ? 'concepto' : 'conceptos' }}</span></div>
             <div class="table-responsive">
@@ -118,26 +149,12 @@
         </section>
 
         <section class="panel" id="archivos">
-            <div class="panel-head"><h2>Archivos</h2><span class="ayuda">Muestras, catálogos, ponchados y tus diseños</span></div>
-            @foreach($otros as $a)
+            <div class="panel-head"><h2>Archivos del proveedor</h2><span class="ayuda">Muestras, catálogos y ponchados que te sube</span></div>
+            @forelse($otros as $a)
                 @include('admin.ordenes._archivo', ['a' => $a])
-            @endforeach
-            <form method="post" action="{{ route('admin.ordenes.subir', $o) }}" enctype="multipart/form-data" class="panel-body {{ $otros->isNotEmpty() ? 'border-top' : '' }} d-flex flex-wrap gap-2 align-items-end">
-                @csrf
-                <div style="min-width: 170px">
-                    <label class="form-label" for="tipo-archivo">Tipo</label>
-                    <select name="tipo" id="tipo-archivo" class="form-select">
-                        @foreach(\App\Models\OrdenCompra::TIPOS_ARCHIVO as $k => $t)
-                            <option value="{{ $k }}" @selected($k === 'diseno')>{{ $t['texto'] }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="flex-grow-1" style="min-width: 220px">
-                    <label class="form-label" for="archivos-agencia">Archivos <span class="text-secondary fw-normal">(hasta 50 MB c/u)</span></label>
-                    <input type="file" name="archivos[]" id="archivos-agencia" class="form-control" multiple required>
-                </div>
-                <button class="btn btn-borde"><i class="bi bi-upload me-1"></i> Subir</button>
-            </form>
+            @empty
+                <div class="panel-body secundario" style="font-size: 14px">Todavía no sube archivos. Los sube desde su enlace y te llega un aviso.</div>
+            @endforelse
         </section>
 
         <section class="panel" id="comentarios">

@@ -104,6 +104,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::get('ordenes/{orden}/pdf', [Admin\OrdenCompraController::class, 'pdf'])->name('ordenes.pdf');
     Route::get('ordenes/{orden}/version', [Admin\OrdenCompraController::class, 'version'])->name('ordenes.version');
     Route::post('ordenes/{orden}/archivos', [Admin\OrdenCompraController::class, 'subir'])->name('ordenes.subir');
+    Route::get('ordenes/{orden}/archivos.zip', [Admin\OrdenCompraController::class, 'zip'])->name('ordenes.zip');
     Route::get('ordenes/{orden}/archivos/{archivo}', [Admin\OrdenCompraController::class, 'verArchivo'])->name('ordenes.archivo');
     Route::delete('ordenes/{orden}/archivos/{archivo}', [Admin\OrdenCompraController::class, 'borrarArchivo'])->name('ordenes.archivo.borrar');
     Route::post('ordenes/{orden}/comentar', [Admin\OrdenCompraController::class, 'comentar'])->name('ordenes.comentar');
@@ -246,6 +247,7 @@ Route::prefix('/proveedor/{token}')->where(['token' => '[A-Za-z0-9]{32}', 'orden
     Route::get('/orden/{orden}', [\App\Http\Controllers\ProveedorPortalController::class, 'orden'])->name('proveedor.orden');
     Route::get('/orden/{orden}/pdf', [\App\Http\Controllers\ProveedorPortalController::class, 'pdf'])->name('proveedor.pdf');
     Route::post('/orden/{orden}/archivos', [\App\Http\Controllers\ProveedorPortalController::class, 'subir'])->middleware('throttle:20,1')->name('proveedor.subir');
+    Route::get('/orden/{orden}/archivos.zip', [\App\Http\Controllers\ProveedorPortalController::class, 'zip'])->middleware('throttle:10,1')->name('proveedor.zip');
     Route::get('/orden/{orden}/archivos/{archivo}', [\App\Http\Controllers\ProveedorPortalController::class, 'archivo'])->name('proveedor.archivo');
     Route::delete('/orden/{orden}/archivos/{archivo}', [\App\Http\Controllers\ProveedorPortalController::class, 'quitar'])->middleware('throttle:20,1')->name('proveedor.quitar');
     Route::post('/orden/{orden}/comentar', [\App\Http\Controllers\ProveedorPortalController::class, 'comentar'])->middleware('throttle:20,1')->name('proveedor.comentar');

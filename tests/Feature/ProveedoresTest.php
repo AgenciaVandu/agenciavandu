@@ -186,7 +186,7 @@ class ProveedoresTest extends TestCase
 
         // El dueño ve nuestro diseño pero no lo puede borrar
         $propio = $this->bordados->portal_url;
-        $this->get("$propio/orden/{$o->id}")->assertSee('logo-hotel.ai')->assertSee('Archivos que te compartimos');
+        $this->get("$propio/orden/{$o->id}")->assertSee('logo-hotel.ai')->assertSee('Archivos de la orden');
         $this->delete("$propio/orden/{$o->id}/archivos/{$diseno->id}")->assertNotFound();
         $this->get('/proveedor/' . str_repeat('x', 32))->assertNotFound();
     }
@@ -257,5 +257,54 @@ class ProveedoresTest extends TestCase
         $this->app['auth']->forgetGuards();
         $otro = Proveedor::create(['empresa' => 'Imprenta Sol'])->portal_url;
         $this->getJson("$otro/version?orden={$o->id}")->assertNotFound();
+    }
+
+    public function test_mis_archivos_para_producir_van_desde_la_orden_y_salen_primero(): void
+    {
+        // Se adjuntan al crear la orden
+        $this->actingAs($this->admin)->post('/admin/ordenes', $this->datosOrden(['tipo' => 'produccion', 'archivos' => [
+            UploadedFile::fake()->create('lona-3x2.pdf', 200, 'application/pdf'),
+            UploadedFile::fake()->createWithContent('logo-hotel.dst', 'DST'),
+        ]]))->assertRedirect()->assertSessionHas('ok', fn ($m) => str_contains($m, 'con 2 archivos'));
+        $o = OrdenCompra::latest('id')->firstOrFail();
+        $this->assertSame(['produccion', 'produccion'], $o->archivos()->pluck('tipo')->all());
+        $this->assertSame(['agencia', 'agencia'], $o->archivos()->pluck('autor')->all());
+
+        // Y al editar se agregan más (referencia)
+        $this->put("/admin/ordenes/{$o->id}", $this->datosOrden(['tipo' => 'diseno', 'archivos' => [UploadedFile::fake()->createWithContent('mockup.jpg', 'JPG')]]))->assertRedirect();
+        $this->assertSame(3, $o->archivos()->count());
+        $this->assertSame(['lona-3x2.pdf', 'logo-hotel.dst', 'mockup.jpg'], $o->fresh()->adjuntos->pluck('nombre')->all(), 'Producción primero');
+        $this->post('/admin/ordenes', $this->datosOrden(['tipo' => 'produccion', 'archivos' => [UploadedFile::fake()->createWithContent('x.exe', 'MZ')]]))->assertSessionHasErrors();
+
+        $admin = $this->get("/admin/ordenes/{$o->id}")->assertOk()->getContent();
+        $this->assertLessThan(strpos($admin, 'Qué se pidió'), strpos($admin, 'Archivos para el proveedor'), 'Arriba de los conceptos');
+        $this->get("/admin/ordenes/{$o->id}/archivos.zip")->assertOk()->assertHeader('Content-Type', 'application/zip');
+        $this->assertStringStartsWith('%PDF', \App\Support\OrdenCompraPdf::generar($o->fresh())->output());
+        $this->assertStringContainsString('lona-3x2.pdf', view('ordenes.pdf', ['o' => $o->fresh()->load('conceptos', 'proveedor')])->render());
+
+        $this->post("/admin/ordenes/{$o->id}/enviar")->assertRedirect();
+        $this->app['auth']->forgetGuards();
+        $portal = $this->bordados->portal_url;
+
+        $this->get($portal)->assertOk()->assertSee('3 archivos para descargar');
+        $html = $this->get("$portal/orden/{$o->id}")->assertOk()->getContent();
+        $this->assertStringContainsString('Archivos para producir', $html);
+        $this->assertStringContainsString('Descargar todos', $html);
+        $this->assertLessThan(strpos($html, 'Camisa bordada'), strpos($html, 'lona-3x2.pdf'), 'Los archivos van antes que los conceptos');
+
+        $zip = $this->get("$portal/orden/{$o->id}/archivos.zip")->assertOk();
+        $tmp = tempnam(sys_get_temp_dir(), 'z');
+        file_put_contents($tmp, $zip->streamedContent());
+        $z = new \ZipArchive();
+        $z->open($tmp);
+        $nombres = [];
+        for ($i = 0; $i < $z->numFiles; $i++) $nombres[] = $z->getNameIndex($i);
+        sort($nombres);
+        $this->assertSame(['logo-hotel.dst', 'lona-3x2.pdf', 'mockup.jpg'], $nombres);
+        @unlink($tmp);
+
+        // El proveedor no puede subir "para producción" ni borrar los nuestros
+        $this->post("$portal/orden/{$o->id}/archivos", ['tipo' => 'produccion', 'archivos' => [UploadedFile::fake()->createWithContent('a.pdf', '%PDF')]])->assertSessionHasErrors('tipo');
+        $this->delete("$portal/orden/{$o->id}/archivos/" . $o->archivos()->first()->id)->assertNotFound();
     }
 }

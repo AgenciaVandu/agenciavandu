@@ -73,7 +73,7 @@ class ProveedorPortalController extends Controller
         $o = $this->ordenDe($p, $orden);
         abort_if($o->estado === 'cancelada', 422, 'Esta orden está cancelada.');
 
-        $tipos = array_values(array_diff(array_keys(OrdenCompra::TIPOS_ARCHIVO), ['diseno']));
+        $tipos = array_values(array_diff(array_keys(OrdenCompra::TIPOS_ARCHIVO), OrdenCompra::TIPOS_AGENCIA));
         $request->validate(ArchivosOrden::reglas($tipos), ArchivosOrden::mensajes());
         $subidos = ArchivosOrden::guardar($o, $request, 'proveedor');
         $n = count($subidos);
@@ -88,6 +88,12 @@ class ProveedorPortalController extends Controller
 
         return redirect(route('proveedor.orden', [$token, $o->id]) . ($esFactura ? '#facturas' : '#archivos'))
             ->with('ok', $esFactura ? '¡Gracias! Recibimos tu factura.' : ($n === 1 ? 'Archivo recibido.' : "Recibimos $n archivos."));
+    }
+
+    /** Todos nuestros archivos para producir, juntos */
+    public function zip(string $token, int $orden)
+    {
+        return ArchivosOrden::zipAdjuntos($this->ordenDe($this->proveedor($token), $orden));
     }
 
     public function archivo(Request $request, string $token, int $orden, OrdenCompraArchivo $archivo)
