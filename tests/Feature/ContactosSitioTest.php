@@ -3,13 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\Cliente;
+use App\Models\Prospecto;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
-/** Los mensajes del formulario del sitio quedan como clientes "Nuevo" en el panel */
+/** Los mensajes del formulario del sitio entran a Ventas como prospectos nuevos */
 class ContactosSitioTest extends TestCase
 {
     use RefreshDatabase;
@@ -29,49 +30,56 @@ class ContactosSitioTest extends TestCase
         Mail::fake();
     }
 
-    public function test_crea_el_contacto_como_nuevo_y_no_duplica(): void
+    public function test_crea_el_prospecto_nuevo_y_no_duplica(): void
     {
         $this->enviar()->assertOk()->assertJson(['success' => true]);
-        $c = Cliente::sole();
-        $this->assertTrue($c->nuevo);
-        $this->assertSame('sitio', $c->origen);
-        $this->assertSame('Laura Canché', $c->nombre);
-        $this->assertSame('laura@ejemplo.mx', $c->email);
-        $this->assertSame('Video y fotografía', $c->interes);
+        $p = Prospecto::sole();
+        $this->assertTrue($p->nuevo);
+        $this->assertSame('sitio', $p->origen);
+        $this->assertSame('Laura Canché', $p->nombre);
+        $this->assertSame('laura@ejemplo.mx', $p->email);
+        $this->assertSame('Video y fotografía', $p->interes);
+        $this->assertSame('Nuevo', $p->etapa->nombre);
+        $this->assertSame(0, Cliente::count(), 'Todavía no es cliente');
 
-        // Lo atiendes, lo editas, y vuelve a escribir con otro servicio y otro correo pero el mismo celular
-        $c->update(['nuevo' => false, 'empresa' => 'Hotel Laura']);
+        // Vuelve a escribir con otro correo pero el mismo celular: se actualiza, no se duplica
+        $p->update(['nuevo' => false, 'empresa' => 'Hotel Laura']);
         $this->enviar(['email' => 'otra@ejemplo.mx', 'phone' => '+52 1 9991234567', 'service' => 'Diseño web'])->assertOk();
+        $p->refresh();
+        $this->assertSame(1, Prospecto::count());
+        $this->assertTrue($p->nuevo);
+        $this->assertSame('Hotel Laura', $p->empresa);
+        $this->assertSame('laura@ejemplo.mx', $p->email);
+        $this->assertSame('Diseño web', $p->interes);
+        $this->assertSame(2, $p->eventos()->where('tipo', 'mensaje')->count());
+    }
 
-        $c->refresh();
-        $this->assertSame(1, Cliente::count());
-        $this->assertTrue($c->nuevo);
-        $this->assertSame('Hotel Laura', $c->empresa);
-        $this->assertSame('laura@ejemplo.mx', $c->email); // no pisa lo que ya tenías
-        $this->assertSame('Diseño web', $c->interes);
-        $this->assertSame(2, $c->mensajes()->count());
+    public function test_si_ya_es_cliente_el_prospecto_queda_ligado(): void
+    {
+        $c = Cliente::create(['nombre' => 'Laura Canché', 'empresa' => 'Hotel Laura', 'email' => 'laura@ejemplo.mx']);
+        $this->enviar()->assertOk();
+        $p = Prospecto::sole();
+        $this->assertSame($c->id, $p->cliente_id);
+        $this->assertSame('Hotel Laura', $p->empresa);
     }
 
     public function test_si_falla_el_correo_igual_se_guarda_y_responde_bien(): void
     {
         Mail::shouldReceive('to')->andThrow(new \RuntimeException('SMTP caído'));
         $this->enviar()->assertOk()->assertJson(['success' => true]);
-        $this->assertTrue(Cliente::sole()->nuevo);
+        $this->assertTrue(Prospecto::sole()->nuevo);
     }
 
-    public function test_panel_filtra_nuevos_y_se_atienden(): void
+    public function test_el_panel_avisa_y_al_abrirlo_deja_de_ser_nuevo(): void
     {
         $this->enviar()->assertOk();
-        Cliente::create(['nombre' => 'Cliente viejo']);
-        $c = Cliente::where('nuevo', true)->sole();
-        $u = User::factory()->create();
+        $p = Prospecto::sole();
+        $this->actingAs(User::factory()->create());
 
-        $this->actingAs($u)->get('/admin/clientes?ver=nuevos')->assertOk()->assertSee('Laura Canché')->assertDontSee('Cliente viejo')->assertSee('1 nuevo');
-        $this->get('/admin')->assertOk()->assertSee('1 contacto nuevo desde el sitio');
-        $this->get('/admin/clientes/' . $c->id)->assertOk()->assertSee('Contacto nuevo desde agenciavandu.com')->assertSee('Mensajes desde el sitio');
-
-        $this->patch('/admin/clientes/' . $c->id . '/atendido')->assertRedirect();
-        $this->assertFalse($c->fresh()->nuevo);
-        $this->get('/admin/clientes?ver=nuevos')->assertSee('No hay contactos nuevos');
+        $this->get('/admin')->assertOk()->assertSee('1 prospecto nuevo desde el sitio');
+        $this->get('/admin/ventas')->assertOk()->assertSee('Laura Canch', false)->assertSee('1 nuevo');
+        $this->get('/admin/ventas/prospectos/' . $p->id)->assertOk()->assertSee('Escribió desde el sitio')->assertSee('Video y fotografía');
+        $this->assertFalse($p->fresh()->nuevo);
+        $this->get('/admin')->assertDontSee('prospecto nuevo desde el sitio');
     }
 }

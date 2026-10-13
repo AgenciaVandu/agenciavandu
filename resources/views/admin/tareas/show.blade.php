@@ -293,6 +293,7 @@
     <section class="panel">
         <div class="panel-body ts-datos">
             <div class="f"><i class="bi bi-person"></i><div><span class="k">Para</span>@if($t->responsable){{ $t->responsable->name }}@if($t->responsable->puesto) <span class="secundario">· {{ $t->responsable->puesto }}</span>@endif @else <span class="secundario">Sin asignar</span>@endif</div></div>
+            @if($t->prospecto)<div class="f"><i class="bi bi-funnel"></i><div><span class="k">Prospecto</span><a href="{{ route('admin.ventas.show', $t->prospecto) }}">{{ $t->prospecto->quien }}</a> <span class="secundario">· {{ $t->prospecto->etapa?->nombre }}</span></div></div>@endif
             <div class="f"><i class="bi bi-calendar3"></i><div><span class="k">Fecha límite</span>@if($t->fecha_limite){{ ucfirst($t->fecha_limite->locale('es')->isoFormat('dddd D [de] MMMM')) }} <span class="secundario">· {{ $t->cuando }}</span>@else<span class="secundario">Sin fecha</span>@endif</div></div>
             @if($t->cliente || $t->proyecto)
                 <div class="f"><i class="bi bi-building"></i><div><span class="k">Cliente / proyecto</span>

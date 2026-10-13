@@ -89,9 +89,21 @@
             </select>
         </div>
         <div>
-            <label class="form-label" for="tf-fecha">Fecha límite <span class="secundario fw-normal">(opcional)</span></label>
-            <input id="tf-fecha" type="date" name="fecha_limite" class="form-control num" value="{{ old('fecha_limite', $t->fecha_limite?->toDateString()) }}">
+            <label class="form-label" for="tf-fecha">Fecha y hora <span class="secundario fw-normal">(opcional)</span></label>
+            <div class="d-flex gap-2">
+                <input id="tf-fecha" type="date" name="fecha_limite" class="form-control num" value="{{ old('fecha_limite', $t->fecha_limite?->toDateString()) }}">
+                <input id="tf-hora" type="time" name="hora" class="form-control num" style="max-width: 130px" step="300" value="{{ old('hora', $t->hora ? substr($t->hora, 0, 5) : '') }}" aria-label="Hora">
+            </div>
         </div>
+        @if($prospectos->isNotEmpty() || $t->prospecto_id)
+            <div>
+                <label class="form-label" for="tf-prospecto">Prospecto de ventas <span class="secundario fw-normal">(opcional)</span></label>
+                <select id="tf-prospecto" name="prospecto_id" class="form-select">
+                    <option value="">Ninguno</option>
+                    @foreach($prospectos as $pr)<option value="{{ $pr->id }}" @selected((string) old('prospecto_id', $t->prospecto_id) === (string) $pr->id)>{{ $pr->empresa ? $pr->empresa . ' — ' . $pr->nombre : $pr->nombre }}</option>@endforeach
+                </select>
+            </div>
+        @endif
 
         <div class="ancho">
             <label class="form-label" for="tf-carpeta">Carpeta de entrega en Dropbox</label>

@@ -49,14 +49,14 @@ class TareasController extends Controller
         $ver = $gestiona ? (string) $request->query('ver', 'todas') : 'mias';
         $terminadas = $request->query('estado') === 'terminadas';
 
-        $q = Tarea::with(['cliente', 'proyecto.cliente', 'responsable'])->withCount('archivos');
+        $q = Tarea::with(['cliente', 'proyecto.cliente', 'prospecto', 'responsable'])->withCount('archivos');
         if ($ver === 'mias' || ! $gestiona) $q->where('asignada_a', $yo->id);
         elseif ($ver === 'sin') $q->whereNull('asignada_a');
         elseif (ctype_digit($ver)) $q->where('asignada_a', (int) $ver);
 
         $q = $terminadas
             ? $q->where('estado', 'terminada')->latest('terminada_at')->limit(60)
-            : $q->abiertas()->orderByDesc('urgente')->orderByRaw('fecha_limite is null')->orderBy('fecha_limite')->orderBy('id');
+            : $q->abiertas()->orderByDesc('urgente')->orderByRaw('fecha_limite is null')->orderBy('fecha_limite')->orderByRaw('hora is null')->orderBy('hora')->orderBy('id');
         $tareas = $q->get();
 
         return view('admin.tareas.index', [
@@ -76,6 +76,7 @@ class TareasController extends Controller
         $t = new Tarea([
             'proyecto_id' => $request->integer('proyecto') ?: null,
             'cliente_id'  => $request->integer('cliente') ?: null,
+            'prospecto_id' => $request->integer('prospecto') ?: null,
             'asignada_a'  => $request->integer('para') ?: null,
             'estado'      => 'pendiente',
         ]);
@@ -393,6 +394,7 @@ class TareasController extends Controller
                 'etapas'  => $p->etapas->map(fn ($e) => ['id' => (string) $e->id, 'nombre' => $e->nombre, 'estado' => $e->estado])->values(),
             ]]),
             'clientes'  => Cliente::orderByRaw("coalesce(nullif(empresa, ''), nombre)")->get(['id', 'nombre', 'empresa']),
+            'prospectos' => request()->user()?->puede('ventas') ? \App\Models\Prospecto::abiertos()->orWhere('id', $t->prospecto_id)->orderBy('nombre')->get(['id', 'nombre', 'empresa']) : collect(),
             'proyectos' => $proyectos,
             'equipo'    => User::with('rol')->where('activo', true)->orderBy('name')->get(),
             'dropbox'   => Dropbox::conectado(),
@@ -415,6 +417,8 @@ class TareasController extends Controller
             'proyecto_id'  => ['nullable', Rule::exists('proyectos', 'id')->where('cuenta_id', \App\Support\Cuentas::id())],
             'asignada_a'   => ['nullable', Rule::exists('users', 'id')->where('activo', true)->where('cuenta_id', \App\Support\Cuentas::id())],
             'fecha_limite' => 'nullable|date',
+            'hora'         => 'nullable|date_format:H:i',
+            'prospecto_id' => ['nullable', Rule::exists('prospectos', 'id')->where('cuenta_id', \App\Support\Cuentas::id())],
             'carpeta'      => ['nullable', 'string', 'max:480', 'regex:/^\/[^\\\\<>:"|?*]*$/'],
         ], [
             'titulo.required' => 'Escribe qué hay que hacer.',

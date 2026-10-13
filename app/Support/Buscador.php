@@ -6,6 +6,7 @@ use App\Models\Cliente;
 use App\Models\OrdenCompra;
 use App\Models\Presupuesto;
 use App\Models\Proveedor;
+use App\Models\Prospecto;
 use App\Models\Proyecto;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -33,6 +34,18 @@ class Buscador
                     'titulo' => $c->empresa ?: $c->nombre,
                     'sub'    => collect([$c->empresa ? $c->nombre : null, $c->telefono, $c->email])->filter()->implode(' · ') ?: 'Cliente',
                     'url'    => route('admin.clientes.show', $c),
+                ]);
+        }
+
+        if ($u->puede('ventas')) {
+            $grupos[] = static::grupo('prospectos', 'Prospectos', 'bi-funnel',
+                Prospecto::query()->with('etapa'), $palabras, ['nombre', 'empresa', 'email', 'interes'], 'telefono', $porGrupo,
+                fn ($q) => $q->latest('etapa_at'),
+                fn (Prospecto $p) => [
+                    'titulo'   => $p->quien,
+                    'sub'      => collect([$p->empresa ? $p->nombre : null, $p->interes, $p->valor ? '$' . number_format($p->valor, 0) : null])->filter()->implode(' · ') ?: 'Prospecto',
+                    'url'      => route('admin.ventas.show', $p),
+                    'etiqueta' => $p->etapa?->nombre,
                 ]);
         }
 

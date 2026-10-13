@@ -313,7 +313,7 @@ return [
             'cotizacion_descargada' => ['seccion' => 'cotizaciones', 'texto' => 'Un cliente descarga la cotización', 'ayuda' => 'Cuando baja el PDF desde su enlace', 'icono' => 'bi-file-earmark-arrow-down'],
             'proyecto_visto'        => ['seccion' => 'proyectos', 'texto' => 'Un cliente revisa su proyecto', 'ayuda' => 'Abre su página de avance o de entrega', 'icono' => 'bi-kanban'],
             'proveedor_actividad'   => ['seccion' => 'proveedores', 'texto' => 'Un proveedor sube algo o comenta', 'ayuda' => 'Abre una orden de compra, sube su factura o archivos, o deja un comentario', 'icono' => 'bi-truck'],
-            'mensaje_sitio'         => ['seccion' => 'clientes', 'texto' => 'Llega un mensaje desde el sitio', 'ayuda' => 'Alguien llenó el formulario de cotizar en agenciavandu.com', 'icono' => 'bi-chat-dots'],
+            'mensaje_sitio'         => ['seccion' => 'ventas', 'texto' => 'Llega un mensaje desde el sitio', 'ayuda' => 'Alguien llenó el formulario de cotizar en agenciavandu.com', 'icono' => 'bi-chat-dots'],
             'resumen_diario'        => ['seccion' => 'resumen', 'texto' => 'Resumen de la mañana', 'ayuda' => 'Cobros vencidos o por vencer, etapas del día y cotizaciones a punto de vencer', 'icono' => 'bi-sunrise'],
             // Tareas: llegan solo a las personas involucradas
             'tarea_asignada'        => ['texto' => 'Te asignan una tarea', 'ayuda' => 'Alguien del equipo te asignó trabajo nuevo', 'icono' => 'bi-check2-square'],

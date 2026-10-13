@@ -57,6 +57,7 @@ class PresupuestoController extends Controller
         return view('admin.presupuestos.form', [
             'presupuesto' => $presupuesto,
             'clientes'    => Cliente::orderBy('nombre')->get(['id', 'nombre', 'empresa']),
+            'prospecto'   => $request->filled('prospecto') ? \App\Models\Prospecto::find($request->integer('prospecto')) : null,
         ]);
     }
 
@@ -69,6 +70,12 @@ class PresupuestoController extends Controller
             // Ya se le está atendiendo: deja de aparecer como contacto nuevo
             if ($p->cliente_id) Cliente::whereKey($p->cliente_id)->where('nuevo', true)->update(['nuevo' => false]);
             Aceptacion::registrar($p, 'creada', 'agencia', null, null, ['version' => 1] + Aceptacion::foto($p->fresh('conceptos')), false);
+            // Viene de Ventas: la cotización queda ligada al prospecto (al aceptarse, pasa a Ganado)
+            if ($request->filled('prospecto_id') && ($pr = \App\Models\Prospecto::find($request->integer('prospecto_id')))) {
+                $p->load('conceptos');
+                $pr->update(['presupuesto_id' => $p->id, 'cliente_id' => $pr->cliente_id ?? $p->cliente_id, 'valor' => $pr->valor ?: $p->subtotal]);
+                $pr->eventos()->create(['tipo' => 'cotizacion', 'user_id' => $request->user()?->id, 'texto' => "Se le cotizó {$p->folio} por " . $p->monto($p->subtotal)]);
+            }
             return $p;
         });
 

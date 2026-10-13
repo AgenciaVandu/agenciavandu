@@ -88,11 +88,11 @@
     <a href="{{ route('admin.notificaciones') }}" class="btn btn-primario btn-sm">Activar</a>
     <button type="button" class="btn btn-fantasma btn-icono" @click="cerrar()" aria-label="Ahora no"><i class="bi bi-x-lg"></i></button>
 </div>
-@php $contactosNuevos = \App\Models\Cliente::where('nuevo', true)->orderByDesc('contacto_at')->get(['id', 'nombre', 'empresa', 'interes', 'contacto_at']); @endphp
+@php $contactosNuevos = auth()->user()?->puede('ventas') ? \App\Models\Prospecto::where('nuevo', true)->orderByDesc('contacto_at')->get(['id', 'nombre', 'empresa', 'interes', 'contacto_at']) : collect(); @endphp
 @if($contactosNuevos->isNotEmpty())
-    <a href="{{ $contactosNuevos->count() === 1 ? route('admin.clientes.show', $contactosNuevos->first()) : route('admin.clientes.index', ['ver' => 'nuevos']) }}" class="aviso-push aviso-contactos text-reset text-decoration-none">
+    <a href="{{ $contactosNuevos->count() === 1 ? route('admin.ventas.show', $contactosNuevos->first()) : route('admin.ventas.index') }}" class="aviso-push aviso-contactos text-reset text-decoration-none">
         <i class="bi bi-inbox-fill"></i>
-        <div class="t"><b>{{ $contactosNuevos->count() === 1 ? '1 contacto nuevo desde el sitio' : $contactosNuevos->count() . ' contactos nuevos desde el sitio' }}</b>
+        <div class="t"><b>{{ $contactosNuevos->count() === 1 ? '1 prospecto nuevo desde el sitio' : $contactosNuevos->count() . ' prospectos nuevos desde el sitio' }}</b>
             <span>{{ $contactosNuevos->take(3)->map(fn ($c) => ($c->empresa ?: $c->nombre) . ($c->interes ? ' · ' . $c->interes : ''))->implode(' — ') }}</span></div>
         <i class="bi bi-chevron-right" style="font-size:15px; color: var(--muted)"></i>
     </a>

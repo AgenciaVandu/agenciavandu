@@ -147,6 +147,7 @@
       x-data="editor({{ Js::from($estado) }})" @keydown.ctrl.s.prevent="$el.requestSubmit()" @keydown.meta.s.prevent="$el.requestSubmit()">
     @csrf
     @unless($nuevo) @method('put') @endunless
+    @if($nuevo && ! empty($prospecto))<input type="hidden" name="prospecto_id" value="{{ $prospecto->id }}">@endif
 
     <div class="migas"><a href="{{ route('admin.presupuestos.index') }}">Cotizaciones</a> <i class="bi bi-chevron-right small"></i> <span>{{ $nuevo ? 'Nueva' : $p->folio }}</span></div>
     <div class="page-head">

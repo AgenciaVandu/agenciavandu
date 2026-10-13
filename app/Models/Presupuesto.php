@@ -56,6 +56,23 @@ class Presupuesto extends Model
             }
         });
 
+        // Ventas: al aceptarse, el prospecto ligado pasa a Ganado con el valor de la cotización
+        static::saved(function (Presupuesto $p) {
+            if ($p->estado !== 'aceptada' || ! ($p->wasChanged('estado') || $p->wasRecentlyCreated)) return;
+            try {
+                $pros = Prospecto::abiertos()->where('presupuesto_id', $p->id)->get();
+                if ($pros->isEmpty() && $p->cliente_id) {
+                    $pros = Prospecto::abiertos()->where('cliente_id', $p->cliente_id)->whereNull('presupuesto_id')->latest('id')->limit(1)->get();
+                }
+                foreach ($pros as $x) {
+                    $x->fill(['presupuesto_id' => $p->id, 'valor' => $p->subtotal])->save();
+                    $x->moverA(EmbudoEtapa::ganada(), auth()->id(), null, 'Aceptó la cotización ' . $p->folio);
+                }
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        });
+
         static::creating(function (Presupuesto $p) {
             $p->token ??= Str::random(32);
             $p->folio ??= static::siguienteFolio();

@@ -96,6 +96,21 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::patch('presupuestos/{presupuesto}/rapido', [Admin\PresupuestoController::class, 'rapido'])->name('presupuestos.rapido');
     Route::get('presupuestos/{presupuesto}/whatsapp', [Admin\PresupuestoController::class, 'whatsapp'])->name('presupuestos.whatsapp');
     Route::post('presupuestos/{presupuesto}/codigo', [Admin\PresupuestoController::class, 'codigo'])->name('presupuestos.codigo');
+    // Ventas: embudo de prospectos
+    Route::get('ventas', [Admin\VentasController::class, 'index'])->name('ventas.index');
+    Route::get('ventas/etapas', [Admin\VentasController::class, 'etapas'])->name('ventas.etapas');
+    Route::put('ventas/etapas', [Admin\VentasController::class, 'guardarEtapas'])->name('ventas.etapas.guardar');
+    Route::get('ventas/prospectos/nuevo', [Admin\VentasController::class, 'create'])->name('ventas.create');
+    Route::post('ventas/prospectos', [Admin\VentasController::class, 'store'])->name('ventas.store');
+    Route::get('ventas/prospectos/{prospecto}', [Admin\VentasController::class, 'show'])->name('ventas.show');
+    Route::get('ventas/prospectos/{prospecto}/editar', [Admin\VentasController::class, 'edit'])->name('ventas.edit');
+    Route::put('ventas/prospectos/{prospecto}', [Admin\VentasController::class, 'update'])->name('ventas.update');
+    Route::delete('ventas/prospectos/{prospecto}', [Admin\VentasController::class, 'destroy'])->name('ventas.destroy');
+    Route::patch('ventas/prospectos/{prospecto}/etapa', [Admin\VentasController::class, 'etapa'])->name('ventas.etapa');
+    Route::post('ventas/prospectos/{prospecto}/nota', [Admin\VentasController::class, 'nota'])->name('ventas.nota');
+    Route::post('ventas/prospectos/{prospecto}/convertir', [Admin\VentasController::class, 'convertir'])->name('ventas.convertir');
+    Route::post('ventas/prospectos/{prospecto}/seguimiento', [Admin\VentasController::class, 'seguimiento'])->name('ventas.seguimiento');
+
     // Proveedores y órdenes de compra
     Route::resource('proveedores', Admin\ProveedorController::class)->parameters(['proveedores' => 'proveedor']);
     Route::resource('ordenes', Admin\OrdenCompraController::class)->parameters(['ordenes' => 'orden']);

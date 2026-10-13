@@ -19,7 +19,7 @@ class Tarea extends Model
         'terminada' => ['texto' => 'Terminada',   'color' => '#047A4B', 'icono' => 'bi-check-circle-fill'],
     ];
 
-    protected $fillable = ['titulo', 'descripcion', 'cliente_id', 'proyecto_id', 'asignada_a', 'creada_por', 'fecha_limite', 'urgente', 'estado', 'carpeta', 'destino', 'etapa_id', 'completar_etapa', 'ronda', 'entregada_at', 'terminada_at', 'aprobada_por'];
+    protected $fillable = ['titulo', 'descripcion', 'cliente_id', 'proyecto_id', 'prospecto_id', 'hora', 'asignada_a', 'creada_por', 'fecha_limite', 'urgente', 'estado', 'carpeta', 'destino', 'etapa_id', 'completar_etapa', 'ronda', 'entregada_at', 'terminada_at', 'aprobada_por'];
 
     /** A dónde va lo entregado al aprobar la tarea */
     public const DESTINOS = [
@@ -37,6 +37,7 @@ class Tarea extends Model
 
     public function cliente(): BelongsTo { return $this->belongsTo(Cliente::class); }
     public function proyecto(): BelongsTo { return $this->belongsTo(Proyecto::class); }
+    public function prospecto(): BelongsTo { return $this->belongsTo(Prospecto::class); }
     public function responsable(): BelongsTo { return $this->belongsTo(User::class, 'asignada_a'); }
     public function autor(): BelongsTo { return $this->belongsTo(User::class, 'creada_por'); }
     public function aprobador(): BelongsTo { return $this->belongsTo(User::class, 'aprobada_por'); }
@@ -48,27 +49,41 @@ class Tarea extends Model
 
     public function getVencidaAttribute(): bool
     {
-        return $this->estado !== 'terminada' && $this->fecha_limite && $this->fecha_limite->lt(now(config('vandu.zona_horaria'))->startOfDay());
+        if ($this->estado === 'terminada' || ! $this->fecha_limite) return false;
+        $ahora = now(config('vandu.zona_horaria'));
+        if ($this->fecha_limite->toDateString() === $ahora->toDateString() && $this->hora) {
+            return substr($this->hora, 0, 5) < $ahora->format('H:i');   // hoy, pero ya pasó la hora
+        }
+        return $this->fecha_limite->toDateString() < $ahora->toDateString();   // por día, en la zona del negocio
+    }
+
+    /** "4:30 p. m." */
+    public function getHoraTextoAttribute(): ?string
+    {
+        if (! $this->hora) return null;
+        return \Illuminate\Support\Carbon::createFromFormat('H:i', substr($this->hora, 0, 5))->locale('es')->isoFormat('h:mm a');
     }
 
     /** "Hoy", "Mañana", "Vie 16 oct", "Venció hace 2 días" */
     public function getCuandoAttribute(): ?string
     {
         if (! $this->fecha_limite) return null;
-        $hoy = now(config('vandu.zona_horaria'))->startOfDay();
-        $d = (int) $hoy->diffInDays($this->fecha_limite, false);
-        return match (true) {
+        $tz = config('vandu.zona_horaria');
+        $hoy = now($tz)->startOfDay();
+        $d = (int) $hoy->diffInDays(\Illuminate\Support\Carbon::parse($this->fecha_limite->toDateString(), $tz), false);
+        $dia = match (true) {
             $d === 0 => 'Hoy',
             $d === 1 => 'Mañana',
             $d < 0 && $this->estado !== 'terminada' => 'Venció ' . ($d === -1 ? 'ayer' : 'hace ' . abs($d) . ' días'),
             default => ucfirst($this->fecha_limite->locale('es')->isoFormat($d > 0 && $d < 7 ? 'dddd D' : 'ddd D MMM')),
         };
+        return $this->hora && $d >= 0 ? $dia . ' · ' . $this->hora_texto : $dia;
     }
 
     public function getDondeAttribute(): ?string
     {
         $c = $this->cliente ?? $this->proyecto?->cliente;
-        $n = $c ? ($c->empresa ?: $c->nombre) : null;
+        $n = $c ? ($c->empresa ?: $c->nombre) : ($this->prospecto_id ? $this->prospecto?->quien : null);
         return collect([$n, $this->proyecto?->nombre])->filter()->unique()->implode(' · ') ?: null;
     }
 

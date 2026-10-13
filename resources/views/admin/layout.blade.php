@@ -6,6 +6,7 @@
     $activosNav = \App\Models\Proyecto::where('estado', 'activo')->count();
     try { $redesNav = \App\Models\RedesPost::where('estado', 'cambios')->count(); } catch (\Throwable $e) { $redesNav = 0; }
     try { $nuevosNav = \App\Models\Cliente::where('nuevo', true)->count(); } catch (\Throwable $e) { $nuevosNav = 0; } // antes de migrar
+    try { $prospectosNav = \App\Models\Prospecto::where('nuevo', true)->count(); } catch (\Throwable $e) { $prospectosNav = 0; }
     $cuentaNav = \App\Support\Cuentas::actual();
     $viendoOtra = $usuario?->plataforma && $cuentaNav && $cuentaNav->id !== $usuario->cuenta_id;
     // Cada quien ve solo las secciones de su rol
@@ -14,6 +15,7 @@
     $nav = array_values(array_filter([
         ['ruta' => 'admin.resumen',             'activo' => 'admin.resumen',          'icono' => 'bi-grid-1x2',        'texto' => 'Resumen', 'seccion' => 'resumen'],
         ['ruta' => 'admin.tareas.index',        'activo' => 'admin.tareas.*',         'icono' => 'bi-check2-square',   'texto' => $puede('tareas') ? 'Tareas' : 'Mis tareas', 'cuenta' => $tareasNav, 'seccion' => null],
+        ['ruta' => 'admin.ventas.index',        'activo' => 'admin.ventas.*',         'icono' => 'bi-funnel',          'texto' => 'Ventas', 'cuenta' => $prospectosNav, 'nuevos' => true, 'seccion' => 'ventas'],
         ['ruta' => 'admin.presupuestos.index',  'activo' => 'admin.presupuestos.*',   'icono' => 'bi-file-earmark-text','texto' => 'Cotizaciones', 'cuenta' => $vigentesNav, 'seccion' => 'cotizaciones'],
         ['ruta' => 'admin.proyectos.index',     'activo' => 'admin.proyectos.*',      'icono' => 'bi-kanban',          'texto' => 'Proyectos', 'cuenta' => $activosNav, 'seccion' => 'proyectos'],
         ['ruta' => 'admin.redes',               'activo' => 'admin.redes*',           'icono' => 'bi-grid-3x3-gap',    'texto' => 'Redes sociales', 'cuenta' => $redesNav ?? 0, 'seccion' => 'redes'],
@@ -424,7 +426,7 @@
             <a href="{{ route($item['ruta']) }}" class="{{ request()->routeIs($item['activo']) ? 'activo' : '' }}"
                @if(request()->routeIs($item['activo'])) aria-current="page" @endif>
                 <i class="bi {{ $item['icono'] }}"></i> {{ $item['texto'] }}
-                @if(! empty($item['cuenta']))<span class="cuenta num {{ ! empty($item['nuevos']) ? 'nuevos' : '' }}" @if(! empty($item['nuevos'])) title="{{ $item['cuenta'] }} {{ $item['cuenta'] === 1 ? 'contacto nuevo' : 'contactos nuevos' }}" @endif>{{ ! empty($item['nuevos']) ? $item['cuenta'] . ' ' . ($item['cuenta'] === 1 ? 'nuevo' : 'nuevos') : $item['cuenta'] }}</span>@endif
+                @if(! empty($item['cuenta']))<span class="cuenta num {{ ! empty($item['nuevos']) ? 'nuevos' : '' }}" @if(! empty($item['nuevos'])) title="{{ $item['cuenta'] }} {{ $item['cuenta'] === 1 ? 'nuevo' : 'nuevos' }}" @endif>{{ ! empty($item['nuevos']) ? $item['cuenta'] . ' ' . ($item['cuenta'] === 1 ? 'nuevo' : 'nuevos') : $item['cuenta'] }}</span>@endif
             </a>
         @endforeach
     </nav>

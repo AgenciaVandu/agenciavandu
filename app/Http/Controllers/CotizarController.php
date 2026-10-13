@@ -37,14 +37,14 @@ class CotizarController extends Controller
             return response()->json(['success' => false, 'message' => 'Error validando reCAPTCHA.'], 500);
         }
 
-        // 3. Se guarda en el panel como contacto "Nuevo" (aunque el correo falle, no se pierde)
+        // 3. Se guarda en Ventas como prospecto nuevo (aunque el correo falle, no se pierde)
         $datos = $request->only(['name', 'lastname', 'phone', 'email', 'service']);
         $cliente = null;
         try {
-            $cliente = \App\Models\Cliente::desdeFormulario($datos);
-            \App\Support\Push\Notificar::evento('mensaje_sitio', 'Nuevo contacto desde agenciavandu.com',
+            $cliente = \App\Models\Prospecto::desdeFormulario($datos);
+            \App\Support\Push\Notificar::evento('mensaje_sitio', 'Nuevo prospecto desde agenciavandu.com',
                 trim($datos['name'] . ' ' . $datos['lastname']) . ' · ' . $datos['service'] . ' · ' . $datos['phone'],
-                route('admin.clientes.show', $cliente), 'contacto-' . $cliente->id);
+                route('admin.ventas.show', $cliente), 'prospecto-' . $cliente->id);
         } catch (\Throwable $e) {
             \Log::error('No se pudo guardar el contacto del sitio: ' . $e->getMessage());
         }
