@@ -289,11 +289,11 @@ class PresupuestoController extends Controller
                 ])->values()->all();
             if ($costos) {
                 $fila['costos'] = $costos;
-                $fila['utilidad'] = $num($c['utilidad'] ?? null);
                 $fila['utilidad_modo'] = ($c['utilidad_modo'] ?? 'pct') === 'monto' ? 'monto' : 'pct';
-                // El precio al cliente sale del costeo (misma fórmula que el editor)
+                // Manda el precio que quedó (lo escribas tú o lo sugiera el costeo); la utilidad se calcula a partir de él
                 $costo = collect($costos)->sum(fn ($x) => \App\Support\Costeo::importe($x, (float) $c['cantidad']));
-                $fila['precio'] = \App\Models\PresupuestoConcepto::precioDesdeCosteo((float) $c['cantidad'], $costo, $fila['utilidad'], $fila['utilidad_modo']);
+                $ganancia = (float) $c['cantidad'] * (float) $c['precio'] - $costo;
+                $fila['utilidad'] = $fila['utilidad_modo'] === 'monto' ? round($ganancia, 2) : ($costo > 0 ? round($ganancia / $costo * 100, 2) : null);
             }
             return $fila;
         })->all();

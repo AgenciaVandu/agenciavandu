@@ -41,7 +41,7 @@ class CosteoTest extends TestCase
     {
         // 20 playeras: proveedor $80 c/u (tercero), gasolina $200 total (operativo), utilidad 30 %
         $this->actingAs($this->admin)->post('/admin/presupuestos', $this->datos([[
-            'titulo' => 'Playeras bordadas', 'cantidad' => 20, 'precio' => 1, 'utilidad' => 30, 'utilidad_modo' => 'pct',
+            'titulo' => 'Playeras bordadas', 'cantidad' => 20, 'precio' => 117, 'utilidad' => 999, 'utilidad_modo' => 'pct',
             'costos' => [
                 ['clave' => 'proveedor', 'nombre' => 'Proveedor o maquila', 'modo' => 'unidad', 'clase' => 'tercero', 'monto' => 80],
                 ['clave' => 'gasolina', 'nombre' => 'Gasolina y traslados', 'modo' => 'fijo', 'clase' => 'operativo', 'monto' => 200],
@@ -55,7 +55,8 @@ class CosteoTest extends TestCase
         $this->assertEquals(1800, $playeras->costo);               // 20×80 + 200
         $this->assertEquals(1600, $playeras->costoDe('tercero'));
         $this->assertEquals(200, $playeras->costoDe('operativo'));
-        $this->assertEquals(117, $playeras->precio);               // 1800 × 1.3 / 20 (el precio sale del costeo)
+        $this->assertEquals(117, $playeras->precio);               // el precio que quedó en el formulario
+        $this->assertEquals(30, $playeras->utilidad);              // la utilidad se calcula de ese precio: 540 / 1800
         $this->assertEquals(540, $playeras->ganancia);
         $this->assertFalse($web->tiene_costeo);
 
@@ -70,6 +71,36 @@ class CosteoTest extends TestCase
         // Duplicar conserva el costeo
         $this->post("/admin/presupuestos/{$p->id}/duplicar")->assertRedirect();
         $this->assertEquals(1800, Presupuesto::latest('id')->first()->conceptos->first()->costo);
+    }
+
+    public function test_el_precio_que_escribes_se_respeta_y_la_utilidad_se_ajusta(): void
+    {
+        // Cobras $22,000 + IVA y tus costos suman $5,369.96: el precio no se mueve
+        $this->actingAs($this->admin)->post('/admin/presupuestos', $this->datos([[
+            'titulo' => 'Video corporativo', 'cantidad' => 1, 'precio' => 22000, 'utilidad' => 30, 'utilidad_modo' => 'pct',
+            'costos' => [
+                ['clave' => 'freelance', 'nombre' => 'Freelance o terceros', 'modo' => 'fijo', 'clase' => 'tercero', 'monto' => 4000],
+                ['clave' => 'gasolina', 'nombre' => 'Gasolina y traslados', 'modo' => 'fijo', 'clase' => 'operativo', 'monto' => 1369.96],
+            ],
+        ]]))->assertRedirect();
+        $p = Presupuesto::latest('id')->first();
+        $c = $p->conceptos->first();
+        $this->assertEquals(22000, $c->precio);
+        $this->assertEquals(22000, $p->subtotal);
+        $this->assertEquals(3520, $p->iva);
+        $this->assertEquals(25520, $p->total);
+        $this->assertEquals(16630.04, $c->ganancia);
+        $this->assertEquals(309.69, $c->utilidad);                  // % sobre el costo
+        $this->assertEquals(75.6, $p->margen);                      // % de lo vendido
+
+        // Con utilidad en $ también se calcula del precio
+        $this->put("/admin/presupuestos/{$p->id}", $this->datos([[
+            'titulo' => 'Video corporativo', 'cantidad' => 1, 'precio' => 22000, 'utilidad' => 1, 'utilidad_modo' => 'monto',
+            'costos' => [['clave' => 'freelance', 'nombre' => 'Freelance o terceros', 'modo' => 'fijo', 'clase' => 'tercero', 'monto' => 4000]],
+        ]]))->assertRedirect();
+        $c = $p->fresh('conceptos')->conceptos->first();
+        $this->assertEquals(22000, $c->precio);
+        $this->assertEquals(18000, $c->utilidad);
     }
 
     public function test_el_costeo_anterior_pasa_a_componentes(): void

@@ -226,14 +226,14 @@
                         </div>
                         <div>
                             <label class="form-label d-md-none" :for="'cant'+i">Cantidad</label>
-                            <input type="number" step="0.01" min="0" class="form-control num" :id="'cant'+i" :name="`conceptos[${i}][cantidad]`" x-model.number="c.cantidad" required>
+                            <input type="number" step="0.01" min="0" class="form-control num" :id="'cant'+i" :name="`conceptos[${i}][cantidad]`" x-model.number="c.cantidad" required @input="if (conCosteo(c)) recalcularPrecio(c)">
                         </div>
                         <div>
                             <label class="form-label d-md-none" :for="'precio'+i">Precio unitario</label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
                                 <input type="number" step="0.01" min="0" class="form-control num" :id="'precio'+i" :name="`conceptos[${i}][precio]`" x-model.number="c.precio" required placeholder="0.00"
-                                       :readonly="conCosteo(c)" :class="conCosteo(c) && 'precio-auto'" :title="conCosteo(c) ? 'Se calcula con los costos + utilidad' : ''">
+                                       @input="if (conCosteo(c)) recalcularUtilidad(c)" :title="conCosteo(c) ? 'Escribe el precio y la utilidad se ajusta sola' : ''">
                             </div>
                         </div>
                         <div class="costo num" x-text="dinero(importe(c))"></div>
@@ -253,13 +253,13 @@
                             <div class="costear"><button type="button" @click="activarCosteo(c)"><i class="bi bi-calculator me-1"></i>Calcular precio con costos</button></div>
                         </template>
                         <template x-if="c.costear">
-                            <div class="costeo" x-effect="if (conCosteo(c)) c.precio = precioCosteo(c)">
+                            <div class="costeo">
                                 <div class="comps">
                                     <template x-for="(k, j) in c.costos" :key="k.clave + j">
                                         <div>
                                             <label class="form-label" :for="'cos'+i+'_'+j"><span x-text="k.nombre + (k.modo === 'unidad' ? ' (c/u)' : ' (total)')"></span><span class="cl" x-text="k.clase === 'tercero' ? 'Tercero' : 'Operativo'"></span></label>
                                             <div class="input-group"><span class="input-group-text">$</span>
-                                                <input type="number" step="0.01" min="0" class="form-control num" :id="'cos'+i+'_'+j" :name="`conceptos[${i}][costos][${j}][monto]`" x-model="k.monto" placeholder="0.00"></div>
+                                                <input type="number" step="0.01" min="0" class="form-control num" :id="'cos'+i+'_'+j" :name="`conceptos[${i}][costos][${j}][monto]`" x-model="k.monto" placeholder="0.00" @input="recalcularPrecio(c)"></div>
                                             <input type="hidden" :name="`conceptos[${i}][costos][${j}][clave]`" :value="k.clave">
                                             <input type="hidden" :name="`conceptos[${i}][costos][${j}][nombre]`" :value="k.nombre">
                                             <input type="hidden" :name="`conceptos[${i}][costos][${j}][modo]`" :value="k.modo">
@@ -269,8 +269,8 @@
                                     <div>
                                         <label class="form-label" :for="'util'+i">Utilidad</label>
                                         <div class="input-group">
-                                            <input type="number" step="0.01" class="form-control num" :id="'util'+i" :name="`conceptos[${i}][utilidad]`" x-model="c.utilidad" placeholder="0">
-                                            <select class="form-select flex-grow-0" style="width: 64px" :name="`conceptos[${i}][utilidad_modo]`" x-model="c.utilidad_modo" aria-label="Utilidad en porcentaje sobre el costo o monto">
+                                            <input type="number" step="0.01" class="form-control num" :id="'util'+i" :name="`conceptos[${i}][utilidad]`" x-model="c.utilidad" placeholder="0" @input="recalcularPrecio(c)">
+                                            <select class="form-select flex-grow-0" style="width: 64px" :name="`conceptos[${i}][utilidad_modo]`" x-model="c.utilidad_modo" aria-label="Utilidad en porcentaje sobre el costo o monto" @change="recalcularUtilidad(c)">
                                                 <option value="pct">%</option><option value="monto">$</option>
                                             </select>
                                         </div>
@@ -622,6 +622,15 @@ function editor(init) {
         activarCosteo(c) {
             c.costear = true;
             if (c.utilidad === '' || c.utilidad === null) { c.utilidad = this.utilidadBase; c.utilidad_modo = 'pct'; }
+            // Si ya tenía precio, se respeta: la utilidad sale de ese precio en cuanto captures los costos
+        },
+        // Costos o utilidad cambian → precio sugerido. El precio sigue siendo editable.
+        recalcularPrecio(c) { if (this.conCosteo(c)) c.precio = this.precioCosteo(c); },
+        // Escribes el precio → la utilidad se ajusta (en % sobre el costo o en $, según elegiste)
+        recalcularUtilidad(c) {
+            if (! this.conCosteo(c)) return;
+            const costo = this.costo(c), ganancia = this.importe(c) - costo;
+            c.utilidad = c.utilidad_modo === 'monto' ? Math.round(ganancia * 100) / 100 : (costo > 0 ? Math.round(ganancia / costo * 10000) / 100 : '');
         },
         quitarCosteo(c) { c.costos.forEach(k => k.monto = ''); c.costear = false; },
         get usaCosteo() { return this.conceptos.some(c => this.conCosteo(c)); },
