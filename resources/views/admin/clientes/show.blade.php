@@ -26,7 +26,7 @@
     $pendientes = collect();
     if ($vencido > 0) $pendientes->push(['bi-exclamation-octagon', 'rojo', 'Tiene ' . $dinero($vencido) . ' de pagos vencidos', 'Mándale un recordatorio desde su proyecto.', route('admin.clientes.show', [$cliente, 'ver' => 'proyectos']), 'Ver pagos']);
     foreach ($facturaPorEnviar as $p) $pendientes->push(['bi-send', 'verde', "La factura de {$p->folio} está lista para enviar", $p->facturas_ordenadas->pluck('nombre')->join(' · '), route('admin.presupuestos.edit', [$p, 'correo' => 'factura']), 'Enviar factura']);
-    foreach ($sinFactura->take(3) as $p) $pendientes->push(['bi-receipt', 'ambar', "{$p->folio} está aceptada y no tiene factura", \Illuminate\Support\Str::limit($p->conceptos->first()?->resumen ?: $p->titulo, 70), route('admin.presupuestos.edit', $p) . '#factura', 'Subir factura']);
+    foreach ($sinFactura->take(3) as $p) $pendientes->push(['bi-receipt', 'ambar', "{$p->folio} está aceptada y no tiene factura", \Illuminate\Support\Str::limit($p->conceptos->first()?->resumen ?: $p->titulo, 70), route('admin.presupuestos.edit', [$p, 'ver' => 'factura']), 'Subir factura']);
     foreach ($porResponder->take(3) as $p) $pendientes->push(['bi-hourglass-split', 'azul', "{$p->folio} espera respuesta", 'Vence el ' . $p->vigencia_local->locale('es')->isoFormat('D [de] MMMM') . ' · ' . $p->monto($p->modo_iva === 'desglosado' ? $p->total : $p->subtotal), route('admin.presupuestos.edit', [$p, 'correo' => 'por_vencer']), 'Dar seguimiento']);
     if ($aceptadas->isNotEmpty() && ! $cliente->fiscales_completos) $pendientes->push(['bi-person-vcard', 'ambar', 'Faltan sus datos fiscales', 'Los necesitas para facturar.', route('admin.clientes.edit', $cliente) . '#rfc', 'Capturar']);
 @endphp
@@ -128,7 +128,7 @@
                 @endforeach
                 @if($conFactura->isNotEmpty() && $sinFactura->isNotEmpty())<li><hr class="dropdown-divider"></li>@endif
                 @foreach($sinFactura as $p)
-                    <li><a class="dropdown-item" href="{{ route('admin.presupuestos.edit', $p) }}#factura"><i class="bi bi-upload me-1"></i> Subir factura de {{ $p->folio }}
+                    <li><a class="dropdown-item" href="{{ route('admin.presupuestos.edit', [$p, 'ver' => 'factura']) }}"><i class="bi bi-upload me-1"></i> Subir factura de {{ $p->folio }}
                         <small>{{ \Illuminate\Support\Str::limit($p->conceptos->first()?->resumen ?: $p->titulo, 50) }}</small></a></li>
                 @endforeach
             </ul>
@@ -291,7 +291,7 @@
                             @if($p->facturas->isNotEmpty())
                                 <span class="{{ $env ? 'text-success' : '' }}"><i class="bi {{ $env ? 'bi-check2-circle' : 'bi-receipt' }}"></i> {{ $env ? 'Enviada' : 'Por enviar' }}</span>
                             @elseif($p->estado === 'aceptada')
-                                <a href="{{ route('admin.presupuestos.edit', $p) }}#factura" class="secundario">Subir</a>
+                                <a href="{{ route('admin.presupuestos.edit', [$p, 'ver' => 'factura']) }}" class="secundario">Subir</a>
                             @else<span class="secundario">—</span>@endif
                         </td>
                         <td class="text-end text-nowrap">
@@ -300,7 +300,7 @@
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item" href="{{ route('admin.presupuestos.edit', [$p, 'correo' => 'cotizacion']) }}"><i class="bi bi-envelope me-2"></i>Enviar por correo</a></li>
                                     @if($p->facturas->isNotEmpty())<li><a class="dropdown-item" href="{{ route('admin.presupuestos.edit', [$p, 'correo' => 'factura']) }}"><i class="bi bi-receipt me-2"></i>{{ $env ? 'Reenviar factura' : 'Enviar factura' }}</a></li>
-                                    @elseif($p->estado === 'aceptada')<li><a class="dropdown-item" href="{{ route('admin.presupuestos.edit', $p) }}#factura"><i class="bi bi-upload me-2"></i>Subir factura</a></li>@endif
+                                    @elseif($p->estado === 'aceptada')<li><a class="dropdown-item" href="{{ route('admin.presupuestos.edit', [$p, 'ver' => 'factura']) }}"><i class="bi bi-upload me-2"></i>Subir factura</a></li>@endif
                                     @if($cliente->whatsapp)<li><a class="dropdown-item" href="{{ route('admin.presupuestos.whatsapp', $p) }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp me-2"></i>Enviar por WhatsApp</a></li>@endif
                                     <li><button type="button" class="dropdown-item" data-copiar="{{ $p->url_publica }}"><i class="bi bi-link-45deg me-2"></i>Copiar enlace</button></li>
                                     <li><a class="dropdown-item" href="{{ route('admin.presupuestos.pdf', $p) }}" target="_blank"><i class="bi bi-file-earmark-pdf me-2"></i>Ver PDF</a></li>
@@ -359,7 +359,7 @@
                     <div class="fac-fila" @if($loop->first) style="border-top:0" @endif>
                         <i class="bi bi-receipt fs-5 {{ $env ? 'text-success' : 'text-secondary' }}"></i>
                         <div class="t">
-                            <a href="{{ route('admin.presupuestos.edit', $p) }}#factura" class="principal text-reset text-decoration-none num">{{ $p->folio }}</a>
+                            <a href="{{ route('admin.presupuestos.edit', [$p, 'ver' => 'factura']) }}" class="principal text-reset text-decoration-none num">{{ $p->folio }}</a>
                             <span class="secundario"> · {{ \Illuminate\Support\Str::limit($p->conceptos->first()?->resumen ?: $p->titulo, 50) }}</span>
                             <div class="archivos">
                                 @foreach($p->facturas_ordenadas as $f)<a href="{{ route('admin.presupuestos.facturas.ver', [$p, $f]) }}" target="_blank" class="text-reset me-2"><i class="bi {{ $f->icono }}"></i> {{ $f->nombre }}</a>@endforeach
@@ -373,11 +373,11 @@
                     <div class="fac-fila" @if($loop->first && $conFactura->isEmpty()) style="border-top:0" @endif>
                         <i class="bi bi-receipt-cutoff fs-5 text-secondary"></i>
                         <div class="t">
-                            <a href="{{ route('admin.presupuestos.edit', $p) }}#factura" class="principal text-reset text-decoration-none num">{{ $p->folio }}</a>
+                            <a href="{{ route('admin.presupuestos.edit', [$p, 'ver' => 'factura']) }}" class="principal text-reset text-decoration-none num">{{ $p->folio }}</a>
                             <span class="secundario"> · {{ \Illuminate\Support\Str::limit($p->conceptos->first()?->resumen ?: $p->titulo, 50) }}</span>
                             <div class="archivos">Aceptada · sin factura</div>
                         </div>
-                        <a href="{{ route('admin.presupuestos.edit', $p) }}#factura" class="btn btn-borde btn-sm"><i class="bi bi-upload me-1"></i> Subir factura</a>
+                        <a href="{{ route('admin.presupuestos.edit', [$p, 'ver' => 'factura']) }}" class="btn btn-borde btn-sm"><i class="bi bi-upload me-1"></i> Subir factura</a>
                     </div>
                 @endforeach
             @endif

@@ -47,6 +47,19 @@
     ];
     $wa = $p->contacto?->whatsapp;
 @endphp
+@php
+    // Secciones del editor (como en Finanzas y Proyectos); las de seguimiento solo existen ya guardada
+    $seccionesCot = ['contenido' => ['Contenido', 'bi-list-ul'], 'condiciones' => ['Condiciones', 'bi-card-text'], 'pago' => ['Pago y encabezado', 'bi-bank']];
+    if (! $nuevo) $seccionesCot += ['envio' => ['Envío y respuesta', 'bi-send'], 'factura' => ['Factura y proyecto', 'bi-receipt']];
+    // Si hay errores, abre la sección donde está el primero
+    $camposSeccion = ['observaciones' => 'condiciones', 'consideraciones' => 'condiciones', 'notas_internas' => 'condiciones',
+        'pago_intro' => 'pago', 'banco' => 'pago', 'clabe' => 'pago', 'beneficiario' => 'pago', 'nota_comprobante' => 'pago', 'nota_factura' => 'pago',
+        'emisor_nombre' => 'pago', 'emisor_telefono' => 'pago', 'emisor_sitio' => 'pago', 'emisor_email' => 'pago', 'facturas' => 'factura', 'codigo' => 'envio'];
+    $primerError = collect($errors->keys())->first();
+    $seccionInicial = $primerError ? ($camposSeccion[\Illuminate\Support\Str::before($primerError, '.')] ?? 'contenido') : request('ver', 'contenido');
+    if (! isset($seccionesCot[$seccionInicial])) $seccionInicial = 'contenido';
+    $estado['seccion'] = $seccionInicial;
+@endphp
 @section('titulo', $nuevo ? 'Nueva cotización' : $p->folio)
 
 @push('head')
@@ -130,8 +143,28 @@
     .colapsable[open] summary .bi-chevron-down { transform: rotate(180deg); }
     .colapsable:not([open]) .panel-head { border-bottom: 0; }
 
+    /* Encabezado y secciones */
+    .min-w-0 { min-width: 0; }
+    .sec-cot { display: grid; gap: 1.5rem; }
+    .cot-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px; margin-bottom: 18px; }
+    .cot-head .sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .subnav { position: sticky; top: 0; z-index: 6; background: var(--canvas); display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 0 0 22px; overflow-x: auto; scrollbar-width: none; }
+    .subnav::-webkit-scrollbar { display: none; }
+    .subnav a { display: inline-flex; align-items: center; gap: 7px; padding: 11px 14px; color: var(--muted); text-decoration: none; font-weight: 500; font-size: 14.5px;
+                border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+    .subnav a:hover { color: var(--text); }
+    .subnav a.activo { color: var(--text); border-bottom-color: var(--ink); }
+    .subnav a.activo i { color: var(--green-ink); }
+    .subnav .n { font-size: 12px; background: var(--surface); border: 1px solid var(--line); color: var(--text-2); border-radius: 99px; padding: 0 7px; line-height: 18px; }
+    .punto-est { width: 8px; height: 8px; border-radius: 50%; background: #C9CDD4; }
+    .punto-est.verde { background: var(--green-ink); } .punto-est.azul { background: var(--blue); } .punto-est.ambar { background: var(--amber); }
+
     @media (max-width: 1199.98px) { .editor { grid-template-columns: minmax(0, 1fr); } .lateral { position: static; } }
     @media (max-width: 767.98px) {
+        .subnav { position: static; flex-wrap: wrap; border-bottom: 0; gap: 6px; background: none; }
+        .subnav a { border: 1px solid var(--line); border-radius: 99px; padding: 6px 12px; font-size: 13.5px; margin: 0; background: var(--surface); }
+        .subnav a.activo { background: var(--ink); color: #fff; border-color: var(--ink); } .subnav a.activo i { color: var(--green); }
+        .cot-acciones { width: 100%; } .cot-acciones > * { flex: 1 1 auto; } .cot-acciones .dropdown .btn { width: 100%; }
         .conceptos-head { display: none; }
         .concepto { grid-template-columns: 1fr 1fr; }
         .concepto .n { display: none; }
@@ -148,33 +181,57 @@
 
 @section('contenido')
 <form method="post" action="{{ $nuevo ? route('admin.presupuestos.store') : route('admin.presupuestos.update', $p) }}"
-      x-data="editor({{ Js::from($estado) }})" @keydown.ctrl.s.prevent="$el.requestSubmit()" @keydown.meta.s.prevent="$el.requestSubmit()">
+      x-data="editor({{ Js::from($estado) }})" @invalid.capture="alInvalido($event)" @keydown.ctrl.s.prevent="$el.requestSubmit()" @keydown.meta.s.prevent="$el.requestSubmit()">
     @csrf
     @unless($nuevo) @method('put') @endunless
     <input type="hidden" name="cliente_id" :value="clienteId.startsWith('p') ? '' : clienteId">
     <input type="hidden" name="prospecto_id" :value="clienteId.startsWith('p') ? clienteId.slice(1) : prospectoLigado">
 
     <div class="migas"><a href="{{ route('admin.presupuestos.index') }}">Cotizaciones</a> <i class="bi bi-chevron-right small"></i> <span>{{ $nuevo ? 'Nueva' : $p->folio }}</span></div>
-    <div class="page-head">
-        <div>
+    <div class="cot-head">
+        <div class="min-w-0">
             <div class="titulo-doc">
                 <h1>{{ $nuevo ? 'Nueva cotización' : $p->folio }}</h1>
                 @unless($nuevo)<span class="estado estado-{{ $p->estado }}">{{ \App\Models\Presupuesto::ESTADOS[$p->estado] }}</span>@endunless
             </div>
-            <p class="sub">{{ $nuevo ? 'Llena los datos; el folio se asigna al guardar.' : 'Creada el ' . $p->created_at->locale('es')->isoFormat('D [de] MMMM') . ' · Última edición ' . $p->updated_at->locale('es')->diffForHumans() }}</p>
+            <p class="sub mb-0">
+                <span x-text="clienteEmpresa || clienteNombre || 'Sin cliente todavía'"></span>
+                · <span class="num" x-text="dinero(total)"></span>
+                @unless($nuevo) · editada {{ $p->updated_at->locale('es')->diffForHumans() }}@endunless
+            </p>
         </div>
-        <div class="d-flex flex-wrap gap-2">
+        <div class="d-flex flex-wrap gap-2 cot-acciones">
             @unless($nuevo)
                 <a href="{{ $p->url_publica }}?vista_previa=1" target="_blank" class="btn btn-borde"><i class="bi bi-eye me-1"></i> Ver como cliente</a>
-                <a href="{{ route('admin.presupuestos.pdf', $p) }}" target="_blank" class="btn btn-borde"><i class="bi bi-file-earmark-pdf me-1"></i> PDF</a>
+                <div class="dropdown">
+                    <button type="button" class="btn btn-borde dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-send me-1"></i> Enviar</button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><button type="button" class="dropdown-item" data-correo="{{ $p->vigente && now()->diffInHours($p->vigente_hasta, false) <= 72 && ! in_array($p->estado, ['aceptada', 'rechazada']) ? 'por_vencer' : 'cotizacion' }}"><i class="bi bi-envelope me-2"></i>Por correo</button></li>
+                        @if($wa)<li><a class="dropdown-item" target="_blank" rel="noopener" href="{{ route('admin.presupuestos.whatsapp', $p) }}"><i class="bi bi-whatsapp me-2"></i>Por WhatsApp</a></li>@endif
+                        <li><button type="button" class="dropdown-item" data-copiar="{{ $p->url_publica }}"><i class="bi bi-link-45deg me-2"></i>Copiar enlace</button></li>
+                        <li><a class="dropdown-item" href="{{ route('admin.presupuestos.pdf', $p) }}" target="_blank"><i class="bi bi-file-earmark-pdf me-2"></i>Descargar PDF</a></li>
+                        @if($p->facturas->isNotEmpty())<li><hr class="dropdown-divider"></li><li><button type="button" class="dropdown-item" data-correo="factura"><i class="bi bi-receipt me-2"></i>Enviar factura</button></li>@endif
+                    </ul>
+                </div>
             @endunless
-            <button class="btn btn-primario px-4">{{ $nuevo ? 'Crear cotización' : 'Guardar cambios' }}</button>
+            <button class="btn btn-primario px-4">{{ $nuevo ? 'Crear cotización' : 'Guardar' }}</button>
         </div>
     </div>
 
-    <div class="editor">
-        <div class="d-grid gap-4">
+    <nav class="subnav" aria-label="Secciones de la cotización">
+        @foreach($seccionesCot as $k => [$texto, $icono])
+            <a href="?ver={{ $k }}" :class="{ activo: seccion === '{{ $k }}' }" @click.prevent="irA('{{ $k }}')" data-recargar>
+                <i class="bi {{ $icono }}"></i> {{ $texto }}
+                @if($k === 'contenido')<span class="n num" x-text="conceptos.length"></span>@endif
+                @if($k === 'envio' && ! $nuevo && $p->vistas)<span class="n num" title="Veces que la abrió"><i class="bi bi-eye"></i> {{ $p->vistas }}</span>@endif
+                @if($k === 'factura' && ! $nuevo)<span class="punto-est {{ $p->facturas->isEmpty() ? ($p->estado === 'aceptada' ? 'ambar' : '') : ($p->facturas->max('enviada_at') ? 'verde' : 'azul') }}"></span>@endif
+            </a>
+        @endforeach
+    </nav>
 
+    <div class="editor">
+        <div class="min-w-0">
+        <div class="sec-cot" data-seccion="contenido" x-show="seccion === 'contenido'" @if($seccionInicial !== 'contenido') x-cloak @endif>
             {{-- Cliente --}}
             <section class="panel">
                 <div class="panel-head"><h2>Cliente y fecha</h2><span class="ayuda">Así aparece en el encabezado</span></div>
@@ -336,7 +393,8 @@
                     </dl>
                 </div>
             </section>
-
+        </div>
+        <div class="sec-cot" data-seccion="condiciones" x-show="seccion === 'condiciones'" @if($seccionInicial !== 'condiciones') x-cloak @endif>
             {{-- Observaciones --}}
             <section class="panel">
                 <div class="panel-head"><h2>Observaciones</h2><span class="ayuda">Debajo de los conceptos · opcional</span></div>
@@ -385,6 +443,16 @@
                 </div>
             </section>
 
+            {{-- Notas internas --}}
+            <section class="panel">
+                <div class="panel-head"><h2>Notas internas</h2><span class="ayuda">Solo las ve tu equipo</span></div>
+                <div class="panel-body">
+                    <label class="visually-hidden" for="notas_internas">Notas internas</label>
+                    <textarea name="notas_internas" id="notas_internas" rows="3" class="form-control" placeholder="El cliente no las ve">{{ old('notas_internas', $p->notas_internas) }}</textarea>
+                </div>
+            </section>
+        </div>
+        <div class="sec-cot" data-seccion="pago" x-show="seccion === 'pago'" @if($seccionInicial !== 'pago') x-cloak @endif>
             {{-- Pago --}}
             <section class="panel">
                 <div class="panel-head">
@@ -426,7 +494,7 @@
             </section>
 
             {{-- Encabezado --}}
-            <details class="panel colapsable" @if($errors->hasAny(['emisor_nombre', 'emisor_telefono', 'emisor_sitio', 'emisor_email'])) open @endif>
+            <details class="panel colapsable" open>
                 <summary class="panel-head">
                     <div><h2>Tus datos en el encabezado</h2><span class="ayuda">{{ $p->emisor_nombre }} · {{ $p->emisor_telefono }}</span></div>
                     <i class="bi bi-chevron-down text-secondary"></i>
@@ -450,76 +518,9 @@
                     </div>
                 </div>
             </details>
-
-            @unless($nuevo)
-                <div class="d-flex flex-wrap gap-2">
-                    <button type="submit" form="duplicar" class="btn btn-fantasma"><i class="bi bi-copy me-1"></i> Duplicar cotización</button>
-                    <button type="submit" form="eliminar" class="btn btn-fantasma text-danger"><i class="bi bi-trash me-1"></i> Eliminar</button>
-                </div>
-            @endunless
         </div>
-
-        {{-- ================= Lateral ================= --}}
-        <aside class="lateral">
-            <section class="panel panel-body">
-                <div class="secundario">Total</div>
-                <div class="total-lateral num" x-text="dinero(total)"></div>
-                <div class="secundario num" x-show="modoIva !== 'sin_iva'">
-                    <span x-text="dinero(subtotal)"></span> + IVA <span x-text="dinero(iva)"></span>
-                </div>
-                <div class="utilidad num" x-show="usaCosteo && costoTotal > 0" x-cloak>
-                    <div><span class="secundario">Costo total</span> <span x-text="dinero(costoTotal)"></span></div>
-                    <div x-show="costoTerceros > 0 && costoOperativo > 0"><span class="secundario">· Terceros</span> <span x-text="dinero(costoTerceros)"></span></div>
-                    <div x-show="costoTerceros > 0 && costoOperativo > 0"><span class="secundario">· Operativo</span> <span x-text="dinero(costoOperativo)"></span></div>
-                    <div><span class="secundario">Tu utilidad</span> <b :style="utilidadTotal < 0 ? 'color: var(--red)' : 'color: var(--green-ink)'" x-text="dinero(utilidadTotal)"></b></div>
-                    <div><span class="secundario" title="Qué parte de lo vendido (con costeo) es utilidad">Margen</span> <b x-text="margen === null ? '—' : margen + '%'"></b></div>
-                    <div class="secundario" style="font-size: 12px" x-show="conceptos.some(c => ! conCosteo(c))">Solo cuenta los conceptos con costeo.</div>
-                </div>
-                <div class="secundario mt-2" x-show="modoIva === 'mas_iva'"><i class="bi bi-info-circle me-1"></i>El cliente ve los precios con “+ IVA”.</div>
-                <button class="btn btn-primario w-100 mt-3">{{ $nuevo ? 'Crear cotización' : 'Guardar cambios' }}</button>
-                <div class="secundario text-center mt-2" style="font-size:12.5px">Atajo: Ctrl / ⌘ + S</div>
-            </section>
-
-            <section class="panel">
-                <div class="panel-head"><h2>Vigencia</h2></div>
-                <div class="panel-body">
-                    <label class="form-label" for="vigente_hasta">El enlace funciona hasta</label>
-                    <input type="datetime-local" name="vigente_hasta" id="vigente_hasta" class="form-control num" x-model="vigencia" required>
-                    <div class="chips mt-2" role="group" aria-label="Atajos de vigencia">
-                        @foreach([3, 7, 15, 30] as $d)
-                            <button type="button" @click="sumarDias({{ $d }})">{{ $d }} días</button>
-                        @endforeach
-                    </div>
-                    <div class="restante" :class="restante.clase" x-show="restante.texto">
-                        <i class="bi" :class="restante.clase === 'vig-vencida' ? 'bi-x-circle' : (restante.clase === 'vig-pronto' ? 'bi-hourglass-split' : 'bi-clock')"></i>
-                        <span x-text="restante.texto"></span>
-                    </div>
-                </div>
-            </section>
-
-            <section class="panel">
-                <div class="panel-head"><h2>Estado</h2></div>
-                <div class="panel-body">
-                    <div class="estados" role="radiogroup" aria-label="Estado">
-                        @php $colores = ['borrador' => '#8A90A0', 'enviada' => 'var(--blue)', 'negociacion' => '#6E32B5', 'aceptada' => 'var(--green-ink)', 'rechazada' => 'var(--red)']; @endphp
-                        @foreach(\App\Models\Presupuesto::ESTADOS as $k => $label)
-                            <label><input type="radio" name="estado" value="{{ $k }}" x-model="estadoSel"><span class="pt" style="background: {{ $colores[$k] }}"></span> {{ $label }}</label>
-                        @endforeach
-                    </div>
-                    <div class="mt-3" x-show="estadoSel === 'aceptada'" x-cloak>
-                        <label class="form-label" for="aceptada_el">Aceptada el</label>
-                        <input type="date" name="aceptada_el" id="aceptada_el" class="form-control num" value="{{ old('aceptada_el', $p->aceptada_el?->toDateString()) }}" :disabled="estadoSel !== 'aceptada'">
-                        <div class="secundario mt-1" style="font-size:12.5px">Si la dejas vacía se usa la fecha de hoy.</div>
-                    </div>
-                    <label class="form-label mt-3" for="notas_internas">Notas internas</label>
-                    <textarea name="notas_internas" id="notas_internas" rows="3" class="form-control" placeholder="El cliente no las ve">{{ old('notas_internas', $p->notas_internas) }}</textarea>
-                </div>
-            </section>
-
-            @unless($nuevo)
-                @include('admin.presupuestos._respuesta', ['p' => $p])
-            @endunless
-
+        @unless($nuevo)
+        <div class="sec-cot" data-seccion="envio" x-show="seccion === 'envio'" @if($seccionInicial !== 'envio') x-cloak @endif>
             @unless($nuevo)
                 <section class="panel">
                     <div class="panel-head"><h2>Enlace del cliente</h2>
@@ -543,10 +544,11 @@
                         </p>
                     </div>
                 </section>
-            @endunless
-            @unless($nuevo)
+                @include('admin.presupuestos._respuesta', ['p' => $p])
                 @include('admin.correos._historial', ['correos' => \App\Models\Correo::where('presupuesto_id', $p->id)->latest()->take(8)->get(), 'plantilla' => 'cotizacion'])
             @endunless
+        </div>
+        <div class="sec-cot" data-seccion="factura" x-show="seccion === 'factura'" @if($seccionInicial !== 'factura') x-cloak @endif>
             @unless($nuevo)
                 @php $facturas = $p->facturas_ordenadas; $enviada = $facturas->max('enviada_at'); @endphp
                 <section class="panel" id="factura">
@@ -587,7 +589,7 @@
             @if(! $nuevo && $p->cliente)
                 @php $cl = $p->cliente; $csf = $cl->constancias()->first(); @endphp
                 <section class="panel">
-                    <div class="panel-head"><h2>Facturación</h2>
+                    <div class="panel-head"><h2>Datos fiscales</h2>
                         @if($cl->fiscales_completos)<span class="estado estado-aceptada">Completos</span>
                         @elseif($cl->rfc || $cl->razon_social)<span class="estado estado-enviada">Incompletos</span>
                         @else<span class="estado estado-borrador">Sin datos</span>@endif
@@ -639,6 +641,71 @@
                     </section>
                 @endif
             @endunless
+        </div>
+        @endunless
+            @unless($nuevo)
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <button type="submit" form="duplicar" class="btn btn-fantasma"><i class="bi bi-copy me-1"></i> Duplicar cotización</button>
+                    <button type="submit" form="eliminar" class="btn btn-fantasma text-danger"><i class="bi bi-trash me-1"></i> Eliminar</button>
+                </div>
+            @endunless
+        </div>
+
+        {{-- ================= Lateral: siempre a la vista ================= --}}
+        <aside class="lateral">
+            <section class="panel panel-body">
+                <div class="secundario">Total</div>
+                <div class="total-lateral num" x-text="dinero(total)"></div>
+                <div class="secundario num" x-show="modoIva !== 'sin_iva'">
+                    <span x-text="dinero(subtotal)"></span> + IVA <span x-text="dinero(iva)"></span>
+                </div>
+                <div class="utilidad num" x-show="usaCosteo && costoTotal > 0" x-cloak>
+                    <div><span class="secundario">Costo total</span> <span x-text="dinero(costoTotal)"></span></div>
+                    <div x-show="costoTerceros > 0 && costoOperativo > 0"><span class="secundario">· Terceros</span> <span x-text="dinero(costoTerceros)"></span></div>
+                    <div x-show="costoTerceros > 0 && costoOperativo > 0"><span class="secundario">· Operativo</span> <span x-text="dinero(costoOperativo)"></span></div>
+                    <div><span class="secundario">Tu utilidad</span> <b :style="utilidadTotal < 0 ? 'color: var(--red)' : 'color: var(--green-ink)'" x-text="dinero(utilidadTotal)"></b></div>
+                    <div><span class="secundario" title="Qué parte de lo vendido (con costeo) es utilidad">Margen</span> <b x-text="margen === null ? '—' : margen + '%'"></b></div>
+                    <div class="secundario" style="font-size: 12px" x-show="conceptos.some(c => ! conCosteo(c))">Solo cuenta los conceptos con costeo.</div>
+                </div>
+                <div class="secundario mt-2" x-show="modoIva === 'mas_iva'"><i class="bi bi-info-circle me-1"></i>El cliente ve los precios con “+ IVA”.</div>
+                <button class="btn btn-primario w-100 mt-3">{{ $nuevo ? 'Crear cotización' : 'Guardar cambios' }}</button>
+                <div class="secundario text-center mt-2" style="font-size:12.5px">Atajo: Ctrl / ⌘ + S</div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-head"><h2>Vigencia</h2></div>
+                <div class="panel-body">
+                    <label class="form-label" for="vigente_hasta">El enlace funciona hasta</label>
+                    <input type="datetime-local" name="vigente_hasta" id="vigente_hasta" class="form-control num" x-model="vigencia" required>
+                    <div class="chips mt-2" role="group" aria-label="Atajos de vigencia">
+                        @foreach([3, 7, 15, 30] as $d)
+                            <button type="button" @click="sumarDias({{ $d }})">{{ $d }} días</button>
+                        @endforeach
+                    </div>
+                    <div class="restante" :class="restante.clase" x-show="restante.texto">
+                        <i class="bi" :class="restante.clase === 'vig-vencida' ? 'bi-x-circle' : (restante.clase === 'vig-pronto' ? 'bi-hourglass-split' : 'bi-clock')"></i>
+                        <span x-text="restante.texto"></span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-head"><h2>Estado</h2></div>
+                <div class="panel-body">
+                    <div class="estados" role="radiogroup" aria-label="Estado">
+                        @php $colores = ['borrador' => '#8A90A0', 'enviada' => 'var(--blue)', 'negociacion' => '#6E32B5', 'aceptada' => 'var(--green-ink)', 'rechazada' => 'var(--red)']; @endphp
+                        @foreach(\App\Models\Presupuesto::ESTADOS as $k => $label)
+                            <label><input type="radio" name="estado" value="{{ $k }}" x-model="estadoSel"><span class="pt" style="background: {{ $colores[$k] }}"></span> {{ $label }}</label>
+                        @endforeach
+                    </div>
+                    <div class="mt-3" x-show="estadoSel === 'aceptada'" x-cloak>
+                        <label class="form-label" for="aceptada_el">Aceptada el</label>
+                        <input type="date" name="aceptada_el" id="aceptada_el" class="form-control num" value="{{ old('aceptada_el', $p->aceptada_el?->toDateString()) }}" :disabled="estadoSel !== 'aceptada'">
+                        <div class="secundario mt-1" style="font-size:12.5px">Si la dejas vacía se usa la fecha de hoy.</div>
+                    </div>
+
+                </div>
+            </section>
         </aside>
     </div>
 </form>
@@ -662,7 +729,24 @@ function editor(init) {
     return {
         ...init,
         ahora: Date.now(),
-        init() { setInterval(() => this.ahora = Date.now(), 30000); },
+        init() {
+            setInterval(() => this.ahora = Date.now(), 30000);
+            if (location.hash === '#factura' && this.$root.querySelector('[data-seccion="factura"]')) this.irA('factura');
+        },
+        // Secciones: se recuerda en la dirección (?ver=) para volver a la misma al guardar
+        irA(s) {
+            this.seccion = s;
+            try { const u = new URL(location.href); u.searchParams.set('ver', s); u.hash = ''; history.replaceState(history.state, '', u.href); } catch (e) {}
+            const nav = this.$root.querySelector('.subnav');
+            if (nav && nav.getBoundingClientRect().top < 0) nav.scrollIntoView({ block: 'start' });
+        },
+        // Un campo obligatorio vacío en otra sección: se abre esa sección y se señala el campo
+        alInvalido(e) {
+            const s = e.target.closest('[data-seccion]')?.dataset.seccion;
+            if (!s || s === this.seccion) return;
+            this.irA(s);
+            this.$nextTick(() => { e.target.focus(); e.target.reportValidity(); });
+        },
         importe(c) { return Math.round((+c.cantidad || 0) * (+c.precio || 0) * 100) / 100; },
         sugerirObservaciones() {
             // Al cambiar a un tipo con texto base, solo se llena si está vacío o tenía otro texto base

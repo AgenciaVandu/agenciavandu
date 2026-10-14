@@ -33,7 +33,7 @@ class ProyectosVistaTest extends TestCase
         $atrasado = $this->proyecto('Atrasado');
         $atrasado->pagos->each->update(['pagado_el' => $hoy]);
         $e = $atrasado->etapas->first(fn ($e) => ! $e->es_fecha);
-        $e->update(['estado' => 'en_curso', 'fecha_inicio' => $hoy->copy()->subDays(10), 'fecha_fin' => $hoy->copy()->subDays(2)]);
+        $e->update(['estado' => 'en_curso', 'fecha_inicio' => $hoy->copy()->subDays(16), 'fecha_fin' => $hoy->copy()->subDays(9)]);
         $atrasado->etapas->where('orden', '<', $e->orden)->each->update(['estado' => 'completada']);
 
         $tranquilo = $this->proyecto('Tranquilo');
@@ -44,18 +44,18 @@ class ProyectosVistaTest extends TestCase
 
         $this->assertSame('atrasado', $atrasado->fresh(['etapas', 'pagos'])->salud[0]);
         $this->assertSame('ok', $tranquilo->fresh(['etapas', 'pagos'])->salud[0]);
-        $this->assertSame('hace 2 días', $atrasado->fresh('etapas')->etapa_actual->falta_texto);
+        $this->assertSame('hace 9 días', $atrasado->fresh('etapas')->etapa_actual->falta_texto);
 
         $html = $this->get(route('admin.proyectos.index'))->assertOk()
-            ->assertSee('En marcha')->assertSee('Atrasado')->assertSee('En tiempo')->assertSee('Termina hace 2 días')
+            ->assertSee('En marcha')->assertSee('Atrasado')->assertSee('En tiempo')->assertSee('Termina hace 9 días')
             ->assertSee('Recordar pago')->getContent();
         // Lo urgente primero
         $this->assertLessThan(strpos($html, '>Tranquilo<'), strpos($html, '>Atrasado<'));
         if ($pago->fresh(['etapas', 'pagos'])->salud[0] === 'pago') $this->assertLessThan(strpos($html, '>Tranquilo<'), strpos($html, '>Esperando pago<'));
 
         // La semana: lo atrasado aparece hoy y se puede navegar entre semanas
-        $this->get(route('admin.proyectos.index'))->assertSee('La semana')->assertSee('Atrasado · hace 2 días');
-        $this->get(route('admin.proyectos.index', ['semana' => 1]))->assertOk()->assertSee('La semana')->assertDontSee('Atrasado · hace 2 días');
+        $this->get(route('admin.proyectos.index'))->assertSee('La semana')->assertSee('Atrasado · hace 9 días');
+        $this->get(route('admin.proyectos.index', ['semana' => 1]))->assertOk()->assertSee('La semana')->assertDontSee('Atrasado · hace 9 días');
         $this->get(route('admin.proyectos.index', ['vista' => 'lista']))->assertOk()->assertSee('Siguiente paso');
         $this->get(route('admin.proyectos.index', ['filtro' => 'todos']))->assertOk()->assertSee('Tranquilo');
         $this->get(route('admin.proyectos.index', ['filtro' => 'terminado']))->assertOk()->assertSee('No hay proyectos');

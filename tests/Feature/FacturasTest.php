@@ -109,6 +109,29 @@ class FacturasTest extends TestCase
         $this->get(route('admin.clientes.show', [$c, 'ver' => 'otra-cosa']))->assertOk()->assertSee('Por atender');
     }
 
+    public function test_cotizacion_por_secciones(): void
+    {
+        $edit = route('admin.presupuestos.edit', $this->p);
+        $html = $this->get($edit)->assertOk()->assertSee('Contenido')->assertSee('Condiciones')->assertSee('Pago y encabezado')
+            ->assertSee('Envío y respuesta')->assertSee('Factura y proyecto')->getContent();
+        $this->assertStringContainsString('seccion\u0022:\u0022contenido', $html);
+        $this->assertStringContainsString('seccion\u0022:\u0022factura', $this->get($edit . '?ver=factura')->getContent());
+        // Todos los campos siguen en el mismo formulario
+        foreach (['name="observaciones"', 'name="clabe"', 'name="emisor_nombre"', 'name="notas_internas"', 'name="vigente_hasta"', 'name="estado"'] as $campo) {
+            $this->assertStringContainsString($campo, $html);
+        }
+        // Una cotización nueva solo tiene las secciones de contenido
+        $this->get(route('admin.presupuestos.create'))->assertOk()->assertSee('Pago y encabezado')->assertDontSee('Envío y respuesta');
+
+        // Si el error está en otra sección, se abre esa sección
+        $this->from($edit . '?ver=contenido')->put(route('admin.presupuestos.update', $this->p), [
+            'cliente_id' => $this->p->cliente_id, 'cliente_nombre' => 'Ana López', 'fecha' => '2026-10-12', 'titulo' => 'Cotización',
+            'emisor_nombre' => '', 'modo_iva' => 'mas_iva', 'iva_porcentaje' => 16, 'vigente_hasta' => now()->addDays(10)->format('Y-m-d\\TH:i'),
+            'estado' => 'aceptada', 'conceptos' => [['titulo' => 'Video', 'cantidad' => 1, 'precio' => 22000]],
+        ])->assertSessionHasErrors('emisor_nombre')->assertRedirect();
+        $this->assertStringContainsString('seccion\u0022:\u0022pago', $this->get($edit . '?ver=contenido')->getContent());
+    }
+
     public function test_desde_el_proyecto_tambien_lleva_la_factura(): void
     {
         Mail::fake();
