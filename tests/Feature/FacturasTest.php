@@ -91,6 +91,24 @@ class FacturasTest extends TestCase
         $this->get(route('admin.clientes.show', $this->p->cliente))->assertOk()->assertSee($this->p->folio)->assertSee('Enviada');
     }
 
+    public function test_ficha_del_cliente_por_secciones_con_acceso_a_facturas(): void
+    {
+        $c = $this->p->cliente;
+        // Aceptada sin factura: aparece como pendiente y en el menú de Factura
+        $this->get(route('admin.clientes.show', $c))->assertOk()
+            ->assertSee('Por atender')->assertSee("{$this->p->folio} está aceptada y no tiene factura")->assertSee('Subir factura de ' . $this->p->folio)
+            ->assertSee('Cotizaciones')->assertSee('Facturación')->assertSee('Correos y mensajes');
+
+        $this->subir([$this->pdf(), $this->xml()]);
+        $enviar = route('admin.presupuestos.edit', [$this->p, 'correo' => 'factura']);
+        $this->get(route('admin.clientes.show', $c))->assertSee('está lista para enviar')->assertSee($enviar, false);
+        $this->get(route('admin.clientes.show', [$c, 'ver' => 'facturacion']))->assertOk()->assertSee('A123.pdf')->assertSee('Datos fiscales')->assertSee('Constancia de Situación Fiscal');
+        $this->get(route('admin.clientes.show', [$c, 'ver' => 'cotizaciones']))->assertOk()->assertSee('Por enviar')->assertSee('Enviar por correo');
+        $this->get(route('admin.clientes.show', [$c, 'ver' => 'proyectos']))->assertOk()->assertSee('Sin proyectos');
+        $this->get(route('admin.clientes.show', [$c, 'ver' => 'correos']))->assertOk()->assertSee('Mensajes desde el sitio');
+        $this->get(route('admin.clientes.show', [$c, 'ver' => 'otra-cosa']))->assertOk()->assertSee('Por atender');
+    }
+
     public function test_desde_el_proyecto_tambien_lleva_la_factura(): void
     {
         Mail::fake();

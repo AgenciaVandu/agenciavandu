@@ -64,11 +64,21 @@ class ClienteController extends Controller
         return redirect()->route('admin.clientes.show', $cliente)->with('ok', 'Cliente creado.');
     }
 
-    public function show(Cliente $cliente)
-    {
-        $cliente->load(['presupuestos.conceptos', 'proyectos.etapas', 'proyectos.pagos', 'constancias']);
+    /** Secciones de la ficha del cliente, en orden de importancia */
+    public const SECCIONES = [
+        'resumen'      => ['Resumen', 'bi-grid'],
+        'cotizaciones' => ['Cotizaciones', 'bi-file-earmark-text'],
+        'proyectos'    => ['Proyectos', 'bi-kanban'],
+        'facturacion'  => ['Facturación', 'bi-receipt'],
+        'correos'      => ['Correos y mensajes', 'bi-envelope'],
+    ];
 
-        return view('admin.clientes.show', compact('cliente'));
+    public function show(Request $request, Cliente $cliente)
+    {
+        $cliente->load(['presupuestos.conceptos', 'presupuestos.facturas', 'presupuestos.proyecto:id,presupuesto_id', 'proyectos.etapas', 'proyectos.pagos', 'constancias']);
+        $ver = array_key_exists($request->query('ver'), self::SECCIONES) ? $request->query('ver') : 'resumen';
+
+        return view('admin.clientes.show', compact('cliente', 'ver'));
     }
 
     public function edit(Cliente $cliente)
