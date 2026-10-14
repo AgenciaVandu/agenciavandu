@@ -109,6 +109,8 @@
         .fac .bts { display: flex; gap: 8px; }
         .fac .bts a { font-size: 13.5px; font-weight: 600; text-decoration: none; color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; }
         .fac .bts a::before { content: "↓ "; }
+        .fac .bts.comp { flex-basis: 100%; align-items: center; flex-wrap: wrap; }
+        .fac .bts.comp .lbl { font-size: 13px; color: var(--muted); margin-right: 4px; }
         .fac .bts a:hover { background: var(--mist, #F4F5F7); }
 
         details.term summary { cursor: pointer; list-style: none; color: var(--muted); font-weight: 500; margin: 26px 0 12px; }
@@ -213,7 +215,7 @@
         </div>
     @endif
 
-    @php $conFactura = $cotizaciones->filter(fn ($p) => $p->facturas->isNotEmpty()); @endphp
+    @php $conFactura = $cotizaciones->filter(fn ($p) => $p->facturas->isNotEmpty() || $p->complementos->isNotEmpty()); @endphp
     @if($conFactura->isNotEmpty())
         <h2>Tus facturas <small class="num">{{ $conFactura->count() }}</small></h2>
         <div class="facturas">
@@ -221,6 +223,9 @@
                 <div class="fac">
                     <span class="n">{{ $p->conceptos->first()?->resumen ?: $p->titulo }}<span class="s num">{{ $p->folio }} · {{ $dinero($p->total) }}</span></span>
                     <span class="bts">@foreach($p->facturas_ordenadas as $fa)<a href="{{ route('presupuesto.factura', [$p->token, $fa->id]) }}">{{ in_array($fa->ext, ['pdf', 'xml', 'zip'], true) ? strtoupper($fa->ext) : $fa->nombre }}</a>@endforeach</span>
+                    @foreach($p->complementos_lotes as $c)
+                        <span class="bts comp"><span class="lbl">{{ $c['pago'] ? 'Complemento · ' . $c['pago']->concepto : 'Complemento de pago' }}</span>@foreach($c['archivos'] as $fa)<a href="{{ route('presupuesto.factura', [$p->token, $fa->id]) }}">{{ in_array($fa->ext, ['pdf', 'xml', 'zip'], true) ? strtoupper($fa->ext) : $fa->nombre }}</a>@endforeach</span>
+                    @endforeach
                 </div>
             @endforeach
         </div>

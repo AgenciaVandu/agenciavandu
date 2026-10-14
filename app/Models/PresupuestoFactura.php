@@ -14,9 +14,9 @@ class PresupuestoFactura extends Model
 
     protected $table = 'presupuesto_facturas';
 
-    protected $fillable = ['nombre', 'ruta', 'mime', 'peso', 'enviada_at'];
+    protected $fillable = ['tipo', 'lote', 'pago_id', 'fecha_pago', 'nombre', 'ruta', 'mime', 'peso', 'enviada_at'];
 
-    protected $casts = ['peso' => 'integer', 'enviada_at' => 'datetime'];
+    protected $casts = ['peso' => 'integer', 'enviada_at' => 'datetime', 'fecha_pago' => 'date'];
 
     protected static function booted(): void
     {
@@ -26,6 +26,17 @@ class PresupuestoFactura extends Model
     public function presupuesto(): BelongsTo
     {
         return $this->belongsTo(Presupuesto::class);
+    }
+
+    /** El pago del proyecto que ampara (solo complementos) */
+    public function pago(): BelongsTo
+    {
+        return $this->belongsTo(ProyectoPago::class, 'pago_id');
+    }
+
+    public function getEsComplementoAttribute(): bool
+    {
+        return $this->tipo === 'complemento';
     }
 
     public function getExtAttribute(): string
@@ -46,7 +57,7 @@ class PresupuestoFactura extends Model
     /** Lo que ve el cliente en el botón: "Factura PDF", "Factura XML" */
     public function getEtiquetaAttribute(): string
     {
-        return 'Factura ' . (in_array($this->ext, ['pdf', 'xml', 'zip'], true) ? Str::upper($this->ext) : $this->nombre);
+        return ($this->es_complemento ? 'Complemento de pago ' : 'Factura ') . (in_array($this->ext, ['pdf', 'xml', 'zip'], true) ? Str::upper($this->ext) : $this->nombre);
     }
 
     public function contenido(): ?string

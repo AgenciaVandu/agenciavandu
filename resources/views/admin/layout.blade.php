@@ -681,7 +681,7 @@
             abierto: false, cargando: false, enviando: false, conCopia: false,
             clave: '', para: '', cc: '', asunto: '', titulo: '', cuerpo: '', boton: '',
             conBoton: false, resumen: false, banco: false, pdf: false, miniaturas: false, ultimo: '',
-            archivos: [], pideAdjuntos: false, codigo: false, factura: false, hayFactura: !!init.facturas,
+            archivos: [], pideAdjuntos: false, codigo: false, factura: false, guardados: init.guardados || {},
             init() {
                 // ?correo=recordatorio_pago abre la ventana con esa plantilla
                 const u = new URL(location.href), q = u.searchParams.get('correo');
@@ -706,7 +706,7 @@
                 this.boton = pl.boton || pl.boton_por_defecto || ''; this.conBoton = !!pl.boton;
                 this.resumen = !!pl.resumen; this.banco = !!pl.banco; this.pdf = !!pl.pdf; this.miniaturas = !!pl.miniaturas;
                 this.pideAdjuntos = !!pl.adjuntos; this.codigo = !!pl.codigo;
-                this.factura = this.hayFactura && !!pl.adjuntos;   // la plantilla de factura ya lleva la guardada
+                this.factura = !!this.guardados[k] && !!pl.adjuntos;   // la factura o el complemento guardado ya va adjunto
                 this.$nextTick(() => this.previsualizar());
             },
             cerrar() { this.abierto = false; },

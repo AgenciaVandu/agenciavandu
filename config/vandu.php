@@ -384,6 +384,13 @@ return [
                 'cuerpo' => "Hola {nombre},\n\nTe comparto la factura correspondiente a {concepto}. Adjunto encontrarás el PDF y el XML para tu contabilidad.\n\nSi necesitas algún ajuste en los datos fiscales o que la enviemos a otro correo, respóndeme este mensaje y lo corregimos.\n\nGracias por tu confianza.",
                 'adjuntos' => true, 'para_factura' => true,
             ],
+            'complemento' => [
+                'nombre' => 'Enviar complemento de pago', 'icono' => 'bi-receipt-cutoff', 'para' => ['proyecto', 'presupuesto'],
+                'asunto' => 'Complemento de pago · {concepto}',
+                'titulo' => 'Tu complemento de pago',
+                'cuerpo' => "Hola {nombre},\n\nTe comparto el complemento de pago (REP) correspondiente a tu pago de {concepto}. Adjunto encontrarás el PDF y el XML para tu contabilidad.\n\nSi necesitas algún ajuste, respóndeme este mensaje y lo corregimos.\n\nGracias por tu pago.",
+                'adjuntos' => true, 'para_factura' => true,
+            ],
             'libre' => [
                 'nombre' => 'En blanco', 'icono' => 'bi-pencil', 'para' => ['cliente', 'presupuesto', 'proyecto'],
                 'asunto' => '',

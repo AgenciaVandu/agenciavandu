@@ -15,7 +15,7 @@ class ClientePortalController extends Controller
         $c = Cliente::where('portal_token', $token)->firstOrFail();
 
         $cotizaciones = $c->presupuestos()->where('estado', '!=', 'borrador')
-            ->with(['conceptos', 'facturas', 'proyecto:id,presupuesto_id,token,nombre'])->orderByDesc('fecha')->orderByDesc('id')->get();
+            ->with(['conceptos', 'facturas', 'complementos.pago', 'proyecto:id,presupuesto_id,token,nombre'])->orderByDesc('fecha')->orderByDesc('id')->get();
         $proyectos = $c->proyectos()->with(['etapas', 'pagos'])->get()
             ->sortBy(fn ($p) => [$p->estado === 'terminado' ? 1 : 0, -$p->id])->values();
 

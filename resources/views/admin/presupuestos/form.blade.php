@@ -54,7 +54,7 @@
     // Si hay errores, abre la sección donde está el primero
     $camposSeccion = ['observaciones' => 'condiciones', 'consideraciones' => 'condiciones', 'notas_internas' => 'condiciones',
         'pago_intro' => 'pago', 'banco' => 'pago', 'clabe' => 'pago', 'beneficiario' => 'pago', 'nota_comprobante' => 'pago', 'nota_factura' => 'pago',
-        'emisor_nombre' => 'pago', 'emisor_telefono' => 'pago', 'emisor_sitio' => 'pago', 'emisor_email' => 'pago', 'facturas' => 'factura', 'codigo' => 'envio'];
+        'emisor_nombre' => 'pago', 'emisor_telefono' => 'pago', 'emisor_sitio' => 'pago', 'emisor_email' => 'pago', 'facturas' => 'factura', 'complemento' => 'factura', 'pago_id' => 'factura', 'fecha_pago' => 'factura', 'metodo_sat' => 'factura', 'codigo' => 'envio'];
     $primerError = collect($errors->keys())->first();
     $seccionInicial = $primerError ? ($camposSeccion[\Illuminate\Support\Str::before($primerError, '.')] ?? 'contenido') : request('ver', 'contenido');
     if (! isset($seccionesCot[$seccionInicial])) $seccionInicial = 'contenido';
@@ -176,6 +176,23 @@
     .sig-acc .btn { white-space: nowrap; }
     @media (max-width: 991.98px) { .sig-pasos { grid-template-columns: minmax(0, 1fr); } }
     @media (max-width: 575.98px) { .sig-paso { flex-wrap: wrap; } .sig-acc { width: 100%; padding-left: 40px; } .sig-acc .btn:first-child { flex: 1; } }
+
+    /* Factura: método SAT y complementos */
+    .metodo-sat { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .metodo-sat label { display: flex; flex-direction: column; padding: 9px 12px; border: 1px solid var(--line-strong); border-radius: 10px; cursor: pointer; }
+    .metodo-sat label b { font-size: 14px; } .metodo-sat label span { font-size: 12px; color: var(--muted); }
+    .metodo-sat label.activo { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+    .metodo-sat input { position: absolute; opacity: 0; pointer-events: none; }
+    .comp-lista { list-style: none; margin: 0; padding: 0; }
+    .comp-lista li { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--line); }
+    .comp-lista .t { flex: 1; min-width: 0; }
+    .comp-lista .t b { display: block; font-size: 14px; font-weight: 600; }
+    .comp-lista .t > span { display: block; font-size: 12.5px; color: var(--muted); overflow-wrap: anywhere; }
+    .comp-ic { width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; background: var(--sunken); color: var(--text-2); flex: none; }
+    .comp-ic.verde { background: var(--green-soft); color: var(--green-ink); } .comp-ic.azul { background: #EAF1FE; color: #2456C8; } .comp-ic.ambar { background: var(--amber-soft); color: var(--amber); }
+    .comp-x { border: 0; background: none; padding: 0 6px 0 0; color: var(--muted); margin-left: -6px; }
+    .comp-x:hover { color: var(--red); }
+    .comp-subir { background: var(--sunken); border-radius: 0 0 var(--radius, 12px) var(--radius, 12px); }
 
     .punto-est { width: 8px; height: 8px; border-radius: 50%; background: #C9CDD4; }
     .punto-est.verde { background: var(--green-ink); } .punto-est.azul { background: var(--blue); } .punto-est.ambar { background: var(--amber); }
@@ -634,6 +651,14 @@
         <div class="sec-cot" data-seccion="factura" x-show="seccion === 'factura'" @if($seccionInicial !== 'factura') x-cloak @endif>
             @unless($nuevo)
                 @php $facturas = $p->facturas_ordenadas; $enviada = $facturas->max('enviada_at'); @endphp
+                @php
+                    $lotes = $p->complementos_lotes;
+                    $pagosPr = $p->proyecto?->pagos ?? collect();
+                    $lotePorPago = $lotes->filter(fn ($c) => $c['pago'])->keyBy(fn ($c) => $c['pago']->id);
+                    $sueltos = $lotes->filter(fn ($c) => ! $c['pago'] || ! $pagosPr->contains('id', $c['pago']->id));
+                    $pagadosSinComp = $pagosPr->filter(fn ($x) => $x->pagado && ! $lotePorPago->has($x->id));
+                @endphp
+                <div class="sec-cot" x-data="{ sat: {{ Js::from(old('metodo_sat', $p->metodo_sat_efectivo)) }} }">
                 <section class="panel" id="factura">
                     <div class="panel-head"><h2>Factura</h2>
                         @if($facturas->isEmpty())<span class="estado estado-borrador">Sin subir</span>
@@ -641,6 +666,11 @@
                         @else<span class="estado estado-enviada">Por enviar</span>@endif
                     </div>
                     <div class="panel-body">
+                        <div class="metodo-sat mb-3" role="radiogroup" aria-label="Método de pago de la factura">
+                            <label :class="sat === 'PUE' && 'activo'"><input type="radio" name="metodo_sat" value="PUE" x-model="sat"><b>PUE</b><span>Una sola exhibición</span></label>
+                            <label :class="sat === 'PPD' && 'activo'"><input type="radio" name="metodo_sat" value="PPD" x-model="sat"><b>PPD</b><span>En parcialidades o diferido</span></label>
+                        </div>
+                        <div class="secundario mb-3" style="font-size:12.5px" x-show="sat === 'PPD'" x-cloak><i class="bi bi-info-circle me-1"></i>Con PPD, cada pago que recibas lleva su complemento de pago (REP). Súbelos abajo. Guarda para conservar el método.</div>
                         @if($facturas->isEmpty())
                             <p class="secundario mt-0 mb-3" style="font-size:13.5px">Sube el PDF y el XML. El cliente los podrá descargar desde su cotización y su espacio.</p>
                         @else
@@ -668,6 +698,82 @@
                         @error('facturas.*')<div class="text-danger mt-2" style="font-size:13px">{{ $message }}</div>@enderror
                     </div>
                 </section>
+
+                {{-- Complementos de pago (PPD) --}}
+                <section class="panel" id="complementos" x-show="sat === 'PPD' || {{ $lotes->isNotEmpty() ? 'true' : 'false' }}" @if($p->metodo_sat_efectivo !== 'PPD' && $lotes->isEmpty()) x-cloak @endif
+                         x-data="{ subirPara(id) { this.$refs.compPago.value = id || ''; this.$refs.compFecha.value = ''; this.$refs.compArchivo.click(); } }">
+                    <div class="panel-head"><h2>Complementos de pago</h2>
+                        @if($pagosPr->isNotEmpty())<span class="ayuda">{{ $lotePorPago->count() }} de {{ $pagosPr->where('pagado', true)->count() ?: $pagosPr->count() }} {{ $pagosPr->where('pagado', true)->count() ? 'pagos recibidos' : 'pagos' }}</span>
+                        @else<span class="ayuda">{{ $lotes->count() ?: '' }}</span>@endif
+                    </div>
+                    @if($pagosPr->isNotEmpty())
+                        <ul class="comp-lista">
+                            @foreach($pagosPr as $pg)
+                                @php $c = $lotePorPago->get($pg->id); @endphp
+                                <li>
+                                    <span class="comp-ic {{ $c ? ($c['enviado'] ? 'verde' : 'azul') : ($pg->pagado ? 'ambar' : '') }}"><i class="bi {{ $c ? ($c['enviado'] ? 'bi-check2' : 'bi-receipt-cutoff') : ($pg->pagado ? 'bi-exclamation' : 'bi-hourglass') }}"></i></span>
+                                    <div class="t">
+                                        <b>{{ $pg->concepto }} <span class="secundario fw-normal num">· {{ $pg->monto_texto }}</span></b>
+                                        @if($c)
+                                            <span>@foreach($c['archivos'] as $f)<a href="{{ route('admin.presupuestos.facturas.ver', [$p, $f]) }}" target="_blank" class="text-reset me-2"><i class="bi {{ $f->icono }}"></i> {{ $f->nombre }}</a><button type="submit" form="borrar-factura-{{ $f->id }}" class="comp-x" aria-label="Quitar {{ $f->nombre }}"><i class="bi bi-x"></i></button>@endforeach
+                                                · {{ $c['enviado'] ? 'Enviado ' . $c['enviado']->locale('es')->diffForHumans() : 'Por enviar' }}</span>
+                                        @elseif($pg->pagado)
+                                            <span class="text-warning-emphasis">Pagado el {{ $pg->pagado_el->locale('es')->isoFormat('D MMM') }} · falta su complemento</span>
+                                        @else
+                                            <span>Aún no se paga · el complemento se emite al recibirlo</span>
+                                        @endif
+                                    </div>
+                                    @if($c)
+                                        <button type="button" class="btn {{ $c['enviado'] ? 'btn-borde' : 'btn-primario' }} btn-sm" data-correo="{{ 'complemento@' . ($c['archivos']->first()->lote ?: 'f' . $c['archivos']->first()->id) }}"><i class="bi bi-send me-1"></i> {{ $c['enviado'] ? 'Reenviar' : 'Enviar' }}</button>
+                                    @elseif($pg->pagado)
+                                        <button type="button" class="btn btn-acento btn-sm" @click="subirPara({{ $pg->id }})"><i class="bi bi-upload me-1"></i> Subir</button>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                    @if($sueltos->isNotEmpty())
+                        <ul class="comp-lista">
+                            @foreach($sueltos as $lote => $c)
+                                <li>
+                                    <span class="comp-ic {{ $c['enviado'] ? 'verde' : 'azul' }}"><i class="bi {{ $c['enviado'] ? 'bi-check2' : 'bi-receipt-cutoff' }}"></i></span>
+                                    <div class="t">
+                                        <b>{{ $c['titulo'] }}</b>
+                                        <span>@foreach($c['archivos'] as $f)<a href="{{ route('admin.presupuestos.facturas.ver', [$p, $f]) }}" target="_blank" class="text-reset me-2"><i class="bi {{ $f->icono }}"></i> {{ $f->nombre }}</a><button type="submit" form="borrar-factura-{{ $f->id }}" class="comp-x" aria-label="Quitar {{ $f->nombre }}"><i class="bi bi-x"></i></button>@endforeach
+                                            · {{ $c['enviado'] ? 'Enviado ' . $c['enviado']->locale('es')->diffForHumans() : 'Por enviar' }}</span>
+                                    </div>
+                                    <button type="button" class="btn {{ $c['enviado'] ? 'btn-borde' : 'btn-primario' }} btn-sm" data-correo="{{ 'complemento@' . $lote }}"><i class="bi bi-send me-1"></i> {{ $c['enviado'] ? 'Reenviar' : 'Enviar' }}</button>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                    <div class="panel-body comp-subir">
+                        @if($pagosPr->isEmpty() && $lotes->isEmpty())
+                            <p class="secundario mt-0 mb-3" style="font-size:13.5px">Cuando el cliente te pague, sube aquí el complemento (PDF y XML) y envíaselo. Si creas el proyecto, cada complemento se liga a su pago.</p>
+                        @endif
+                        <div class="row g-2 align-items-end">
+                            <div class="col-sm-5">
+                                <label class="form-label" for="comp-pago" style="font-size:12.5px">Pago que ampara</label>
+                                <select id="comp-pago" name="pago_id" form="subir-complemento" class="form-select form-select-sm" x-ref="compPago">
+                                    <option value="">{{ $pagosPr->isNotEmpty() ? 'Ninguno en particular' : ($p->proyecto ? 'El proyecto no tiene pagos' : 'Sin proyecto todavía') }}</option>
+                                    @foreach($pagosPr as $pg)<option value="{{ $pg->id }}" @selected($pagadosSinComp->first()?->id === $pg->id)>{{ $pg->concepto }} · {{ $pg->monto_texto }}{{ $pg->pagado ? '' : ' (pendiente)' }}</option>@endforeach
+                                </select>
+                            </div>
+                            <div class="col-sm-3">
+                                <label class="form-label" for="comp-fecha" style="font-size:12.5px">Fecha del pago</label>
+                                <input type="date" id="comp-fecha" name="fecha_pago" form="subir-complemento" class="form-control form-control-sm num" x-ref="compFecha">
+                            </div>
+                            <div class="col-sm-4">
+                                <label class="btn btn-borde btn-sm w-100 mb-0"><i class="bi bi-upload me-1"></i> Subir PDF y XML
+                                    <input type="file" name="complemento[]" form="subir-complemento" multiple accept=".pdf,.xml,.zip" class="d-none" x-ref="compArchivo" onchange="this.files.length && this.form.requestSubmit()">
+                                </label>
+                            </div>
+                        </div>
+                        @error('complemento')<div class="text-danger mt-2" style="font-size:13px">{{ $message }}</div>@enderror
+                        @error('complemento.*')<div class="text-danger mt-2" style="font-size:13px">{{ $message }}</div>@enderror
+                    </div>
+                </section>
+                </div>
             @endunless
             @if(! $nuevo && $p->cliente)
                 @php $cl = $p->cliente; $csf = $cl->constancias()->first(); @endphp
@@ -796,7 +902,8 @@
 @unless($nuevo)
     <form id="convertir" method="get" action="{{ route('admin.proyectos.create', $p) }}"></form>
     <form id="subir-factura" method="post" action="{{ route('admin.presupuestos.facturas.subir', $p) }}" enctype="multipart/form-data">@csrf</form>
-    @foreach($p->facturas as $f)
+    <form id="subir-complemento" method="post" action="{{ route('admin.presupuestos.complementos.subir', $p) }}" enctype="multipart/form-data">@csrf</form>
+    @foreach($p->archivosFiscales as $f)
         <form id="borrar-factura-{{ $f->id }}" method="post" action="{{ route('admin.presupuestos.facturas.borrar', [$p, $f]) }}" onsubmit="return confirm({{ Js::from('¿Quitar ' . $f->nombre . '? El cliente ya no podrá descargarlo.') }})">@csrf @method('delete')</form>
     @endforeach
     <form id="duplicar" method="post" action="{{ route('admin.presupuestos.duplicar', $p) }}">@csrf</form>

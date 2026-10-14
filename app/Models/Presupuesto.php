@@ -29,7 +29,7 @@ class Presupuesto extends Model
     protected $fillable = [
         'cliente_id', 'prospecto_id', 'cliente_nombre', 'cliente_empresa', 'fecha', 'titulo', 'tipo',
         'emisor_nombre', 'emisor_telefono', 'emisor_sitio', 'emisor_email',
-        'modo_iva', 'iva_porcentaje', 'consideraciones', 'observaciones',
+        'modo_iva', 'metodo_sat', 'iva_porcentaje', 'consideraciones', 'observaciones',
         'mostrar_pago', 'pago_intro', 'banco', 'clabe', 'beneficiario',
         'nota_comprobante', 'nota_factura',
         'vigente_hasta', 'estado', 'aceptada_el', 'notas_internas',
@@ -76,7 +76,7 @@ class Presupuesto extends Model
         });
 
         // Al borrarla también se borran los archivos de su factura
-        static::deleting(fn (Presupuesto $p) => $p->facturas()->get()->each->delete());
+        static::deleting(fn (Presupuesto $p) => $p->archivosFiscales()->get()->each->delete());
 
         static::creating(function (Presupuesto $p) {
             $p->token ??= Str::random(32);
@@ -126,7 +126,45 @@ class Presupuesto extends Model
     /** Archivos de su factura (PDF, XML) */
     public function facturas(): HasMany
     {
+        return $this->hasMany(PresupuestoFactura::class)->where('tipo', 'factura');
+    }
+
+    /** Complementos de pago (REP) de una factura PPD */
+    public function complementos(): HasMany
+    {
+        return $this->hasMany(PresupuestoFactura::class)->where('tipo', 'complemento');
+    }
+
+    /** Todos los archivos fiscales: factura y complementos */
+    public function archivosFiscales(): HasMany
+    {
         return $this->hasMany(PresupuestoFactura::class);
+    }
+
+    /**
+     * Complementos agrupados por lo que se subió junto (PDF + XML), del más reciente al más viejo:
+     * [lote => ['archivos' => Collection, 'pago' => ?ProyectoPago, 'fecha' => ?Carbon, 'enviado' => ?Carbon, 'titulo' => string]]
+     */
+    public function getComplementosLotesAttribute(): \Illuminate\Support\Collection
+    {
+        $orden = fn ($f) => [['pdf' => 0, 'xml' => 1][$f->ext] ?? 2, $f->id];
+        return $this->complementos->sortByDesc('id')->groupBy(fn ($f) => $f->lote ?: 'f' . $f->id)->map(function ($g) use ($orden) {
+            $f = $g->first();
+            $pago = $f->pago;
+            return [
+                'archivos' => $g->sortBy($orden)->values(),
+                'pago'     => $pago,
+                'fecha'    => $f->fecha_pago ?? $pago?->pagado_el,
+                'enviado'  => $g->max('enviada_at'),
+                'titulo'   => 'Complemento' . ($pago ? ' · ' . $pago->concepto : '') . (($f->fecha_pago ?? $pago?->pagado_el) ? ' · pago del ' . ($f->fecha_pago ?? $pago->pagado_el)->locale('es')->isoFormat('D MMM') : ''),
+            ];
+        });
+    }
+
+    /** PUE o PPD: el que se eligió, o PPD si el cliente paga a crédito */
+    public function getMetodoSatEfectivoAttribute(): string
+    {
+        return $this->metodo_sat ?: ($this->cliente?->metodo_pago === 'credito' ? 'PPD' : 'PUE');
     }
 
     /** Los archivos de la factura en orden: PDF, XML y lo demás */

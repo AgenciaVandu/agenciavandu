@@ -23,6 +23,7 @@ class PresupuestoEvento extends Model
         'vigencia'    => ['texto' => 'Vigencia extendida',             'icono' => 'bi-calendar-plus'],
         'bloqueo'     => ['texto' => 'Demasiados intentos con código', 'icono' => 'bi-shield-exclamation'],
         'factura'     => ['texto' => 'Factura enviada',                'icono' => 'bi-receipt'],
+        'complemento' => ['texto' => 'Complemento de pago enviado',    'icono' => 'bi-receipt-cutoff'],
     ];
 
     protected $fillable = ['presupuesto_id', 'tipo', 'actor', 'autor', 'detalle', 'datos', 'visible_cliente', 'ip'];

@@ -51,8 +51,11 @@ class CorreoController extends Controller
             $registro->save();
             $this->historialCotizacion($ctx, $datos, $para);
             if (! empty($datos['adjuntar_factura']) && ($pf = $this->presupuestoFactura($ctx))) {
-                $pf->facturas()->update(['enviada_at' => now()]);
-                \App\Support\Aceptacion::registrar($pf, 'factura', 'agencia', null, 'Factura enviada por correo a ' . implode(', ', array_map([\App\Support\Aceptacion::class, 'correoOculto'], $para)), ['canal' => 'correo'], false);
+                $archivos = $this->archivosGuardados($pf, $datos['plantilla']);
+                \App\Models\PresupuestoFactura::whereIn('id', $archivos->pluck('id'))->update(['enviada_at' => now()]);
+                $esComp = str_starts_with($datos['plantilla'], 'complemento@');
+                \App\Support\Aceptacion::registrar($pf, $esComp ? 'complemento' : 'factura', 'agencia', null,
+                    ($esComp ? 'Complemento de pago enviado' : 'Factura enviada') . ' por correo a ' . implode(', ', array_map([\App\Support\Aceptacion::class, 'correoOculto'], $para)), ['canal' => 'correo'], false);
             }
         } catch (\Throwable $e) {
             report($e);
@@ -68,7 +71,7 @@ class CorreoController extends Controller
 
     private function armar(array $ctx, array $d, bool $vistaPrevia = false): CorreoVandu
     {
-        $pagoId = Str::contains($d['plantilla'], '@') ? (int) Str::after($d['plantilla'], '@') : null;
+        $pagoId = Str::startsWith($d['plantilla'], 'recordatorio_pago@') ? (int) Str::after($d['plantilla'], '@') : null;
         $archivos = [];
         if (! empty($d['adjuntar_pdf']) && $ctx['presupuesto']) {
             $p = $ctx['presupuesto'];
@@ -81,7 +84,7 @@ class CorreoController extends Controller
 
         // La factura guardada en la cotización (o en la cotización del proyecto)
         if (! empty($d['adjuntar_factura']) && ($pf = $this->presupuestoFactura($ctx))) {
-            foreach ($pf->facturas()->get() as $f) {
+            foreach ($this->archivosGuardados($pf, $d['plantilla']) as $f) {
                 $archivos[] = ['data' => $vistaPrevia ? '' : (string) $f->contenido(), 'nombre' => $f->nombre, 'mime' => $f->mime ?: 'application/octet-stream'];
             }
         }
@@ -121,6 +124,15 @@ class CorreoController extends Controller
             vistaPrevia: $vistaPrevia,
         );
         return $correo;
+    }
+
+    /** Lo guardado que va adjunto: el complemento de esa plantilla, o la factura */
+    private function archivosGuardados(\App\Models\Presupuesto $p, string $plantilla): \Illuminate\Support\Collection
+    {
+        if (str_starts_with($plantilla, 'complemento@')) {
+            return $p->complementos_lotes[\Illuminate\Support\Str::after($plantilla, '@')]['archivos'] ?? collect();
+        }
+        return $p->facturas_ordenadas;
     }
 
     private function presupuestoFactura(array $ctx): ?\App\Models\Presupuesto

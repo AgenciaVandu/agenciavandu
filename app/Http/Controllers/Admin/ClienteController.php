@@ -75,7 +75,7 @@ class ClienteController extends Controller
 
     public function show(Request $request, Cliente $cliente)
     {
-        $cliente->load(['presupuestos.conceptos', 'presupuestos.facturas', 'presupuestos.proyecto:id,presupuesto_id', 'proyectos.etapas', 'proyectos.pagos', 'constancias']);
+        $cliente->load(['presupuestos.conceptos', 'presupuestos.facturas', 'presupuestos.complementos.pago', 'presupuestos.proyecto.pagos', 'proyectos.etapas', 'proyectos.pagos', 'constancias']);
         $ver = array_key_exists($request->query('ver'), self::SECCIONES) ? $request->query('ver') : 'resumen';
 
         return view('admin.clientes.show', compact('cliente', 'ver'));

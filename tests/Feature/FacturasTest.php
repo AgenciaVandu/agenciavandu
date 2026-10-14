@@ -167,6 +167,55 @@ class FacturasTest extends TestCase
         $this->get(route('admin.presupuestos.index', ['q' => 'Logo']))->assertSee($borrador->folio)->assertDontSee('Video corporativo');
     }
 
+    public function test_complementos_de_pago_ppd(): void
+    {
+        Mail::fake();
+        $c = $this->p->cliente; $c->update(['metodo_pago' => 'credito']);
+        $this->assertSame('PPD', $this->p->fresh()->metodo_sat_efectivo, 'A crédito sugiere PPD');
+        $this->subir([$this->pdf(), $this->xml()]);
+        $pr = \App\Models\Proyecto::desdePresupuesto($this->p->fresh('conceptos'), array_key_first(config('vandu.proyectos')));
+        $pago = $pr->pagos()->orderBy('orden')->first();
+        $pago->update(['pagado_el' => now()->subDay()]);
+
+        // Pagado sin complemento: se avisa en la cotización y en el cliente
+        $edit = route('admin.presupuestos.edit', [$this->p, 'ver' => 'factura']);
+        $this->get($edit)->assertSee('Complementos de pago')->assertSee('falta su complemento');
+        $this->get(route('admin.clientes.show', $c))->assertSee("Falta el complemento del {$pago->concepto}");
+
+        // Se sube ligado al pago
+        $this->post(route('admin.presupuestos.complementos.subir', $this->p), [
+            'pago_id' => $pago->id, 'complemento' => [$this->pdf('REP-1.pdf'), $this->xml('REP-1.xml')],
+        ])->assertRedirect($edit)->assertSessionHasNoErrors();
+        $comps = PresupuestoFactura::where('tipo', 'complemento')->get();
+        $this->assertCount(2, $comps);
+        $this->assertSame(1, $comps->pluck('lote')->unique()->count());
+        $this->assertSame(['A123.pdf', 'A123.xml'], $this->p->fresh()->facturas_ordenadas->pluck('nombre')->all(), 'La factura no se mezcla con los complementos');
+        $lote = $comps->first()->lote;
+        $this->get($edit)->assertSee('REP-1.pdf')->assertSee('data-correo="complemento@' . $lote . '"', false);
+        $this->get(route('admin.clientes.show', $c))->assertSee('complemento de pago de ' . $this->p->folio . ' está listo para enviar')->assertDontSee('Falta el complemento');
+
+        // No se puede ligar a un pago de otro proyecto
+        $this->post(route('admin.presupuestos.complementos.subir', $this->p), ['pago_id' => 999999, 'complemento' => [$this->pdf('X.pdf')]])->assertSessionHasErrors('pago_id');
+
+        // El correo del complemento lleva solo sus archivos y lo marca enviado
+        $pl = \App\Support\Correos::plantillas(\App\Support\Correos::contexto('presupuesto', $this->p->id));
+        $this->assertArrayHasKey("complemento@$lote", $pl);
+        $this->assertSame('conta@hotel.mx', $pl["complemento@$lote"]['para']);
+        $this->post('/admin/correos', [
+            'contexto_tipo' => 'presupuesto', 'contexto_id' => $this->p->id, 'plantilla' => "complemento@$lote",
+            'para' => 'conta@hotel.mx', 'asunto' => 'Complemento', 'cuerpo' => 'Hola', 'adjuntar_factura' => 1,
+        ])->assertSessionHasNoErrors();
+        Mail::assertSent(CorreoVandu::class, fn ($m) => array_column($m->archivos, 'nombre') === ['REP-1.pdf', 'REP-1.xml']);
+        $this->assertNotNull(PresupuestoFactura::where('lote', $lote)->first()->enviada_at);
+        $this->assertNull(PresupuestoFactura::where('tipo', 'factura')->first()->enviada_at, 'La factura sigue sin enviar');
+        $this->assertTrue($this->p->eventos()->where('tipo', 'complemento')->exists());
+
+        // El cliente lo descarga desde su cotización
+        auth()->logout();
+        $this->get($this->p->url_publica)->assertSee('Complemento de pago PDF');
+        $this->get(route('presupuesto.factura', [$this->p->token, $comps->first()->id]))->assertOk();
+    }
+
     public function test_desde_el_proyecto_tambien_lleva_la_factura(): void
     {
         Mail::fake();

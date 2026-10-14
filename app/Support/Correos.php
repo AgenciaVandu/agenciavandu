@@ -53,6 +53,14 @@ class Correos
             if ($clave === 'entrega_digital' && ! $ctx['proyecto']?->archivos->where('grupo', 'galeria')->where('visible', true)->count()) {
                 continue;
             }
+            // Un correo por cada complemento de pago subido (con sus archivos)
+            if ($clave === 'complemento') {
+                $pres = $ctx['presupuesto'] ?? $ctx['proyecto']?->presupuesto;
+                foreach ($pres?->complementos_lotes ?? [] as $lote => $c) {
+                    $lista["complemento@$lote"] = self::armar($ctx, $clave, $pl) + ['etiqueta' => $c['pago'] ? "Complemento: {$c['pago']->concepto}" : 'Complemento de pago'];
+                }
+                continue;
+            }
             if ($clave === 'recordatorio_pago') {
                 $pendientes = $ctx['proyecto']?->pagos->whereNull('pagado_el')->values() ?? collect();
                 foreach ($pendientes as $pago) {

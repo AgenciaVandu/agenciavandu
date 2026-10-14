@@ -267,6 +267,7 @@ class PresupuestoController extends Controller
             'emisor_sitio'     => 'nullable|string|max:255',
             'emisor_email'     => 'nullable|string|max:255',
             'modo_iva'         => ['required', Rule::in(array_keys(Presupuesto::MODOS_IVA))],
+            'metodo_sat'       => 'nullable|in:PUE,PPD',
             'iva_porcentaje'   => 'required|numeric|min:0|max:100',
 
             'conceptos'               => 'required|array|min:1',

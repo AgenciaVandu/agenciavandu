@@ -26,6 +26,15 @@
     $pendientes = collect();
     if ($vencido > 0) $pendientes->push(['bi-exclamation-octagon', 'rojo', 'Tiene ' . $dinero($vencido) . ' de pagos vencidos', 'Mándale un recordatorio desde su proyecto.', route('admin.clientes.show', [$cliente, 'ver' => 'proyectos']), 'Ver pagos']);
     foreach ($facturaPorEnviar as $p) $pendientes->push(['bi-send', 'verde', "La factura de {$p->folio} está lista para enviar", $p->facturas_ordenadas->pluck('nombre')->join(' · '), route('admin.presupuestos.edit', [$p, 'correo' => 'factura']), 'Enviar factura']);
+    // Facturas PPD: cada pago recibido lleva su complemento
+    foreach ($ps as $p) {
+        foreach ($p->complementos_lotes as $lote => $c) if (! $c['enviado']) $pendientes->push(['bi-receipt-cutoff', 'verde', "El complemento de pago de {$p->folio} está listo para enviar", $c['titulo'], route('admin.presupuestos.edit', [$p, 'correo' => "complemento@$lote"]), 'Enviar']);
+        if ($p->metodo_sat_efectivo === 'PPD' && $p->facturas->isNotEmpty() && $p->proyecto) {
+            $conComp = $p->complementos->pluck('pago_id')->filter()->all();
+            foreach ($p->proyecto->pagos->filter(fn ($x) => $x->pagado && ! in_array($x->id, $conComp)) as $x)
+                $pendientes->push(['bi-receipt-cutoff', 'ambar', "Falta el complemento del {$x->concepto} de {$p->folio}", 'Pagado el ' . $x->pagado_el->locale('es')->isoFormat('D [de] MMMM') . ' · ' . $x->monto_texto, route('admin.presupuestos.edit', [$p, 'ver' => 'factura']) . '#complementos', 'Subir']);
+        }
+    }
     foreach ($sinFactura->take(3) as $p) $pendientes->push(['bi-receipt', 'ambar', "{$p->folio} está aceptada y no tiene factura", \Illuminate\Support\Str::limit($p->conceptos->first()?->resumen ?: $p->titulo, 70), route('admin.presupuestos.edit', [$p, 'ver' => 'factura']), 'Subir factura']);
     foreach ($porResponder->take(3) as $p) $pendientes->push(['bi-hourglass-split', 'azul', "{$p->folio} espera respuesta", 'Vence el ' . $p->vigencia_local->locale('es')->isoFormat('D [de] MMMM') . ' · ' . $p->monto($p->modo_iva === 'desglosado' ? $p->total : $p->subtotal), route('admin.presupuestos.edit', [$p, 'correo' => 'por_vencer']), 'Dar seguimiento']);
     if ($aceptadas->isNotEmpty() && ! $cliente->fiscales_completos) $pendientes->push(['bi-person-vcard', 'ambar', 'Faltan sus datos fiscales', 'Los necesitas para facturar.', route('admin.clientes.edit', $cliente) . '#rfc', 'Capturar']);
