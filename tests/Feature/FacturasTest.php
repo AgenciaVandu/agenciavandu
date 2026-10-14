@@ -150,6 +150,23 @@ class FacturasTest extends TestCase
         $this->get($edit)->assertDontSee('¡Cotización aceptada!');
     }
 
+    public function test_lista_de_cotizaciones_abre_con_todas(): void
+    {
+        $borrador = Presupuesto::nuevaPara($this->p->cliente); $borrador->save();
+        $borrador->conceptos()->create(['titulo' => 'Logo nuevo', 'descripcion' => '', 'cantidad' => 1, 'precio' => 5000, 'orden' => 0]);
+
+        // Sin filtro se ven todas, con sus tarjetas de resumen
+        $this->get(route('admin.presupuestos.index'))->assertOk()
+            ->assertSee($this->p->folio)->assertSee($borrador->folio)
+            ->assertSee('Por responder')->assertSee('Aceptado este mes')->assertSee('Borrador sin enviar')
+            ->assertSee('Crear proyecto')->assertSee('Sin factura');
+        // Una vista vacía no deja la pantalla en blanco: ofrece ver todas
+        $this->get(route('admin.presupuestos.index', ['filtro' => 'vigentes']))->assertOk()->assertSee('Nada en «Por responder»')->assertSee('Ver todas (2)');
+        $this->get(route('admin.presupuestos.index', ['filtro' => 'borrador']))->assertSee($borrador->folio)->assertDontSee('>' . $this->p->folio . '<', false);
+        // Buscar también por lo cotizado
+        $this->get(route('admin.presupuestos.index', ['q' => 'Logo']))->assertSee($borrador->folio)->assertDontSee('Video corporativo');
+    }
+
     public function test_desde_el_proyecto_tambien_lleva_la_factura(): void
     {
         Mail::fake();

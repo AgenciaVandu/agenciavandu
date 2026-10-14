@@ -14,38 +14,63 @@ use Illuminate\Validation\Rule;
 
 class PresupuestoController extends Controller
 {
+    /** Vistas de la lista. "vigentes" se conserva como nombre de "Por responder" para los enlaces que ya existen */
+    public const VISTAS = [
+        'todas'     => 'Todas',
+        'vigentes'  => 'Por responder',
+        'por_vencer' => 'Por vencer',
+        'borrador'  => 'Borradores',
+        'aceptada'  => 'Aceptadas',
+        'cerradas'  => 'Vencidas o rechazadas',
+    ];
+
     public function index(Request $request)
     {
         $q = trim((string) $request->query('q'));
-        $filtro = $request->query('filtro', 'vigentes');
+        $filtro = array_key_exists($request->query('filtro'), self::VISTAS) ? $request->query('filtro') : 'todas';
+
+        $vista = fn (string $f) => function ($w) use ($f) {
+            match ($f) {
+                // Enviadas que siguen vigentes, o en negociación
+                'vigentes'   => $w->where(fn ($x) => $x->where('estado', 'negociacion')
+                                    ->orWhere(fn ($y) => $y->where('estado', 'enviada')->where('vigente_hasta', '>', now()))),
+                'por_vencer' => $w->whereBetween('vigente_hasta', [now(), now()->addHours(72)])->whereIn('estado', ['enviada', 'negociacion', 'borrador']),
+                'borrador'   => $w->where('estado', 'borrador'),
+                'aceptada'   => $w->where('estado', 'aceptada'),
+                'cerradas'   => $w->where(fn ($x) => $x->where('estado', 'rechazada')
+                                    ->orWhere(fn ($y) => $y->where('vigente_hasta', '<=', now())->whereIn('estado', ['enviada', 'borrador']))),
+                default      => $w,
+            };
+        };
 
         $presupuestos = Presupuesto::query()
-            ->with(['cliente', 'prospecto', 'conceptos', 'proyecto'])
+            ->with(['cliente', 'prospecto', 'conceptos', 'proyecto', 'facturas'])
             ->when($q, fn ($query) => $query->where(fn ($w) => $w
                 ->where('folio', 'like', "%$q%")
                 ->orWhere('cliente_nombre', 'like', "%$q%")
-                ->orWhere('cliente_empresa', 'like', "%$q%")))
-            ->when($filtro === 'vigentes', fn ($w) => $w->where(fn ($q) => $q->where('estado', 'negociacion')
-                ->orWhere(fn ($q2) => $q2->where('vigente_hasta', '>', now())->whereNotIn('estado', ['aceptada', 'rechazada']))))
-            ->when($filtro === 'vencidas', fn ($w) => $w->where('vigente_hasta', '<=', now())->whereNotIn('estado', ['aceptada', 'negociacion']))
-            ->when($filtro === 'por_vencer', fn ($w) => $w->whereBetween('vigente_hasta', [now(), now()->addHours(72)])
-                ->whereNotIn('estado', ['aceptada', 'rechazada']))
-            ->when(array_key_exists($filtro, Presupuesto::ESTADOS), fn ($w) => $w->where('estado', $filtro))
+                ->orWhere('cliente_empresa', 'like', "%$q%")
+                ->orWhereHas('conceptos', fn ($c) => $c->where('titulo', 'like', "%$q%")->orWhere('descripcion', 'like', "%$q%"))))
+            ->where($vista($filtro))
             ->latest()
             ->paginate(25)
             ->withQueryString();
 
-        $conteos = [
-            'vigentes'   => Presupuesto::where(fn ($q) => $q->where('estado', 'negociacion')
-                ->orWhere(fn ($q2) => $q2->where('vigente_hasta', '>', now())->whereNotIn('estado', ['aceptada', 'rechazada'])))->count(),
-            'por_vencer' => Presupuesto::whereBetween('vigente_hasta', [now(), now()->addHours(72)])->whereNotIn('estado', ['aceptada', 'rechazada'])->count(),
-            'vencidas'   => Presupuesto::where('vigente_hasta', '<=', now())->whereNotIn('estado', ['aceptada', 'negociacion'])->count(),
-            'aceptada'   => Presupuesto::where('estado', 'aceptada')->count(),
-            'negociacion' => Presupuesto::where('estado', 'negociacion')->count(),
-            'todas'      => Presupuesto::count(),
+        $conteos = collect(self::VISTAS)->map(fn ($t, $k) => Presupuesto::where($vista($k))->count())->all();
+
+        // Tarjetas de arriba (montos antes de IVA)
+        $suma = fn ($c) => $c->sum(fn ($p) => $p->subtotal);
+        $porResponder = Presupuesto::with('conceptos')->where($vista('vigentes'))->get();
+        $mes = now(config('vandu.zona_horaria'))->startOfMonth()->toDateString();
+        $aceptadasMes = Presupuesto::with('conceptos')->where('estado', 'aceptada')->where('aceptada_el', '>=', $mes)->get();
+        $resumen = [
+            'porResponder' => ['n' => $porResponder->count(), 'monto' => $suma($porResponder)],
+            'porVencer'    => $conteos['por_vencer'],
+            'aceptadasMes' => ['n' => $aceptadasMes->count(), 'monto' => $suma($aceptadasMes)],
+            'borradores'   => $conteos['borrador'],
+            'sinProyecto'  => Presupuesto::where('estado', 'aceptada')->doesntHave('proyecto')->count(),
         ];
 
-        return view('admin.presupuestos.index', compact('presupuestos', 'q', 'filtro', 'conteos'));
+        return view('admin.presupuestos.index', compact('presupuestos', 'q', 'filtro', 'conteos', 'resumen'));
     }
 
     public function create(Request $request)
