@@ -54,6 +54,7 @@
     .cq-tag.ambar { background: var(--amber-soft); color: var(--amber); }
     .cq-tag.verde { background: var(--green-soft); color: var(--green-ink); }
     .cq-acc { display: flex; justify-content: flex-end; gap: 2px; position: relative; z-index: 2; }
+    .cq-acc:has(.dropdown-menu.show) { z-index: 20; }   /* el menú abierto queda encima de la fila de abajo */
 
     .cq-vacio { text-align: center; padding: 48px 20px; }
     .cq-vacio .ico { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; margin: 0 auto 14px; background: var(--sunken); font-size: 24px; color: var(--text-2); }

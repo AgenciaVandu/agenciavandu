@@ -216,6 +216,24 @@ class FacturasTest extends TestCase
         $this->get(route('presupuesto.factura', [$this->p->token, $comps->first()->id]))->assertOk();
     }
 
+    public function test_lista_de_clientes_con_valor_y_pendientes(): void
+    {
+        $otro = Cliente::create(['nombre' => 'Luis', 'empresa' => 'Café Lima']);
+        $pr = \App\Models\Proyecto::desdePresupuesto($this->p->fresh('conceptos'), array_key_first(config('vandu.proyectos')));
+        $html = $this->get(route('admin.clientes.index'))->assertOk()
+            ->assertSee('Hotel X')->assertSee('Café Lima')->assertSee('$22,000')->assertSee('1 sin factura')->assertSee('1 en marcha')
+            ->assertSee('Con proyecto en marcha')->assertSee('Aceptado en')->getContent();
+        // Por valor: primero el que más ha comprado
+        $html = $this->get(route('admin.clientes.index', ['orden' => 'valor']))->getContent();
+        $this->assertLessThan(strpos($html, '>Café Lima<'), strpos($html, '>Hotel X<'));
+
+        $this->get(route('admin.clientes.index', ['ver' => 'activos']))->assertSee('Hotel X')->assertDontSee('Café Lima');
+        $this->get(route('admin.clientes.index', ['ver' => 'por_cobrar']))->assertSee('Hotel X');
+        $this->get(route('admin.clientes.index', ['ver' => 'sin_actividad']))->assertSee('Nadie en «Sin actividad en 3 meses»')->assertSee('Ver todos (2)');
+        $this->get(route('admin.clientes.index', ['orden' => 'nombre']))->assertOk();
+        $this->get(route('admin.clientes.index', ['q' => 'lima']))->assertSee('Café Lima')->assertDontSee('Hotel X');
+    }
+
     public function test_desde_el_proyecto_tambien_lleva_la_factura(): void
     {
         Mail::fake();
