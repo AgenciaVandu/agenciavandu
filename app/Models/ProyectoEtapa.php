@@ -29,6 +29,24 @@ class ProyectoEtapa extends Model
         return $this->hasMany(ProyectoArchivo::class, 'etapa_id')->orderBy('orden')->orderBy('id');
     }
 
+    /** Cuándo debe quedar lista (un evento: su día; una etapa: su último día) */
+    public function getFechaLimiteAttribute(): ?\Illuminate\Support\Carbon
+    {
+        return $this->es_fecha ? $this->fecha_inicio : ($this->fecha_fin ?? $this->fecha_inicio);
+    }
+
+    /** "Hoy", "Mañana", "En 3 días", "Hace 2 días" respecto a su fecha límite */
+    public function getFaltaTextoAttribute(): ?string
+    {
+        if (! $this->fecha_limite) return null;
+        $hoy = now(config('vandu.zona_horaria'))->startOfDay();
+        $d = (int) $hoy->diffInDays($this->fecha_limite->copy()->startOfDay(), false);
+        return match (true) {
+            $d === 0 => 'hoy', $d === 1 => 'mañana', $d === -1 => 'ayer',
+            $d > 1 => "en $d días", default => 'hace ' . abs($d) . ' días',
+        };
+    }
+
     /** Texto de fechas para mostrar: "12 – 16 oct" o "Sáb 18 oct" */
     public function getFechasTextoAttribute(): ?string
     {

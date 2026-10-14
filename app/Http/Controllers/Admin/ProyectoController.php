@@ -20,17 +20,68 @@ class ProyectoController extends Controller
     {
         $filtro = $request->query('filtro', 'activo');
         $tipo = $request->query('tipo');
+        $vista = $request->query('vista') === 'lista' ? 'lista' : 'tarjetas';
 
-        $proyectos = Proyecto::with(['cliente', 'etapas', 'pagos'])
+        $consulta = Proyecto::with(['cliente', 'etapas', 'pagos'])->withCount('archivos')
             ->when(array_key_exists($filtro, Proyecto::ESTADOS), fn ($q) => $q->where('estado', $filtro))
-            ->when($tipo && config("vandu.proyectos.$tipo"), fn ($q) => $q->where('tipo', $tipo))
-            ->latest()
-            ->paginate(25)
-            ->withQueryString();
+            ->when($tipo && config("vandu.proyectos.$tipo"), fn ($q) => $q->where('tipo', $tipo));
+
+        // En marcha y en pausa se ven todos, lo más urgente primero; terminados y "todos", por páginas
+        if (in_array($filtro, ['activo', 'pausado'], true)) {
+            $proyectos = $consulta->latest()->limit(300)->get()->sortBy(fn ($p) => [$p->urgencia, $p->etapa_actual?->fecha_limite?->timestamp ?? PHP_INT_MAX])->values();
+        } else {
+            $proyectos = $consulta->latest()->paginate(24)->withQueryString();
+        }
 
         $conteos = collect(Proyecto::ESTADOS)->map(fn ($l, $k) => Proyecto::where('estado', $k)->count())->put('todos', Proyecto::count());
 
-        return view('admin.proyectos.index', compact('proyectos', 'filtro', 'tipo', 'conteos'));
+        // Números de arriba: siempre sobre lo que está en marcha
+        $enMarcha = Proyecto::with(['etapas', 'pagos'])->where('estado', 'activo')->get();
+        $pagos = $enMarcha->flatMap->pagos;
+        $semana = now(config('vandu.zona_horaria'))->addDays(7)->toDateString();
+        $resumen = [
+            'activos'   => $enMarcha->count(),
+            'atrasados' => $enMarcha->filter(fn ($p) => $p->salud[0] === 'atrasado')->count(),
+            'porCobrar' => $pagos->whereNull('pagado_el')->sum('monto'),
+            'vencido'   => $pagos->filter->vencido->sum('monto'),
+            'semana'    => $enMarcha->filter(fn ($p) => ($f = $p->etapa_actual?->fecha_limite) && $f->toDateString() <= $semana)->count(),
+        ];
+
+        // La semana: entregas de etapas, eventos agendados y pagos que vencen (lunes a domingo)
+        $zona = config('vandu.zona_horaria');
+        $semanaN = max(-52, min(52, (int) $request->query('semana', 0)));
+        $lunes = now($zona)->startOfWeek(\Carbon\Carbon::MONDAY)->addWeeks($semanaN)->startOfDay();
+        $domingo = $lunes->copy()->addDays(6);
+        $eventos = collect();
+        $hoyStr = now($zona)->toDateString();
+        $esEstaSemana = $semanaN === 0;
+        foreach ($enMarcha->load('cliente') as $p) {
+            foreach ($p->etapas as $e) {
+                $f = $e->fecha_limite;
+                // Lo atrasado de semanas anteriores se muestra hoy, para que no se pierda
+                if ($esEstaSemana && $f && $e->estado !== 'completada' && $f->toDateString() < $lunes->toDateString()) {
+                    $eventos->push(['dia' => $hoyStr, 'tipo' => 'entrega', 'atrasado' => true, 'proyecto' => $p, 'titulo' => $e->nombre,
+                        'detalle' => 'Atrasado · ' . $e->falta_texto, 'en_curso' => $e->estado === 'en_curso']);
+                    continue;
+                }
+                if (! $f || $e->estado === 'completada' || $f->toDateString() < $lunes->toDateString() || $f->toDateString() > $domingo->toDateString()) continue;
+                $eventos->push(['dia' => $f->toDateString(), 'tipo' => $e->es_fecha ? 'evento' : 'entrega', 'proyecto' => $p, 'titulo' => $e->nombre,
+                    'detalle' => $e->es_fecha ? 'Día agendado' : 'Termina la etapa', 'en_curso' => $e->estado === 'en_curso']);
+            }
+            foreach ($p->pagos as $pg) {
+                if ($esEstaSemana && $pg->vencido && $pg->vence_el->toDateString() < $lunes->toDateString()) {
+                    $eventos->push(['dia' => $hoyStr, 'tipo' => 'pago', 'atrasado' => true, 'proyecto' => $p, 'titulo' => $pg->concepto,
+                        'detalle' => '$' . number_format($pg->monto, 0) . ' · vencido', 'en_curso' => false]);
+                    continue;
+                }
+                if ($pg->pagado || ! $pg->vence_el || $pg->vence_el->toDateString() < $lunes->toDateString() || $pg->vence_el->toDateString() > $domingo->toDateString()) continue;
+                $eventos->push(['dia' => $pg->vence_el->toDateString(), 'tipo' => 'pago', 'proyecto' => $p, 'titulo' => $pg->concepto,
+                    'detalle' => '$' . number_format($pg->monto, 0) . ($pg->vencido ? ' · vencido' : ' · vence'), 'en_curso' => false]);
+            }
+        }
+        $semana = ['lunes' => $lunes, 'n' => $semanaN, 'eventos' => $eventos->sortByDesc(fn ($e) => ! empty($e['atrasado']))->groupBy('dia')];
+
+        return view('admin.proyectos.index', compact('proyectos', 'filtro', 'tipo', 'conteos', 'vista', 'resumen', 'semana'));
     }
 
     /** Pantalla para revisar etapas, pagos y fechas antes de crear el proyecto */

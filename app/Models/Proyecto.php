@@ -225,6 +225,31 @@ class Proyecto extends Model
         return $this->etapas->firstWhere('estado', 'en_curso') ?? $this->etapas->firstWhere('estado', 'pendiente');
     }
 
+    /**
+     * Semáforo del proyecto para la vista general: [clave, texto, color].
+     * Orden de gravedad: pago vencido o etapa atrasada → esperando pago → entrega en 3 días → en tiempo.
+     */
+    public function getSaludAttribute(): array
+    {
+        if ($this->estado === 'terminado') return ['terminado', 'Terminado', 'gris'];
+        if ($this->estado === 'pausado') return ['pausa', 'En pausa', 'gris'];
+        $hoy = now(config('vandu.zona_horaria'))->toDateString();
+        $e = $this->etapa_actual;
+        $limite = $e?->fecha_limite?->toDateString();
+        if ($this->pagos->contains->vencido) return ['atrasado', 'Pago vencido', 'rojo'];
+        if ($limite && $limite < $hoy) return ['atrasado', 'Atrasado', 'rojo'];
+        if ($e && $this->pagosQueBloquean($e)->isNotEmpty()) return ['pago', 'Esperando pago', 'ambar'];
+        if ($limite && $limite <= now(config('vandu.zona_horaria'))->addDays(3)->toDateString()) return ['pronto', 'Entrega pronto', 'azul'];
+        if (! $e && $this->etapas->isNotEmpty()) return ['listo', 'Por cerrar', 'verde'];
+        return ['ok', 'En tiempo', 'verde'];
+    }
+
+    /** Para ordenar: lo más urgente primero */
+    public function getUrgenciaAttribute(): int
+    {
+        return ['atrasado' => 0, 'pago' => 1, 'pronto' => 2, 'listo' => 3, 'ok' => 4, 'pausa' => 5, 'terminado' => 6][$this->salud[0]] ?? 9;
+    }
+
     public function getACreditoAttribute(): bool
     {
         return $this->forma_pago === 'credito';
