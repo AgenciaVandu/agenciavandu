@@ -132,6 +132,24 @@ class FacturasTest extends TestCase
         $this->assertStringContainsString('seccion\u0022:\u0022pago', $this->get($edit . '?ver=contenido')->getContent());
     }
 
+    public function test_aceptada_destaca_proyecto_y_factura(): void
+    {
+        $edit = route('admin.presupuestos.edit', $this->p);
+        $this->get($edit)->assertSee('¡Cotización aceptada!')->assertSee('Crear el proyecto')->assertSee('Subir la factura')
+            ->assertSee(route('admin.proyectos.create', [$this->p, 'tipo' => \App\Models\Proyecto::tipoSugerido($this->p)]), false);
+
+        $this->subir([$this->pdf(), $this->xml()]);
+        $this->get($edit)->assertSee('Enviar la factura')->assertSee('A123.pdf · A123.xml');
+
+        \App\Models\Proyecto::desdePresupuesto($this->p->fresh('conceptos'), array_key_first(config('vandu.proyectos')));
+        PresupuestoFactura::query()->update(['enviada_at' => now()]);
+        $this->get($edit)->assertDontSee('¡Cotización aceptada!');
+
+        // Una que no está aceptada no lo muestra
+        $this->p->update(['estado' => 'enviada']);
+        $this->get($edit)->assertDontSee('¡Cotización aceptada!');
+    }
+
     public function test_desde_el_proyecto_tambien_lleva_la_factura(): void
     {
         Mail::fake();

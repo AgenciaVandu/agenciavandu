@@ -156,6 +156,27 @@
     .subnav a.activo { color: var(--text); border-bottom-color: var(--ink); }
     .subnav a.activo i { color: var(--green-ink); }
     .subnav .n { font-size: 12px; background: var(--surface); border: 1px solid var(--line); color: var(--text-2); border-radius: 99px; padding: 0 7px; line-height: 18px; }
+    /* Siguientes pasos al aceptarse */
+    .siguientes { background: linear-gradient(135deg, #E9FCF2 0%, #F5FFF9 60%, #FFFFFF 100%); border: 1px solid #BDF2D6; border-radius: 16px; padding: 16px 18px 18px; margin: -4px 0 20px; display: grid; gap: 14px; }
+    .sig-titulo { display: flex; align-items: center; gap: 12px; }
+    .sig-titulo b { display: block; font-size: 16px; }
+    .sig-titulo div span { display: block; font-size: 13px; color: var(--muted); }
+    .sig-ico { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: var(--green); color: var(--ink); flex: none; }
+    .sig-ico i { font-size: 19px; line-height: 1; }
+    .sig-pasos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .sig-paso { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-width: 0; }
+    .sig-paso.hecho { background: rgba(255,255,255,.65); }
+    .sig-n { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; background: var(--ink); color: #fff; flex: none; }
+    .sig-paso.hecho .sig-n { background: var(--green-ink); }
+    .sig-txt { flex: 1; min-width: 0; }
+    .sig-txt b { display: block; font-size: 14.5px; font-weight: 600; }
+    .sig-paso.hecho .sig-txt b { color: var(--green-ink); }
+    .sig-txt span { display: block; font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sig-acc { display: flex; gap: 4px; flex: none; }
+    .sig-acc .btn { white-space: nowrap; }
+    @media (max-width: 991.98px) { .sig-pasos { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 575.98px) { .sig-paso { flex-wrap: wrap; } .sig-acc { width: 100%; padding-left: 40px; } .sig-acc .btn:first-child { flex: 1; } }
+
     .punto-est { width: 8px; height: 8px; border-radius: 50%; background: #C9CDD4; }
     .punto-est.verde { background: var(--green-ink); } .punto-est.azul { background: var(--blue); } .punto-est.ambar { background: var(--amber); }
 
@@ -217,6 +238,68 @@
             <button class="btn btn-primario px-4">{{ $nuevo ? 'Crear cotización' : 'Guardar' }}</button>
         </div>
     </div>
+
+    {{-- Aceptada: los siguientes pasos, a la vista en cualquier sección --}}
+    @if(! $nuevo && $p->estado === 'aceptada')
+        @php
+            $sigFacturas = $p->facturas_ordenadas; $sigEnviada = $sigFacturas->max('enviada_at');
+            $sigTipo = \App\Models\Proyecto::tipoSugerido($p);
+            $sigListo = $p->proyecto && $sigEnviada;
+        @endphp
+        @unless($sigListo)
+            <section class="siguientes" aria-label="Siguientes pasos">
+                <div class="sig-titulo">
+                    <span class="sig-ico"><i class="bi bi-trophy"></i></span>
+                    <div><b>¡Cotización aceptada!</b><span>Aceptada {{ $p->aceptada_el ? 'el ' . \App\Models\Presupuesto::fechaLarga($p->aceptada_el) : '' }} · sigue con esto:</span></div>
+                </div>
+                <div class="sig-pasos">
+                    {{-- 1. Proyecto --}}
+                    <div class="sig-paso {{ $p->proyecto ? 'hecho' : '' }}">
+                        <span class="sig-n">@if($p->proyecto)<i class="bi bi-check-lg"></i>@else 1 @endif</span>
+                        <div class="sig-txt">
+                            @if($p->proyecto)
+                                <b>Proyecto creado</b><span>{{ $p->proyecto->nombre }} · {{ $p->proyecto->siguiente_paso ?? 'Terminado' }}</span>
+                            @else
+                                <b>Crear el proyecto</b><span>Etapas, pagos y el enlace de avance para el cliente · {{ config("vandu.proyectos.$sigTipo.nombre") }}</span>
+                            @endif
+                        </div>
+                        <div class="sig-acc">
+                        @if($p->proyecto)
+                            <a href="{{ route('admin.proyectos.show', $p->proyecto) }}" class="btn btn-borde btn-sm">Abrir</a>
+                        @else
+                                <a href="{{ route('admin.proyectos.create', [$p, 'tipo' => $sigTipo]) }}" class="btn btn-acento btn-sm"><i class="bi bi-kanban me-1"></i> Crear proyecto</a>
+                                <a href="?ver=factura" class="btn btn-fantasma btn-sm" @click.prevent="irA('factura')" data-recargar title="Elegir otro tipo de proyecto">Otro tipo</a>
+                        @endif
+                        </div>
+                    </div>
+                    {{-- 2. Factura --}}
+                    <div class="sig-paso {{ $sigEnviada ? 'hecho' : '' }}">
+                        <span class="sig-n">@if($sigEnviada)<i class="bi bi-check-lg"></i>@else 2 @endif</span>
+                        <div class="sig-txt">
+                            @if($sigEnviada)
+                                <b>Factura enviada</b><span>{{ $sigEnviada->locale('es')->diffForHumans() }}</span>
+                            @elseif($sigFacturas->isNotEmpty())
+                                <b>Enviar la factura</b><span>{{ $sigFacturas->pluck('nombre')->join(' · ') }}</span>
+                            @else
+                                <b>Subir la factura</b><span>El PDF y el XML; el cliente la descarga desde su enlace</span>
+                            @endif
+                        </div>
+                        <div class="sig-acc">
+                        @if($sigEnviada)
+                            <a href="?ver=factura" class="btn btn-borde btn-sm" @click.prevent="irA('factura')" data-recargar>Ver</a>
+                        @elseif($sigFacturas->isNotEmpty())
+                            <button type="button" class="btn btn-acento btn-sm" data-correo="factura"><i class="bi bi-send me-1"></i> Enviar factura</button>
+                        @else
+                            <label class="btn btn-acento btn-sm mb-0"><i class="bi bi-upload me-1"></i> Subir PDF y XML
+                                <input type="file" name="facturas[]" form="subir-factura" multiple accept=".pdf,.xml,.zip" class="d-none" onchange="this.files.length && this.form.requestSubmit()">
+                            </label>
+                        @endif
+                        </div>
+                    </div>
+                </div>
+            </section>
+        @endunless
+    @endif
 
     <nav class="subnav" aria-label="Secciones de la cotización">
         @foreach($seccionesCot as $k => [$texto, $icono])
