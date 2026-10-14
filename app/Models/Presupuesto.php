@@ -75,6 +75,9 @@ class Presupuesto extends Model
             }
         });
 
+        // Al borrarla también se borran los archivos de su factura
+        static::deleting(fn (Presupuesto $p) => $p->facturas()->get()->each->delete());
+
         static::creating(function (Presupuesto $p) {
             $p->token ??= Str::random(32);
             $p->folio ??= static::siguienteFolio();
@@ -118,6 +121,18 @@ class Presupuesto extends Model
         $this->setRelation('cliente', $c);
         if ($guardar && $this->exists) $this->saveQuietly();
         return $c;
+    }
+
+    /** Archivos de su factura (PDF, XML) */
+    public function facturas(): HasMany
+    {
+        return $this->hasMany(PresupuestoFactura::class);
+    }
+
+    /** Los archivos de la factura en orden: PDF, XML y lo demás */
+    public function getFacturasOrdenadasAttribute(): \Illuminate\Support\Collection
+    {
+        return $this->facturas->sortBy(fn ($f) => [['pdf' => 0, 'xml' => 1][$f->ext] ?? 2, $f->id])->values();
     }
 
     public function proyecto(): \Illuminate\Database\Eloquent\Relations\HasOne

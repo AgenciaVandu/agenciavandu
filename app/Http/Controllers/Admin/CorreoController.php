@@ -50,6 +50,10 @@ class CorreoController extends Controller
             $registro->estado = 'enviado';
             $registro->save();
             $this->historialCotizacion($ctx, $datos, $para);
+            if (! empty($datos['adjuntar_factura']) && ($pf = $this->presupuestoFactura($ctx))) {
+                $pf->facturas()->update(['enviada_at' => now()]);
+                \App\Support\Aceptacion::registrar($pf, 'factura', 'agencia', null, 'Factura enviada por correo a ' . implode(', ', array_map([\App\Support\Aceptacion::class, 'correoOculto'], $para)), ['canal' => 'correo'], false);
+            }
         } catch (\Throwable $e) {
             report($e);
             $registro->estado = 'fallido';
@@ -73,6 +77,13 @@ class CorreoController extends Controller
                 'nombre' => $p->nombre_archivo,
                 'mime'   => 'application/pdf',
             ];
+        }
+
+        // La factura guardada en la cotización (o en la cotización del proyecto)
+        if (! empty($d['adjuntar_factura']) && ($pf = $this->presupuestoFactura($ctx))) {
+            foreach ($pf->facturas()->get() as $f) {
+                $archivos[] = ['data' => $vistaPrevia ? '' : (string) $f->contenido(), 'nombre' => $f->nombre, 'mime' => $f->mime ?: 'application/octet-stream'];
+            }
         }
 
         // Archivos que adjuntas al enviar (factura en PDF y XML, etc.)
@@ -112,6 +123,11 @@ class CorreoController extends Controller
         return $correo;
     }
 
+    private function presupuestoFactura(array $ctx): ?\App\Models\Presupuesto
+    {
+        return $ctx['presupuesto'] ?? $ctx['proyecto']?->presupuesto;
+    }
+
     /** Deja constancia en el historial de la cotización (y la marca como enviada si era borrador) */
     private function historialCotizacion(array $ctx, array $datos, array $para): void
     {
@@ -144,6 +160,7 @@ class CorreoController extends Controller
             'incluir_resumen' => 'nullable|boolean',
             'incluir_banco'   => 'nullable|boolean',
             'adjuntar_pdf'    => 'nullable|boolean',
+            'adjuntar_factura' => 'nullable|boolean',
             'incluir_miniaturas' => 'nullable|boolean',
             'incluir_codigo'  => 'nullable|boolean',
             'adjuntos'        => 'nullable|array|max:8',

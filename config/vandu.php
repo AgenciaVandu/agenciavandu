@@ -378,7 +378,7 @@ return [
                 'boton'  => 'Ver mi entrega', 'enlace' => 'entrega', 'miniaturas' => true,
             ],
             'factura' => [
-                'nombre' => 'Enviar factura', 'icono' => 'bi-receipt', 'para' => ['proyecto', 'presupuesto', 'cliente'],
+                'nombre' => 'Enviar factura', 'icono' => 'bi-receipt', 'para' => ['proyecto', 'presupuesto'],
                 'asunto' => 'Factura · {concepto}',
                 'titulo' => 'Tu factura está lista',
                 'cuerpo' => "Hola {nombre},\n\nTe comparto la factura correspondiente a {concepto}. Adjunto encontrarás el PDF y el XML para tu contabilidad.\n\nSi necesitas algún ajuste en los datos fiscales o que la enviemos a otro correo, respóndeme este mensaje y lo corregimos.\n\nGracias por tu confianza.",

@@ -547,6 +547,43 @@
             @unless($nuevo)
                 @include('admin.correos._historial', ['correos' => \App\Models\Correo::where('presupuesto_id', $p->id)->latest()->take(8)->get(), 'plantilla' => 'cotizacion'])
             @endunless
+            @unless($nuevo)
+                @php $facturas = $p->facturas_ordenadas; $enviada = $facturas->max('enviada_at'); @endphp
+                <section class="panel" id="factura">
+                    <div class="panel-head"><h2>Factura</h2>
+                        @if($facturas->isEmpty())<span class="estado estado-borrador">Sin subir</span>
+                        @elseif($enviada)<span class="estado estado-aceptada">Enviada</span>
+                        @else<span class="estado estado-enviada">Por enviar</span>@endif
+                    </div>
+                    <div class="panel-body">
+                        @if($facturas->isEmpty())
+                            <p class="secundario mt-0 mb-3" style="font-size:13.5px">Sube el PDF y el XML. El cliente los podrá descargar desde su cotización y su espacio.</p>
+                        @else
+                            <ul class="list-unstyled d-grid gap-1 mb-3">
+                                @foreach($facturas as $f)
+                                    <li class="d-flex align-items-center gap-2">
+                                        <i class="bi {{ $f->icono }}" style="font-size:18px; color: var(--text-2)"></i>
+                                        <a href="{{ route('admin.presupuestos.facturas.ver', [$p, $f]) }}" target="_blank" class="text-reset text-truncate flex-grow-1" style="font-size:13.5px" title="{{ $f->nombre }}">{{ $f->nombre }}</a>
+                                        <span class="secundario num" style="font-size:12px">{{ $f->peso_texto }}</span>
+                                        <button type="submit" form="borrar-factura-{{ $f->id }}" class="btn btn-fantasma btn-icono btn-sm" aria-label="Quitar {{ $f->nombre }}"><i class="bi bi-x-lg"></i></button>
+                                    </li>
+                                @endforeach
+                            </ul>
+                            @if($enviada)<div class="secundario mb-3" style="font-size:12.5px"><i class="bi bi-check2-circle"></i> Enviada por correo {{ $enviada->locale('es')->diffForHumans() }}</div>@endif
+                        @endif
+                        <div class="d-grid gap-2">
+                            @if($facturas->isNotEmpty())
+                                <button type="button" class="btn {{ $enviada ? 'btn-borde' : 'btn-primario' }} btn-sm" data-correo="factura"><i class="bi bi-send me-1"></i> {{ $enviada ? 'Enviar de nuevo' : 'Enviar factura' }}</button>
+                            @endif
+                            <label class="btn btn-borde btn-sm mb-0"><i class="bi bi-upload me-1"></i> {{ $facturas->isEmpty() ? 'Subir PDF y XML' : 'Subir otro archivo' }}
+                                <input type="file" name="facturas[]" form="subir-factura" multiple accept=".pdf,.xml,.zip" class="d-none" onchange="this.files.length && this.form.requestSubmit()">
+                            </label>
+                        </div>
+                        @error('facturas')<div class="text-danger mt-2" style="font-size:13px">{{ $message }}</div>@enderror
+                        @error('facturas.*')<div class="text-danger mt-2" style="font-size:13px">{{ $message }}</div>@enderror
+                    </div>
+                </section>
+            @endunless
             @if(! $nuevo && $p->cliente)
                 @php $cl = $p->cliente; $csf = $cl->constancias()->first(); @endphp
                 <section class="panel">
@@ -608,6 +645,10 @@
 
 @unless($nuevo)
     <form id="convertir" method="get" action="{{ route('admin.proyectos.create', $p) }}"></form>
+    <form id="subir-factura" method="post" action="{{ route('admin.presupuestos.facturas.subir', $p) }}" enctype="multipart/form-data">@csrf</form>
+    @foreach($p->facturas as $f)
+        <form id="borrar-factura-{{ $f->id }}" method="post" action="{{ route('admin.presupuestos.facturas.borrar', [$p, $f]) }}" onsubmit="return confirm({{ Js::from('¿Quitar ' . $f->nombre . '? El cliente ya no podrá descargarlo.') }})">@csrf @method('delete')</form>
+    @endforeach
     <form id="duplicar" method="post" action="{{ route('admin.presupuestos.duplicar', $p) }}">@csrf</form>
     <form id="generar-codigo" method="post" action="{{ route('admin.presupuestos.codigo', $p) }}">@csrf</form>
     <form id="eliminar" method="post" action="{{ route('admin.presupuestos.destroy', $p) }}" onsubmit="return confirm({{ Js::from($p->proyecto ? '¿Eliminar ' . $p->folio . '? También se elimina su proyecto «' . $p->proyecto->nombre . '» con sus pagos y entregas, y deja de contar en tus ingresos. El enlace del cliente dejará de funcionar.' : '¿Eliminar ' . $p->folio . '? El enlace del cliente dejará de funcionar.') }})">@csrf @method('delete')</form>

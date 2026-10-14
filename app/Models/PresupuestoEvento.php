@@ -22,6 +22,7 @@ class PresupuestoEvento extends Model
         'estado'      => ['texto' => 'Cambio de estado',               'icono' => 'bi-arrow-left-right'],
         'vigencia'    => ['texto' => 'Vigencia extendida',             'icono' => 'bi-calendar-plus'],
         'bloqueo'     => ['texto' => 'Demasiados intentos con código', 'icono' => 'bi-shield-exclamation'],
+        'factura'     => ['texto' => 'Factura enviada',                'icono' => 'bi-receipt'],
     ];
 
     protected $fillable = ['presupuesto_id', 'tipo', 'actor', 'autor', 'detalle', 'datos', 'visible_cliente', 'ip'];

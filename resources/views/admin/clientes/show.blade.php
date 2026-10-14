@@ -156,7 +156,6 @@
         <section class="panel" id="facturacion">
             <div class="panel-head">
                 <h2>Facturación</h2>
-                <button type="button" class="btn btn-fantasma btn-sm ms-auto me-1" data-correo="factura"><i class="bi bi-receipt me-1"></i> Enviar factura</button>
                 @if($cliente->fiscales_completos)
                     <span class="estado estado-aceptada">Completos</span>
                 @elseif($cliente->rfc || $cliente->razon_social)
@@ -180,6 +179,19 @@
             @else
                 <div class="panel-body secundario">Sin datos de facturación. <a href="{{ route('admin.clientes.edit', $cliente) }}#rfc">Capturarlos</a></div>
             @endif
+
+            @php $conFactura = $cliente->presupuestos()->whereHas('facturas')->withMax('facturas', 'enviada_at')->latest('id')->get(); @endphp
+            <div class="border-top">
+                <div class="px-3 pt-3 pb-2"><span class="principal">Facturas</span> <span class="secundario" style="font-size:12.5px">· se suben y envían desde cada cotización</span></div>
+                @forelse($conFactura as $cf)
+                    <a href="{{ route('admin.presupuestos.edit', $cf) }}#factura" class="d-flex justify-content-between align-items-center px-3 py-2 text-reset text-decoration-none border-top" style="font-size:13.5px">
+                        <span class="num"><i class="bi bi-receipt me-1"></i>{{ $cf->folio }}</span>
+                        <span class="secundario">{{ $cf->facturas_max_enviada_at ? 'Enviada' : 'Por enviar' }}</span>
+                    </a>
+                @empty
+                    <div class="px-3 pb-3 secundario" style="font-size:13px">Ninguna todavía. Abre una cotización aceptada y sube ahí el PDF y el XML.</div>
+                @endforelse
+            </div>
 
             <div class="border-top">
                 <div class="px-3 pt-3 pb-2 d-flex justify-content-between align-items-center">

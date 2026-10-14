@@ -1,0 +1,117 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Mail\CorreoVandu;
+use App\Models\Cliente;
+use App\Models\Correo;
+use App\Models\Presupuesto;
+use App\Models\PresupuestoFactura;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+use Tests\TestCase;
+
+/** La factura de cada cotización: se sube en el panel, el cliente la descarga y se envía por correo ya adjunta */
+class FacturasTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private Presupuesto $p;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Storage::fake('local');
+        $this->actingAs(User::factory()->create());
+        $c = Cliente::create(['nombre' => 'Ana López', 'empresa' => 'Hotel X', 'email' => 'ana@hotel.mx', 'email_factura' => 'conta@hotel.mx']);
+        $this->p = Presupuesto::nuevaPara($c)->fill(['estado' => 'aceptada']);
+        $this->p->save();
+        $this->p->conceptos()->create(['titulo' => 'Video corporativo', 'descripcion' => '', 'cantidad' => 1, 'precio' => 22000, 'orden' => 0]);
+    }
+
+    private function subir(array $archivos)
+    {
+        return $this->post(route('admin.presupuestos.facturas.subir', $this->p), ['facturas' => $archivos]);
+    }
+
+    private function pdf(string $n = 'A123.pdf') { return UploadedFile::fake()->createWithContent($n, '%PDF-1.4 factura'); }
+    private function xml(string $n = 'A123.xml') { return UploadedFile::fake()->createWithContent($n, '<?xml version="1.0"?><cfdi:Comprobante/>'); }
+
+    public function test_sube_la_factura_y_el_cliente_la_descarga(): void
+    {
+        $this->subir([$this->xml(), $this->pdf()])->assertRedirect()->assertSessionHas('ok', fn ($m) => str_contains($m, '2 archivos'));
+        $this->assertSame(['A123.pdf', 'A123.xml'], $this->p->fresh()->facturas_ordenadas->pluck('nombre')->all());
+
+        $this->get(route('admin.presupuestos.edit', $this->p))->assertOk()
+            ->assertSee('A123.pdf')->assertSee('Por enviar')->assertSee('data-correo="factura"', false);
+
+        // En la cotización del cliente y en su espacio
+        $pdf = $this->p->facturas()->where('nombre', 'A123.pdf')->sole();
+        auth()->logout();
+        $this->get($this->p->url_publica)->assertOk()->assertSee('Factura PDF')->assertSee('Factura XML');
+        $r = $this->get(route('presupuesto.factura', [$this->p->token, $pdf->id]))->assertOk();
+        $this->assertStringContainsString('attachment', $r->headers->get('content-disposition'));
+        $this->get($this->p->cliente->portal_url)->assertOk()->assertSee('Tus facturas')->assertSee($this->p->folio);
+
+        // No se puede bajar la factura de otra cotización con este enlace
+        $otra = Presupuesto::nuevaPara($this->p->cliente); $otra->save();
+        $this->get(route('presupuesto.factura', [$otra->token, $pdf->id]))->assertNotFound();
+    }
+
+    public function test_mismo_nombre_reemplaza_y_solo_pdf_xml_zip(): void
+    {
+        $this->subir([$this->pdf()]);
+        $vieja = PresupuestoFactura::sole();
+        $this->subir([$this->pdf()]);
+        $this->assertSame(1, PresupuestoFactura::count());
+        Storage::disk('local')->assertMissing($vieja->ruta);
+
+        $this->subir([UploadedFile::fake()->create('virus.exe', 10)])->assertSessionHasErrors('facturas.0');
+        $this->subir([])->assertSessionHasErrors('facturas');
+    }
+
+    public function test_enviar_factura_adjunta_la_guardada_y_la_marca_enviada(): void
+    {
+        Mail::fake();
+        $this->subir([$this->pdf(), $this->xml()]);
+
+        $this->post('/admin/correos', [
+            'contexto_tipo' => 'presupuesto', 'contexto_id' => $this->p->id, 'plantilla' => 'factura',
+            'para' => 'conta@hotel.mx', 'asunto' => 'Factura', 'cuerpo' => 'Hola Ana', 'adjuntar_factura' => 1,
+        ])->assertSessionHasNoErrors();
+
+        Mail::assertSent(CorreoVandu::class, fn ($m) => array_column($m->archivos, 'nombre') === ['A123.pdf', 'A123.xml'] && str_starts_with($m->archivos[0]['data'], '%PDF'));
+        $this->assertSame(['A123.pdf', 'A123.xml'], Correo::sole()->adjuntos);
+        $this->assertNotNull(PresupuestoFactura::first()->enviada_at);
+        $this->assertTrue($this->p->eventos()->where('tipo', 'factura')->exists());
+        $this->get(route('admin.presupuestos.edit', $this->p))->assertSee('Enviar de nuevo');
+        $this->get(route('admin.clientes.show', $this->p->cliente))->assertOk()->assertSee($this->p->folio)->assertSee('Enviada');
+    }
+
+    public function test_desde_el_proyecto_tambien_lleva_la_factura(): void
+    {
+        Mail::fake();
+        $this->subir([$this->pdf()]);
+        $pr = \App\Models\Proyecto::create(['cliente_id' => $this->p->cliente_id, 'presupuesto_id' => $this->p->id, 'tipo' => array_key_first(config('vandu.proyectos')), 'nombre' => 'Video', 'estado' => 'activo', 'monto_total' => 25520]);
+        $this->post('/admin/correos', [
+            'contexto_tipo' => 'proyecto', 'contexto_id' => $pr->id, 'plantilla' => 'factura',
+            'para' => 'conta@hotel.mx', 'asunto' => 'Factura', 'cuerpo' => 'Hola', 'adjuntar_factura' => 1,
+        ])->assertSessionHasNoErrors();
+        Mail::assertSent(CorreoVandu::class, fn ($m) => array_column($m->archivos, 'nombre') === ['A123.pdf']);
+    }
+
+    public function test_quitar_y_borrar_cotizacion_limpian_archivos(): void
+    {
+        $this->subir([$this->pdf(), $this->xml()]);
+        [$a, $b] = PresupuestoFactura::orderBy('id')->get()->all();
+        $this->delete(route('admin.presupuestos.facturas.borrar', [$this->p, $a]))->assertRedirect();
+        Storage::disk('local')->assertMissing($a->ruta);
+
+        $this->delete(route('admin.presupuestos.destroy', $this->p))->assertRedirect();
+        Storage::disk('local')->assertMissing($b->ruta);
+        $this->assertSame(0, PresupuestoFactura::count());
+    }
+}

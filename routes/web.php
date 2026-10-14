@@ -96,6 +96,9 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::patch('presupuestos/{presupuesto}/rapido', [Admin\PresupuestoController::class, 'rapido'])->name('presupuestos.rapido');
     Route::get('presupuestos/{presupuesto}/whatsapp', [Admin\PresupuestoController::class, 'whatsapp'])->name('presupuestos.whatsapp');
     Route::post('presupuestos/{presupuesto}/codigo', [Admin\PresupuestoController::class, 'codigo'])->name('presupuestos.codigo');
+    Route::post('presupuestos/{presupuesto}/facturas', [Admin\FacturaController::class, 'subir'])->name('presupuestos.facturas.subir');
+    Route::get('presupuestos/{presupuesto}/facturas/{factura}', [Admin\FacturaController::class, 'ver'])->name('presupuestos.facturas.ver');
+    Route::delete('presupuestos/{presupuesto}/facturas/{factura}', [Admin\FacturaController::class, 'borrar'])->name('presupuestos.facturas.borrar');
     // Ventas: embudo de prospectos
     Route::get('ventas', [Admin\VentasController::class, 'index'])->name('ventas.index');
     Route::get('ventas/etapas', [Admin\VentasController::class, 'etapas'])->name('ventas.etapas');
@@ -250,6 +253,8 @@ Route::get('/cotizacion/{token}', [PresupuestoPublicoController::class, 'show'])
     ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:presupuesto')->name('presupuesto.publico');
 Route::get('/cotizacion/{token}/descargar', [PresupuestoPublicoController::class, 'descargar'])
     ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:presupuesto')->middleware('throttle:30,1')->name('presupuesto.descargar');
+Route::get('/cotizacion/{token}/factura/{factura}', [PresupuestoPublicoController::class, 'factura'])
+    ->where(['token' => '[A-Za-z0-9]{32}', 'factura' => '[0-9]+'])->middleware('cuenta.enlace:presupuesto')->middleware('throttle:30,1')->name('presupuesto.factura');
 Route::post('/cotizacion/{token}/responder', [PresupuestoPublicoController::class, 'responder'])
     ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:presupuesto')->middleware('throttle:12,1')->name('presupuesto.responder');
 Route::post('/cotizacion/{token}/codigo', [PresupuestoPublicoController::class, 'pedirCodigo'])

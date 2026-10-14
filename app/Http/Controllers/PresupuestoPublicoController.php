@@ -16,7 +16,7 @@ class PresupuestoPublicoController extends Controller
 {
     public function show(Request $request, string $token)
     {
-        $p = Presupuesto::where('token', $token)->with(['conceptos', 'proyecto.etapas', 'proyecto.pagos', 'cliente', 'prospecto', 'eventos' => fn ($q) => $q->where('visible_cliente', true)])->firstOrFail();
+        $p = Presupuesto::where('token', $token)->with(['conceptos', 'proyecto.etapas', 'proyecto.pagos', 'cliente', 'prospecto', 'facturas', 'eventos' => fn ($q) => $q->where('visible_cliente', true)])->firstOrFail();
 
         // ?vista_previa=1 lo usa el panel para no contar tus propias visitas
         if (! $request->boolean('vista_previa')) {
@@ -52,6 +52,20 @@ class PresupuestoPublicoController extends Controller
         }
 
         return PresupuestoPdf::descargar($p);
+    }
+
+    /** El cliente descarga su factura (PDF o XML) */
+    public function factura(string $token, int $factura)
+    {
+        $p = Presupuesto::where('token', $token)->firstOrFail();
+        $f = $p->facturas()->findOrFail($factura);
+
+        if (! auth()->check()) {
+            Notificar::evento('cotizacion_descargada', ($p->cliente_empresa ?: $p->cliente_nombre) . ' descargó su factura',
+                "{$p->folio} · {$f->nombre}", route('admin.presupuestos.edit', $p), 'factura-' . $p->id);
+        }
+
+        return $f->respuesta();
     }
 
     /** El cliente acepta o pide cambios, verificando su identidad con el código de 24 horas */

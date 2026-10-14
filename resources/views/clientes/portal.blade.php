@@ -101,6 +101,15 @@
         .cots .s { grid-column: 1; font-size: 13.5px; color: var(--muted); }
         .cots .monto { font-weight: 600; text-align: right; grid-row: 1 / span 2; grid-column: 2; }
         .cots .est { grid-row: 1 / span 2; grid-column: 3; text-align: right; }
+        .facturas { background: #fff; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+        .fac { display: flex; align-items: center; gap: 12px 16px; padding: 14px 20px; flex-wrap: wrap; }
+        .fac + .fac { border-top: 1px solid var(--line); }
+        .fac .n { flex: 1 1 220px; min-width: 0; font-weight: 500; }
+        .fac .s { display: block; font-size: 13.5px; color: var(--muted); font-weight: 400; }
+        .fac .bts { display: flex; gap: 8px; }
+        .fac .bts a { font-size: 13.5px; font-weight: 600; text-decoration: none; color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; }
+        .fac .bts a::before { content: "↓ "; }
+        .fac .bts a:hover { background: var(--mist, #F4F5F7); }
 
         details.term summary { cursor: pointer; list-style: none; color: var(--muted); font-weight: 500; margin: 26px 0 12px; }
         details.term summary::-webkit-details-marker { display: none; }
@@ -200,6 +209,19 @@
                     <span class="monto num">{{ $dinero($p->total) }}</span>
                     <span class="est"><span class="pill {{ $cls }}">{{ $txt }}</span></span>
                 </a>
+            @endforeach
+        </div>
+    @endif
+
+    @php $conFactura = $cotizaciones->filter(fn ($p) => $p->facturas->isNotEmpty()); @endphp
+    @if($conFactura->isNotEmpty())
+        <h2>Tus facturas <small class="num">{{ $conFactura->count() }}</small></h2>
+        <div class="facturas">
+            @foreach($conFactura as $p)
+                <div class="fac">
+                    <span class="n">{{ $p->conceptos->first()?->resumen ?: $p->titulo }}<span class="s num">{{ $p->folio }} · {{ $dinero($p->total) }}</span></span>
+                    <span class="bts">@foreach($p->facturas_ordenadas as $fa)<a href="{{ route('presupuesto.factura', [$p->token, $fa->id]) }}">{{ in_array($fa->ext, ['pdf', 'xml', 'zip'], true) ? strtoupper($fa->ext) : $fa->nombre }}</a>@endforeach</span>
+                </div>
             @endforeach
         </div>
     @endif

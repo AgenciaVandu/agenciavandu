@@ -22,15 +22,18 @@ class CorreoFacturaTest extends TestCase
         Mail::fake();
         $this->actingAs(User::factory()->create());
         $c = Cliente::create(['nombre' => 'Ana López', 'email' => 'ana@hotel.mx', 'email_factura' => 'conta@hotel.mx']);
+        $p = \App\Models\Presupuesto::nuevaPara($c); $p->save();
+        $p->conceptos()->create(['titulo' => 'Video', 'descripcion' => '', 'cantidad' => 1, 'precio' => 1000, 'orden' => 0]);
 
-        $pl = Correos::plantillas(Correos::contexto('cliente', $c->id))['factura'];
+        $this->assertArrayNotHasKey('factura', Correos::plantillas(Correos::contexto('cliente', $c->id)), 'La factura se manda desde la cotización');
+        $pl = Correos::plantillas(Correos::contexto('presupuesto', $p->id))['factura'];
         $this->assertSame('conta@hotel.mx', $pl['para']);
         $this->assertTrue($pl['adjuntos']);
         $this->assertStringContainsString('Hola Ana', $pl['cuerpo']);
         $this->assertStringNotContainsString('{', $pl['cuerpo']);
 
         $this->post('/admin/correos', [
-            'contexto_tipo' => 'cliente', 'contexto_id' => $c->id, 'plantilla' => 'factura',
+            'contexto_tipo' => 'presupuesto', 'contexto_id' => $p->id, 'plantilla' => 'factura',
             'para' => 'conta@hotel.mx', 'asunto' => $pl['asunto'], 'cuerpo' => $pl['cuerpo'],
             'adjuntos' => [
                 UploadedFile::fake()->createWithContent('A123.pdf', '%PDF-1.4 factura'),

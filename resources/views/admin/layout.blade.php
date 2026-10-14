@@ -285,6 +285,7 @@
         .correo-previa { padding: 18px 22px; background: var(--sunken); border-left: 1px solid var(--line); border-radius: 0 0 0 0; display: flex; flex-direction: column; }
         .correo-previa iframe { width: 100%; flex: 1; min-height: 560px; border: 1px solid var(--line); border-radius: 12px; background: #EEF0F3; }
         .correo-pie { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 14px 22px; border-top: 1px solid var(--line); }
+        .correo-factura { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px 10px 36px; margin: 0; background: var(--sunken); }
         .correo-adjuntos { border: 1px dashed var(--line-strong); border-radius: 10px; padding: 10px 12px; }
         .correo-adjuntos.pide { border-color: #E8B04B; background: #FFF9EC; }
         .correo-archivos { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
@@ -680,7 +681,7 @@
             abierto: false, cargando: false, enviando: false, conCopia: false,
             clave: '', para: '', cc: '', asunto: '', titulo: '', cuerpo: '', boton: '',
             conBoton: false, resumen: false, banco: false, pdf: false, miniaturas: false, ultimo: '',
-            archivos: [], pideAdjuntos: false, codigo: false,
+            archivos: [], pideAdjuntos: false, codigo: false, factura: false, hayFactura: !!init.facturas,
             init() {
                 // ?correo=recordatorio_pago abre la ventana con esa plantilla
                 const u = new URL(location.href), q = u.searchParams.get('correo');
@@ -705,6 +706,7 @@
                 this.boton = pl.boton || pl.boton_por_defecto || ''; this.conBoton = !!pl.boton;
                 this.resumen = !!pl.resumen; this.banco = !!pl.banco; this.pdf = !!pl.pdf; this.miniaturas = !!pl.miniaturas;
                 this.pideAdjuntos = !!pl.adjuntos; this.codigo = !!pl.codigo;
+                this.factura = this.hayFactura && !!pl.adjuntos;   // la plantilla de factura ya lleva la guardada
                 this.$nextTick(() => this.previsualizar());
             },
             cerrar() { this.abierto = false; },
@@ -726,7 +728,7 @@
                 this.archivos = this._lista.map((f) => { const ext = (f.name.split('.').pop() || '').toLowerCase(); return { nombre: f.name, peso: peso(f.size), ext, icono: icono(ext) }; });
             },
             revisarAdjuntos(e) {
-                if (this.pideAdjuntos && !this.archivos.length && !confirm('No adjuntaste la factura. ¿Enviar el correo sin archivos?')) { e.preventDefault(); e.stopImmediatePropagation(); }
+                if (this.pideAdjuntos && !this.factura && !this.archivos.length && !confirm('No adjuntaste la factura. ¿Enviar el correo sin archivos?')) { e.preventDefault(); e.stopImmediatePropagation(); }
             },
             async previsualizar() {
                 if (!this.abierto && !this.clave) return;
@@ -762,7 +764,7 @@
          * el contenido. La barra lateral y la de abajo se quedan quietas (no "parpadea" todo).
          * Si algo no es una página del panel (PDF, descarga, Dropbox…), se navega normal.
          */
-        const NO_INTERCEPTAR = /\/(pdf|exportar|conectar|abrir|descargar|sw\.js|manifest\.webmanifest)(\/|\?|$)|\/archivos\/(\d+|ver|miniatura)|\/constancias\/\d+|\/whatsapp(\/|\?|$)|\/logout/;
+        const NO_INTERCEPTAR = /\/(pdf|exportar|conectar|abrir|descargar|sw\.js|manifest\.webmanifest)(\/|\?|$)|\/archivos\/(\d+|ver|miniatura)|\/constancias\/\d+|\/facturas\/\d+|\/whatsapp(\/|\?|$)|\/logout/;
         const precargas = new Map();
         const esInterno = (a) => {
             if (!a || !a.href || a.hasAttribute('download') || a.hasAttribute('data-recargar') || a.hasAttribute('data-correo')) return false;
