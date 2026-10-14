@@ -27,7 +27,7 @@ class Presupuesto extends Model
     ];
 
     protected $fillable = [
-        'cliente_id', 'cliente_nombre', 'cliente_empresa', 'fecha', 'titulo', 'tipo',
+        'cliente_id', 'prospecto_id', 'cliente_nombre', 'cliente_empresa', 'fecha', 'titulo', 'tipo',
         'emisor_nombre', 'emisor_telefono', 'emisor_sitio', 'emisor_email',
         'modo_iva', 'iva_porcentaje', 'consideraciones', 'observaciones',
         'mostrar_pago', 'pago_intro', 'banco', 'clabe', 'beneficiario',
@@ -49,6 +49,8 @@ class Presupuesto extends Model
     {
         // La fecha de aceptación se llena sola; se puede editar para registrar ventas pasadas
         static::saving(function (Presupuesto $p) {
+            // Una cotización para un prospecto: al aceptarse, el prospecto se vuelve cliente
+            if ($p->estado === 'aceptada' && ! $p->cliente_id) $p->cliente_id = $p->asegurarCliente(false)->id;
             if ($p->estado === 'aceptada' && ! $p->aceptada_el) {
                 $p->aceptada_el = now(config('vandu.zona_horaria'))->toDateString();
             } elseif ($p->estado !== 'aceptada') {
@@ -60,7 +62,7 @@ class Presupuesto extends Model
         static::saved(function (Presupuesto $p) {
             if ($p->estado !== 'aceptada' || ! ($p->wasChanged('estado') || $p->wasRecentlyCreated)) return;
             try {
-                $pros = Prospecto::abiertos()->where('presupuesto_id', $p->id)->get();
+                $pros = Prospecto::abiertos()->where(fn ($q) => $q->where('presupuesto_id', $p->id)->when($p->prospecto_id, fn ($q) => $q->orWhere('id', $p->prospecto_id)))->get();
                 if ($pros->isEmpty() && $p->cliente_id) {
                     $pros = Prospecto::abiertos()->where('cliente_id', $p->cliente_id)->whereNull('presupuesto_id')->latest('id')->limit(1)->get();
                 }
@@ -84,6 +86,38 @@ class Presupuesto extends Model
     public function cliente(): BelongsTo
     {
         return $this->belongsTo(Cliente::class);
+    }
+
+    public function prospecto(): BelongsTo
+    {
+        return $this->belongsTo(Prospecto::class);
+    }
+
+    /** A quién va dirigida: su cliente, o el prospecto si todavía no es cliente (para correo y WhatsApp) */
+    public function getContactoAttribute(): Cliente|Prospecto|null
+    {
+        return $this->cliente ?? $this->prospecto;
+    }
+
+    /** ¿Es para alguien que todavía no es cliente? */
+    public function getParaProspectoAttribute(): bool
+    {
+        return ! $this->cliente_id && $this->prospecto_id;
+    }
+
+    /**
+     * Devuelve su cliente; si es de un prospecto, lo vuelve cliente (y si el prospecto ya no existe,
+     * lo crea con el nombre y la empresa de la cotización).
+     */
+    public function asegurarCliente(bool $guardar = true): Cliente
+    {
+        if ($this->cliente_id && ($c = $this->cliente)) return $c;
+        $c = $this->prospecto?->volverCliente(auth()->id())
+            ?? Cliente::create(['nombre' => $this->cliente_nombre, 'empresa' => $this->cliente_empresa, 'origen' => 'ventas']);
+        $this->cliente_id = $c->id;
+        $this->setRelation('cliente', $c);
+        if ($guardar && $this->exists) $this->saveQuietly();
+        return $c;
     }
 
     public function proyecto(): \Illuminate\Database\Eloquent\Relations\HasOne

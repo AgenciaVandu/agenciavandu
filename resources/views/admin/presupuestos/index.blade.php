@@ -59,7 +59,7 @@
                 <tbody>
                 @foreach($presupuestos as $p)
                     @php
-                        $wa = $p->cliente?->whatsapp;
+                        $wa = $p->contacto?->whatsapp;
                         $msg = "Hola {$p->cliente_nombre}, te comparto la cotización {$p->folio}: {$p->url_publica}";
                         $quien = $p->cliente_empresa ?: $p->cliente_nombre;
                     @endphp
@@ -68,7 +68,7 @@
                             <a href="{{ route('admin.presupuestos.edit', $p) }}" class="fila-link persona">
                                 @include('admin._avatar', ['nombre' => $quien])
                                 <div>
-                                    <div class="principal text-truncate">{{ $quien }}</div>
+                                    <div class="principal text-truncate">{{ $quien }}@if($p->para_prospecto) <span class="secundario fw-normal" style="font-size:12px"><i class="bi bi-funnel"></i> Prospecto</span>@endif</div>
                                     <div class="secundario text-truncate">{{ $p->cliente_empresa ? $p->cliente_nombre : \Illuminate\Support\Str::limit($p->conceptos->first()?->resumen, 40) }}</div>
                                 </div>
                             </a>

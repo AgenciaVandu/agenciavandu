@@ -90,7 +90,9 @@ class VentasController extends Controller
             'p'      => $prospecto,
             'etapas' => EmbudoEtapa::todas(),
             'equipo' => User::where('activo', true)->orderBy('name')->get(['id', 'name']),
-            'cotizaciones' => $prospecto->cliente_id ? \App\Models\Presupuesto::with('conceptos')->where('cliente_id', $prospecto->cliente_id)->latest('id')->get() : collect(),
+            'cotizaciones' => \App\Models\Presupuesto::with('conceptos')
+                ->where(fn ($q) => $q->where('prospecto_id', $prospecto->id)->when($prospecto->cliente_id, fn ($q) => $q->orWhere('cliente_id', $prospecto->cliente_id)))
+                ->latest('id')->get(),
         ]);
     }
 
@@ -144,20 +146,13 @@ class VentasController extends Controller
         return back()->with('ok', 'Nota guardada.');
     }
 
-    /** Lo vuelve cliente (o usa el que ya tiene) y abre una cotización para él */
+    /** Lo vuelve cliente (sus cotizaciones de prospecto pasan a su ficha de cliente) */
     public function convertir(Request $request, Prospecto $prospecto)
     {
-        $cliente = $prospecto->cliente ?? DB::transaction(function () use ($prospecto, $request) {
-            $c = Cliente::create([
-                'nombre'   => $prospecto->nombre, 'empresa' => $prospecto->empresa, 'email' => $prospecto->email,
-                'telefono' => $prospecto->telefono, 'origen' => $prospecto->origen === 'sitio' ? 'sitio' : 'ventas',
-                'interes'  => $prospecto->interes, 'notas' => $prospecto->notas,
-            ]);
-            $prospecto->update(['cliente_id' => $c->id]);
-            $prospecto->eventos()->create(['tipo' => 'convertido', 'user_id' => $request->user()->id, 'texto' => 'Se volvió cliente']);
-            return $c;
-        });
-        return redirect()->route('admin.presupuestos.create', ['cliente' => $cliente->id, 'prospecto' => $prospecto->id]);
+        $yaEra = (bool) $prospecto->cliente_id;
+        $cliente = $prospecto->volverCliente($request->user()->id);
+        return redirect()->route('admin.ventas.show', $prospecto)
+            ->with('ok', ($cliente->empresa ?: $cliente->nombre) . ($yaEra ? ' ya era cliente.' : ' ya es cliente.'));
     }
 
     /** Agenda una tarea de seguimiento (llamar, mandar propuesta, reunión) con fecha y hora */

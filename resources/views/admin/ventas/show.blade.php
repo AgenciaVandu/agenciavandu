@@ -65,8 +65,11 @@
         @if($p->presupuesto)
             <a href="{{ route('admin.presupuestos.edit', $p->presupuesto) }}" class="btn btn-primario"><i class="bi bi-file-earmark-text me-1"></i> Ver cotización {{ $p->presupuesto->folio }}</a>
         @elseif($p->etapa?->tipo !== 'perdida')
+            <a href="{{ route('admin.presupuestos.create', ['prospecto' => $p->id]) }}" class="btn btn-primario"><i class="bi bi-file-earmark-plus me-1"></i> Hacer cotización</a>
+        @endif
+        @if(! $p->cliente && $p->etapa?->tipo !== 'perdida')
             <form method="post" action="{{ route('admin.ventas.convertir', $p) }}">@csrf
-                <button class="btn btn-primario"><i class="bi bi-person-check me-1"></i> {{ $p->cliente ? 'Cotizarle' : 'Convertir en cliente y cotizar' }}</button>
+                <button class="btn btn-borde"><i class="bi bi-person-check me-1"></i> Convertir en cliente</button>
             </form>
         @endif
     </div>
@@ -194,11 +197,11 @@
                 @if($p->notas)<dt>Notas</dt><dd style="white-space: pre-line">{{ $p->notas }}</dd>@endif
             </dl>
         </section>
-        @if($p->cliente)
+        @if($p->cliente || $cotizaciones->isNotEmpty())
             <section class="panel">
-                <div class="panel-head"><h2>Cliente</h2></div>
+                <div class="panel-head"><h2>{{ $p->cliente ? 'Cliente' : 'Cotizaciones' }}</h2>@if($p->etapa?->tipo !== 'perdida')<a href="{{ route('admin.presupuestos.create', ['prospecto' => $p->id]) }}" class="btn btn-fantasma btn-sm"><i class="bi bi-plus-lg me-1"></i> Otra</a>@endif</div>
                 <div class="panel-body d-grid gap-2">
-                    <a href="{{ route('admin.clientes.show', $p->cliente) }}" class="d-flex align-items-center gap-2 text-reset text-decoration-none">@include('admin._avatar', ['nombre' => $p->cliente->empresa ?: $p->cliente->nombre])<span class="principal">{{ $p->cliente->empresa ?: $p->cliente->nombre }}</span></a>
+                    @if($p->cliente)<a href="{{ route('admin.clientes.show', $p->cliente) }}" class="d-flex align-items-center gap-2 text-reset text-decoration-none">@include('admin._avatar', ['nombre' => $p->cliente->empresa ?: $p->cliente->nombre])<span class="principal">{{ $p->cliente->empresa ?: $p->cliente->nombre }}</span></a>@endif
                     @foreach($cotizaciones->take(5) as $c)
                         <a href="{{ route('admin.presupuestos.edit', $c) }}" class="d-flex justify-content-between text-reset text-decoration-none" style="font-size: 13.5px">
                             <span class="num">{{ $c->folio }} <span class="estado estado-{{ $c->estado }} ms-1">{{ \App\Models\Presupuesto::ESTADOS[$c->estado] }}</span></span><span class="num">{{ $d($c->subtotal) }}</span></a>

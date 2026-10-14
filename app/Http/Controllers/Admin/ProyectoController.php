@@ -94,6 +94,7 @@ class ProyectoController extends Controller
         $credito = $request->input('forma_pago') === 'credito';
 
         $proyecto = DB::transaction(function () use ($request, $presupuesto, $etapas, $pagos, $metodo, $credito) {
+            $presupuesto->asegurarCliente();   // si era de un prospecto, aquí se vuelve cliente
             $terminado = collect($etapas)->every(fn ($e) => $e['estado'] === 'completada');
             $proyecto = Proyecto::create([
                 'cliente_id'     => $presupuesto->cliente_id,

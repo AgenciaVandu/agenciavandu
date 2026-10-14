@@ -21,6 +21,9 @@
             return array_merge($base, ['costos' => $costos, 'costear' => collect($costos)->contains(fn ($k) => $k['monto'] !== '' && $k['monto'] !== null)]);
         })->all() ?: [$vacio];
     $tipos = config('vandu.proyectos');
+    // Para quién: un cliente, o un prospecto que todavía no es cliente ("p12")
+    $cliSel = old('cliente_id', $p->cliente_id);
+    $proSel = old('prospecto_id', $p->prospecto_id);
     $consideraciones = old('consideraciones', $p->consideraciones ?? []);
     $estado = [
         'conceptos'       => array_values($conceptos),
@@ -29,10 +32,11 @@
         'ivaPct'          => (float) old('iva_porcentaje', $p->iva_porcentaje),
         'vigencia'        => old('vigente_hasta', $p->vigencia_local->format('Y-m-d\TH:i')),
         'mostrarPago'     => (bool) old('mostrar_pago', $p->mostrar_pago),
-        'clienteId'       => (string) old('cliente_id', $p->cliente_id),
+        'clienteId'       => $cliSel ? (string) $cliSel : ($proSel ? 'p' . $proSel : ''),
+        'prospectoLigado' => $cliSel && $proSel ? (string) $proSel : '',
         'clienteNombre'   => old('cliente_nombre', $p->cliente_nombre),
         'clienteEmpresa'  => old('cliente_empresa', $p->cliente_empresa),
-        'clientes'        => $clientes->keyBy('id'),
+        'clientes'        => $clientes->keyBy('id')->union(($prospectos ?? collect())->keyBy(fn ($x) => 'p' . $x->id)),
         'estadoSel'       => old('estado', $p->estado),
         'tipo'            => old('tipo', $p->tipo ?? \App\Models\Proyecto::tipoSugerido($p)),
         'tiposCosteo'     => collect($tipos)->filter(fn ($m) => ! empty($m['costeo']))->keys()->values(),
@@ -41,7 +45,7 @@
         'observaciones'   => (string) old('observaciones', $p->observaciones),
         'obsBase'         => collect($tipos)->map(fn ($m) => $m['observaciones'] ?? '')->filter(),
     ];
-    $wa = $p->cliente?->whatsapp;
+    $wa = $p->contacto?->whatsapp;
 @endphp
 @section('titulo', $nuevo ? 'Nueva cotización' : $p->folio)
 
@@ -147,7 +151,8 @@
       x-data="editor({{ Js::from($estado) }})" @keydown.ctrl.s.prevent="$el.requestSubmit()" @keydown.meta.s.prevent="$el.requestSubmit()">
     @csrf
     @unless($nuevo) @method('put') @endunless
-    @if($nuevo && ! empty($prospecto))<input type="hidden" name="prospecto_id" value="{{ $prospecto->id }}">@endif
+    <input type="hidden" name="cliente_id" :value="clienteId.startsWith('p') ? '' : clienteId">
+    <input type="hidden" name="prospecto_id" :value="clienteId.startsWith('p') ? clienteId.slice(1) : prospectoLigado">
 
     <div class="migas"><a href="{{ route('admin.presupuestos.index') }}">Cotizaciones</a> <i class="bi bi-chevron-right small"></i> <span>{{ $nuevo ? 'Nueva' : $p->folio }}</span></div>
     <div class="page-head">
@@ -175,15 +180,28 @@
                 <div class="panel-head"><h2>Cliente y fecha</h2><span class="ayuda">Así aparece en el encabezado</span></div>
                 <div class="panel-body row g-3">
                     <div class="col-12">
-                        <label class="form-label" for="cliente_id">Cliente</label>
+                        <label class="form-label" for="cliente_id">Cliente o prospecto</label>
                         <div class="input-group">
-                            <select name="cliente_id" id="cliente_id" class="form-select" x-model="clienteId" @change="elegirCliente()" required>
-                                <option value="">Elige un cliente…</option>
-                                @foreach($clientes as $c)
-                                    <option value="{{ $c->id }}">{{ $c->empresa ? $c->empresa . ' — ' . $c->nombre : $c->nombre }}</option>
-                                @endforeach
+                            <select id="cliente_id" class="form-select @error('cliente_id') is-invalid @enderror" x-model="clienteId" @change="prospectoLigado = ''; elegirCliente()" required>
+                                <option value="">Elige un cliente o prospecto…</option>
+                                <optgroup label="Clientes">
+                                    @foreach($clientes as $c)
+                                        <option value="{{ $c->id }}">{{ $c->empresa ? $c->empresa . ' — ' . $c->nombre : $c->nombre }}</option>
+                                    @endforeach
+                                </optgroup>
+                                @if(($prospectos ?? collect())->isNotEmpty())
+                                    <optgroup label="Prospectos (aún no son clientes)">
+                                        @foreach($prospectos as $x)
+                                            <option value="p{{ $x->id }}">{{ $x->empresa ? $x->empresa . ' — ' . $x->nombre : $x->nombre }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
                             </select>
                             <a href="{{ route('admin.clientes.create') }}" class="btn btn-borde"><i class="bi bi-person-plus"></i> Nuevo</a>
+                        </div>
+                        @error('cliente_id')<div class="text-danger mt-1" style="font-size:13px">Elige un cliente o un prospecto.</div>@enderror
+                        <div class="secundario mt-2" style="font-size:13px" x-show="clienteId.startsWith('p')" x-cloak>
+                            <i class="bi bi-funnel me-1"></i>Es un prospecto de Ventas. Cuando acepte la cotización (o crees su proyecto) se vuelve cliente automáticamente.
                         </div>
                     </div>
                     <div class="col-md-6">

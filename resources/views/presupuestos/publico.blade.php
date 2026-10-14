@@ -16,7 +16,7 @@
     $eventos = $p->eventos; // solo los visibles para el cliente, del más reciente al más antiguo
     $ultimaAceptacion = $eventos->firstWhere('tipo', 'aceptada');
     $ultimosCambios = $p->estado === 'negociacion' ? $eventos->firstWhere('tipo', 'cambios') : null;
-    $hayCorreo = (bool) $p->cliente?->email;
+    $hayCorreo = (bool) $p->contacto?->email;
     $fechaEv = fn ($d) => $d->copy()->setTimezone(config('vandu.zona_horaria'))->locale('es')->isoFormat('D MMM YYYY, h:mm a');
 @endphp
 <!DOCTYPE html>
@@ -439,7 +439,7 @@
                     <label for="r-codigo">Código de verificación</label>
                     <input type="text" id="r-codigo" name="codigo" class="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="000 000" required>
                     <div class="ayuda">Te lo enviamos junto con la cotización por correo o WhatsApp; vale 24 horas.
-                        @if($hayCorreo)<br>¿No lo tienes o ya venció? <button type="button" data-pedir-codigo>Enviarme un código a {{ \App\Support\Aceptacion::correoOculto($p->cliente->email) }}</button>
+                        @if($hayCorreo)<br>¿No lo tienes o ya venció? <button type="button" data-pedir-codigo>Enviarme un código a {{ \App\Support\Aceptacion::correoOculto($p->contacto->email) }}</button>
                         @else<br>¿No lo tienes? <a href="https://wa.me/{{ $wa }}?text={{ rawurlencode('Hola, ¿me compartes el código de verificación de la cotización ' . $p->folio . '?') }}" target="_blank" rel="noopener" style="font-weight:600">Pídelo por WhatsApp</a>@endif
                     </div>
                     <div class="exito" data-codigo-ok hidden></div>

@@ -67,6 +67,31 @@ class Prospecto extends Model
         return strlen($tel) === 10 ? '52' . $tel : $tel;
     }
 
+    /** Cotizaciones que se le han hecho (antes o después de volverse cliente) */
+    public function cotizaciones(): HasMany { return $this->hasMany(Presupuesto::class); }
+
+    /**
+     * Lo vuelve cliente (o devuelve el que ya tiene). Sus cotizaciones hechas como prospecto pasan a ese cliente.
+     */
+    public function volverCliente(?int $userId = null): Cliente
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($userId) {
+            $c = $this->cliente;
+            if (! $c) {
+                $c = Cliente::create([
+                    'nombre'   => $this->nombre, 'empresa' => $this->empresa, 'email' => $this->email,
+                    'telefono' => $this->telefono, 'origen' => $this->origen === 'sitio' ? 'sitio' : 'ventas',
+                    'interes'  => $this->interes, 'notas' => $this->notas,
+                ]);
+                $this->update(['cliente_id' => $c->id]);
+                $this->setRelation('cliente', $c);
+                $this->eventos()->create(['tipo' => 'convertido', 'user_id' => $userId, 'texto' => 'Se volvió cliente']);
+            }
+            Presupuesto::where('prospecto_id', $this->id)->whereNull('cliente_id')->update(['cliente_id' => $c->id]);
+            return $c;
+        });
+    }
+
     /** Lo mueve de etapa y lo anota en su historial. Al ganar o perder queda la fecha de cierre */
     public function moverA(EmbudoEtapa $etapa, ?int $userId = null, ?string $motivo = null, ?string $nota = null): void
     {

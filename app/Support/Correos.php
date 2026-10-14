@@ -23,7 +23,7 @@ class Correos
         if ($tipo === 'cliente') {
             $ctx['cliente'] = Cliente::findOrFail($id);
         } elseif ($tipo === 'presupuesto') {
-            $ctx['presupuesto'] = Presupuesto::with(['conceptos', 'cliente', 'proyecto'])->findOrFail($id);
+            $ctx['presupuesto'] = Presupuesto::with(['conceptos', 'cliente', 'prospecto', 'proyecto'])->findOrFail($id);
             $ctx['cliente'] = $ctx['presupuesto']->cliente;
         } else {
             $ctx['proyecto'] = Proyecto::with(['cliente', 'presupuesto.conceptos', 'pagos', 'etapas', 'archivos'])->findOrFail($id);
@@ -138,7 +138,7 @@ class Correos
         if (($clave === 'recordatorio_pago' || ! empty($pl['para_factura'])) && $c?->email_factura) {
             return $c->email_factura;
         }
-        return (string) ($c?->email ?? '');
+        return (string) ($c?->email ?? $ctx['presupuesto']?->prospecto?->email ?? '');
     }
 
     /** Enlace del botón: la vista del proyecto o la de la cotización */

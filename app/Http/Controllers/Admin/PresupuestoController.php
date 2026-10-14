@@ -20,7 +20,7 @@ class PresupuestoController extends Controller
         $filtro = $request->query('filtro', 'vigentes');
 
         $presupuestos = Presupuesto::query()
-            ->with(['cliente', 'conceptos', 'proyecto'])
+            ->with(['cliente', 'prospecto', 'conceptos', 'proyecto'])
             ->when($q, fn ($query) => $query->where(fn ($w) => $w
                 ->where('folio', 'like', "%$q%")
                 ->orWhere('cliente_nombre', 'like', "%$q%")
@@ -50,14 +50,19 @@ class PresupuestoController extends Controller
 
     public function create(Request $request)
     {
-        $cliente = $request->filled('cliente') ? Cliente::findOrFail($request->query('cliente')) : null;
+        $prospecto = $request->filled('prospecto') ? \App\Models\Prospecto::find($request->integer('prospecto')) : null;
+        $cliente = $request->filled('cliente') ? Cliente::findOrFail($request->query('cliente')) : $prospecto?->cliente;
         $presupuesto = Presupuesto::nuevaPara($cliente);
         $presupuesto->setRelation('conceptos', collect());
+        // Prospecto que todavía no es cliente: la cotización va a su nombre
+        if ($prospecto) $presupuesto->prospecto_id = $prospecto->id;
+        if ($prospecto && ! $cliente) $presupuesto->fill(['cliente_nombre' => $prospecto->nombre, 'cliente_empresa' => $prospecto->empresa]);
 
         return view('admin.presupuestos.form', [
             'presupuesto' => $presupuesto,
             'clientes'    => Cliente::orderBy('nombre')->get(['id', 'nombre', 'empresa']),
-            'prospecto'   => $request->filled('prospecto') ? \App\Models\Prospecto::find($request->integer('prospecto')) : null,
+            'prospectos'  => $this->prospectosSinCliente($presupuesto),
+            'prospecto'   => $prospecto,
         ]);
     }
 
@@ -71,7 +76,7 @@ class PresupuestoController extends Controller
             if ($p->cliente_id) Cliente::whereKey($p->cliente_id)->where('nuevo', true)->update(['nuevo' => false]);
             Aceptacion::registrar($p, 'creada', 'agencia', null, null, ['version' => 1] + Aceptacion::foto($p->fresh('conceptos')), false);
             // Viene de Ventas: la cotización queda ligada al prospecto (al aceptarse, pasa a Ganado)
-            if ($request->filled('prospecto_id') && ($pr = \App\Models\Prospecto::find($request->integer('prospecto_id')))) {
+            if ($p->prospecto_id && ($pr = \App\Models\Prospecto::find($p->prospecto_id))) {
                 $p->load('conceptos');
                 $pr->update(['presupuesto_id' => $p->id, 'cliente_id' => $pr->cliente_id ?? $p->cliente_id, 'valor' => $pr->valor ?: $p->subtotal]);
                 $pr->eventos()->create(['tipo' => 'cotizacion', 'user_id' => $request->user()?->id, 'texto' => "Se le cotizó {$p->folio} por " . $p->monto($p->subtotal)]);
@@ -85,12 +90,21 @@ class PresupuestoController extends Controller
 
     public function edit(Presupuesto $presupuesto)
     {
-        $presupuesto->load('conceptos', 'cliente');
+        $presupuesto->load('conceptos', 'cliente', 'prospecto');
 
         return view('admin.presupuestos.form', [
             'presupuesto' => $presupuesto,
             'clientes'    => Cliente::orderBy('nombre')->get(['id', 'nombre', 'empresa']),
+            'prospectos'  => $this->prospectosSinCliente($presupuesto),
         ]);
+    }
+
+    /** Prospectos abiertos que todavía no son clientes (y el de esta cotización, aunque ya esté cerrado) */
+    private function prospectosSinCliente(Presupuesto $p)
+    {
+        return \App\Models\Prospecto::whereNull('cliente_id')
+            ->where(fn ($q) => $q->whereHas('etapa', fn ($e) => $e->where('tipo', 'abierta'))->when($p->prospecto_id, fn ($q) => $q->orWhere('id', $p->prospecto_id)))
+            ->orderBy('nombre')->get(['id', 'nombre', 'empresa']);
     }
 
     public function update(Request $request, Presupuesto $presupuesto)
@@ -153,9 +167,9 @@ class PresupuestoController extends Controller
      */
     public function whatsapp(Presupuesto $presupuesto)
     {
-        $p = $presupuesto->load('cliente');
-        $wa = $p->cliente?->whatsapp;
-        abort_unless($wa, 404, 'El cliente no tiene WhatsApp registrado.');
+        $p = $presupuesto->load('cliente', 'prospecto');
+        $wa = $p->contacto?->whatsapp;
+        abort_unless($wa, 404, 'No tiene WhatsApp registrado.');
 
         $nombre = \App\Support\Correos::primerNombre($p->cliente_nombre);
         $msg = "Hola {$nombre}, te comparto la cotización {$p->folio}: {$p->url_publica}";
@@ -216,7 +230,8 @@ class PresupuestoController extends Controller
     private function validar(Request $request): array
     {
         $v = $request->validate([
-            'cliente_id'       => ['required', \Illuminate\Validation\Rule::exists('clientes', 'id')->where('cuenta_id', \App\Support\Cuentas::id())],
+            'cliente_id'       => ['nullable', 'required_without:prospecto_id', \Illuminate\Validation\Rule::exists('clientes', 'id')->where('cuenta_id', \App\Support\Cuentas::id())],
+            'prospecto_id'     => ['nullable', \Illuminate\Validation\Rule::exists('prospectos', 'id')->where('cuenta_id', \App\Support\Cuentas::id())],
             'cliente_nombre'   => 'required|string|max:255',
             'cliente_empresa'  => 'nullable|string|max:255',
             'fecha'            => 'required|date',
@@ -299,6 +314,9 @@ class PresupuestoController extends Controller
         })->all();
 
         $datos = collect($v)->except('conceptos')->all();
+        // Para un prospecto: si ya se volvió cliente, la cotización queda a nombre de su cliente
+        $datos['cliente_id'] = ($datos['cliente_id'] ?? null) ?: (! empty($datos['prospecto_id']) ? \App\Models\Prospecto::find($datos['prospecto_id'])?->cliente_id : null);
+        $datos['prospecto_id'] = $datos['prospecto_id'] ?? null;
         $datos['mostrar_pago'] = $request->boolean('mostrar_pago');
         $datos['consideraciones'] = collect($v['consideraciones'] ?? [])->map(fn ($s) => [
             'titulo' => (string) ($s['titulo'] ?? ''),

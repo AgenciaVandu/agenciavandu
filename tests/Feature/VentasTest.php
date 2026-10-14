@@ -88,7 +88,7 @@ class VentasTest extends TestCase
         $p = $this->prospecto(['email' => 'ana@hotelx.mx']);
         $r = $this->post("/admin/ventas/prospectos/{$p->id}/convertir");
         $c = Cliente::sole();
-        $r->assertRedirect(route('admin.presupuestos.create', ['cliente' => $c->id, 'prospecto' => $p->id]));
+        $r->assertRedirect(route('admin.ventas.show', $p))->assertSessionHas('ok', 'Hotel X ya es cliente.');
         $this->assertSame('Hotel X', $c->empresa);
         $this->assertSame($c->id, $p->fresh()->cliente_id);
         $this->get(route('admin.presupuestos.create', ['cliente' => $c->id, 'prospecto' => $p->id]))->assertOk()->assertSee('name="prospecto_id"', false);
@@ -110,6 +110,54 @@ class VentasTest extends TestCase
         $this->assertSame('ganada', $p->etapa->tipo);
         $this->assertEquals(38000, $p->valor);
         $this->get("/admin/ventas/prospectos/{$p->id}")->assertOk()->assertSee('Ganado')->assertSee($cot->folio)->assertSee('Se volvió cliente');
+    }
+
+    public function test_cotizar_a_un_prospecto_sin_volverlo_cliente(): void
+    {
+        $p = $this->prospecto(['email' => 'ana@hotelx.mx']);
+        $this->get("/admin/ventas/prospectos/{$p->id}")->assertOk()->assertSee('Hacer cotización')->assertSee('Convertir en cliente');
+
+        // El formulario ya trae al prospecto elegido
+        $this->get(route('admin.presupuestos.create', ['prospecto' => $p->id]))->assertOk()
+            ->assertSee('Prospectos (aún no son clientes)')->assertSee('clienteId\u0022:\u0022p' . $p->id . '\u0022', false)->assertSee('Ana L', false);
+
+        $datos = [
+            'prospecto_id' => $p->id, 'cliente_id' => '', 'cliente_nombre' => 'Ana López', 'cliente_empresa' => 'Hotel X', 'fecha' => '2026-10-12',
+            'titulo' => 'Cotización', 'tipo' => 'audiovisual', 'emisor_nombre' => 'Alvar', 'modo_iva' => 'mas_iva', 'iva_porcentaje' => 16,
+            'vigente_hasta' => now()->addDays(10)->format('Y-m-d\TH:i'), 'estado' => 'enviada',
+            'conceptos' => [['titulo' => 'Video corporativo', 'cantidad' => 1, 'precio' => 22000]],
+        ];
+        $this->post('/admin/presupuestos', $datos)->assertRedirect()->assertSessionHasNoErrors();
+        $cot = Presupuesto::sole();
+        $this->assertNull($cot->cliente_id);
+        $this->assertSame($p->id, $cot->prospecto_id);
+        $this->assertSame(0, Cliente::count(), 'Sigue siendo prospecto');
+        $this->assertSame($cot->id, $p->fresh()->presupuesto_id);
+        $this->get('/admin/presupuestos')->assertOk()->assertSee('Prospecto');
+        $this->get("/admin/presupuestos/{$cot->id}/edit")->assertOk();
+        $this->get($cot->url_publica)->assertOk()->assertSee('Ana López');
+        $this->get("/admin/ventas/prospectos/{$p->id}")->assertOk()->assertSee($cot->folio);
+
+        // Sin cliente ni prospecto no se puede
+        $this->post('/admin/presupuestos', ['prospecto_id' => ''] + $datos)->assertSessionHasErrors('cliente_id');
+
+        // Al aceptarla se vuelve cliente y gana
+        $cot->update(['estado' => 'aceptada']);
+        $c = Cliente::sole();
+        $this->assertSame('Hotel X', $c->empresa);
+        $this->assertSame('ana@hotelx.mx', $c->email);
+        $this->assertSame($c->id, $cot->fresh()->cliente_id);
+        $this->assertSame($c->id, $p->fresh()->cliente_id);
+        $this->assertSame('ganada', $p->fresh()->etapa->tipo);
+    }
+
+    public function test_al_convertir_sus_cotizaciones_pasan_al_cliente(): void
+    {
+        $p = $this->prospecto();
+        $cot = Presupuesto::nuevaPara(null)->fill(['prospecto_id' => $p->id, 'cliente_nombre' => 'Ana López', 'cliente_empresa' => 'Hotel X']);
+        $cot->save();
+        $this->post("/admin/ventas/prospectos/{$p->id}/convertir")->assertRedirect();
+        $this->assertSame(Cliente::sole()->id, $cot->fresh()->cliente_id);
     }
 
     public function test_seguimiento_con_fecha_y_hora(): void

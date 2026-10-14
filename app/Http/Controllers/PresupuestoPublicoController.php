@@ -16,7 +16,7 @@ class PresupuestoPublicoController extends Controller
 {
     public function show(Request $request, string $token)
     {
-        $p = Presupuesto::where('token', $token)->with(['conceptos', 'proyecto.etapas', 'proyecto.pagos', 'cliente', 'eventos' => fn ($q) => $q->where('visible_cliente', true)])->firstOrFail();
+        $p = Presupuesto::where('token', $token)->with(['conceptos', 'proyecto.etapas', 'proyecto.pagos', 'cliente', 'prospecto', 'eventos' => fn ($q) => $q->where('visible_cliente', true)])->firstOrFail();
 
         // ?vista_previa=1 lo usa el panel para no contar tus propias visitas
         if (! $request->boolean('vista_previa')) {
@@ -114,7 +114,7 @@ class PresupuestoPublicoController extends Controller
         if (! Aceptacion::puedeResponder($p)) {
             return $this->respuesta($request, $token, false, 'Esta cotización ya no se puede responder en línea.', 409);
         }
-        $email = $p->cliente?->email;
+        $email = $p->contacto?->email;
         if (! $email) {
             return $this->respuesta($request, $token, false, 'No tenemos un correo registrado. Pídenos tu código por WhatsApp.', 422);
         }
