@@ -7,21 +7,30 @@
     // Franja de números. Solo datos comprobables; cambia o agrega los tuyos
     // (proyectos entregados, sesiones de fotografía, clientes activos).
     $numeros = [
-        ['valor' => '+4', 'texto' => 'años trabajando con marcas de Yucatán'],
-        ['valor' => '11', 'texto' => 'marcas que ya confían en nosotros'],
+        ['valor' => '+4', 'texto' => 'años creando para marcas de todo México'],
         ['valor' => '5', 'texto' => 'servicios con un solo equipo'],
         ['valor' => '24 h', 'texto' => 'para recibir tu cotización'],
     ];
 
-    // Trabajo reciente: "video" reproduce un clip corto en silencio; "img" es una foto.
+    // Sitios web destacados. Cada clip vive en public/img/inicio/{video}.mp4 con su
+    // imagen fija {video}.webp; si el clip todavía no existe, el proyecto no se muestra.
+    $sitios = collect([
+        ['video' => 'web-nicxa1', 'cliente' => 'Grupo Nicxa', 'tipo' => 'Sitio para grupo de franquicias', 'detalle' => 'Un solo sitio para KFC, Burger King, Pizza Hut y Bisquets Obregón, con promociones por marca.'],
+        ['video' => 'web-maxispace', 'cliente' => 'Maxispace', 'tipo' => 'Sitio y captación de prospectos', 'detalle' => 'Renta de mini bodegas: sitio para cotizar por medidas y panel para dar seguimiento a cada prospecto.'],
+        ['video' => 'web-stev', 'cliente' => 'Stev Seguridad Privada', 'tipo' => 'Sitio corporativo', 'detalle' => 'Presencia profesional para una empresa de seguridad privada, pensada para generar contactos.'],
+        ['video' => 'web-osorio', 'cliente' => 'Grupo Osorio', 'tipo' => 'Sitio corporativo', 'detalle' => 'Sitio para un grupo con más de 30 años de experiencia y varias líneas de negocio.'],
+        ['video' => 'web-rewear', 'cliente' => 'Rewear', 'tipo' => 'Tienda en línea', 'detalle' => 'Catálogo de ropa con fichas de producto, tallas y colores.'],
+    ])->filter(fn ($s) => file_exists(public_path('img/inicio/' . $s['video'] . '.mp4')))->values();
+
+    // Galería de fotografía, video y diseño: "video" reproduce un clip corto en silencio; "img" es una foto.
     $trabajos = [
-        ['clase' => 'vi-grande', 'video' => 'web-nicxa1', 'cliente' => 'Grupo Nicxa', 'servicio' => 'Sitio web para franquicias', 'ruta' => 'servicios'],
+        ['clase' => 'vi-grande', 'img' => 'tokyo-tyger-fachada.webp', 'cliente' => 'Tokyo Tyger', 'servicio' => 'Fotografía de restaurante', 'ruta' => 'audiovisuales'],
         ['clase' => 'vi-alta', 'img' => 'foto-kuro.webp', 'cliente' => 'Kuro', 'servicio' => 'Fotografía de alimentos', 'ruta' => 'audiovisuales'],
-        ['clase' => '', 'video' => 'web-osorio', 'cliente' => 'Grupo Osorio', 'servicio' => 'Sitio web corporativo', 'ruta' => 'servicios'],
         ['clase' => '', 'img' => 'antelar-cuarto.webp', 'cliente' => 'Antelar', 'servicio' => 'Fotografía de interiores', 'ruta' => 'audiovisuales'],
         ['clase' => '', 'video' => 'video-comida', 'cliente' => 'Reel para restaurante', 'servicio' => 'Video para redes', 'ruta' => 'audiovisuales'],
-        ['clase' => '', 'video' => 'web-rewear', 'cliente' => 'Rewear', 'servicio' => 'Tienda en línea', 'ruta' => 'servicios'],
         ['clase' => 'vi-ancha', 'img' => 'campana-burger-king.webp', 'cliente' => 'Burger King', 'servicio' => 'Campaña Real Whopper Beach', 'ruta' => 'multimedia'],
+        ['clase' => '', 'img' => 'redes-tokio07.webp', 'cliente' => 'Tokio 07', 'servicio' => 'Contenido para redes', 'ruta' => 'marketing'],
+        ['clase' => '', 'img' => 'impresos-tarjetas.webp', 'cliente' => 'Impresos', 'servicio' => 'Papelería y producción', 'ruta' => 'cotizar'],
     ];
 
     $servicios = [
@@ -86,14 +95,14 @@
         ],
     ];
 @endphp
-<x-layouts.guest titulo="Sitios web, fotografía y video en Mérida"
-    meta-description="Agencia en Mérida, Yucatán: sitios web con SEO y GEO, fotografía de alimentos e interiores, video, redes sociales, impresión y rotulación para negocios locales.">
+<x-layouts.guest titulo="Sitios web, fotografía y video para negocios en México"
+    meta-description="Agencia con base en Mérida que trabaja con negocios de todo México: sitios web con SEO y GEO, fotografía de alimentos e interiores, video, redes sociales, impresión y rotulación para tu negocio.">
 
     <x-hero />
 
     {{-- Números --}}
     <section class="vi-numeros">
-        <div class="vi-contenedor">
+        <div class="vi-contenedor" style="--columnas: {{ count($numeros) }}">
             @foreach ($numeros as $n)
                 <div class="vi-numero">
                     <strong>{{ $n['valor'] }}</strong>
@@ -103,12 +112,61 @@
         </div>
     </section>
 
-    {{-- Trabajo reciente --}}
-    <section class="vi-seccion" id="trabajo">
+    {{-- Sitios web --}}
+    <section class="vi-seccion vi-webs" id="trabajo">
         <div class="vi-contenedor">
             <header class="vi-encabezado">
-                <p class="vi-ceja">Trabajo reciente</p>
-                <h2>Lo que hemos hecho para negocios como el tuyo</h2>
+                <p class="vi-ceja">Sitios web</p>
+                <h2>Sitios que trabajan por tu negocio todos los días</h2>
+                <p>Diseñamos y programamos cada sitio a la medida, sin plantillas. Rápidos, fáciles de administrar y preparados para que te encuentren en Google y en ChatGPT.</p>
+            </header>
+
+            @if ($sitios->isNotEmpty())
+                <div class="vi-webs-grid">
+                    <div class="vi-navegador">
+                        <div class="vi-navegador-barra">
+                            <span></span><span></span><span></span>
+                            <em class="vi-navegador-url">{{ $sitios[0]['cliente'] }}</em>
+                        </div>
+                        <video class="vi-navegador-video" muted playsinline preload="none"
+                            poster="{{ asset('img/inicio/' . $sitios[0]['video'] . '.webp') }}"
+                            data-src="{{ asset('img/inicio/' . $sitios[0]['video'] . '.mp4') }}"></video>
+                    </div>
+
+                    <ol class="vi-proyectos">
+                        @foreach ($sitios as $i => $sitio)
+                            <li>
+                                <button type="button" @class(['vi-proyecto', 'activo' => $i === 0])
+                                    data-video="{{ asset('img/inicio/' . $sitio['video'] . '.mp4') }}"
+                                    data-poster="{{ asset('img/inicio/' . $sitio['video'] . '.webp') }}"
+                                    data-cliente="{{ $sitio['cliente'] }}">
+                                    <span class="vi-proyecto-tipo">{{ $sitio['tipo'] }}</span>
+                                    <b>{{ $sitio['cliente'] }}</b>
+                                    <span class="vi-proyecto-detalle">{{ $sitio['detalle'] }}</span>
+                                </button>
+                            </li>
+                        @endforeach
+                    </ol>
+                </div>
+            @endif
+
+            <ul class="vi-ventajas">
+                <li><b>A la medida</b>Diseño propio para tu marca, sin plantillas.</li>
+                <li><b>SEO y GEO</b>Listo para aparecer en Google y en respuestas de ChatGPT.</li>
+                <li><b>Fácil de administrar</b>Panel para cambiar contenido y dar seguimiento a prospectos.</li>
+                <li><b>Hosting y mantenimiento</b>Nos encargamos de dominio, servidor y actualizaciones.</li>
+            </ul>
+
+            <a class="vh-btn vh-btn-linea" href="{{ route('servicios') }}">Ver más sobre sitios web</a>
+        </div>
+    </section>
+
+    {{-- Fotografía, video y diseño --}}
+    <section class="vi-seccion" id="galeria">
+        <div class="vi-contenedor">
+            <header class="vi-encabezado">
+                <p class="vi-ceja">Fotografía, video y diseño</p>
+                <h2>Imágenes que hacen que tu negocio se antoje</h2>
             </header>
             <div class="vi-galeria">
                 @foreach ($trabajos as $t)

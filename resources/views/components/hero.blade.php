@@ -28,7 +28,7 @@
                 <img src="{{ asset('img/hero/cara-tokio07-mayo-1-1.webp') }}" width="28" height="28" alt="">
                 <img src="{{ asset('img/hero/cara-samma-18-alberto-1.webp') }}" width="28" height="28" alt="">
             </span>
-            <span>Más de <b>4 años</b> creando para marcas de Yucatán</span>
+            <span>Más de <b>4 años</b> creando para marcas de todo México</span>
         </div>
 
         <h1 class="vh-titulo">Que a tu negocio <span class="vh-verde">lo encuentren y lo elijan</span>
@@ -37,7 +37,7 @@
 
         <p class="vh-lead">
             Creamos <span class="vh-escribe" data-palabras='@json($servicios)'>{{ $servicios[0] }}</span><span class="vh-cursor" aria-hidden="true"></span>
-            <small>Sitios web, fotografía, video y producción con un solo equipo en Mérida. Para restaurantes, hoteles, constructoras y negocios locales que quieren vender más.</small>
+            <small>Sitios web, fotografía, video y producción con un solo equipo. Desde Mérida para negocios de todo México que quieren vender más.</small>
         </p>
 
         <div class="vh-botones">

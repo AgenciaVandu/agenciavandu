@@ -75,7 +75,7 @@ $verde-tinta: #03140b;
 
     .vi-contenedor {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(var(--columnas, 4), 1fr);
         border: 1px solid $linea;
         border-radius: 20px;
         background: $superficie;
@@ -104,6 +104,160 @@ $verde-tinta: #03140b;
         color: $gris;
         font-size: 15px;
         line-height: 1.4;
+    }
+}
+
+// ---------- sitios web ----------
+.vi-webs {
+    .vi-encabezado > p:last-child {
+        margin: 20px 0 0;
+        font-size: 17px;
+    }
+
+    > .vi-contenedor > .vh-btn {
+        margin-top: 32px;
+    }
+}
+
+.vi-webs-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 24px;
+    align-items: start;
+
+    > * {
+        min-width: 0;
+    }
+}
+
+.vi-navegador {
+    border-radius: 18px;
+    overflow: hidden;
+    background: $superficie;
+    border: 1px solid $linea;
+    box-shadow: 0 40px 80px rgba(0, 0, 0, .45), 0 0 90px rgba(colores.$green, .08);
+}
+
+.vi-navegador-barra {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 16px;
+    border-bottom: 1px solid $linea;
+
+    span {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: $superficie-2;
+        border: 1px solid $linea;
+    }
+
+    em {
+        flex: 1;
+        margin-left: 12px;
+        padding: 4px 12px;
+        border-radius: 999px;
+        background: $fondo;
+        font-style: normal;
+        font-size: 12px;
+        color: $gris;
+        text-align: center;
+    }
+}
+
+.vi-navegador-video {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    object-position: top;
+    background: $fondo;
+}
+
+.vi-proyectos {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.vi-proyecto {
+    width: 100%;
+    display: grid;
+    gap: 2px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    border: 1px solid $linea;
+    background: transparent;
+    color: $tinta;
+    text-align: left;
+    transition: border-color .25s ease, background .25s ease;
+
+    b {
+        font-family: 'Geist-medium', sans-serif;
+        font-weight: 500;
+        font-size: 17px;
+    }
+
+    &:hover {
+        border-color: rgba(colores.$green, .5);
+    }
+
+    &:focus-visible {
+        outline: 2px solid colores.$green;
+        outline-offset: 2px;
+    }
+
+    &.activo {
+        background: $superficie;
+        border-color: colores.$green;
+
+        .vi-proyecto-detalle {
+            display: block;
+        }
+    }
+}
+
+.vi-proyecto-tipo {
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: colores.$green;
+}
+
+.vi-proyecto-detalle {
+    display: none;
+    margin-top: 6px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: $gris;
+}
+
+.vi-ventajas {
+    list-style: none;
+    margin: 40px 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+
+    li {
+        padding-top: 16px;
+        border-top: 2px solid colores.$green;
+        color: $gris;
+        font-size: 15px;
+        line-height: 1.5;
+    }
+
+    b {
+        display: block;
+        margin-bottom: 4px;
+        font-family: 'Geist-medium', sans-serif;
+        font-weight: 500;
+        color: $tinta;
+        font-size: 16px;
     }
 }
 
@@ -776,6 +930,14 @@ $verde-tinta: #03140b;
         grid-template-columns: repeat(2, 1fr);
     }
 
+    .vi-webs-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .vi-ventajas {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
     .vi-portal,
     .vi-contacto-grid {
         grid-template-columns: 1fr;
@@ -817,7 +979,12 @@ $verde-tinta: #03140b;
     }
 
     .vi-servicios,
-    .vi-pasos {
+    .vi-pasos,
+    .vi-ventajas {
+        grid-template-columns: 1fr;
+    }
+
+    .vi-numeros .vi-contenedor {
         grid-template-columns: 1fr;
     }
 

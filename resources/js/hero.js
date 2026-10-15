@@ -127,8 +127,37 @@ const iniciarVideos = () => {
     videos.forEach((v) => observador.observe(v));
 };
 
+// Sitios web: el navegador muestra el proyecto elegido y avanza solo al terminar cada clip
+const iniciarSitios = () => {
+    const video = document.querySelector('.vi-navegador-video');
+    const botones = [...document.querySelectorAll('.vi-proyecto')];
+    const url = document.querySelector('.vi-navegador-url');
+    if (!video || !botones.length) return;
+
+    let actual = 0;
+    const mostrar = (i, reproducir = true) => {
+        actual = i;
+        const b = botones[i];
+        botones.forEach((x) => x.classList.toggle('activo', x === b));
+        url.textContent = b.dataset.cliente;
+        video.poster = b.dataset.poster;
+        video.dataset.src = b.dataset.video;
+        if (video.src || reproducir) {
+            video.src = b.dataset.video;
+            video.play().catch(() => {});
+        }
+    };
+
+    botones.forEach((b, i) => b.addEventListener('click', () => mostrar(i)));
+    video.addEventListener('ended', () => {
+        if (botones.length > 1) mostrar((actual + 1) % botones.length);
+        else { video.currentTime = 0; video.play().catch(() => {}); }
+    });
+};
+
 const iniciar = () => {
     iniciarHero();
+    iniciarSitios();
     iniciarVideos();
 };
 
