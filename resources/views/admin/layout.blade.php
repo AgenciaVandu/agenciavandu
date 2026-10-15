@@ -2,7 +2,7 @@
     $usuario = auth()->user();
     $iniciales = collect(explode(' ', trim($usuario?->name ?? 'V')))->filter()->take(2)->map(fn ($p) => mb_substr($p, 0, 1))->join('');
     $vigentesNav = \App\Models\Presupuesto::where(fn ($q) => $q->where('estado', 'negociacion')
-        ->orWhere(fn ($q2) => $q2->where('vigente_hasta', '>', now())->whereNotIn('estado', ['aceptada', 'rechazada'])))->count();
+        ->orWhere(fn ($q2) => $q2->where('vigente_hasta', '>', now())->whereNotIn('estado', ['aceptada', 'rechazada', 'cancelada'])))->count();
     $activosNav = \App\Models\Proyecto::where('estado', 'activo')->count();
     try { $redesNav = \App\Models\RedesPost::where('estado', 'cambios')->count(); } catch (\Throwable $e) { $redesNav = 0; }
     try { $nuevosNav = \App\Models\Cliente::where('nuevo', true)->count(); } catch (\Throwable $e) { $nuevosNav = 0; } // antes de migrar
@@ -181,7 +181,7 @@
         .estado-en_proceso { background: var(--amber-soft); color: var(--amber); }
         .estado-entregada, .estado-facturada { background: var(--green-soft); color: var(--green-ink); }
         .estado-pagada { background: #13161D; color: #fff; }
-        .estado-cancelada { background: #EEF0F3; color: #4E5463; text-decoration: line-through; }
+        .estado-cancelada, .estado-cancelado { background: #EEF0F3; color: #4E5463; text-decoration: line-through; }
         .vig { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; white-space: nowrap; }
         .vig-ok { color: var(--text-2); } .vig-ok i { color: var(--green-ink); }
         .vig-pronto { color: var(--amber); }

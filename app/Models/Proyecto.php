@@ -14,7 +14,10 @@ class Proyecto extends Model
 {
     use \App\Models\Concerns\DeCuenta;
 
-    public const ESTADOS = ['activo' => 'Activo', 'pausado' => 'En pausa', 'terminado' => 'Terminado'];
+    public const ESTADOS = ['activo' => 'Activo', 'pausado' => 'En pausa', 'terminado' => 'Terminado', 'cancelado' => 'Cancelado'];
+
+    /** Estados en los que lo pendiente no se cobra (no cuenta como por cobrar ni vencido) */
+    public const SIN_COBRO = ['pausado', 'cancelado'];
 
     protected $fillable = [
         'cliente_id', 'presupuesto_id', 'tipo', 'nombre', 'estado', 'monto_total',
@@ -25,6 +28,7 @@ class Proyecto extends Model
         'fecha_inicio'    => 'date',
         'monto_total'     => 'float',
         'ultima_vista_at' => 'datetime',
+        'cancelado_at'    => 'datetime',
     ];
 
     protected static function booted(): void
@@ -219,6 +223,7 @@ class Proyecto extends Model
 
     public function getPorCobrarAttribute(): float
     {
+        if ($this->estado === 'cancelado') return 0.0;
         return round($this->pagos->whereNull('pagado_el')->sum('monto'), 2);
     }
 
@@ -233,6 +238,7 @@ class Proyecto extends Model
      */
     public function getSaludAttribute(): array
     {
+        if ($this->estado === 'cancelado') return ['cancelado', 'Cancelado', 'gris'];
         if ($this->estado === 'terminado') return ['terminado', 'Terminado', 'gris'];
         if ($this->estado === 'pausado') return ['pausa', 'En pausa', 'gris'];
         $hoy = now(config('vandu.zona_horaria'))->toDateString();
@@ -249,7 +255,7 @@ class Proyecto extends Model
     /** Para ordenar: lo más urgente primero */
     public function getUrgenciaAttribute(): int
     {
-        return ['atrasado' => 0, 'pago' => 1, 'pronto' => 2, 'listo' => 3, 'ok' => 4, 'pausa' => 5, 'terminado' => 6][$this->salud[0]] ?? 9;
+        return ['atrasado' => 0, 'pago' => 1, 'pronto' => 2, 'listo' => 3, 'ok' => 4, 'pausa' => 5, 'terminado' => 6, 'cancelado' => 7][$this->salud[0]] ?? 9;
     }
 
     public function getACreditoAttribute(): bool
@@ -287,7 +293,7 @@ class Proyecto extends Model
     /** Lo que sigue, en lenguaje para el cliente */
     public function getSiguientePasoAttribute(): ?string
     {
-        if ($this->estado === 'terminado') return null;
+        if (in_array($this->estado, ['terminado', 'cancelado'], true)) return null;
         foreach ($this->lineaDelTiempo() as $t) {
             if ($t['tipo'] === 'pago' && ! $t['item']->pagado) {
                 return "{$t['item']->concepto} pendiente";

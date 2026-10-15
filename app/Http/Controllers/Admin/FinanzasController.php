@@ -70,7 +70,7 @@ class FinanzasController extends Controller
         $resueltasPeriodo = $delPeriodo->filter(fn ($p) => $p->estado === 'aceptada' || $perdida($p));
         $abiertas = $cotizaciones->filter(fn ($p) => $p->abierta);
         $cobrados = $pagos->filter(fn ($x) => $x->pago->pagado_el && $enRango($x->pago->pagado_el->toDateString()));
-        $porCobrar = $pagos->filter(fn ($x) => ! $x->pago->pagado_el && $x->proyecto->estado !== 'pausado')
+        $porCobrar = $pagos->filter(fn ($x) => ! $x->pago->pagado_el && ! in_array($x->proyecto->estado, Proyecto::SIN_COBRO, true))
             ->sortBy(fn ($x) => $x->proyecto->fecha_inicio?->toDateString() ?? '9999');
 
         $suma = fn (Collection $c) => round($c->sum($monto), 2);
@@ -279,11 +279,11 @@ class FinanzasController extends Controller
             foreach ($filas as $p) {
                 $perdida = $p->perdida;
                 $cobrado = $p->proyecto ? $p->proyecto->pagos->whereNotNull('pagado_el')->sum('monto') : 0;
-                $pend = $p->proyecto ? $p->proyecto->pagos->whereNull('pagado_el')->sum('monto') : 0;
+                $pend = $p->proyecto ? $p->proyecto->por_cobrar : 0;
                 fputcsv($out, [
                     $p->folio, $p->fecha->toDateString(), $p->cliente_nombre, $p->cliente_empresa,
                     $p->conceptos->first()?->resumen, Presupuesto::ESTADOS[$p->estado] ?? $p->estado,
-                    $p->estado === 'aceptada' ? 'Ganada' : ($perdida ? 'Perdida' : 'Abierta'),
+                    $p->estado === 'aceptada' ? 'Ganada' : ($p->estado === 'cancelada' ? 'Cancelada: ' . $p->motivo_cancelacion : ($perdida ? 'Perdida' : 'Abierta')),
                     $p->aceptada_el?->toDateString(),
                     number_format($p->subtotal, 2, '.', ''), number_format($p->iva, 2, '.', ''), number_format($p->total, 2, '.', ''),
                     number_format($cobrado, 2, '.', ''), number_format($pend, 2, '.', ''),

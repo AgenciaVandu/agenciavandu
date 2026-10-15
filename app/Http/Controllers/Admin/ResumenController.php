@@ -17,7 +17,7 @@ class ResumenController extends Controller
 
         // Volumen pequeño: se calcula en memoria con los conceptos ya cargados
         $todas = Presupuesto::with(['conceptos', 'cliente'])->latest()->get();
-        $abiertas = fn ($p) => ! in_array($p->estado, ['aceptada', 'rechazada']);
+        $abiertas = fn ($p) => ! in_array($p->estado, ['aceptada', 'rechazada', 'cancelada']);
 
         $vigentes = $todas->filter(fn ($p) => $p->abierta);
         $porVencer = $vigentes->filter(fn ($p) => $p->estado !== 'negociacion' && $p->vigente_hasta->gt($ahora) && $p->vigente_hasta->lte($ahora->copy()->addHours(72)))
@@ -47,7 +47,7 @@ class ResumenController extends Controller
         $sinAbrir = $vigentes->filter(fn ($p) => $p->estado === 'enviada' && ! $p->vistas)->take(5)->values();
 
         // Pagos pendientes de proyectos que no están en pausa
-        $pendientes = \App\Models\ProyectoPago::with('proyecto.presupuesto.conceptos')->whereNull('pagado_el')->whereHas('proyecto', fn ($q) => $q->where('estado', '!=', 'pausado'))->get();
+        $pendientes = \App\Models\ProyectoPago::with('proyecto.presupuesto.conceptos')->whereNull('pagado_el')->whereHas('proyecto', fn ($q) => $q->whereNotIn('estado', \App\Models\Proyecto::SIN_COBRO))->get();
         // Con o sin IVA según lo último que elegiste en Finanzas, para que ambos digan lo mismo
         $conIva = \App\Support\EsteMes::conIva();
         $montoPago = function ($pg) use ($conIva) {

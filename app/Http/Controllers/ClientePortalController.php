@@ -18,7 +18,7 @@ class ClientePortalController extends Controller
             ->with(['conceptos', 'facturas', 'complementos.pago', 'proyecto:id,presupuesto_id,token,nombre'])->orderByDesc('fecha')->orderByDesc('id')->get();
         $proyectos = $c->proyectos()->with(['etapas', 'pagos', 'presupuesto:id,razon_id'])
             ->withCount(['solicitudes as pide_archivos' => fn ($q) => $q->where('estado', 'abierta')])->get()
-            ->sortBy(fn ($p) => [$p->estado === 'terminado' ? 1 : 0, -$p->id])->values();
+            ->sortBy(fn ($p) => [['terminado' => 1, 'cancelado' => 2][$p->estado] ?? 0, -$p->id])->values();
 
         // Si el cliente tiene varias empresas, puede ver solo una (?empresa=principal|id)
         $c->load('razones');

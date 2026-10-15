@@ -230,7 +230,7 @@
 
     <section class="avance" aria-label="Avance del proyecto">
         <div class="pct num">{{ $p->progreso }}%</div>
-        <div class="sig" style="text-align:right">@if($p->estado === 'terminado')<b>Proyecto terminado</b>@else Siguiente: <b>{{ $p->siguiente_paso }}</b>@endif</div>
+        <div class="sig" style="text-align:right">@if($p->estado === 'cancelado')<b>Proyecto cancelado</b>@elseif($p->estado === 'terminado')<b>Proyecto terminado</b>@else Siguiente: <b>{{ $p->siguiente_paso }}</b>@endif</div>
         <div class="barra" role="progressbar" aria-valuenow="{{ $p->progreso }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ $p->progreso }}%"></span></div>
     </section>
 
@@ -238,7 +238,10 @@
         <div class="mensaje">{{ $p->mensaje_cliente }}</div>
     @endif
 
-    @php $pideArchivos = $p->solicitudes->where('estado', 'abierta')->isNotEmpty(); @endphp
+    @if($p->estado === 'cancelado')
+        <div class="aviso-arch" role="status" style="grid-template-columns:1fr"><b>Este proyecto se canceló</b><span>Si quieres retomarlo o tienes dudas, escríbenos por WhatsApp.</span></div>
+    @endif
+    @php $pideArchivos = $p->estado !== 'cancelado' && $p->solicitudes->where('estado', 'abierta')->isNotEmpty(); @endphp
     @if($pideArchivos)
         <a class="aviso-arch" href="#enviar-archivos"><b>Necesitamos unos archivos tuyos</b><span>{{ $p->solicitudes->where('estado', 'abierta')->pluck('titulo')->join(' · ') }}</span><i>Subirlos ↓</i></a>
     @endif
@@ -296,7 +299,7 @@
         @endforeach
     </ol>
 
-    @if($pendientes->isNotEmpty() && $p->estado !== 'terminado')
+    @if($pendientes->isNotEmpty() && ! in_array($p->estado, ['terminado', 'cancelado'], true))
         <h2>Datos para tu pago</h2>
         <div class="banco">
             <div class="t">Datos bancarios</div>
@@ -360,7 +363,9 @@
         </div>
     @endif
 
-    @include('proyectos._enviar')
+    @if($p->estado !== 'cancelado')
+        @include('proyectos._enviar')
+    @endif
 
     <footer class="pie">
         <span>¿Dudas? <a href="https://wa.me/{{ $wa }}?text={{ $waMsg }}" target="_blank" rel="noopener">Escríbenos por WhatsApp</a></span>

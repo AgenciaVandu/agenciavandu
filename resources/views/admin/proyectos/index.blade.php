@@ -2,7 +2,7 @@
 @section('titulo', 'Proyectos')
 
 @php
-    $filtros = ['activo' => 'En marcha', 'pausado' => 'En pausa', 'terminado' => 'Terminados', 'todos' => 'Todos'];
+    $filtros = ['activo' => 'En marcha', 'pausado' => 'En pausa', 'terminado' => 'Terminados', 'cancelado' => 'Cancelados', 'todos' => 'Todos'];
     $dinero = fn ($n) => '$' . number_format($n, 0);
     $q = fn (array $extra = []) => route('admin.proyectos.index', array_filter(array_merge(['filtro' => $filtro, 'tipo' => $tipo, 'vista' => $vista === 'lista' ? 'lista' : null, 'semana' => $semana['n'] ?: null], $extra), fn ($v) => $v !== null && $v !== 0));
     $paginado = $proyectos instanceof \Illuminate\Contracts\Pagination\Paginator;

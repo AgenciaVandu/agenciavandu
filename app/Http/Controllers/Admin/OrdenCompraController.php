@@ -107,8 +107,13 @@ class OrdenCompraController extends Controller
     /** Cambia el estado a mano (en proceso, entregada, pagada, cancelada…) */
     public function estado(Request $request, OrdenCompra $orden)
     {
-        $d = $request->validate(['estado' => 'required|in:' . implode(',', array_keys(OrdenCompra::ESTADOS))]);
-        $cambios = ['estado' => $d['estado']];
+        $d = $request->validate(['estado' => 'required|in:' . implode(',', array_keys(OrdenCompra::ESTADOS)), 'motivo' => 'nullable|string|max:1000']);
+        if ($d['estado'] === 'cancelada') {
+            if (blank($d['motivo'] ?? null)) return back()->withErrors(['motivo' => 'Escribe el motivo de la cancelación.']);
+            \App\Support\Cancelaciones::cancelarOrden($orden, trim($d['motivo']));
+            return back()->with('ok', "Orden {$orden->folio} cancelada. Ya no cuenta como gasto ni como pendiente de pago.");
+        }
+        $cambios = ['estado' => $d['estado'], 'cancelada_at' => null, 'motivo_cancelacion' => null];
         if ($d['estado'] !== 'borrador' && ! $orden->enviada_at) $cambios['enviada_at'] = now();
         $orden->update($cambios);
         return back()->with('ok', 'Estado: ' . OrdenCompra::ESTADOS[$d['estado']]['texto'] . '.');
@@ -187,7 +192,7 @@ class OrdenCompraController extends Controller
     {
         $proveedores = Proveedor::orderBy('empresa')->get(['id', 'empresa', 'nombre', 'rubro']);
         $proyectos = Proyecto::with('cliente:id,nombre,empresa')
-            ->where(fn ($w) => $w->where('estado', '!=', 'terminado')->when($o->proyecto_id, fn ($x) => $x->orWhere('id', $o->proyecto_id)))
+            ->where(fn ($w) => $w->whereNotIn('estado', ['terminado', 'cancelado'])->when($o->proyecto_id, fn ($x) => $x->orWhere('id', $o->proyecto_id)))
             ->latest('id')->get(['id', 'nombre', 'cliente_id', 'estado']);
         $conceptos = $o->exists
             ? $o->conceptos->map->only(['descripcion', 'cantidad', 'unidad', 'precio'])->values()->all()

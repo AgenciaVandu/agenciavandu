@@ -4,13 +4,14 @@
     $aceptada = $p->estado === 'aceptada';
     $proyecto = $p->proyecto;
     $negociando = $p->estado === 'negociacion' && ! $p->vigente;
-    $vigente = $p->vigente || $aceptada || $p->estado === 'negociacion';
+    $cancelada = $p->estado === 'cancelada';
+    $vigente = ! $cancelada && ($p->vigente || $aceptada || $p->estado === 'negociacion');
     $secciones = $p->consideraciones_limpias;
     $vence = \App\Models\Presupuesto::fechaLarga($p->vigencia_local) . ' a las ' . $p->vigencia_local->format('H:i');
     $wa = config('vandu.whatsapp');
     $waMsg = rawurlencode($vigente
         ? "Hola, tengo una duda sobre la cotización {$p->folio}."
-        : "Hola, la cotización {$p->folio} venció. ¿Me pueden enviar una actualizada?");
+        : ($cancelada ? "Hola, quisiera retomar la cotización {$p->folio}." : "Hola, la cotización {$p->folio} venció. ¿Me pueden enviar una actualizada?"));
     $n = 0;
     $puedeResponder = \App\Support\Aceptacion::puedeResponder($p);
     $eventos = $p->eventos; // solo los visibles para el cliente, del más reciente al más antiguo
@@ -214,6 +215,8 @@
         @if($aceptada)
             <span class="txt">Cotización aceptada{{ $p->aceptada_el ? ' el ' . \App\Models\Presupuesto::fechaLarga($p->aceptada_el) : '' }}. ¡Gracias por tu confianza!</span>
             @if($proyecto)<a class="ir" href="{{ $proyecto->url_publica }}">Ver proyecto →</a>@endif
+        @elseif($cancelada)
+            <span class="txt">Esta cotización se canceló{{ $p->cancelada_at ? ' el ' . \App\Models\Presupuesto::fechaLarga($p->cancelada_at->copy()->setTimezone(config('vandu.zona_horaria'))) : '' }}. Si quieres retomarla, escríbenos.</span>
         @elseif($negociando)
             <span class="txt">Estamos afinando los detalles de esta cotización contigo.</span>
         @elseif($vigente)

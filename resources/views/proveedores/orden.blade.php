@@ -80,6 +80,10 @@
 @endsection
 
 @section('contenido')
+    @if($o->estado === 'cancelada')
+        <div class="caja" role="status" style="border-color:#B42318; margin-bottom:16px"><b>Esta orden se canceló{{ $o->cancelada_at ? ' el ' . $o->cancelada_at->copy()->setTimezone(config('vandu.zona_horaria'))->locale('es')->isoFormat('D [de] MMMM') : '' }}.</b>
+            Por favor no la produzcas ni la entregues. Si ya tenías avance, escríbenos para revisarlo.</div>
+    @endif
 @if($deAgencia->isNotEmpty())
     <section class="caja prioridad" id="adjuntos" aria-labelledby="titulo-adjuntos">
         <div class="cab">

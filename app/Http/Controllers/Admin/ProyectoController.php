@@ -353,15 +353,41 @@ class ProyectoController extends Controller
 
     public function update(Request $request, Proyecto $proyecto)
     {
-        $proyecto->update($request->validate([
+        // Cancelar lleva motivo: se hace con su propio botón, no desde este selector
+        $estados = array_keys(Proyecto::ESTADOS);
+        if ($proyecto->estado !== 'cancelado') $estados = array_diff($estados, ['cancelado']);
+        $datos = $request->validate([
             'nombre'          => 'required|string|max:255',
-            'estado'          => ['required', Rule::in(array_keys(Proyecto::ESTADOS))],
+            'estado'          => ['required', Rule::in($estados)],
             'monto_total'     => 'required|numeric|min:0',
             'mensaje_cliente' => 'nullable|string|max:2000',
             'notas_internas'  => 'nullable|string|max:5000',
-        ]));
+        ]);
+        if ($proyecto->estado === 'cancelado' && $datos['estado'] !== 'cancelado') {
+            \App\Support\Cancelaciones::reactivarProyecto($proyecto, $datos['estado']);
+        }
+        $proyecto->update($datos);
 
         return back()->with('ok', 'Proyecto actualizado.');
+    }
+
+    public function cancelar(Request $request, Proyecto $proyecto)
+    {
+        $d = $request->validate(['motivo' => 'required|string|max:1000', 'ordenes' => 'nullable|boolean'],
+            ['motivo.required' => 'Escribe el motivo de la cancelación.']);
+        abort_if($proyecto->estado === 'cancelado', 422, 'El proyecto ya está cancelado.');
+        $n = \App\Support\Cancelaciones::cancelarProyecto($proyecto, trim($d['motivo']), $request->boolean('ordenes'));
+
+        return redirect()->route('admin.proyectos.show', $proyecto)->with('ok', 'Proyecto cancelado. Ya no cuenta en ventas ni por cobrar'
+            . ($proyecto->presupuesto ? " y la cotización {$proyecto->presupuesto->folio} quedó como cancelada" : '')
+            . ($n ? '; también se ' . ($n === 1 ? 'canceló 1 orden de compra' : "cancelaron $n órdenes de compra") : '') . '.');
+    }
+
+    public function reactivar(Proyecto $proyecto)
+    {
+        abort_unless($proyecto->estado === 'cancelado', 422);
+        \App\Support\Cancelaciones::reactivarProyecto($proyecto);
+        return redirect()->route('admin.proyectos.show', $proyecto)->with('ok', 'Proyecto reactivado. Vuelve a contar en ventas y cobranza. Las órdenes de compra canceladas siguen canceladas.');
     }
 
     public function destroy(Proyecto $proyecto)

@@ -18,6 +18,7 @@ class Presupuesto extends Model
         'negociacion' => 'En negociación',
         'aceptada'  => 'Aceptada',
         'rechazada' => 'Rechazada',
+        'cancelada' => 'Cancelada',   // se aceptó pero el proyecto se canceló: ya no cuenta como venta
     ];
 
     public const MODOS_IVA = [
@@ -40,6 +41,7 @@ class Presupuesto extends Model
         'aceptada_el'     => 'date',
         'vigente_hasta'   => 'datetime',
         'ultima_vista_at' => 'datetime',
+        'cancelada_at'    => 'datetime',
         'consideraciones' => 'array',
         'mostrar_pago'    => 'boolean',
         'iva_porcentaje'  => 'float',
@@ -53,7 +55,8 @@ class Presupuesto extends Model
             if ($p->estado === 'aceptada' && ! $p->cliente_id) $p->cliente_id = $p->asegurarCliente(false)->id;
             if ($p->estado === 'aceptada' && ! $p->aceptada_el) {
                 $p->aceptada_el = now(config('vandu.zona_horaria'))->toDateString();
-            } elseif ($p->estado !== 'aceptada') {
+            } elseif (! in_array($p->estado, ['aceptada', 'cancelada'], true)) {
+                // Cancelada conserva su fecha: si el proyecto se reactiva, la venta vuelve a su mes
                 $p->aceptada_el = null;
             }
         });
@@ -366,7 +369,7 @@ class Presupuesto extends Model
     /** En negociación sigue viva aunque pase su vigencia: no se da por perdida */
     public function getPerdidaAttribute(): bool
     {
-        return $this->estado === 'rechazada'
+        return in_array($this->estado, ['rechazada', 'cancelada'], true)
             || (! in_array($this->estado, ['aceptada', 'negociacion'], true) && ! $this->vigente);
     }
 
@@ -374,7 +377,7 @@ class Presupuesto extends Model
     public function getAbiertaAttribute(): bool
     {
         return $this->estado === 'negociacion'
-            || (! in_array($this->estado, ['aceptada', 'rechazada'], true) && $this->vigente);
+            || (! in_array($this->estado, ['aceptada', 'rechazada', 'cancelada'], true) && $this->vigente);
     }
 
     public function getVigenteAttribute(): bool

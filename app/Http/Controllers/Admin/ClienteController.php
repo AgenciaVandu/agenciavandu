@@ -33,13 +33,13 @@ class ClienteController extends Controller
 
         // Lo que vale cada cliente (aceptado, antes de IVA), lo que debe y cuándo fue lo último
         $aceptado = 'SELECT COALESCE(SUM(pc.cantidad * pc.precio), 0) FROM presupuesto_conceptos pc JOIN presupuestos p ON p.id = pc.presupuesto_id WHERE p.cliente_id = clientes.id AND p.estado = \'aceptada\'';
-        $porCobrar = 'SELECT COALESCE(SUM(pg.monto), 0) FROM proyecto_pagos pg JOIN proyectos pr ON pr.id = pg.proyecto_id WHERE pr.cliente_id = clientes.id AND pg.pagado_el IS NULL';
+        $porCobrar = 'SELECT COALESCE(SUM(pg.monto), 0) FROM proyecto_pagos pg JOIN proyectos pr ON pr.id = pg.proyecto_id WHERE pr.cliente_id = clientes.id AND pg.pagado_el IS NULL AND pr.estado <> \'cancelado\'';
         $ultima = 'SELECT MAX(p.updated_at) FROM presupuestos p WHERE p.cliente_id = clientes.id';
 
         $vista = fn (string $v) => function ($w) use ($v, $hace3m) {
             match ($v) {
                 'activos'       => $w->whereHas('proyectos', fn ($p) => $p->where('estado', 'activo')),
-                'por_cobrar'    => $w->whereHas('proyectos.pagos', fn ($p) => $p->whereNull('pagado_el')),
+                'por_cobrar'    => $w->whereHas('proyectos', fn ($p) => $p->where('estado', '!=', 'cancelado')->whereHas('pagos', fn ($g) => $g->whereNull('pagado_el'))),
                 'nuevos'        => $w->where('nuevo', true),
                 'sin_actividad' => $w->where('created_at', '<', $hace3m)->whereDoesntHave('presupuestos', fn ($p) => $p->where('updated_at', '>=', $hace3m)),
                 default         => $w,
@@ -74,8 +74,8 @@ class ClienteController extends Controller
             'total'     => $conteos['todos'],
             'nuevosMes' => Cliente::where('created_at', '>=', now(config('vandu.zona_horaria'))->startOfMonth())->count(),
             'activos'   => $conteos['activos'],
-            'porCobrar' => (float) \App\Models\ProyectoPago::whereNull('pagado_el')->whereHas('proyecto')->sum('monto'),
-            'vencido'   => \App\Models\ProyectoPago::whereNull('pagado_el')->whereHas('proyecto')->get()->filter->vencido->sum('monto'),
+            'porCobrar' => (float) \App\Models\ProyectoPago::whereNull('pagado_el')->whereHas('proyecto', fn ($p) => $p->where('estado', '!=', 'cancelado'))->sum('monto'),
+            'vencido'   => \App\Models\ProyectoPago::whereNull('pagado_el')->whereHas('proyecto', fn ($p) => $p->where('estado', '!=', 'cancelado'))->get()->filter->vencido->sum('monto'),
             'anio'      => \App\Models\Presupuesto::with('conceptos')->where('estado', 'aceptada')->where('aceptada_el', '>=', $anio)->get()->sum(fn ($p) => $p->subtotal),
         ];
 

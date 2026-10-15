@@ -152,6 +152,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::put('proyectos/{proyecto}/fechas', [Admin\ProyectoController::class, 'guardarFechas'])->name('proyectos.fechas.guardar');
     Route::get('proyectos/{proyecto}', [Admin\ProyectoController::class, 'show'])->name('proyectos.show');
     Route::put('proyectos/{proyecto}', [Admin\ProyectoController::class, 'update'])->name('proyectos.update');
+    Route::post('proyectos/{proyecto}/cancelar', [Admin\ProyectoController::class, 'cancelar'])->name('proyectos.cancelar');
+    Route::post('proyectos/{proyecto}/reactivar', [Admin\ProyectoController::class, 'reactivar'])->name('proyectos.reactivar');
     Route::delete('proyectos/{proyecto}', [Admin\ProyectoController::class, 'destroy'])->name('proyectos.destroy');
     Route::patch('proyectos/{proyecto}/etapas/{etapa}', [Admin\ProyectoController::class, 'etapa'])->name('proyectos.etapa');
     Route::patch('proyectos/{proyecto}/pagos/{pago}', [Admin\ProyectoController::class, 'pago'])->name('proyectos.pago');

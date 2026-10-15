@@ -2,7 +2,7 @@
 @section('titulo', 'Órdenes de compra')
 
 @php
-    $filtros = ['abiertas' => 'Abiertas', 'borrador' => 'Borradores', 'en_proceso' => 'En proceso', 'facturada' => 'Por pagar', 'pagada' => 'Pagadas', 'todas' => 'Todas'];
+    $filtros = ['abiertas' => 'Abiertas', 'borrador' => 'Borradores', 'en_proceso' => 'En proceso', 'facturada' => 'Por pagar', 'pagada' => 'Pagadas', 'cancelada' => 'Canceladas', 'todas' => 'Todas'];
     $n = fn ($k) => match ($k) {
         'abiertas' => $cuentas->except(['pagada', 'cancelada'])->sum(),
         'todas'    => $cuentas->sum(),
@@ -61,7 +61,7 @@
                             <div class="secundario text-truncate" style="max-width: 280px">{{ $o->proyecto ? $o->proyecto->nombre . ' · ' . ($o->proyecto->cliente?->empresa ?: $o->proyecto->cliente?->nombre) : $o->resumen }}</div></td>
                         <td class="text-nowrap {{ $o->retrasada ? 'text-danger' : 'secundario' }}">{{ $o->fecha_entrega ? \Illuminate\Support\Str::after($o->entrega_texto, 'Entrega ') : '—' }}</td>
                         <td class="text-end num fw-medium text-nowrap">{{ \App\Models\OrdenCompra::dinero($o->total) }}</td>
-                        <td class="text-nowrap"><span class="estado estado-{{ $o->estado }}">{{ $o->estado_texto }}</span>
+                        <td class="text-nowrap"><span class="estado estado-{{ $o->estado }}" @if($o->motivo_cancelacion) title="Motivo: {{ $o->motivo_cancelacion }}" @endif>{{ $o->estado_texto }}</span>
                             @if($o->archivos->where('tipo', 'factura')->count())<i class="bi bi-receipt ms-1" style="color: var(--green-ink)" title="Con factura"></i>@endif</td>
                     </tr>
                 @endforeach

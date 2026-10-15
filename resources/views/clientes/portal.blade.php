@@ -8,14 +8,15 @@
         return match (true) {
             $p->estado === 'aceptada'    => ['Aceptada', 'ok'],
             $p->estado === 'rechazada'   => ['No aceptada', 'gris'],
+            $p->estado === 'cancelada'   => ['Cancelada', 'gris'],
             $p->estado === 'negociacion' => ['Revisando tus cambios', 'azul'],
             ! $p->vigente                => ['Vencida', 'gris'],
             default                      => ['Por responder', 'pend'],
         };
     };
     $porResponder = $cotizaciones->filter(fn ($p) => $p->abierta && $p->estado !== 'negociacion' && ! $p->proyecto);
-    $activos = $proyectos->where('estado', '!=', 'terminado');
-    $terminados = $proyectos->where('estado', 'terminado');
+    $activos = $proyectos->whereNotIn('estado', ['terminado', 'cancelado']);
+    $terminados = $proyectos->whereIn('estado', ['terminado', 'cancelado']);
     $miniatura = fn ($a) => route('proyecto.archivo', [$proyectos->firstWhere('id', $a->proyecto_id)->token, $a->id]) . '?v=miniatura';
     $wa = config('vandu.whatsapp');
     $varias = $empresas->count() > 1;
@@ -167,7 +168,8 @@
         <p class="sub">Aquí están {{ $empresa ? 'los proyectos y cotizaciones de ' . $empresa['nombre'] : 'todos tus proyectos y cotizaciones' . ($c->empresa && ! $varias ? ' de ' . $c->empresa : '') }} con {{ config('vandu.marca.nombre') }}. Guarda este enlace: siempre está al día.</p>
         <div class="resumen">
             @if($activos->count())<span><b>{{ $activos->count() }}</b> {{ $activos->count() === 1 ? 'proyecto en curso' : 'proyectos en curso' }}</span>@endif
-            @if($terminados->count())<span><b>{{ $terminados->count() }}</b> {{ $terminados->count() === 1 ? 'terminado' : 'terminados' }}</span>@endif
+            @php $nTerm = $terminados->where('estado', 'terminado')->count(); @endphp
+            @if($nTerm)<span><b>{{ $nTerm }}</b> {{ $nTerm === 1 ? 'terminado' : 'terminados' }}</span>@endif
             <span><b>{{ $cotizaciones->count() }}</b> {{ $cotizaciones->count() === 1 ? 'cotización' : 'cotizaciones' }}</span>
         </div>
     </header>
@@ -210,7 +212,7 @@
     </div>
     @if($terminados->isNotEmpty())
         <details class="term" @if($activos->isEmpty()) open @endif>
-            <summary>{{ $terminados->count() === 1 ? 'Ver 1 proyecto terminado' : 'Ver ' . $terminados->count() . ' proyectos terminados' }} ▾</summary>
+            <summary>{{ $terminados->count() === 1 ? 'Ver 1 proyecto cerrado' : 'Ver ' . $terminados->count() . ' proyectos cerrados' }} ▾</summary>
             <div class="proyectos">
                 @foreach($terminados as $pr) {!! $tarjeta($pr) !!} @endforeach
             </div>

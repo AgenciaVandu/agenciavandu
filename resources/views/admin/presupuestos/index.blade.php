@@ -164,7 +164,7 @@
                 <div class="cq-monto num">{{ $dinero($p->modo_iva === 'desglosado' ? $p->total : $p->subtotal) }}<div class="s">{{ $p->modo_iva === 'mas_iva' ? '+ IVA' : ($p->modo_iva === 'desglosado' ? 'con IVA' : 'sin IVA') }}</div></div>
                 <div class="cq-sit">
                     <span class="estado estado-{{ $p->estado }}">{{ \App\Models\Presupuesto::ESTADOS[$p->estado] ?? $p->estado }}</span>
-                    @if(! in_array($p->estado, ['aceptada', 'rechazada'], true))@include('admin.presupuestos._vigencia', ['p' => $p])@endif
+                    @if(! in_array($p->estado, ['aceptada', 'rechazada', 'cancelada'], true))@include('admin.presupuestos._vigencia', ['p' => $p])@endif
                     @if($p->estado === 'aceptada')
                         @if(! $p->proyecto)<a href="{{ route('admin.proyectos.create', $p) }}" class="cq-tag ambar"><i class="bi bi-kanban"></i> Crear proyecto</a>@endif
                         @if($p->facturas->isEmpty())<a href="{{ route('admin.presupuestos.edit', [$p, 'ver' => 'factura']) }}" class="cq-tag ambar"><i class="bi bi-receipt"></i> Sin {{ $p->es_nota ? 'nota' : 'factura' }}</a>
@@ -174,7 +174,7 @@
                     @if($p->vistas && $p->estado !== 'aceptada')<span class="vistas" title="{{ $p->ultima_vista_at ? 'Última vez ' . $p->ultima_vista_at->locale('es')->diffForHumans() : '' }}"><i class="bi bi-eye"></i> {{ $p->vistas }}</span>@endif
                 </div>
                 <div class="cq-acc">
-                    @if($wa && ! in_array($p->estado, ['aceptada', 'rechazada'], true))
+                    @if($wa && ! in_array($p->estado, ['aceptada', 'rechazada', 'cancelada'], true))
                         <a class="btn btn-fantasma btn-icono" target="_blank" rel="noopener" href="{{ route('admin.presupuestos.whatsapp', $p) }}" title="Enviar por WhatsApp" aria-label="Enviar {{ $p->folio }} por WhatsApp"><i class="bi bi-whatsapp"></i></a>
                     @endif
                     <button type="button" class="btn btn-fantasma btn-icono" data-copiar="{{ $p->url_publica }}" title="Copiar enlace del cliente" aria-label="Copiar enlace de {{ $p->folio }}"><i class="bi bi-link-45deg"></i></button>

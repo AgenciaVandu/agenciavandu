@@ -36,6 +36,9 @@
     .adjuntos .panel-head h2 i { color: var(--green-ink); }
     .estados { display: flex; flex-wrap: wrap; gap: 6px; }
     .estados button { border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 4px 12px; font-size: 13px; }
+    .cancelada-info { padding: 10px 12px; border-radius: 10px; background: #F4F5F7; font-size: 14px; display: grid; gap: 2px; white-space: pre-line; }
+    .cancelar-o > summary { list-style: none; } .cancelar-o > summary::-webkit-details-marker { display: none; }
+    .cancelar-o[open] > summary { display: none; }
     .estados button.activo { background: #13161D; color: #fff; border-color: #13161D; }
     .estados button:hover:not(.activo) { border-color: #13161D; }
     @media (max-width: 991.98px) { .ficha { grid-template-columns: minmax(0, 1fr); } }
@@ -183,10 +186,31 @@
             <div class="panel-head"><h2>Estado</h2></div>
             <form method="post" action="{{ route('admin.ordenes.estado', $o) }}" class="panel-body estados">
                 @csrf @method('patch')
-                @foreach(\App\Models\OrdenCompra::ESTADOS as $k => $e)
+                @foreach(\Illuminate\Support\Arr::except(\App\Models\OrdenCompra::ESTADOS, $o->estado === 'cancelada' ? [] : ['cancelada']) as $k => $e)
                     <button name="estado" value="{{ $k }}" class="{{ $o->estado === $k ? 'activo' : '' }}" @if($o->estado === $k) aria-pressed="true" disabled @endif>{{ $e['texto'] }}</button>
                 @endforeach
             </form>
+            <div class="panel-body pt-0">
+                @if($o->estado === 'cancelada')
+                    <div class="cancelada-info">
+                        <b><i class="bi bi-x-octagon me-1"></i> Cancelada{{ $o->cancelada_at ? ' ' . $o->cancelada_at->locale('es')->diffForHumans() : '' }}</b>
+                        @if($o->motivo_cancelacion)<div>Motivo: {{ $o->motivo_cancelacion }}</div>@endif
+                        <div class="secundario" style="font-size:12.5px">No cuenta como gasto ni como pendiente de pago. Para reactivarla elige otro estado.</div>
+                    </div>
+                @else
+                    <details class="cancelar-o" @if($errors->has('motivo')) open @endif>
+                        <summary class="btn btn-fantasma btn-sm text-danger"><i class="bi bi-x-octagon me-1"></i> Cancelar orden</summary>
+                        <form method="post" action="{{ route('admin.ordenes.estado', $o) }}" class="d-grid gap-2 mt-2" onsubmit="return confirm('¿Cancelar la orden {{ $o->folio }}?')">
+                            @csrf @method('patch') <input type="hidden" name="estado" value="cancelada">
+                            <label class="form-label mb-0" for="motivo-orden">Motivo</label>
+                            <textarea name="motivo" id="motivo-orden" rows="2" maxlength="1000" required class="form-control @error('motivo') is-invalid @enderror" placeholder="Ej. El proveedor no tenía el material a tiempo">{{ old('motivo') }}</textarea>
+                            @error('motivo')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            <div class="secundario" style="font-size:12.5px">Deja de contar como gasto y como pendiente de pago. El proveedor verá que se canceló.</div>
+                            <div><button class="btn btn-borde btn-sm text-danger">Cancelar orden</button></div>
+                        </form>
+                    </details>
+                @endif
+            </div>
         </section>
 
         <section class="panel">

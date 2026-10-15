@@ -56,6 +56,13 @@
     .tl-estados .activo.completada { color: var(--green-ink); }
     .bloqueo { margin-top: 12px; padding: 12px 14px; border-radius: 10px; background: var(--amber-soft); color: #6B3B00; font-size: 14px; display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
 
+    /* Cancelación */
+    .cancelado-aviso { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; padding: 14px 18px; border-radius: 12px; background: #F4F5F7; border: 1px solid var(--line-strong, #D5D8DE); }
+    .cancelado-aviso > i { font-size: 22px; color: var(--red, #B42318); line-height: 1; margin-top: 2px; }
+    .cancelado-aviso .motivo { margin: 2px 0; color: var(--text-2); white-space: pre-line; }
+    .cancelar-p > summary { list-style: none; } .cancelar-p > summary::-webkit-details-marker { display: none; }
+    .cancelar-p[open] > summary { display: none; }
+
     /* Archivos del cliente */
     .sol { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: var(--surface); }
     .sol.cerrada { background: var(--sunken); }
@@ -165,7 +172,7 @@
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <h1>{{ $p->nombre }}</h1>
                 <span class="tipo-pill"><i class="bi {{ $p->metodologia['icono'] ?? 'bi-kanban' }}"></i> {{ $p->tipo_nombre }}</span>
-                @if($p->estado !== 'activo')<span class="estado {{ $p->estado === 'terminado' ? 'estado-aceptada' : 'estado-borrador' }}">{{ \App\Models\Proyecto::ESTADOS[$p->estado] }}</span>@endif
+                @if($p->estado !== 'activo')<span class="estado {{ $p->estado === 'terminado' ? 'estado-aceptada' : ($p->estado === 'cancelado' ? 'estado-cancelado' : 'estado-borrador') }}">{{ \App\Models\Proyecto::ESTADOS[$p->estado] }}</span>@endif
             </div>
             <p class="sub">
                 <a href="{{ route('admin.clientes.show', $p->cliente) }}" class="text-reset">{{ $quien }}</a>
@@ -186,6 +193,20 @@
     </div>
 </div>
 
+@if($p->estado === 'cancelado')
+    <section class="cancelado-aviso mb-4" role="status">
+        <i class="bi bi-x-octagon"></i>
+        <div class="flex-grow-1">
+            <b>Proyecto cancelado{{ $p->cancelado_at ? ' el ' . $p->cancelado_at->copy()->setTimezone(config('vandu.zona_horaria'))->locale('es')->isoFormat('D [de] MMMM YYYY') : '' }}</b>
+            @if($p->motivo_cancelacion)<div class="motivo">Motivo: {{ $p->motivo_cancelacion }}</div>@endif
+            <div class="secundario" style="font-size:13px">No cuenta en ventas ni por cobrar{{ $p->pagado > 0 ? '; lo ya cobrado ($' . number_format($p->pagado, 2) . ') sigue registrado como cobrado' : '' }}.</div>
+        </div>
+        <form method="post" action="{{ route('admin.proyectos.reactivar', $p) }}" onsubmit="return confirm('¿Reactivar el proyecto? Vuelve a contar en ventas y por cobrar.')">@csrf
+            <button class="btn btn-borde btn-sm"><i class="bi bi-arrow-counterclockwise me-1"></i> Reactivar</button>
+        </form>
+    </section>
+@endif
+
 <div class="ficha-p">
     <div class="d-grid gap-4">
         <div class="panel resumen-p">
@@ -195,7 +216,7 @@
                 <div class="prog" role="progressbar" aria-valuenow="{{ $p->progreso }}" aria-valuemin="0" aria-valuemax="100" aria-label="Avance del proyecto"><span style="width: {{ $p->progreso }}%"></span></div>
             </div>
             <div><div class="k">Cobrado</div><div class="v num">${{ number_format($p->pagado, 0) }}</div><div class="secundario num">de ${{ number_format($p->monto_total, 0) }}</div></div>
-            <div><div class="k">Siguiente paso</div><div class="fw-semibold mt-1">{{ $p->siguiente_paso ?? 'Terminado' }}</div></div>
+            <div><div class="k">Siguiente paso</div><div class="fw-semibold mt-1">{{ $p->siguiente_paso ?? ($p->estado === 'cancelado' ? 'Cancelado' : 'Terminado') }}</div></div>
         </div>
 
         {{-- ================= Línea del tiempo ================= --}}
@@ -515,7 +536,7 @@
                 <div><label class="form-label" for="nombre">Nombre</label><input name="nombre" id="nombre" value="{{ old('nombre', $p->nombre) }}" class="form-control" required></div>
                 <div class="row g-2">
                     <div class="col-6"><label class="form-label" for="estado">Estado</label>
-                        <select name="estado" id="estado" class="form-select">@foreach(\App\Models\Proyecto::ESTADOS as $k => $l)<option value="{{ $k }}" @selected($p->estado === $k)>{{ $l }}</option>@endforeach</select></div>
+                        <select name="estado" id="estado" class="form-select">@foreach(\Illuminate\Support\Arr::except(\App\Models\Proyecto::ESTADOS, $p->estado === 'cancelado' ? [] : ['cancelado']) as $k => $l)<option value="{{ $k }}" @selected($p->estado === $k)>{{ $l }}</option>@endforeach</select></div>
                     <div class="col-6"><label class="form-label" for="monto_total">Monto total</label>
                         <input type="number" step="0.01" min="0" name="monto_total" id="monto_total" value="{{ old('monto_total', $p->monto_total) }}" class="form-control num"></div>
                 </div>
@@ -526,6 +547,29 @@
                 <button class="btn btn-primario">Guardar cambios</button>
             </form>
         </section>
+
+        @if($p->estado !== 'cancelado')
+            @php $ordAbiertas = \App\Support\Cancelaciones::ordenesAbiertas($p); @endphp
+            <details class="cancelar-p" @if($errors->has('motivo')) open @endif>
+                <summary class="btn btn-fantasma w-100"><i class="bi bi-x-octagon me-1"></i> Cancelar proyecto</summary>
+                <form method="post" action="{{ route('admin.proyectos.cancelar', $p) }}" class="panel panel-body d-grid gap-2 mt-2"
+                      onsubmit="return confirm('¿Cancelar el proyecto? Deja de contar en ventas y por cobrar. Lo puedes reactivar después.')">@csrf
+                    <label class="form-label mb-0" for="motivo-cancelar">Motivo de la cancelación</label>
+                    <textarea name="motivo" id="motivo-cancelar" rows="3" maxlength="1000" required class="form-control @error('motivo') is-invalid @enderror"
+                              placeholder="Ej. El cliente pospuso la campaña para el próximo año">{{ old('motivo') }}</textarea>
+                    @error('motivo')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                    <div class="secundario" style="font-size:12.5px">
+                        La cotización {{ $p->presupuesto?->folio }} pasa a “Cancelada” y deja de contar como venta; los pagos pendientes
+                        @if($p->por_cobrar > 0)(${{ number_format($p->por_cobrar, 2) }})@endif dejan de contar como por cobrar. Lo ya cobrado se queda registrado.
+                    </div>
+                    @if($ordAbiertas->isNotEmpty())
+                        <label class="form-check" style="font-size:13.5px"><input type="checkbox" name="ordenes" value="1" class="form-check-input" checked>
+                            <span class="form-check-label">Cancelar también {{ $ordAbiertas->count() === 1 ? 'su orden de compra abierta' : 'sus ' . $ordAbiertas->count() . ' órdenes de compra abiertas' }} ({{ $ordAbiertas->pluck('folio')->join(', ') }})</span></label>
+                    @endif
+                    <button class="btn btn-borde text-danger"><i class="bi bi-x-octagon me-1"></i> Cancelar proyecto</button>
+                </form>
+            </details>
+        @endif
 
         <form method="post" action="{{ route('admin.proyectos.destroy', $p) }}" onsubmit="return confirm('¿Eliminar este proyecto con sus archivos? La cotización no se borra.')">
             @csrf @method('delete')

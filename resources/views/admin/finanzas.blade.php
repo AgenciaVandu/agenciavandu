@@ -296,7 +296,8 @@
                     <tr>
                         <td style="min-width:200px"><div class="persona">@include('admin._avatar', ['nombre' => $quien])<div><div class="principal text-truncate">{{ $quien }}</div><div class="secundario text-truncate">{{ \Illuminate\Support\Str::limit($p->conceptos->first()?->resumen, 40) }}</div></div></div></td>
                         <td class="num"><a href="{{ route('admin.presupuestos.edit', $p) }}" class="text-reset">{{ $p->folio }}</a><div class="secundario">{{ $p->fecha->locale('es')->isoFormat('D MMM') }}</div></td>
-                        <td>@if($p->estado === 'rechazada')<span class="estado estado-rechazada">Rechazada</span>@else<span class="estado estado-borrador">Venció sin respuesta</span>@endif</td>
+                        <td>@if($p->estado === 'cancelada')<span class="estado estado-cancelada">Cancelada</span>@if($p->motivo_cancelacion)<div class="secundario text-truncate" style="max-width:240px" title="{{ $p->motivo_cancelacion }}">{{ $p->motivo_cancelacion }}</div>@endif
+                            @elseif($p->estado === 'rechazada')<span class="estado estado-rechazada">Rechazada</span>@else<span class="estado estado-borrador">Venció sin respuesta</span>@endif</td>
                         <td class="num">{!! $p->vistas ? '<i class="bi bi-eye text-secondary"></i> ' . $p->vistas : '<span class="secundario">No la abrió</span>' !!}</td>
                         <td class="text-end num fw-medium">{{ $d($monto($p)) }}</td>
                     </tr>

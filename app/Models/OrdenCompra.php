@@ -36,7 +36,7 @@ class OrdenCompra extends Model
         'otro'     => ['texto' => 'Otro',         'icono' => 'bi-paperclip'],
     ];
 
-    protected $fillable = ['proveedor_id', 'proyecto_id', 'creada_por', 'titulo', 'indicaciones', 'fecha', 'fecha_entrega', 'lugar_entrega', 'con_iva', 'iva_porcentaje', 'estado', 'enviada_at', 'vista_at'];
+    protected $fillable = ['proveedor_id', 'proyecto_id', 'creada_por', 'titulo', 'indicaciones', 'fecha', 'fecha_entrega', 'lugar_entrega', 'con_iva', 'iva_porcentaje', 'estado', 'enviada_at', 'vista_at', 'cancelada_at', 'motivo_cancelacion'];
 
     protected $casts = [
         'fecha'          => 'date',
@@ -45,6 +45,7 @@ class OrdenCompra extends Model
         'iva_porcentaje' => 'float',
         'enviada_at'     => 'datetime',
         'vista_at'       => 'datetime',
+        'cancelada_at'   => 'datetime',
     ];
 
     protected static function booted(): void

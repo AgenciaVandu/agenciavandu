@@ -52,7 +52,7 @@ class PushResumen extends Command
 
         // Cobros
         $pendientes = ProyectoPago::with('proyecto.cliente')->whereNull('pagado_el')
-            ->whereHas('proyecto', fn ($q) => $q->where('estado', '!=', 'pausado'))->whereNotNull('vence_el')->get();
+            ->whereHas('proyecto', fn ($q) => $q->whereNotIn('estado', \App\Models\Proyecto::SIN_COBRO))->whereNotNull('vence_el')->get();
         $vencidos = $pendientes->filter(fn ($p) => $p->vence_el->toDateString() < $hoy->toDateString());
         $proximos = $pendientes->filter(fn ($p) => $p->vence_el->toDateString() >= $hoy->toDateString() && $p->vence_el->toDateString() <= $hoy->copy()->addDays(3)->toDateString());
         if ($vencidos->count()) {

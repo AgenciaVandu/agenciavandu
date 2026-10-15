@@ -45,7 +45,7 @@
             @if($puede)
                 <p class="secundario m-0" style="font-size:12.5px"><i class="bi bi-link-45deg me-1"></i>El cliente puede aceptarla o pedir cambios desde su enlace.</p>
             @else
-                <p class="secundario m-0">No se puede responder en línea: {{ $p->estado === 'rechazada' ? 'está rechazada' : 'la vigencia ya pasó (extiéndela para habilitarlo)' }}.</p>
+                <p class="secundario m-0">No se puede responder en línea: {{ $p->estado === 'rechazada' ? 'está rechazada' : ($p->estado === 'cancelada' ? 'está cancelada' : 'la vigencia ya pasó (extiéndela para habilitarlo)') }}.</p>
             @endif
         @endif
     </div>

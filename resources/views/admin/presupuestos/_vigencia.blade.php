@@ -1,6 +1,6 @@
 @php
     $h = now()->diffInHours($p->vigente_hasta, false);
-    $cerrada = in_array($p->estado, ['aceptada', 'rechazada', 'negociacion']);
+    $cerrada = in_array($p->estado, ['aceptada', 'rechazada', 'negociacion', 'cancelada']);
     $rel = $p->vigente_hasta->locale('es')->diffForHumans(['parts' => 1, 'syntax' => \Carbon\CarbonInterface::DIFF_RELATIVE_TO_NOW]);
     if ($p->estado === 'negociacion' && $h <= 0) {
         // Sigue viva aunque haya pasado la fecha: se muestra así para no confundir con "perdida"

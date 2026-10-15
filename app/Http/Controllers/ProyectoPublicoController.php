@@ -66,6 +66,7 @@ class ProyectoPublicoController extends Controller
     public function subir(Request $request, string $token)
     {
         $p = $this->proyecto($token);
+        if ($p->estado === 'cancelado') return response()->json(['message' => 'Este proyecto se canceló; ya no recibe archivos.'], 422);
         $max = intdiv(SubidaCliente::PARTE, 1024) + 64;
         $d = $request->validate([
             'accion'    => 'required|in:iniciar,agregar,terminar',

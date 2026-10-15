@@ -10,7 +10,7 @@
     $pagos = $cliente->proyectos->flatMap->pagos;
     $porCobrar = $pagos->reject->pagado->sum('monto');
     $vencido = $pagos->filter->vencido->sum('monto');
-    $activos = $cliente->proyectos->where('estado', '!=', 'terminado');
+    $activos = $cliente->proyectos->whereNotIn('estado', ['terminado', 'cancelado']);
     $conFactura = $ps->filter(fn ($p) => $p->facturas->isNotEmpty());
     $facturaPorEnviar = $conFactura->filter(fn ($p) => ! $p->facturas->max('enviada_at'));
     $sinFactura = $aceptadas->filter(fn ($p) => $p->facturas->isEmpty());
@@ -342,7 +342,7 @@
         </div>
     @else
         <ul class="list-unstyled m-0">
-            @foreach($cliente->proyectos->sortBy(fn ($p) => [$p->estado === 'terminado' ? 1 : 0, -$p->id]) as $pr)
+            @foreach($cliente->proyectos->sortBy(fn ($p) => [['terminado' => 1, 'cancelado' => 2][$p->estado] ?? 0, -$p->id]) as $pr)
                 @php $pend = $pr->pagos->reject->pagado; $venc = $pr->pagos->filter->vencido; @endphp
                 <li class="{{ $loop->first ? '' : 'border-top' }}">
                     <a href="{{ route('admin.proyectos.show', $pr) }}" class="d-block px-3 py-3 text-decoration-none text-reset">

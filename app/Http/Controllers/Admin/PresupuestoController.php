@@ -37,7 +37,7 @@ class PresupuestoController extends Controller
                 'por_vencer' => $w->whereBetween('vigente_hasta', [now(), now()->addHours(72)])->whereIn('estado', ['enviada', 'negociacion', 'borrador']),
                 'borrador'   => $w->where('estado', 'borrador'),
                 'aceptada'   => $w->where('estado', 'aceptada'),
-                'cerradas'   => $w->where(fn ($x) => $x->where('estado', 'rechazada')
+                'cerradas'   => $w->where(fn ($x) => $x->whereIn('estado', ['rechazada', 'cancelada'])
                                     ->orWhere(fn ($y) => $y->where('vigente_hasta', '<=', now())->whereIn('estado', ['enviada', 'borrador']))),
                 default      => $w,
             };
