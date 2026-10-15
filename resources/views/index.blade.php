@@ -47,9 +47,9 @@
         ['titulo' => 'Sistemas y automatización', 'texto' => 'Paneles, portales y procesos conectados a WhatsApp: ventas, proyectos, inventario.', 'ruta' => '#sistemas'],
         ['titulo' => 'Video y video con IA', 'texto' => 'Reels, video corporativo, tomas con dron, comerciales y avatares hechos con IA.', 'ruta' => '#video'],
         ['titulo' => 'Fotografía', 'texto' => 'Alimentos, interiores, arquitectura, retrato empresarial y eventos.', 'ruta' => route('audiovisuales')],
-        ['titulo' => 'Redes sociales', 'texto' => 'Manejo mensual de Instagram, Facebook, TikTok y LinkedIn, con reporte de resultados.', 'ruta' => $whatsapp],
-        ['titulo' => 'Producción e impresos', 'texto' => 'Impresión, rotulación e instalación, bordado y artículos promocionales.', 'ruta' => $whatsapp],
-        ['titulo' => 'Diseño digital', 'texto' => 'Campañas, promociones, presentaciones y material para punto de venta.', 'ruta' => $whatsapp],
+        ['titulo' => 'Redes sociales', 'texto' => 'Manejo mensual de Instagram, Facebook, TikTok y LinkedIn, con reporte de resultados.', 'ruta' => $whatsapp, 'servicio' => 'Redes sociales'],
+        ['titulo' => 'Producción e impresos', 'texto' => 'Impresión, rotulación e instalación, bordado y artículos promocionales.', 'ruta' => $whatsapp, 'servicio' => 'Impresión y rotulación'],
+        ['titulo' => 'Diseño digital', 'texto' => 'Campañas, promociones, presentaciones y material para punto de venta.', 'ruta' => $whatsapp, 'servicio' => 'Otro'],
     ];
 
     $pasos = [
@@ -298,7 +298,7 @@
             <ul class="vi-lista-servicios">
                 @foreach ($servicios as $i => $s)
                     <li>
-                        <a href="{{ $s['ruta'] }}" @if (str_starts_with($s['ruta'], 'https://')) target="_blank" rel="noopener" @endif>
+                        <a href="{{ $s['ruta'] }}" @if (str_starts_with($s['ruta'], 'https://')) target="_blank" rel="noopener" @endif @isset($s['servicio']) data-servicio="{{ $s['servicio'] }}" @endisset>
                             <span class="vi-lista-num">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</span>
                             <b>{{ $s['titulo'] }}</b>
                             <span class="vi-lista-texto">{{ $s['texto'] }}</span>

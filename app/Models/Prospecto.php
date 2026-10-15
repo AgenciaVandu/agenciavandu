@@ -111,8 +111,9 @@ class Prospecto extends Model
     /**
      * Mensaje del formulario del sitio: si ya hay un prospecto abierto con ese correo o teléfono lo actualiza,
      * si no, crea uno nuevo en la primera etapa. Si ya es cliente, el prospecto queda ligado a su ficha.
+     * $origen distingue el formulario de cotizar ('sitio') del botón de WhatsApp ('whatsapp').
      */
-    public static function desdeFormulario(array $d): self
+    public static function desdeFormulario(array $d, string $origen = 'sitio'): self
     {
         $nombre = trim(($d['name'] ?? '') . ' ' . ($d['lastname'] ?? ''));
         $email = mb_strtolower(trim((string) ($d['email'] ?? '')));
@@ -127,17 +128,19 @@ class Prospecto extends Model
             $cliente = ($email ? Cliente::whereRaw('LOWER(email) = ?', [$email])->first() : null)
                 ?? Cliente::whereNotNull('telefono')->get(['id', 'telefono'])->first($mismoTel);
             $cliente = $cliente ? Cliente::find($cliente->id) : null;
-            $p = new static(['origen' => 'sitio', 'cliente_id' => $cliente?->id, 'empresa' => $cliente?->empresa]);
+            $p = new static(['origen' => $origen, 'cliente_id' => $cliente?->id, 'empresa' => $cliente?->empresa ?: ($d['company'] ?? null)]);
         }
         $p->nombre = $p->nombre ?: ($nombre ?: $email);
-        $p->email = $p->email ?: $email;
+        $p->empresa = $p->empresa ?: (($d['company'] ?? null) ?: null);
+        $p->email = $p->email ?: ($email ?: null);
         $p->telefono = $p->telefono ?: ($d['phone'] ?? null);
         $p->fill(['nuevo' => true, 'interes' => $d['service'] ?? $p->interes, 'contacto_at' => now()])->save();
 
         if ($p->wasRecentlyCreated) {
-            $p->eventos()->create(['tipo' => 'alta', 'a_etapa_id' => $p->etapa_id, 'texto' => 'Llegó desde el formulario del sitio']);
+            $p->eventos()->create(['tipo' => 'alta', 'a_etapa_id' => $p->etapa_id,
+                'texto' => $origen === 'whatsapp' ? 'Llegó desde el botón de WhatsApp del sitio' : 'Llegó desde el formulario del sitio']);
         }
-        $p->eventos()->create(['tipo' => 'mensaje', 'texto' => $d['service'] ?? null, 'datos' => $d]);
+        $p->eventos()->create(['tipo' => 'mensaje', 'texto' => $d['message'] ?? ($d['service'] ?? null), 'datos' => $d]);
 
         return $p;
     }

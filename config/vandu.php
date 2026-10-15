@@ -327,6 +327,8 @@ return [
         'nombre'      => env('VANDU_CORREO_NOMBRE', 'Agencia Vandu'),
         'responder_a' => env('VANDU_CORREO_RESPONDER_A', env('VANDU_EMISOR_EMAIL', 'ab@agenciavandu.com')),
         'pie'         => 'Agencia Vandu · Mérida, Yucatán',
+        // A dónde llegan las copias de los mensajes del sitio (formulario y botón de WhatsApp)
+        'avisos'      => env('VANDU_CORREO_AVISOS', 'proyectos@agenciavandu.com'),
 
         'plantillas' => [
             'bienvenida' => [

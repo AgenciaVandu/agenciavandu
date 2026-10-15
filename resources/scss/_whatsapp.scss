@@ -1,0 +1,323 @@
+// Formulario del botón de WhatsApp (todas las páginas). Prefijo "wa-" para no chocar con Bootstrap.
+@use 'colores';
+
+$wa-fondo: #0c0e12;
+$wa-superficie: #13161d;
+$wa-tinta: #f1f5f3;
+$wa-gris: #98a39e;
+$wa-linea: rgba(241, 245, 243, .14);
+$wa-verde-tinta: #03140b;
+
+html.wa-abierto {
+    overflow: hidden;
+}
+
+.wa-modal {
+    width: min(620px, calc(100vw - 24px));
+    max-height: calc(100dvh - 24px);
+    padding: 0;
+    border: 1px solid $wa-linea;
+    border-radius: 22px;
+    background: $wa-fondo;
+    color: $wa-tinta;
+    box-shadow: 0 40px 100px rgba(0, 0, 0, .6), 0 0 120px rgba(colores.$green, .12);
+    overflow: auto;
+
+    &::backdrop {
+        background: rgba(5, 6, 8, .72);
+        backdrop-filter: blur(4px);
+    }
+
+    &[open] {
+        animation: wa-entra .25s ease-out;
+    }
+
+    * {
+        font-family: 'Geist-regular', 'Helvetica Neue', Arial, sans-serif;
+    }
+}
+
+@keyframes wa-entra {
+    from { opacity: 0; transform: translateY(14px) scale(.98); }
+    to { opacity: 1; transform: none; }
+}
+
+.wa-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 24px;
+}
+
+.wa-encabezado {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 14px;
+    align-items: start;
+
+    h2 {
+        margin: 0;
+        font-family: 'Geist-bold', sans-serif;
+        font-size: 24px;
+        text-transform: uppercase;
+        letter-spacing: -.01em;
+        color: $wa-tinta;
+    }
+
+    p {
+        margin: 4px 0 0;
+        font-size: 15px;
+        color: $wa-gris;
+    }
+}
+
+.wa-icono {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: colores.$green;
+    color: $wa-verde-tinta;
+
+    svg {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+.wa-cerrar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid $wa-linea;
+    background: transparent;
+    color: $wa-tinta;
+    font-size: 22px;
+    line-height: 1;
+
+    &:hover {
+        border-color: colores.$green;
+        color: colores.$green;
+    }
+}
+
+.wa-campos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+
+    > * {
+        min-width: 0;
+    }
+}
+
+.wa-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+
+    > span,
+    legend {
+        font-size: 13px;
+        color: $wa-gris;
+        margin: 0 0 2px;
+        padding: 0;
+        float: none;
+        width: auto;
+
+        em {
+            font-style: normal;
+            opacity: .7;
+        }
+    }
+
+    input,
+    textarea {
+        width: 100%;
+        padding: 11px 14px;
+        border-radius: 12px;
+        border: 1px solid $wa-linea;
+        background: $wa-superficie;
+        color: $wa-tinta;
+        font-size: 15px;
+        resize: vertical;
+
+        &::placeholder {
+            color: rgba($wa-gris, .6);
+        }
+
+        &:focus {
+            outline: none;
+            border-color: colores.$green;
+            box-shadow: 0 0 0 3px rgba(colores.$green, .15);
+        }
+    }
+}
+
+.wa-ancho {
+    grid-column: 1 / -1;
+}
+
+.wa-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.wa-chip {
+    position: relative;
+    margin: 0;
+
+    input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    span {
+        display: inline-block;
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid $wa-linea;
+        font-size: 14px;
+        color: $wa-tinta;
+        cursor: pointer;
+        transition: .2s ease;
+    }
+
+    span:hover {
+        border-color: rgba(colores.$green, .6);
+    }
+
+    input:checked + span {
+        background: colores.$green;
+        border-color: colores.$green;
+        color: $wa-verde-tinta;
+    }
+
+    input:focus-visible + span {
+        outline: 2px solid colores.$green;
+        outline-offset: 2px;
+    }
+}
+
+.wa-vista {
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: #0b141a; // fondo tipo chat
+
+    small {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 11px;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: $wa-gris;
+    }
+
+    p {
+        margin: 0 0 0 auto;
+        max-width: 88%;
+        width: fit-content;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border-top-right-radius: 4px;
+        background: #005c4b;
+        color: $wa-tinta;
+        font-size: 14px;
+        line-height: 1.45;
+        white-space: pre-line;
+        overflow-wrap: anywhere;
+    }
+}
+
+.wa-error {
+    margin: 0;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(255, 99, 99, .12);
+    border: 1px solid rgba(255, 99, 99, .4);
+    color: #ffb4b4;
+    font-size: 14px;
+}
+
+.wa-acciones {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.wa-enviar {
+    padding: 14px 26px;
+    border: 0;
+    border-radius: 999px;
+    background: colores.$green;
+    color: $wa-verde-tinta;
+    font-family: 'Geist-medium', sans-serif !important;
+    font-size: 16px;
+    transition: transform .2s ease, background .2s ease;
+
+    &:hover {
+        background: #3dffa4;
+        transform: translateY(-2px);
+    }
+
+    &:disabled {
+        opacity: .7;
+        transform: none;
+    }
+}
+
+.wa-directo {
+    font-size: 14px;
+    color: $wa-gris;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+
+    &:hover {
+        color: $wa-tinta;
+    }
+}
+
+@media (max-width: 560px) {
+    .wa-modal {
+        width: 100vw;
+        max-width: 100vw;
+        max-height: 100dvh;
+        height: 100dvh;
+        margin: 0;
+        border-radius: 0;
+    }
+
+    .wa-form {
+        padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .wa-campos {
+        grid-template-columns: 1fr;
+    }
+
+    .wa-encabezado h2 {
+        font-size: 20px;
+    }
+
+    .wa-enviar {
+        width: 100%;
+    }
+
+    .wa-acciones {
+        justify-content: center;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wa-modal[open] {
+        animation: none;
+    }
+}

@@ -119,6 +119,8 @@
 
     <x-footer />
 
+    <x-whatsapp-modal />
+
 </body>
 @stack('js')
 

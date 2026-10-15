@@ -42,6 +42,9 @@ Route::get('/alianzas-de-diseno', [PageController::class, 'alianzas'])->name('al
 
 Route::get('/cotizar', [ContactanosController::class, 'index'])->name('cotizar');
 Route::post('/mensaje-enviado', [CotizarController::class, 'store'])->name('cotizar.store');
+Route::post('/whatsapp', [\App\Http\Controllers\WhatsappController::class, 'store'])
+    ->middleware('throttle:10,1')
+    ->name('whatsapp.store');
 
 // La antigua lista de prospectos ya no existe: manda al panel
 Route::redirect('/admin/cotizaciones', '/admin');
