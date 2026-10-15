@@ -1,12 +1,12 @@
 @php
     $whatsapp = 'https://wa.me/529991460310';
-    $servicios = ['sitios web', 'fotografía de alimentos', 'video para redes', 'rótulos y lonas', 'contenido mensual'];
+    $servicios = ['sitios web que venden', 'fotografía de alimentos e interiores', 'video para tu marca', 'rótulos, lonas y bordados', 'redes sociales cada mes'];
     $trabajos = [
         ['img' => 'antelar-41.webp', 'cliente' => 'Antelar', 'servicio' => 'Fotografía de interiores', 'alt' => 'Interior de hotel'],
         ['img' => 'kuro-23.webp', 'cliente' => 'Kuro', 'servicio' => 'Fotografía de alimentos', 'alt' => 'Platillo de sushi'],
-        ['img' => 'sesion-tokyo-tyger-mayo-1-6.webp', 'cliente' => 'Tokyo Tyger', 'servicio' => 'Contenido para redes', 'alt' => 'Clienta en restaurante'],
+        ['img' => 'sesion-tokyo-tyger-mayo-1-6.webp', 'cliente' => 'Tokyo Tyger', 'servicio' => 'Fotografía para restaurantes', 'alt' => 'Clienta en restaurante'],
         ['img' => 'samma-25-alberto-1.webp', 'cliente' => 'Samma', 'servicio' => 'Video corporativo', 'alt' => 'Grabación en obra'],
-        ['img' => 'behing-the-escenes.webp', 'cliente' => 'Detrás de cámaras', 'servicio' => 'Producción audiovisual', 'alt' => 'Detrás de cámaras en gimnasio'],
+        ['img' => 'impresos-tarjetas.webp', 'cliente' => 'Impresos', 'servicio' => 'Papelería y producción', 'alt' => 'Tarjetas de presentación impresas'],
     ];
     $clientes = [
         ['KFC.svg', 'KFC', true], ['gpo-nicxa.svg', 'Grupo Nicxa', false], ['burger-king.svg', 'Burger King', true],
@@ -31,21 +31,21 @@
             <span>Más de <b>4 años</b> creando para marcas de Yucatán</span>
         </div>
 
-        <h1 class="vh-titulo">Hacemos que tu negocio <span class="vh-verde">se vea increíble</span>
+        <h1 class="vh-titulo">Que a tu negocio <span class="vh-verde">lo encuentren y lo elijan</span>
             <span class="vh-sticker">HECHO EN MÉRIDA</span>
         </h1>
 
         <p class="vh-lead">
             Creamos <span class="vh-escribe" data-palabras='@json($servicios)'>{{ $servicios[0] }}</span><span class="vh-cursor" aria-hidden="true"></span>
-            <small>Para restaurantes, hoteles, constructoras y negocios locales que quieren vender más.</small>
+            <small>Sitios web, fotografía, video y producción con un solo equipo en Mérida. Para restaurantes, hoteles, constructoras y negocios locales que quieren vender más.</small>
         </p>
 
         <div class="vh-botones">
             <a class="vh-btn vh-btn-verde" href="{{ $whatsapp }}" target="_blank" rel="noopener">
                 <img src="{{ asset('img/whatsapp.svg') }}" width="18" height="18" alt="">
-                Cotiza por WhatsApp
+                Cotiza tu proyecto por WhatsApp
             </a>
-            <a class="vh-btn vh-btn-linea" href="{{ route('audiovisuales') }}">Ver nuestro trabajo</a>
+            <a class="vh-btn vh-btn-linea" href="#trabajo">Ver nuestro trabajo</a>
         </div>
 
         <div class="vh-abanico">

@@ -108,8 +108,32 @@ const iniciarHero = () => {
     requestAnimationFrame(dibujar);
 };
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', iniciarHero);
-} else {
+// Videos de la galería: cargan y se reproducen solo cuando se ven
+const iniciarVideos = () => {
+    const videos = document.querySelectorAll('video[data-src]');
+    if (!videos.length) return;
+    const reducir = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reducir) return; // se quedan en su imagen fija
+    const observador = new IntersectionObserver((entradas) => {
+        entradas.forEach(({ target: video, isIntersecting }) => {
+            if (isIntersecting) {
+                if (!video.src) video.src = video.dataset.src;
+                video.play().catch(() => {});
+            } else {
+                video.pause();
+            }
+        });
+    }, { threshold: 0.25 });
+    videos.forEach((v) => observador.observe(v));
+};
+
+const iniciar = () => {
     iniciarHero();
+    iniciarVideos();
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', iniciar);
+} else {
+    iniciar();
 }
