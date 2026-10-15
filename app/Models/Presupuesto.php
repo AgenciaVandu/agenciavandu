@@ -27,7 +27,7 @@ class Presupuesto extends Model
     ];
 
     protected $fillable = [
-        'cliente_id', 'prospecto_id', 'cliente_nombre', 'cliente_empresa', 'fecha', 'titulo', 'tipo',
+        'cliente_id', 'razon_id', 'prospecto_id', 'cliente_nombre', 'cliente_empresa', 'fecha', 'titulo', 'tipo',
         'emisor_nombre', 'emisor_telefono', 'emisor_sitio', 'emisor_email',
         'modo_iva', 'metodo_sat', 'comprobante', 'nota_folio', 'iva_porcentaje', 'consideraciones', 'observaciones',
         'mostrar_pago', 'pago_intro', 'banco', 'clabe', 'beneficiario',
@@ -89,6 +89,18 @@ class Presupuesto extends Model
     public function cliente(): BelongsTo
     {
         return $this->belongsTo(Cliente::class);
+    }
+
+    /** La razón social de la cotización (null = la principal del cliente) */
+    public function razon(): BelongsTo
+    {
+        return $this->belongsTo(ClienteRazon::class, 'razon_id');
+    }
+
+    /** De quién son los datos fiscales: la razón social elegida o el cliente (mismos campos y textos) */
+    public function getDatosFiscalesAttribute(): Cliente|ClienteRazon|null
+    {
+        return $this->razon ?? $this->cliente;
     }
 
     public function prospecto(): BelongsTo

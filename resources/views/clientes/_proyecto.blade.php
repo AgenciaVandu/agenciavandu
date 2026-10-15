@@ -7,7 +7,7 @@
 @endphp
 <article class="pry {{ $mini->isEmpty() ? 'sin-fotos' : '' }}">
     <div class="info">
-        <div class="tipo"><span class="pill {{ $estado[1] }}">{{ $estado[0] }}</span> {{ $pr->tipo_nombre }}</div>
+        <div class="tipo"><span class="pill {{ $estado[1] }}">{{ $estado[0] }}</span> {{ $pr->tipo_nombre }}@if(! empty($etiqueta))<span class="emp-tag">{{ $etiqueta }}</span>@endif</div>
         <h3>{{ $pr->nombre }}</h3>
         @if($pr->etapas->isNotEmpty())
             <div class="avance">

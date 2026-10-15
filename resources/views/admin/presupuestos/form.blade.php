@@ -36,6 +36,7 @@
         'prospectoLigado' => $cliSel && $proSel ? (string) $proSel : '',
         'clienteNombre'   => old('cliente_nombre', $p->cliente_nombre),
         'clienteEmpresa'  => old('cliente_empresa', $p->cliente_empresa),
+        'razonId'         => (string) old('razon_id', $p->razon_id),
         'clientes'        => $clientes->keyBy('id')->union(($prospectos ?? collect())->keyBy(fn ($x) => 'p' . $x->id)),
         'estadoSel'       => old('estado', $p->estado),
         'tipo'            => old('tipo', $p->tipo ?? \App\Models\Proyecto::tipoSugerido($p)),
@@ -362,6 +363,13 @@
                             <a href="{{ route('admin.clientes.create') }}" class="btn btn-borde"><i class="bi bi-person-plus"></i> Nuevo</a>
                         </div>
                         @error('cliente_id')<div class="text-danger mt-1" style="font-size:13px">Elige un cliente o un prospecto.</div>@enderror
+                        <div class="mt-3" x-show="razonesDe().length" x-cloak>
+                            <label class="form-label" for="razon_id"><i class="bi bi-building me-1"></i> ¿A nombre de qué empresa?</label>
+                            <select name="razon_id" id="razon_id" class="form-select" x-model="razonId" @change="elegirRazon()">
+                                <option value="" x-text="(clientes[clienteId]?.empresa || clientes[clienteId]?.nombre || 'Principal') + ' (principal)'"></option>
+                                <template x-for="r in razonesDe()" :key="r.id"><option :value="String(r.id)" x-text="r.nombre" :selected="String(r.id) === razonId"></option></template>
+                            </select>
+                        </div>
                         <div class="secundario mt-2" style="font-size:13px" x-show="clienteId.startsWith('p')" x-cloak>
                             <i class="bi bi-funnel me-1"></i>Es un prospecto de Ventas. Cuando acepte la cotización (o crees su proyecto) se vuelve cliente automáticamente.
                         </div>
@@ -845,9 +853,9 @@
                 </div>
             @endunless
             @if(! $nuevo && $p->cliente && ! $p->es_nota)
-                @php $cl = $p->cliente; $csf = $cl->constancias()->first(); @endphp
+                @php $cl = $p->datos_fiscales; $esRazon = $p->razon_id && $p->razon; $csf = $esRazon ? null : $p->cliente->constancias()->first(); $nomCl = $esRazon ? $p->razon->nombre : ($p->cliente->empresa ?: $p->cliente->nombre); @endphp
                 <section class="panel">
-                    <div class="panel-head"><h2>Datos fiscales</h2>
+                    <div class="panel-head"><h2>Datos fiscales{{ $p->cliente->razones()->exists() ? ' · ' . $nomCl : '' }}</h2>
                         @if($cl->fiscales_completos)<span class="estado estado-aceptada">Completos</span>
                         @elseif($cl->rfc || $cl->razon_social)<span class="estado estado-enviada">Incompletos</span>
                         @else<span class="estado estado-borrador">Sin datos</span>@endif
@@ -858,16 +866,16 @@
                             <div class="secundario text-truncate">{{ $cl->razon_social }}</div>
                             <div class="secundario" style="font-size:12.5px">{{ collect([$cl->regimen_fiscal ? 'Régimen ' . $cl->regimen_fiscal : null, $cl->cp_fiscal ? 'C.P. ' . $cl->cp_fiscal : null, $cl->uso_cfdi, $cl->metodo_pago_texto])->filter()->join(' · ') }}</div>
                         @else
-                            <div class="secundario">Aún no capturas los datos fiscales de {{ $cl->empresa ?: $cl->nombre }}.</div>
+                            <div class="secundario">Aún no capturas los datos fiscales de {{ $nomCl }}.</div>
                         @endif
                         <div class="d-grid gap-2 mt-3">
                             @if($cl->rfc || $cl->razon_social)
                                 <button type="button" class="btn btn-borde btn-sm" data-copiar="{{ $cl->fiscales_texto }}"><i class="bi bi-clipboard me-1"></i> Copiar datos</button>
                             @endif
                             @if($csf)
-                                <a href="{{ route('admin.clientes.constancias.show', [$cl, $csf]) }}" target="_blank" class="btn btn-borde btn-sm"><i class="bi bi-file-earmark-pdf me-1"></i> Ver constancia</a>
+                                <a href="{{ route('admin.clientes.constancias.show', [$p->cliente, $csf]) }}" target="_blank" class="btn btn-borde btn-sm"><i class="bi bi-file-earmark-pdf me-1"></i> Ver constancia</a>
                             @endif
-                            <a href="{{ route('admin.clientes.edit', $cl) }}#rfc" class="btn btn-fantasma btn-sm">{{ $cl->rfc || $cl->razon_social ? 'Editar datos' : 'Capturar datos y constancia' }}</a>
+                            <a href="{{ $esRazon ? route('admin.clientes.show', [$p->cliente, 'ver' => 'facturacion']) : route('admin.clientes.edit', $p->cliente) . '#rfc' }}" class="btn btn-fantasma btn-sm">{{ $cl->rfc || $cl->razon_social ? 'Editar datos' : 'Capturar datos y constancia' }}</a>
                         </div>
                     </div>
                 </section>
@@ -1065,7 +1073,15 @@ function editor(init) {
         mover(lista, i, d) { const [x] = lista.splice(i, 1); lista.splice(i + d, 0, x); },
         elegirCliente() {
             const c = this.clientes[this.clienteId];
+            this.razonId = '';
             if (c) { this.clienteNombre = c.nombre; this.clienteEmpresa = c.empresa || ''; }
+        },
+        // Razones sociales del cliente elegido (además de la principal)
+        razonesDe() { const c = this.clientes[this.clienteId]; return (c && c.razones) || []; },
+        elegirRazon() {
+            const c = this.clientes[this.clienteId]; if (!c) return;
+            const r = this.razonesDe().find((x) => String(x.id) === String(this.razonId));
+            this.clienteEmpresa = r ? r.nombre : (c.empresa || '');
         },
         sumarDias(d) {
             const f = new Date(); f.setDate(f.getDate() + d);

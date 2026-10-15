@@ -102,7 +102,7 @@ class FacturasTest extends TestCase
         $this->subir([$this->pdf(), $this->xml()]);
         $enviar = route('admin.presupuestos.edit', [$this->p, 'correo' => 'factura']);
         $this->get(route('admin.clientes.show', $c))->assertSee('está lista para enviar')->assertSee($enviar, false);
-        $this->get(route('admin.clientes.show', [$c, 'ver' => 'facturacion']))->assertOk()->assertSee('A123.pdf')->assertSee('Datos fiscales')->assertSee('Constancia de Situación Fiscal');
+        $this->get(route('admin.clientes.show', [$c, 'ver' => 'facturacion']))->assertOk()->assertSee('A123.pdf')->assertSee('Empresas y razones sociales')->assertSee('Constancia de Situación Fiscal');
         $this->get(route('admin.clientes.show', [$c, 'ver' => 'cotizaciones']))->assertOk()->assertSee('Por enviar')->assertSee('Enviar por correo');
         $this->get(route('admin.clientes.show', [$c, 'ver' => 'proyectos']))->assertOk()->assertSee('Sin proyectos');
         $this->get(route('admin.clientes.show', [$c, 'ver' => 'correos']))->assertOk()->assertSee('Mensajes desde el sitio');

@@ -81,11 +81,15 @@ class PresupuestoController extends Controller
         $presupuesto->setRelation('conceptos', collect());
         // Prospecto que todavía no es cliente: la cotización va a su nombre
         if ($prospecto) $presupuesto->prospecto_id = $prospecto->id;
+        // Cotizar a una razón social en particular (desde la ficha del cliente)
+        if ($cliente && $request->filled('razon') && ($r = $cliente->razones()->find($request->integer('razon')))) {
+            $presupuesto->fill(['razon_id' => $r->id, 'cliente_empresa' => $r->nombre]);
+        }
         if ($prospecto && ! $cliente) $presupuesto->fill(['cliente_nombre' => $prospecto->nombre, 'cliente_empresa' => $prospecto->empresa]);
 
         return view('admin.presupuestos.form', [
             'presupuesto' => $presupuesto,
-            'clientes'    => Cliente::orderBy('nombre')->get(['id', 'nombre', 'empresa']),
+            'clientes'    => Cliente::with('razones:id,cliente_id,nombre')->orderBy('nombre')->get(['id', 'nombre', 'empresa']),
             'prospectos'  => $this->prospectosSinCliente($presupuesto),
             'prospecto'   => $prospecto,
         ]);
@@ -119,7 +123,7 @@ class PresupuestoController extends Controller
 
         return view('admin.presupuestos.form', [
             'presupuesto' => $presupuesto,
-            'clientes'    => Cliente::orderBy('nombre')->get(['id', 'nombre', 'empresa']),
+            'clientes'    => Cliente::with('razones:id,cliente_id,nombre')->orderBy('nombre')->get(['id', 'nombre', 'empresa']),
             'prospectos'  => $this->prospectosSinCliente($presupuesto),
         ]);
     }
@@ -241,6 +245,7 @@ class PresupuestoController extends Controller
         $v = $request->validate([
             'cliente_id'       => ['nullable', 'required_without:prospecto_id', \Illuminate\Validation\Rule::exists('clientes', 'id')->where('cuenta_id', \App\Support\Cuentas::id())],
             'prospecto_id'     => ['nullable', \Illuminate\Validation\Rule::exists('prospectos', 'id')->where('cuenta_id', \App\Support\Cuentas::id())],
+            'razon_id'         => ['nullable', \Illuminate\Validation\Rule::exists('cliente_razones', 'id')->where('cliente_id', (int) $request->input('cliente_id'))],
             'cliente_nombre'   => 'required|string|max:255',
             'cliente_empresa'  => 'nullable|string|max:255',
             'fecha'            => 'required|date',
@@ -329,6 +334,7 @@ class PresupuestoController extends Controller
         $datos['cliente_id'] = ($datos['cliente_id'] ?? null) ?: (! empty($datos['prospecto_id']) ? \App\Models\Prospecto::find($datos['prospecto_id'])?->cliente_id : null);
         $datos['prospecto_id'] = $datos['prospecto_id'] ?? null;
         if (array_key_exists('comprobante', $datos) && ! $datos['comprobante']) unset($datos['comprobante']);
+        $datos['razon_id'] = ! empty($datos['cliente_id']) ? ($datos['razon_id'] ?? null) : null;
         $datos['mostrar_pago'] = $request->boolean('mostrar_pago');
         $datos['consideraciones'] = collect($v['consideraciones'] ?? [])->map(fn ($s) => [
             'titulo' => (string) ($s['titulo'] ?? ''),

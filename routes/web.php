@@ -91,6 +91,9 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::post('correos/plantillas/{clave}/previa', [Admin\PlantillaCorreoController::class, 'previa'])->name('correos.plantillas.previa');
     Route::post('correos/plantillas/{clave}/restaurar', [Admin\PlantillaCorreoController::class, 'restaurar'])->name('correos.plantillas.restaurar');
     Route::delete('correos/plantillas/{clave}', [Admin\PlantillaCorreoController::class, 'destroy'])->name('correos.plantillas.destroy');
+    Route::post('clientes/{cliente}/razones', [Admin\ClienteController::class, 'guardarRazon'])->name('clientes.razones.store');
+    Route::put('clientes/{cliente}/razones/{razon}', [Admin\ClienteController::class, 'actualizarRazon'])->name('clientes.razones.update');
+    Route::delete('clientes/{cliente}/razones/{razon}', [Admin\ClienteController::class, 'borrarRazon'])->name('clientes.razones.destroy');
     Route::post('clientes/{cliente}/constancias', [Admin\ClienteController::class, 'subirConstancia'])->name('clientes.constancias.store');
     Route::get('clientes/{cliente}/constancias/{constancia}', [Admin\ClienteController::class, 'verConstancia'])->name('clientes.constancias.show');
     Route::delete('clientes/{cliente}/constancias/{constancia}', [Admin\ClienteController::class, 'borrarConstancia'])->name('clientes.constancias.destroy');

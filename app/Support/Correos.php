@@ -149,8 +149,10 @@ class Correos
     {
         $c = $ctx['cliente'];
         $pl = PlantillasCorreo::una(Str::before($clave, '@')) ?? [];
-        if (($clave === 'recordatorio_pago' || ! empty($pl['para_factura'])) && $c?->email_factura) {
-            return $c->email_factura;
+        if ($clave === 'recordatorio_pago' || ! empty($pl['para_factura'])) {
+            $razon = ($ctx['presupuesto'] ?? $ctx['proyecto']?->presupuesto)?->razon;
+            if ($razon?->email_factura) return $razon->email_factura;
+            if ($c?->email_factura) return $c->email_factura;
         }
         return (string) ($c?->email ?? $ctx['presupuesto']?->prospecto?->email ?? '');
     }

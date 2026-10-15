@@ -101,6 +101,22 @@ class Cliente extends Model
         ])->filter()->map(fn ($v, $k) => "$k: $v")->join("\n");
     }
 
+    /** Otras razones sociales (la principal son los datos fiscales de este cliente) */
+    public function razones(): HasMany
+    {
+        return $this->hasMany(ClienteRazon::class)->orderBy('orden')->orderBy('id');
+    }
+
+    /**
+     * Empresas del cliente para elegir: la principal (clave "principal") y las demás razones sociales (su id).
+     * @return \Illuminate\Support\Collection<string, array{clave: string, nombre: string, razon_social: ?string, rfc: ?string}>
+     */
+    public function getEmpresasAttribute(): \Illuminate\Support\Collection
+    {
+        return collect(['principal' => ['clave' => 'principal', 'id' => null, 'nombre' => $this->empresa ?: $this->nombre, 'razon_social' => $this->razon_social, 'rfc' => $this->rfc]])
+            ->union($this->razones->mapWithKeys(fn ($r) => [(string) $r->id => ['clave' => (string) $r->id, 'id' => $r->id, 'nombre' => $r->nombre, 'razon_social' => $r->razon_social, 'rfc' => $r->rfc]]));
+    }
+
     public function presupuestos(): HasMany
     {
         return $this->hasMany(Presupuesto::class)->latest();

@@ -95,6 +95,11 @@
     .fac-fila { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-top: 1px solid var(--line); flex-wrap: wrap; }
     .fac-fila .t { flex: 1 1 200px; min-width: 0; }
     .fac-fila .archivos { font-size: 12.5px; color: var(--muted); }
+    .razon { padding: 14px 18px; border-top: 1px solid var(--line); }
+    .razon:first-of-type { margin-top: 10px; }
+    .razon details summary { list-style: none; display: inline-flex; } .razon details summary::-webkit-details-marker { display: none; }
+    .razon-nueva summary { list-style: none; } .razon-nueva summary::-webkit-details-marker { display: none; }
+    .cl-tag.gris { display: inline-flex; padding: 1px 8px; border-radius: 99px; background: var(--sunken); color: var(--text-2); font-weight: 500; }
 
     @media (max-width: 991.98px) { .ficha { grid-template-columns: minmax(0, 1fr); } .kpis { grid-template-columns: repeat(2, 1fr); } .kpis > div:nth-child(3) { border-left: 0; } .kpis > div:nth-child(n+3) { border-top: 1px solid var(--line); } }
     @media (max-width: 767.98px) {
@@ -292,7 +297,7 @@
                     <tr>
                         <td class="text-nowrap"><a href="{{ route('admin.presupuestos.edit', $p) }}" class="fila-link"><span class="principal num">{{ $p->folio }}</span></a>
                             <div class="secundario">{{ $p->fecha->locale('es')->isoFormat('D MMM YYYY') }}</div></td>
-                        <td class="secundario" style="min-width: 180px">{{ \Illuminate\Support\Str::limit($p->conceptos->first()?->resumen, 60) }}</td>
+                        <td class="secundario" style="min-width: 180px">{{ \Illuminate\Support\Str::limit($p->conceptos->first()?->resumen, 60) }}@if($cliente->razones->isNotEmpty())<div style="font-size:12px"><i class="bi bi-building"></i> {{ $p->razon?->nombre ?? ($cliente->empresa ?: $cliente->nombre) }}</div>@endif</td>
                         <td class="text-end num fw-medium text-nowrap">{{ $p->monto($p->modo_iva === 'desglosado' ? $p->total : $p->subtotal) }}</td>
                         <td>@include('admin.presupuestos._vigencia', ['p' => $p])</td>
                         <td><span class="estado estado-{{ $p->estado }}">{{ \App\Models\Presupuesto::ESTADOS[$p->estado] }}</span></td>
@@ -427,27 +432,71 @@
 
     <div class="d-grid gap-4">
         <section class="panel" id="facturacion">
-            <div class="panel-head">
-                <h2>Datos fiscales</h2>
-                @if($cliente->fiscales_completos)<span class="estado estado-aceptada">Completos</span>
-                @elseif($cliente->rfc || $cliente->razon_social)<span class="estado estado-enviada">Incompletos</span>@endif
-            </div>
-            @if($cliente->rfc || $cliente->razon_social || $cliente->metodo_pago)
-                <dl class="panel-body datos mb-0">
-                    <dt>RFC</dt><dd class="num">{{ $cliente->rfc ?: '—' }}</dd>
-                    <dt>Razón social</dt><dd>{{ $cliente->razon_social ?: '—' }}</dd>
-                    <dt>Régimen fiscal</dt><dd>{{ $cliente->regimen_texto ?: '—' }}</dd>
-                    <dt>C.P. fiscal</dt><dd class="num">{{ $cliente->cp_fiscal ?: '—' }}</dd>
-                    <dt>Uso de CFDI</dt><dd>{{ $cliente->uso_cfdi_texto ?: '—' }}</dd>
-                    <dt>Método de pago</dt><dd>{{ $cliente->metodo_pago_texto ?: '—' }}@if($cliente->metodo_pago === 'credito' && $cliente->dias_credito) a {{ $cliente->dias_credito }} días @endif</dd>
-                    <dt>Correo para la factura</dt><dd>{{ $cliente->email_factura ?: ($cliente->email ? $cliente->email . ' (contacto)' : '—') }}</dd>
-                </dl>
-                <div class="px-3 pb-3 d-flex gap-2 flex-wrap">
-                    <button type="button" class="btn btn-borde btn-sm" data-copiar="{{ $cliente->fiscales_texto }}"><i class="bi bi-clipboard me-1"></i> Copiar datos</button>
-                    <a href="{{ route('admin.clientes.edit', $cliente) }}#rfc" class="btn btn-fantasma btn-sm"><i class="bi bi-pencil me-1"></i> Editar</a>
+            <div class="panel-head"><h2>Empresas y razones sociales</h2><span class="ayuda">{{ 1 + $cliente->razones->count() }}</span></div>
+            <p class="secundario px-3 pt-3 mb-0" style="font-size:13px">Si el cliente factura con varias empresas, agrégalas aquí. Cada cotización se hace a nombre de una, y en su espacio el cliente elige cuál ver.</p>
+
+            {{-- Principal: los datos fiscales del cliente --}}
+            <div class="razon">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div style="min-width:0"><b>{{ $cliente->empresa ?: $cliente->nombre }}</b> <span class="cl-tag gris" style="font-size:11px">Principal</span>
+                        <div class="secundario text-truncate" style="font-size:13px">{{ collect([$cliente->razon_social, $cliente->rfc])->filter()->join(' · ') ?: 'Sin datos fiscales' }}</div></div>
+                    @if($cliente->fiscales_completos)<span class="estado estado-aceptada">Completos</span>
+                    @elseif($cliente->rfc || $cliente->razon_social)<span class="estado estado-enviada">Incompletos</span>@endif
                 </div>
-            @else
-                <div class="panel-body secundario">Sin datos de facturación. <a href="{{ route('admin.clientes.edit', $cliente) }}#rfc">Capturarlos</a></div>
+                @if($cliente->rfc || $cliente->razon_social || $cliente->metodo_pago)
+                    <dl class="datos mb-0 mt-2" style="font-size:13.5px">
+                        <dt>Régimen fiscal</dt><dd>{{ $cliente->regimen_texto ?: '—' }}</dd>
+                        <dt>C.P. fiscal</dt><dd class="num">{{ $cliente->cp_fiscal ?: '—' }}</dd>
+                        <dt>Uso de CFDI</dt><dd>{{ $cliente->uso_cfdi_texto ?: '—' }}</dd>
+                        <dt>Método de pago</dt><dd>{{ $cliente->metodo_pago_texto ?: '—' }}@if($cliente->metodo_pago === 'credito' && $cliente->dias_credito) a {{ $cliente->dias_credito }} días @endif</dd>
+                        <dt>Correo para la factura</dt><dd>{{ $cliente->email_factura ?: ($cliente->email ? $cliente->email . ' (contacto)' : '—') }}</dd>
+                    </dl>
+                @endif
+                <div class="d-flex gap-2 flex-wrap mt-2">
+                    @if($cliente->rfc || $cliente->razon_social)<button type="button" class="btn btn-borde btn-sm" data-copiar="{{ $cliente->fiscales_texto }}"><i class="bi bi-clipboard me-1"></i> Copiar datos</button>@endif
+                    <a href="{{ route('admin.clientes.edit', $cliente) }}#rfc" class="btn btn-fantasma btn-sm"><i class="bi bi-pencil me-1"></i> {{ $cliente->rfc || $cliente->razon_social ? 'Editar' : 'Capturar datos' }}</a>
+                </div>
+            </div>
+
+            {{-- Las demás --}}
+            @foreach($cliente->razones as $r)
+                @php $nCot = $ps->where('razon_id', $r->id)->count(); @endphp
+                <div class="razon">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <div style="min-width:0"><b>{{ $r->nombre }}</b>
+                            <div class="secundario text-truncate" style="font-size:13px">{{ collect([$r->razon_social, $r->rfc])->filter()->join(' · ') ?: 'Sin datos fiscales' }} · {{ $nCot }} {{ $nCot === 1 ? 'cotización' : 'cotizaciones' }}</div></div>
+                        @if($r->fiscales_completos)<span class="estado estado-aceptada">Completos</span>
+                        @elseif($r->rfc || $r->razon_social)<span class="estado estado-enviada">Incompletos</span>@endif
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap mt-2">
+                        @if($r->rfc || $r->razon_social)<button type="button" class="btn btn-borde btn-sm" data-copiar="{{ $r->fiscales_texto }}"><i class="bi bi-clipboard me-1"></i> Copiar datos</button>@endif
+                        <a href="{{ route('admin.presupuestos.create', ['cliente' => $cliente->id, 'razon' => $r->id]) }}" class="btn btn-fantasma btn-sm"><i class="bi bi-plus-lg me-1"></i> Cotizar</a>
+                    </div>
+                    <details class="razon-editar mt-2" @if($errors->any() && old('_razon') == $r->id) open @endif>
+                        <summary class="btn btn-fantasma btn-sm"><i class="bi bi-pencil me-1"></i> Editar</summary>
+                        <form method="post" action="{{ route('admin.clientes.razones.update', [$cliente, $r]) }}" class="mt-2">@csrf @method('put')
+                            <input type="hidden" name="_razon" value="{{ $r->id }}">
+                            @include('admin.clientes._razon_campos', ['r' => $r, 'pre' => 'r' . $r->id])
+                            <div class="d-flex justify-content-between mt-3">
+                                <button class="btn btn-primario btn-sm">Guardar</button>
+                                <button type="submit" form="quitar-razon-{{ $r->id }}" class="btn btn-fantasma btn-sm text-danger"><i class="bi bi-trash me-1"></i> Quitar</button>
+                            </div>
+                        </form>
+                        <form id="quitar-razon-{{ $r->id }}" method="post" action="{{ route('admin.clientes.razones.destroy', [$cliente, $r]) }}" onsubmit="return confirm({{ Js::from('¿Quitar ' . $r->nombre . '?' . ($nCot ? ' Sus cotizaciones pasan a la empresa principal.' : '')) }})">@csrf @method('delete')</form>
+                    </details>
+                </div>
+            @endforeach
+
+            <details class="razon razon-nueva" @if($errors->any() && old('_razon') === 'nueva') open @endif>
+                <summary class="btn btn-borde btn-sm"><i class="bi bi-plus-lg me-1"></i> Agregar otra razón social</summary>
+                <form method="post" action="{{ route('admin.clientes.razones.store', $cliente) }}" class="mt-3">@csrf
+                    <input type="hidden" name="_razon" value="nueva">
+                    @include('admin.clientes._razon_campos', ['r' => null, 'pre' => 'rn'])
+                    <button class="btn btn-primario btn-sm mt-3">Agregar</button>
+                </form>
+            </details>
+            @if($errors->hasAny(['nombre', 'rfc', 'cp_fiscal', 'regimen_fiscal', 'uso_cfdi', 'email_factura', 'razon_social']))
+                <div class="text-danger px-3 pb-3" style="font-size:13px">{{ $errors->first() }}</div>
             @endif
         </section>
     </div>

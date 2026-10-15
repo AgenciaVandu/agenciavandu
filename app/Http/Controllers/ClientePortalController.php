@@ -16,8 +16,18 @@ class ClientePortalController extends Controller
 
         $cotizaciones = $c->presupuestos()->where('estado', '!=', 'borrador')
             ->with(['conceptos', 'facturas', 'complementos.pago', 'proyecto:id,presupuesto_id,token,nombre'])->orderByDesc('fecha')->orderByDesc('id')->get();
-        $proyectos = $c->proyectos()->with(['etapas', 'pagos'])->get()
+        $proyectos = $c->proyectos()->with(['etapas', 'pagos', 'presupuesto:id,razon_id'])->get()
             ->sortBy(fn ($p) => [$p->estado === 'terminado' ? 1 : 0, -$p->id])->values();
+
+        // Si el cliente tiene varias empresas, puede ver solo una (?empresa=principal|id)
+        $c->load('razones');
+        $empresas = $c->razones->isNotEmpty() ? $c->empresas : collect();
+        $empresa = $empresas->has((string) $request->query('empresa')) ? $empresas->get((string) $request->query('empresa')) : null;
+        if ($empresa) {
+            $rid = $empresa['id'];
+            $cotizaciones = $cotizaciones->filter(fn ($p) => $p->razon_id == $rid)->values();
+            $proyectos = $proyectos->filter(fn ($p) => $p->presupuesto?->razon_id == $rid)->values();
+        }
 
         // Hasta 4 miniaturas por proyecto (las ya optimizadas, ligeras)
         $fotos = ProyectoArchivo::whereIn('proyecto_id', $proyectos->pluck('id'))->where('grupo', 'galeria')->where('visible', true)
@@ -36,7 +46,7 @@ class ClientePortalController extends Controller
             $c->forceFill(['portal_visto_at' => now()])->save();
         }
 
-        return response()->view('clientes.portal', compact('c', 'cotizaciones', 'proyectos', 'fotos', 'enGaleria', 'redes'))
+        return response()->view('clientes.portal', compact('c', 'cotizaciones', 'proyectos', 'fotos', 'enGaleria', 'redes', 'empresas', 'empresa'))
             ->header('X-Robots-Tag', 'noindex, nofollow')->header('Referrer-Policy', 'no-referrer');
     }
 }

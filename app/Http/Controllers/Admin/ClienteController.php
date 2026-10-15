@@ -120,7 +120,7 @@ class ClienteController extends Controller
 
     public function show(Request $request, Cliente $cliente)
     {
-        $cliente->load(['presupuestos.conceptos', 'presupuestos.facturas', 'presupuestos.complementos.pago', 'presupuestos.proyecto.pagos', 'proyectos.etapas', 'proyectos.pagos', 'constancias']);
+        $cliente->load(['razones', 'presupuestos.razon', 'presupuestos.conceptos', 'presupuestos.facturas', 'presupuestos.complementos.pago', 'presupuestos.proyecto.pagos', 'proyectos.etapas', 'proyectos.pagos', 'constancias']);
         $ver = array_key_exists($request->query('ver'), self::SECCIONES) ? $request->query('ver') : 'resumen';
 
         return view('admin.clientes.show', compact('cliente', 'ver'));
@@ -230,6 +230,52 @@ class ClienteController extends Controller
         $cliente->delete();
 
         return redirect()->route('admin.clientes.index')->with('ok', 'Cliente eliminado junto con sus cotizaciones.');
+    }
+
+    /* ---------------- Razones sociales ---------------- */
+
+    public function guardarRazon(Request $request, Cliente $cliente)
+    {
+        $cliente->razones()->create($this->validarRazon($request) + ['orden' => (int) $cliente->razones()->max('orden') + 1]);
+        return redirect()->route('admin.clientes.show', [$cliente, 'ver' => 'facturacion'])->with('ok', 'Razón social agregada.');
+    }
+
+    public function actualizarRazon(Request $request, Cliente $cliente, \App\Models\ClienteRazon $razon)
+    {
+        abort_unless($razon->cliente_id === $cliente->id, 404);
+        $razon->update($this->validarRazon($request));
+        return redirect()->route('admin.clientes.show', [$cliente, 'ver' => 'facturacion'])->with('ok', "Se guardó {$razon->nombre}.");
+    }
+
+    public function borrarRazon(Cliente $cliente, \App\Models\ClienteRazon $razon)
+    {
+        abort_unless($razon->cliente_id === $cliente->id, 404);
+        // Sus cotizaciones pasan a la empresa principal
+        $n = \App\Models\Presupuesto::where('razon_id', $razon->id)->update(['razon_id' => null]);
+        $razon->delete();
+        return redirect()->route('admin.clientes.show', [$cliente, 'ver' => 'facturacion'])
+            ->with('ok', "Se quitó {$razon->nombre}." . ($n ? " Sus $n " . ($n === 1 ? 'cotización pasó' : 'cotizaciones pasaron') . ' a la empresa principal.' : ''));
+    }
+
+    private function validarRazon(Request $request): array
+    {
+        $request->merge([
+            'rfc'       => $request->filled('rfc') ? Str::upper(preg_replace('/[\s-]/', '', $request->input('rfc'))) : null,
+            'cp_fiscal' => $request->filled('cp_fiscal') ? preg_replace('/\D/', '', $request->input('cp_fiscal')) : null,
+        ]);
+        return $request->validate([
+            'nombre'         => 'required|string|max:255',
+            'razon_social'   => 'nullable|string|max:255',
+            'rfc'            => ['nullable', 'string', 'regex:/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/u'],
+            'regimen_fiscal' => ['nullable', Rule::in(array_keys(config('vandu.sat.regimenes')))],
+            'cp_fiscal'      => 'nullable|digits:5',
+            'uso_cfdi'       => ['nullable', Rule::in(array_keys(config('vandu.sat.usos_cfdi')))],
+            'email_factura'  => 'nullable|email|max:255',
+        ], [
+            'nombre.required'  => 'Escribe cómo se llama esta empresa.',
+            'rfc.regex'        => 'El RFC no tiene un formato válido (12 caracteres para empresa, 13 para persona física).',
+            'cp_fiscal.digits' => 'El código postal fiscal debe tener 5 dígitos.',
+        ]);
     }
 
     private function validar(Request $request): array

@@ -18,6 +18,8 @@
     $terminados = $proyectos->where('estado', 'terminado');
     $miniatura = fn ($a) => route('proyecto.archivo', [$proyectos->firstWhere('id', $a->proyecto_id)->token, $a->id]) . '?v=miniatura';
     $wa = config('vandu.whatsapp');
+    $varias = $empresas->count() > 1;
+    $nomEmpresa = fn ($p) => $varias ? ($empresas->get($p->razon_id ? (string) $p->razon_id : 'principal')['nombre'] ?? null) : null;
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -50,6 +52,14 @@
         .resumen { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
         .resumen span { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); border-radius: 99px; padding: 5px 13px; font-size: 14px; }
         .resumen b { color: var(--green); font-weight: 600; }
+        .empresas { margin-top: 18px; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+        .empresas .lbl { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+        .empresas nav { display: flex; flex-wrap: wrap; gap: 8px; }
+        .empresas nav a { text-decoration: none; border: 1px solid var(--line); border-radius: 99px; padding: 6px 14px; font-size: 14px; background: #fff; }
+        .empresas nav a:hover { border-color: var(--ink); }
+        .empresas nav a.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+        .empresas .fis { margin-top: 10px; font-size: 13px; color: var(--muted); }
+        .emp-tag { display: inline-block; font-size: 12px; background: var(--mist); border-radius: 6px; padding: 1px 7px; margin-left: 4px; color: var(--muted); }
 
         h2 { font-size: 20px; font-weight: 600; letter-spacing: -.01em; margin: 40px 0 14px; display: flex; align-items: baseline; gap: 10px; }
         h2 small { font-size: 14px; font-weight: 400; color: var(--muted); }
@@ -153,13 +163,28 @@
             </div>
         </div>
         <h1>Hola, {{ $nombre ?: $quien }}</h1>
-        <p class="sub">Aquí están todos tus proyectos y cotizaciones{{ $c->empresa ? ' de ' . $c->empresa : '' }} con {{ config('vandu.marca.nombre') }}. Guarda este enlace: siempre está al día.</p>
+        <p class="sub">Aquí están {{ $empresa ? 'los proyectos y cotizaciones de ' . $empresa['nombre'] : 'todos tus proyectos y cotizaciones' . ($c->empresa && ! $varias ? ' de ' . $c->empresa : '') }} con {{ config('vandu.marca.nombre') }}. Guarda este enlace: siempre está al día.</p>
         <div class="resumen">
             @if($activos->count())<span><b>{{ $activos->count() }}</b> {{ $activos->count() === 1 ? 'proyecto en curso' : 'proyectos en curso' }}</span>@endif
             @if($terminados->count())<span><b>{{ $terminados->count() }}</b> {{ $terminados->count() === 1 ? 'terminado' : 'terminados' }}</span>@endif
             <span><b>{{ $cotizaciones->count() }}</b> {{ $cotizaciones->count() === 1 ? 'cotización' : 'cotizaciones' }}</span>
         </div>
     </header>
+
+    @if($varias)
+        <section class="empresas" aria-label="Elige la empresa">
+            <div class="lbl">¿De qué empresa quieres ver la información?</div>
+            <nav>
+                <a href="{{ url()->current() }}" @class(['on' => ! $empresa])>Todas</a>
+                @foreach($empresas as $e)
+                    <a href="{{ url()->current() }}?empresa={{ $e['clave'] }}" @class(['on' => $empresa && $empresa['clave'] === $e['clave']])>{{ $e['nombre'] }}</a>
+                @endforeach
+            </nav>
+            @if($empresa && ($empresa['razon_social'] || $empresa['rfc']))
+                <div class="fis">{{ $empresa['razon_social'] }}@if($empresa['razon_social'] && $empresa['rfc']) · @endif{{ $empresa['rfc'] ? 'RFC ' . $empresa['rfc'] : '' }}</div>
+            @endif
+        </section>
+    @endif
 
     @foreach($porResponder as $p)
         <a class="aviso" href="{{ $p->url_publica }}">
@@ -174,8 +199,9 @@
         <div class="vacio">Cuando aceptes una cotización, aquí verás el avance de tu proyecto, sus entregas y pagos.</div>
     @endif
     @php
-        $tarjeta = function ($pr) use ($fotos, $enGaleria, $miniatura, $dinero) {
-            return view('clientes._proyecto', compact('pr', 'fotos', 'enGaleria', 'miniatura', 'dinero'))->render();
+        $tarjeta = function ($pr) use ($fotos, $enGaleria, $miniatura, $dinero, $empresa, $varias, $empresas) {
+            $etiqueta = $varias && ! $empresa ? ($empresas->get($pr->presupuesto?->razon_id ? (string) $pr->presupuesto->razon_id : 'principal')['nombre'] ?? null) : null;
+            return view('clientes._proyecto', compact('pr', 'fotos', 'enGaleria', 'miniatura', 'dinero', 'etiqueta'))->render();
         };
     @endphp
     <div class="proyectos">
@@ -207,7 +233,7 @@
                 @php [$txt, $cls] = $estadoCot($p); @endphp
                 <a href="{{ $p->url_publica }}">
                     <span class="n">{{ $p->conceptos->first()?->resumen ?: $p->titulo }}</span>
-                    <span class="s num">{{ $p->folio }} · {{ $p->fecha->locale('es')->isoFormat('D MMM YYYY') }}@if($p->proyecto) · proyecto en curso @endif</span>
+                    <span class="s num">{{ $p->folio }} · {{ $p->fecha->locale('es')->isoFormat('D MMM YYYY') }}@if($p->proyecto) · proyecto en curso @endif @if(! $empresa && $nomEmpresa($p))<span class="emp-tag">{{ $nomEmpresa($p) }}</span>@endif</span>
                     <span class="monto num">{{ $dinero($p->total) }}</span>
                     <span class="est"><span class="pill {{ $cls }}">{{ $txt }}</span></span>
                 </a>
@@ -221,10 +247,10 @@
         <div class="facturas">
             @foreach($conFactura as $p)
                 <div class="fac">
-                    <span class="n">{{ $p->conceptos->first()?->resumen ?: $p->titulo }}<span class="s num">{{ $p->folio }} · {{ $dinero($p->total) }}</span></span>
+                    <span class="n">{{ $p->conceptos->first()?->resumen ?: $p->titulo }}<span class="s num">{{ $p->folio }} · {{ $dinero($p->total) }}@if(! $empresa && $nomEmpresa($p))<span class="emp-tag">{{ $nomEmpresa($p) }}</span>@endif</span></span>
                     <span class="bts">@foreach($p->facturas_ordenadas as $fa)<a href="{{ route('presupuesto.factura', [$p->token, $fa->id]) }}">{{ in_array($fa->ext, ['pdf', 'xml', 'zip'], true) ? strtoupper($fa->ext) : $fa->nombre }}</a>@endforeach</span>
-                    @foreach($p->complementos_lotes as $c)
-                        <span class="bts comp"><span class="lbl">{{ $c['pago'] ? 'Complemento · ' . $c['pago']->concepto : 'Complemento de pago' }}</span>@foreach($c['archivos'] as $fa)<a href="{{ route('presupuesto.factura', [$p->token, $fa->id]) }}">{{ in_array($fa->ext, ['pdf', 'xml', 'zip'], true) ? strtoupper($fa->ext) : $fa->nombre }}</a>@endforeach</span>
+                    @foreach($p->complementos_lotes as $lote)
+                        <span class="bts comp"><span class="lbl">{{ $lote['pago'] ? 'Complemento · ' . $lote['pago']->concepto : 'Complemento de pago' }}</span>@foreach($lote['archivos'] as $fa)<a href="{{ route('presupuesto.factura', [$p->token, $fa->id]) }}">{{ in_array($fa->ext, ['pdf', 'xml', 'zip'], true) ? strtoupper($fa->ext) : $fa->nombre }}</a>@endforeach</span>
                     @endforeach
                 </div>
             @endforeach
