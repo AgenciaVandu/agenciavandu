@@ -1,19 +1,24 @@
 
+// Fuentes en woff2 empaquetadas por Vite junto al CSS (funcionan sin depender de la carpeta pública).
 @font-face {
     font-family: 'Geist-regular';
-    src: url('/public/font/Geist-Regular.otf');
+    src: url('../fonts/Geist-Regular.woff2') format('woff2');
+    font-display: swap;
 }
 @font-face {
     font-family: 'Geist-medium';
-    src: url('/public/font/Geist-Medium.otf');
+    src: url('../fonts/Geist-Medium.woff2') format('woff2');
+    font-display: swap;
 }
 @font-face {
-    font-family: 'Geist-medium';
-    src: url('/public/font/Geist-SemiBold.otf');
+    font-family: 'Geist-semibold';
+    src: url('../fonts/Geist-SemiBold.woff2') format('woff2');
+    font-display: swap;
 }
 @font-face {
     font-family: 'Geist-bold';
-    src: url('/public/font/Geist-UltraBlack.otf');
+    src: url('../fonts/Geist-UltraBlack.woff2') format('woff2');
+    font-display: swap;
 }
 
 $fuentes : (

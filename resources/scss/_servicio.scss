@@ -20,7 +20,7 @@ $fuentes : (
         justify-content: center;
         align-items: center;
         width: 100%;
-       h1 {
+       h1, h2 {
         font-family: map-get($fuentes , "bold" );
         z-index: 1;
         span {
@@ -59,7 +59,10 @@ $fuentes : (
     
     .titular {
         width: 44%;
-        h1 {
+        h2 {
+            font-family: map-get($fuentes , "regular" );
+        }
+        h1, h2 {
             .marcas {
                 color: colores.$medium-black !important;
             }

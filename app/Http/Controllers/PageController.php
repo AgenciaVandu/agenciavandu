@@ -35,4 +35,26 @@ class PageController extends Controller
     public function construccion() {
         return view('construccion');
     }
+
+    // Solo páginas con contenido; las secciones en construcción quedan fuera.
+    public function sitemap() {
+        $paginas = [
+            ['ruta' => 'home', 'prioridad' => '1.0', 'archivo' => 'index'],
+            ['ruta' => 'servicios', 'prioridad' => '0.9', 'archivo' => 'servicios'],
+            ['ruta' => 'inmobiliarias', 'prioridad' => '0.8', 'archivo' => 'inmobiliarias'],
+            ['ruta' => 'audiovisuales', 'prioridad' => '0.9', 'archivo' => 'audiovisuales'],
+            ['ruta' => 'cotizar', 'prioridad' => '0.7', 'archivo' => 'contacto'],
+        ];
+
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+        foreach ($paginas as $p) {
+            $vista = resource_path('views/' . $p['archivo'] . '.blade.php');
+            $fecha = date('Y-m-d', file_exists($vista) ? filemtime($vista) : time());
+            $xml .= '  <url><loc>' . route($p['ruta']) . '</loc><lastmod>' . $fecha . '</lastmod><priority>' . $p['prioridad'] . "</priority></url>\n";
+        }
+        $xml .= '</urlset>';
+
+        return response($xml, 200)->header('Content-Type', 'application/xml');
+    }
 }

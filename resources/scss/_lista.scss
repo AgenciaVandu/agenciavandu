@@ -13,7 +13,7 @@ $fuentes : (
     align-items: flex-end;
     .titular {
         padding: 0 5em;
-        h1 {
+        h1, h2 {
             font-family: map-get($fuentes , "semibold" );
         }
     } @media (max-width:600px) {

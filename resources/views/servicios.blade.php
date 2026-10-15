@@ -70,7 +70,7 @@
     </x-detalle>
     <x-quehacemos>
         <x-slot name="quehacemos">
-            <h1>¿Qué hacemos?</h1>
+            <h2 class="h1">¿Qué hacemos?</h2>
             <p>Llevamos tu proyecto de 0 a 100, preparamos todo desde la estrategia inicial hasta el post - lanzamiento
                 y mantenimiento.</p>
         </x-slot>
