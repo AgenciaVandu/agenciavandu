@@ -56,6 +56,28 @@
     .tl-estados .activo.completada { color: var(--green-ink); }
     .bloqueo { margin-top: 12px; padding: 12px 14px; border-radius: 10px; background: var(--amber-soft); color: #6B3B00; font-size: 14px; display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
 
+    /* Archivos del cliente */
+    .sol { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: var(--surface); }
+    .sol.cerrada { background: var(--sunken); }
+    .sol.cerrada .sol-titulo { color: var(--text-2); }
+    .sol-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+    .sol-titulo { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .sol-meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .sol-inst { font-size: 14px; color: var(--text-2); margin: 6px 0 0; white-space: pre-line; }
+    .sol-pill { font-size: 12px; font-weight: 500; border-radius: 99px; padding: 2px 9px; background: #EEF0F3; color: var(--text-2); }
+    .sol-pill.ok { background: var(--green-soft, #E3FBEF); color: var(--green-ink); }
+    .sol-pill.azul { background: #E8EEFC; color: #2557D6; }
+    .sol-pill.alerta { background: #FDECEC; color: #B42318; }
+    .sol-pill.pend { background: var(--amber-soft); color: #6B3B00; }
+    .sol-form { display: grid; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); }
+    .sol-nueva > summary { list-style: none; display: inline-flex; align-items: center; }
+    .sol-nueva > summary::-webkit-details-marker { display: none; }
+    .sol-nueva[open] > summary { display: none; }
+    .sol-nueva .sol-form { margin-top: 0; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; }
+    .sol-archivos li .nombre { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sol-archivos li .peso { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+    .sol .dropdown-menu form { margin: 0; }
+
     .docs { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 6px; }
     .docs li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--sunken); }
     .docs li i.ext { font-size: 18px; color: var(--muted); }
@@ -343,6 +365,9 @@
                 @endforeach
             </ol>
         </section>
+
+        {{-- ================= Archivos que manda el cliente ================= --}}
+        @include('admin.proyectos._solicitudes')
 
         {{-- ================= Galería ================= --}}
             <section class="panel" id="galeria">

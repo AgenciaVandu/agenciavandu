@@ -343,7 +343,10 @@ class ArchivosProyecto
             'Cache-Control' => 'private, max-age=86400',
             'X-Robots-Tag'  => 'noindex',
         ]);
-        if ($descargar || $version === 'original' && ! $a->es_imagen && ! $a->es_video && ! str_contains((string) $a->mime, 'pdf')) {
+        // Lo que sube el cliente solo se muestra en el navegador si es una foto común; lo demás (SVG, HTML…) se descarga
+        $seguro = $a->grupo !== 'cliente' || in_array($a->mime, ['image/jpeg', 'image/png', 'image/webp', 'image/gif'], true);
+        $resp->headers->set('X-Content-Type-Options', 'nosniff');
+        if ($descargar || ! $seguro || $version === 'original' && ! $a->es_imagen && ! $a->es_video && ! str_contains((string) $a->mime, 'pdf')) {
             $resp->setContentDisposition('attachment', $a->nombre, Str::ascii($a->nombre));
         }
         return $resp;

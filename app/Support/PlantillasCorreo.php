@@ -29,6 +29,7 @@ class PlantillasCorreo
             '{vigencia}'     => ['texto' => 'Vigente hasta', 'ejemplo' => '24 de octubre', 'para' => ['presupuesto', 'proyecto']],
             '{proyecto}'     => ['texto' => 'Nombre del proyecto', 'ejemplo' => 'Video corporativo', 'para' => ['proyecto']],
             '{siguiente}'    => ['texto' => 'Siguiente paso del proyecto', 'ejemplo' => 'grabación el 18 de octubre', 'para' => ['proyecto']],
+            '{solicitudes}'  => ['texto' => 'Archivos que le pedimos (solicitudes abiertas)', 'ejemplo' => '• Logotipo en vector', 'para' => ['proyecto']],
             '{entregables}'  => ['texto' => 'Lo que se entrega', 'ejemplo' => '24 fotos y 2 videos', 'para' => ['proyecto']],
             '{pago}'         => ['texto' => 'Concepto del pago', 'ejemplo' => 'anticipo', 'para' => ['recordatorio']],
             '{monto_pago}'   => ['texto' => 'Monto del pago', 'ejemplo' => '$10,000.00', 'para' => ['recordatorio']],

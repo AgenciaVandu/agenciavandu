@@ -10,7 +10,7 @@ class ProyectoArchivo extends Model
 {
     use \App\Models\Concerns\DeCuenta;
 
-    protected $fillable = ['etapa_id', 'seccion_id', 'grupo', 'origen', 'dropbox_id', 'nombre', 'ruta', 'mime', 'peso', 'vista', 'miniatura', 'ancho', 'alto', 'visible', 'orden'];
+    protected $fillable = ['etapa_id', 'seccion_id', 'solicitud_id', 'grupo', 'origen', 'dropbox_id', 'nombre', 'ruta', 'mime', 'peso', 'vista', 'miniatura', 'ancho', 'alto', 'visible', 'orden'];
 
     protected $casts = ['visible' => 'boolean', 'peso' => 'integer'];
 
@@ -32,6 +32,7 @@ class ProyectoArchivo extends Model
     public function proyecto(): BelongsTo { return $this->belongsTo(Proyecto::class); }
     public function etapa(): BelongsTo { return $this->belongsTo(ProyectoEtapa::class, 'etapa_id'); }
     public function seccion(): BelongsTo { return $this->belongsTo(GaleriaSeccion::class, 'seccion_id'); }
+    public function solicitud(): BelongsTo { return $this->belongsTo(ProyectoSolicitud::class, 'solicitud_id'); }
 
     /** Recorte cuadrado para correos (se genera al pedirlo) */
     public function getRutaCorreoAttribute(): string
@@ -65,10 +66,11 @@ class ProyectoArchivo extends Model
             $this->es_imagen                         => 'bi-file-earmark-image',
             $this->es_video                          => 'bi-file-earmark-play',
             $ext === 'pdf'                           => 'bi-file-earmark-pdf',
+            str_starts_with((string) $this->mime, 'audio/') => 'bi-file-earmark-music',
             in_array($ext, ['zip', 'rar', '7z'])     => 'bi-file-earmark-zip',
             in_array($ext, ['doc', 'docx'])          => 'bi-file-earmark-word',
             in_array($ext, ['xls', 'xlsx', 'csv'])   => 'bi-file-earmark-spreadsheet',
-            in_array($ext, ['fig', 'sketch', 'xd'])  => 'bi-vector-pen',
+            in_array($ext, ['fig', 'sketch', 'xd', 'ai', 'psd', 'indd', 'eps', 'svg', 'aep', 'prproj']) => 'bi-vector-pen',
             default                                  => 'bi-file-earmark',
         };
     }

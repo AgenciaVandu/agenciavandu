@@ -59,6 +59,7 @@
         .empresas nav a:hover { border-color: var(--ink); }
         .empresas nav a.on { background: var(--ink); border-color: var(--ink); color: #fff; }
         .empresas .fis { margin-top: 10px; font-size: 13px; color: var(--muted); }
+        .pide { display: block; margin-top: 10px; padding: 8px 12px; border-radius: 10px; background: var(--amber-soft); color: #6B3B00; font-size: 14px; text-decoration: none; }
         .emp-tag { display: inline-block; font-size: 12px; background: var(--mist); border-radius: 6px; padding: 1px 7px; margin-left: 4px; color: var(--muted); }
 
         h2 { font-size: 20px; font-weight: 600; letter-spacing: -.01em; margin: 40px 0 14px; display: flex; align-items: baseline; gap: 10px; }

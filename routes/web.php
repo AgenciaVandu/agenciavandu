@@ -214,6 +214,10 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::patch('proyectos/{proyecto}/archivos/{archivo}', [Admin\ProyectoController::class, 'archivo'])->name('proyectos.archivo');
     Route::delete('proyectos/{proyecto}/archivos/{archivo}', [Admin\ProyectoController::class, 'borrarArchivo'])->name('proyectos.archivo.borrar');
     Route::get('proyectos/{proyecto}/archivos/{archivo}', [Admin\ProyectoController::class, 'verArchivo'])->name('proyectos.archivo.ver');
+    Route::post('proyectos/{proyecto}/solicitudes', [Admin\SolicitudesController::class, 'store'])->name('proyectos.solicitudes.store');
+    Route::put('proyectos/{proyecto}/solicitudes/{solicitud}', [Admin\SolicitudesController::class, 'update'])->name('proyectos.solicitudes.update');
+    Route::patch('proyectos/{proyecto}/solicitudes/{solicitud}/estado', [Admin\SolicitudesController::class, 'estado'])->name('proyectos.solicitudes.estado');
+    Route::delete('proyectos/{proyecto}/solicitudes/{solicitud}', [Admin\SolicitudesController::class, 'destroy'])->name('proyectos.solicitudes.destroy');
 
     Route::get('presupuestos/{presupuesto}/pdf', [Admin\PresupuestoController::class, 'pdf'])->name('presupuestos.pdf');
 
@@ -293,6 +297,8 @@ Route::get('/proyecto/{token}/entrega', [\App\Http\Controllers\ProyectoPublicoCo
     ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:proyecto')->name('proyecto.entrega');
 Route::get('/proyecto/{token}/archivos/{archivo}', [\App\Http\Controllers\ProyectoPublicoController::class, 'archivo'])
     ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:proyecto')->name('proyecto.archivo');
+Route::post('/proyecto/{token}/subir', [\App\Http\Controllers\ProyectoPublicoController::class, 'subir'])
+    ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:proyecto')->middleware('throttle:900,1')->name('proyecto.subir');
 Route::get('/proyecto/{token}/galeria.zip', [\App\Http\Controllers\ProyectoPublicoController::class, 'zip'])
     ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:proyecto')->middleware('throttle:10,1')->name('proyecto.zip');
 

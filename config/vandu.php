@@ -320,6 +320,7 @@ return [
             'redes_aprobado'        => ['seccion' => 'redes', 'texto' => 'Un cliente aprueba su contenido', 'ayuda' => 'Aprobó uno o varios posts de su calendario', 'icono' => 'bi-check2-square'],
             'redes_cambios'         => ['seccion' => 'redes', 'texto' => 'Un cliente comenta un post', 'ayuda' => 'Pidió un cambio o dejó una observación en su contenido', 'icono' => 'bi-chat-square-dots'],
             'cotizacion_descargada' => ['seccion' => 'cotizaciones', 'texto' => 'Un cliente descarga la cotización', 'ayuda' => 'Cuando baja el PDF desde su enlace', 'icono' => 'bi-file-earmark-arrow-down'],
+            'archivos_cliente'      => ['seccion' => 'proyectos', 'texto' => 'Un cliente te envía archivos', 'ayuda' => 'Subió archivos desde la página de su proyecto (van a Dropbox)', 'icono' => 'bi-cloud-arrow-up'],
             'proyecto_visto'        => ['seccion' => 'proyectos', 'texto' => 'Un cliente revisa su proyecto', 'ayuda' => 'Abre su página de avance o de entrega', 'icono' => 'bi-kanban'],
             'proveedor_actividad'   => ['seccion' => 'proveedores', 'texto' => 'Un proveedor sube algo o comenta', 'ayuda' => 'Abre una orden de compra, sube su factura o archivos, o deja un comentario', 'icono' => 'bi-truck'],
             'mensaje_sitio'         => ['seccion' => 'ventas', 'texto' => 'Llega un mensaje desde el sitio', 'ayuda' => 'Alguien llenó el formulario de cotizar en agenciavandu.com', 'icono' => 'bi-chat-dots'],
@@ -366,6 +367,13 @@ return [
                 'titulo' => 'Tu proyecto ya está en marcha',
                 'cuerpo' => "Hola {nombre},\n\n¡Arrancamos con {proyecto}! Desde el enlace de abajo puedes seguir el avance, las fechas de cada etapa y descargar los archivos cuando estén listos.\n\nLo siguiente: {siguiente}.",
                 'boton'  => 'Ver mi proyecto', 'resumen' => true,
+            ],
+            'solicitud_archivos' => [
+                'nombre' => 'Pedir archivos', 'icono' => 'bi-cloud-arrow-up', 'para' => ['proyecto'],
+                'asunto' => 'Necesitamos unos archivos para {proyecto}',
+                'titulo' => 'Compártenos tus archivos',
+                'cuerpo' => "Hola {nombre},\n\nPara avanzar con {proyecto} necesitamos lo siguiente:\n\n{solicitudes}\n\nEntra al enlace de abajo y súbelos directo desde ahí, sin límite de formato: ZIP, video, audio, imágenes o editables de Adobe y Figma. Si algo pesa mucho, solo deja la página abierta mientras termina.",
+                'boton'  => 'Subir archivos', 'enlace' => 'subir',
             ],
             'recordatorio_pago' => [
                 'nombre' => 'Recordatorio de pago', 'icono' => 'bi-cash-coin', 'para' => ['proyecto'],

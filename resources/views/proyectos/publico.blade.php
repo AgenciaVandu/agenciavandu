@@ -113,6 +113,35 @@
         .gal-top { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap; margin: 48px 0 14px; }
         .gal-top h2 { margin: 0; }
         .gal-top span { color: var(--muted); }
+        /* Enviar archivos */
+        .aviso-arch { display: grid; grid-template-columns: 1fr auto; gap: 2px 14px; align-items: center; margin-top: 18px; padding: 14px 18px; border: 1.5px solid var(--amber); background: var(--amber-soft); border-radius: 12px; text-decoration: none; }
+        .aviso-arch span { grid-column: 1; font-size: 14px; color: #6B3B00; }
+        .aviso-arch i { grid-column: 2; grid-row: 1 / span 2; font-style: normal; font-weight: 600; white-space: nowrap; }
+        .enviar { scroll-margin-top: 16px; }
+        .env-ayuda { color: var(--muted); margin: -4px 0 14px; }
+        .env-caja { border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; margin-bottom: 12px; background: #fff; }
+        .env-caja.pedida { border-color: var(--ink); }
+        .env-t { font-size: 16px; }
+        .env-fecha { display: inline-block; margin-left: 8px; font-size: 13px; background: var(--mist); border-radius: 99px; padding: 1px 9px; color: var(--muted); }
+        .env-fecha.tarde { background: #FDECEC; color: #B42318; }
+        .env-inst { margin: 4px 0 0; color: var(--muted); font-size: 14.5px; white-space: pre-line; }
+        .env-zona { position: relative; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 12px; padding: 18px; border: 1.5px dashed #c9ccd3; border-radius: 12px; cursor: pointer; color: var(--muted); text-align: center; transition: .15s; }
+        .env-zona:hover, .env-zona.sobre { border-color: var(--ink); background: var(--mist); color: var(--ink); }
+        .env-zona b { color: var(--ink); }
+        .env-zona svg { width: 22px; height: 22px; flex: none; }
+        .env-zona input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+        .env-lista { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+        .env-lista:empty { display: none; }
+        .env-lista li { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 10px; align-items: center; font-size: 14px; padding: 8px 12px; background: var(--mist); border-radius: 9px; }
+        .env-lista .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+        .env-lista .pz { color: var(--muted); font-size: 13px; }
+        .env-lista .ok { color: var(--green-ink); font-weight: 700; }
+        .env-lista .err { color: #B42318; font-weight: 700; }
+        .env-lista .msg { grid-column: 2 / -1; font-size: 13px; color: #B42318; }
+        .env-lista .barra-s { grid-column: 1 / -1; height: 5px; border-radius: 99px; background: #dfe1e6; overflow: hidden; }
+        .env-lista .barra-s span { display: block; height: 100%; width: 0; background: var(--ink); transition: width .2s; }
+        .env-nota { font-size: 13px; color: var(--muted); margin: 4px 0 0; }
+
         .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 20px; border-radius: 10px;
                font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; border: 1.5px solid var(--ink); background: var(--ink); color: #fff; }
         .btn:hover { background: #000; color: var(--green); }
@@ -207,6 +236,11 @@
 
     @if($p->mensaje_cliente)
         <div class="mensaje">{{ $p->mensaje_cliente }}</div>
+    @endif
+
+    @php $pideArchivos = $p->solicitudes->where('estado', 'abierta')->isNotEmpty(); @endphp
+    @if($pideArchivos)
+        <a class="aviso-arch" href="#enviar-archivos"><b>Necesitamos unos archivos tuyos</b><span>{{ $p->solicitudes->where('estado', 'abierta')->pluck('titulo')->join(' · ') }}</span><i>Subirlos ↓</i></a>
     @endif
 
     <h2>Cómo vamos</h2>
@@ -326,6 +360,8 @@
         </div>
     @endif
 
+    @include('proyectos._enviar')
+
     <footer class="pie">
         <span>¿Dudas? <a href="https://wa.me/{{ $wa }}?text={{ $waMsg }}" target="_blank" rel="noopener">Escríbenos por WhatsApp</a></span>
         <span>{{ config('vandu.marca.nombre') }}{{ config('vandu.marca.ciudad') ? ', ' . config('vandu.marca.ciudad') : '' }}</span>
@@ -373,6 +409,84 @@
     var x0 = null;
     medio.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, { passive: true });
     medio.addEventListener('touchend', function (e) { if (x0 === null) return; var dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 50) mostrar(actual + (dx < 0 ? 1 : -1)); x0 = null; });
+})();
+</script>
+<script>
+/* Subida de archivos del cliente: por partes de 4 MB, con reintentos */
+(function () {
+    var sec = document.getElementById('enviar-archivos'); if (!sec) return;
+    var PARTE = {{ \App\Support\SubidaCliente::parte() }}, MAX = {{ \App\Support\SubidaCliente::maxBytes() }}, activas = 0;
+    var BLOQ = @json(\App\Support\SubidaCliente::BLOQUEADAS);
+    function peso(b) { return b >= 1073741824 ? (b / 1073741824).toFixed(1) + ' GB' : b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB'; }
+    function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+    function espera(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+    async function enviar(datos, blob) {
+        var fd = new FormData();
+        Object.keys(datos).forEach(function (k) { if (datos[k] !== null && datos[k] !== undefined) fd.append(k, datos[k]); });
+        fd.append('parte', blob, 'parte');
+        for (var intento = 1; ; intento++) {
+            var r = null;
+            try { r = await fetch(sec.dataset.subir, { method: 'POST', body: fd, headers: { 'X-CSRF-TOKEN': sec.dataset.token, 'Accept': 'application/json' } }); } catch (e) {}
+            if (r && r.ok) return r.json();
+            var j = r ? await r.json().catch(function () { return {}; }) : {};
+            // Los errores del archivo (tipo, tamaño) no se reintentan
+            if ((r && [413, 419, 422].indexOf(r.status) !== -1) || intento >= 4) throw new Error(r && r.status === 419 ? 'La página expiró. Recárgala e intenta de nuevo.' : (j.message || 'No se pudo subir. Revisa tu conexión e intenta de nuevo.'));
+            await espera(1500 * intento);
+        }
+    }
+
+    async function subir(file, solicitud, fila, barra) {
+        var base = { nombre: file.name, tamano: file.size, solicitud: solicitud || null };
+        if (file.size <= PARTE) {
+            barra.style.width = '60%';
+            return (await enviar(Object.assign({ accion: 'iniciar', unico: 1 }, base), file)).archivo;
+        }
+        var r = await enviar(Object.assign({ accion: 'iniciar' }, base), file.slice(0, PARTE));
+        var sesion = r.sesion, offset = PARTE;
+        while (offset + PARTE < file.size) {
+            barra.style.width = Math.round(offset / file.size * 100) + '%';
+            await enviar(Object.assign({ accion: 'agregar', sesion: sesion, offset: offset }, base), file.slice(offset, offset + PARTE));
+            offset += PARTE;
+        }
+        barra.style.width = Math.round(offset / file.size * 100) + '%';
+        return (await enviar(Object.assign({ accion: 'terminar', sesion: sesion, offset: offset }, base), file.slice(offset))).archivo;
+    }
+
+    async function procesar(caja, files) {
+        var lista = caja.querySelector('.env-progreso'), sol = caja.dataset.solicitud;
+        var filas = Array.prototype.map.call(files, function (f) {
+            var li = el('li'), ic = el('span', '', '…'), n = el('span', 'n', f.name), pz = el('span', 'pz num', peso(f.size)), bs = el('div', 'barra-s'), b = el('span');
+            bs.appendChild(b); li.append(ic, n, pz, bs); lista.appendChild(li);
+            return { f: f, li: li, ic: ic, b: b, bs: bs };
+        });
+        activas++;
+        for (var i = 0; i < filas.length; i++) {
+            var x = filas[i], ext = x.f.name.toLowerCase().split('.').slice(1), err = null;
+            if (!x.f.size) err = 'El archivo está vacío.';
+            else if (x.f.size > MAX) err = 'Pesa más de ' + peso(MAX) + '. Compártenos un enlace de descarga.';
+            else if (ext.some(function (e) { return BLOQ.indexOf(e) !== -1; })) err = 'Por seguridad no aceptamos este tipo de archivo. Comprímelo en ZIP.';
+            if (!err) {
+                try { await subir(x.f, sol, x.li, x.b); } catch (e) { err = e.message; }
+            }
+            x.bs.remove();
+            if (err) { x.ic.className = 'err'; x.ic.textContent = '!'; x.li.appendChild(el('span', 'msg', err)); }
+            else { x.ic.className = 'ok'; x.ic.textContent = '✓'; }
+        }
+        activas--;
+        if (filas.some(function (x) { return x.ic.className === 'ok'; }) && !caja.querySelector('.env-gracias')) {
+            caja.appendChild(el('p', 'env-nota env-gracias', '¡Gracias! Ya recibimos tus archivos.'));
+        }
+    }
+
+    sec.querySelectorAll('.env-caja').forEach(function (caja) {
+        var zona = caja.querySelector('.env-zona'), input = caja.querySelector('.env-input');
+        input.addEventListener('change', function () { if (input.files.length) procesar(caja, Array.from(input.files)); input.value = ''; });
+        ['dragenter', 'dragover'].forEach(function (t) { zona.addEventListener(t, function (e) { e.preventDefault(); zona.classList.add('sobre'); }); });
+        ['dragleave', 'drop'].forEach(function (t) { zona.addEventListener(t, function () { zona.classList.remove('sobre'); }); });
+        zona.addEventListener('drop', function (e) { e.preventDefault(); if (e.dataTransfer.files.length) procesar(caja, Array.from(e.dataTransfer.files)); });
+    });
+    window.addEventListener('beforeunload', function (e) { if (activas) { e.preventDefault(); e.returnValue = ''; } });
 })();
 </script>
 <script>

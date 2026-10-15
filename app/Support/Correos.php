@@ -134,6 +134,8 @@ class Correos
             '{monto_pago}'   => $pago?->monto_texto ?? '',
             '{fecha_limite}' => $limite,
             '{entregables}'  => $pr?->entregables_texto ?? '',
+            '{solicitudes}'  => $pr ? $pr->solicitudes()->where('estado', 'abierta')->get()
+                ->map(fn ($s) => '• ' . $s->titulo . ($s->fecha_limite ? ' (para el ' . $fecha($s->fecha_limite) . ')' : ''))->join("\n") : '',
             '{siguiente}'    => $pr ? Str::lcfirst($pr->siguiente_paso ?? 'te mantendremos al tanto') : '',
             '{firma}'        => config('vandu.emisor.nombre'),
             '{codigo}'       => '',   // ya no se usa: se quita de las plantillas que lo traigan
@@ -162,6 +164,7 @@ class Correos
     {
         $pl = $clave ? (PlantillasCorreo::una(Str::before($clave, '@')) ?? []) : [];
         if ($ctx['proyecto'] && ($pl['enlace'] ?? null) === 'entrega') return $ctx['proyecto']->url_entrega;
+        if ($ctx['proyecto'] && ($pl['enlace'] ?? null) === 'subir') return $ctx['proyecto']->url_publica . '#enviar-archivos';
         if ($ctx['proyecto']) return $ctx['proyecto']->url_publica;
         if ($ctx['presupuesto']) return $ctx['presupuesto']->url_publica;
         $ultima = $ctx['cliente']?->presupuestos()->first();

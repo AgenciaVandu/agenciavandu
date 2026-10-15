@@ -341,7 +341,7 @@ class ProyectoController extends Controller
 
     public function show(Proyecto $proyecto)
     {
-        $proyecto->load(['cliente', 'presupuesto', 'etapas.archivos', 'pagos', 'archivos']);
+        $proyecto->load(['cliente', 'presupuesto', 'etapas.archivos', 'pagos', 'archivos', 'solicitudes.archivos']);
 
         return view('admin.proyectos.show', [
             'p'         => $proyecto,
