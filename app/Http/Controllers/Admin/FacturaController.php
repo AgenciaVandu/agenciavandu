@@ -79,6 +79,33 @@ class FacturaController extends Controller
             ->with('ok', "Nota de venta {$presupuesto->nota_folio} lista. Ya la puedes enviar.");
     }
 
+    /**
+     * Enviar la nota de venta (o la factura) por WhatsApp: WhatsApp no deja adjuntar desde un enlace,
+     * así que el mensaje lleva el enlace para descargarla. Queda marcada como enviada.
+     */
+    public function whatsapp(Presupuesto $presupuesto)
+    {
+        $p = $presupuesto->load('cliente', 'prospecto');
+        $wa = $p->contacto?->whatsapp;
+        abort_unless($wa, 404, 'No tiene WhatsApp registrado.');
+        $archivos = $p->facturas_ordenadas;
+        abort_if($archivos->isEmpty(), 404);
+
+        $nombre = \App\Support\Correos::primerNombre($p->cliente_nombre);
+        if ($p->es_nota) {
+            $msg = "Hola {$nombre}, te comparto tu nota de venta {$p->nota_folio}. Puedes descargarla aquí:\n" . route('presupuesto.factura', [$p->token, $archivos->first()->id]);
+        } else {
+            $msg = "Hola {$nombre}, te comparto tu factura de {$p->folio}:";
+            foreach ($archivos as $f) $msg .= "\n• " . ($f->ext === 'xml' ? 'XML' : ($f->ext === 'pdf' ? 'PDF' : $f->nombre)) . ': ' . route('presupuesto.factura', [$p->token, $f->id]);
+        }
+        $msg .= "\n\nGracias por tu confianza.";
+
+        \App\Models\PresupuestoFactura::whereIn('id', $archivos->pluck('id'))->update(['enviada_at' => now()]);
+        \App\Support\Aceptacion::registrar($p, 'factura', 'agencia', null, ($p->es_nota ? 'Nota de venta' : 'Factura') . ' enviada por WhatsApp', ['canal' => 'whatsapp'], false);
+
+        return redirect()->away('https://wa.me/' . $wa . '?text=' . rawurlencode($msg));
+    }
+
     /** Complemento de pago (REP) de una factura PPD: su PDF y XML, ligado al pago que ampara */
     public function subirComplemento(Request $request, Presupuesto $presupuesto)
     {

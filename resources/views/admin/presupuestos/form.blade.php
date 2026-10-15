@@ -249,7 +249,8 @@
                         @if($wa)<li><a class="dropdown-item" target="_blank" rel="noopener" href="{{ route('admin.presupuestos.whatsapp', $p) }}"><i class="bi bi-whatsapp me-2"></i>Por WhatsApp</a></li>@endif
                         <li><button type="button" class="dropdown-item" data-copiar="{{ $p->url_publica }}"><i class="bi bi-link-45deg me-2"></i>Copiar enlace</button></li>
                         <li><a class="dropdown-item" href="{{ route('admin.presupuestos.pdf', $p) }}" target="_blank"><i class="bi bi-file-earmark-pdf me-2"></i>Descargar PDF</a></li>
-                        @if($p->facturas->isNotEmpty())<li><hr class="dropdown-divider"></li><li><button type="button" class="dropdown-item" data-correo="{{ $p->comprobante_corto }}"><i class="bi bi-receipt me-2"></i>Enviar {{ $p->es_nota ? 'nota de venta' : 'factura' }}</button></li>@endif
+                        @if($p->facturas->isNotEmpty())<li><hr class="dropdown-divider"></li><li><button type="button" class="dropdown-item" data-correo="{{ $p->comprobante_corto }}"><i class="bi bi-receipt me-2"></i>Enviar {{ $p->es_nota ? 'nota de venta' : 'factura' }} por correo</button></li>
+                            @if($wa)<li><a class="dropdown-item" target="_blank" rel="noopener" href="{{ route('admin.presupuestos.comprobante.whatsapp', $p) }}"><i class="bi bi-whatsapp me-2"></i>Enviar {{ $p->es_nota ? 'nota de venta' : 'factura' }} por WhatsApp</a></li>@endif @endif
                     </ul>
                 </div>
             @endunless
@@ -307,6 +308,7 @@
                             <a href="?ver=factura" class="btn btn-borde btn-sm" @click.prevent="irA('factura')" data-recargar>Ver</a>
                         @elseif($sigFacturas->isNotEmpty())
                             <button type="button" class="btn btn-acento btn-sm" data-correo="{{ $p->comprobante_corto }}"><i class="bi bi-send me-1"></i> Enviar {{ $p->es_nota ? 'nota' : 'factura' }}</button>
+                            @if($wa)<a href="{{ route('admin.presupuestos.comprobante.whatsapp', $p) }}" target="_blank" rel="noopener" class="btn btn-borde btn-sm" title="Enviar por WhatsApp" aria-label="Enviar por WhatsApp"><i class="bi bi-whatsapp"></i></a>@endif
                         @elseif($p->es_nota)
                             <button type="submit" form="generar-nota" class="btn btn-acento btn-sm"><i class="bi bi-magic me-1"></i> Generar nota</button>
                         @else
@@ -690,7 +692,11 @@
                                 <button type="submit" form="borrar-factura-{{ $nota->id }}" class="btn btn-fantasma btn-icono btn-sm" aria-label="Quitar {{ $nota->nombre }}"><i class="bi bi-x-lg"></i></button>
                             </div>
                             @if($enviada)<div class="secundario mb-3" style="font-size:12.5px"><i class="bi bi-check2-circle"></i> Enviada por correo {{ $enviada->locale('es')->diffForHumans() }}</div>@endif
-                            <button type="button" class="btn {{ $enviada ? 'btn-borde' : 'btn-primario' }} btn-sm w-100 mb-3" data-correo="nota"><i class="bi bi-send me-1"></i> {{ $enviada ? 'Enviar de nuevo' : 'Enviar nota de venta' }}</button>
+                            <div class="d-flex gap-2 mb-3">
+                                <button type="button" class="btn {{ $enviada ? 'btn-borde' : 'btn-primario' }} btn-sm flex-fill" data-correo="nota"><i class="bi bi-envelope me-1"></i> {{ $enviada ? 'Enviar de nuevo por correo' : 'Enviar por correo' }}</button>
+                                @if($wa)<a href="{{ route('admin.presupuestos.comprobante.whatsapp', $p) }}" target="_blank" rel="noopener" class="btn btn-borde btn-sm flex-fill"><i class="bi bi-whatsapp me-1"></i> Enviar por WhatsApp</a>@endif
+                            </div>
+                            @unless($wa)<div class="secundario mb-3" style="font-size:12.5px"><i class="bi bi-info-circle me-1"></i>Para enviarla por WhatsApp, agrega el teléfono del cliente.</div>@endunless
                         @else
                             <p class="secundario mt-0 mb-3" style="font-size:13.5px">La armamos con los conceptos de esta cotización. Queda guardada, el cliente la descarga desde su enlace y se la envías por correo.</p>
                         @endif
@@ -750,7 +756,8 @@
                         @endif
                         <div class="d-grid gap-2">
                             @if($facturas->isNotEmpty())
-                                <button type="button" class="btn {{ $enviada ? 'btn-borde' : 'btn-primario' }} btn-sm" data-correo="factura"><i class="bi bi-send me-1"></i> {{ $enviada ? 'Enviar de nuevo' : 'Enviar factura' }}</button>
+                                <button type="button" class="btn {{ $enviada ? 'btn-borde' : 'btn-primario' }} btn-sm" data-correo="factura"><i class="bi bi-envelope me-1"></i> {{ $enviada ? 'Enviar de nuevo por correo' : 'Enviar factura por correo' }}</button>
+                                @if($wa)<a href="{{ route('admin.presupuestos.comprobante.whatsapp', $p) }}" target="_blank" rel="noopener" class="btn btn-borde btn-sm"><i class="bi bi-whatsapp me-1"></i> Enviar por WhatsApp</a>@endif
                             @endif
                             <label class="btn btn-borde btn-sm mb-0"><i class="bi bi-upload me-1"></i> {{ $facturas->isEmpty() ? 'Subir PDF y XML' : 'Subir otro archivo' }}
                                 <input type="file" name="facturas[]" form="subir-factura" multiple accept=".pdf,.xml,.zip" class="d-none" onchange="this.files.length && this.form.requestSubmit()">

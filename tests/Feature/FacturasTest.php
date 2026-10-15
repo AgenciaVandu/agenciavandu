@@ -280,6 +280,35 @@ class FacturasTest extends TestCase
         $this->get(route('presupuesto.factura', [$p->token, $p->facturas()->first()->id]))->assertOk();
     }
 
+    public function test_nota_y_factura_por_whatsapp(): void
+    {
+        $wa = route('admin.presupuestos.comprobante.whatsapp', $this->p);
+        $this->get($wa)->assertNotFound();   // sin comprobante todavía
+
+        $this->post(route('admin.presupuestos.nota', $this->p));
+        $this->get($wa)->assertNotFound();   // el cliente no tiene teléfono
+        $this->p->cliente->update(['telefono' => '999 123 4567']);
+        $this->get(route('admin.presupuestos.edit', [$this->p, 'ver' => 'factura']))->assertSee($wa, false)->assertSee('Enviar por WhatsApp');
+
+        $r = $this->get($wa)->assertRedirect();
+        $url = $r->headers->get('Location');
+        $this->assertStringStartsWith('https://wa.me/529991234567?text=', $url);
+        $texto = urldecode(parse_url($url, PHP_URL_QUERY));
+        $nota = $this->p->facturas()->sole();
+        $this->assertStringContainsString('nota de venta NV-0001', $texto);
+        $this->assertStringContainsString(route('presupuesto.factura', [$this->p->token, $nota->id]), $texto);
+        $this->assertNotNull($nota->fresh()->enviada_at);
+        $this->assertTrue($this->p->eventos()->where('tipo', 'factura')->where('detalle', 'like', '%WhatsApp%')->exists());
+
+        // Con factura: manda el PDF y el XML
+        $this->p->update(['comprobante' => 'factura']);
+        $this->p->facturas()->get()->each->delete();
+        $this->subir([$this->pdf(), $this->xml()]);
+        $texto = urldecode(parse_url($this->get($wa)->headers->get('Location'), PHP_URL_QUERY));
+        $this->assertStringContainsString('• PDF: ', $texto);
+        $this->assertStringContainsString('• XML: ', $texto);
+    }
+
     public function test_subir_nota_propia_cambia_a_sin_factura(): void
     {
         $this->post(route('admin.presupuestos.facturas.subir', $this->p), ['tipo' => 'nota', 'facturas' => [$this->pdf('Mi nota.pdf')]])->assertRedirect();
