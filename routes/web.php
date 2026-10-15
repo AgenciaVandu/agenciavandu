@@ -95,7 +95,6 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::post('presupuestos/{presupuesto}/duplicar', [Admin\PresupuestoController::class, 'duplicar'])->name('presupuestos.duplicar');
     Route::patch('presupuestos/{presupuesto}/rapido', [Admin\PresupuestoController::class, 'rapido'])->name('presupuestos.rapido');
     Route::get('presupuestos/{presupuesto}/whatsapp', [Admin\PresupuestoController::class, 'whatsapp'])->name('presupuestos.whatsapp');
-    Route::post('presupuestos/{presupuesto}/codigo', [Admin\PresupuestoController::class, 'codigo'])->name('presupuestos.codigo');
     Route::post('presupuestos/{presupuesto}/facturas', [Admin\FacturaController::class, 'subir'])->name('presupuestos.facturas.subir');
     Route::post('presupuestos/{presupuesto}/nota', [Admin\FacturaController::class, 'generarNota'])->name('presupuestos.nota');
     Route::post('presupuestos/{presupuesto}/complementos', [Admin\FacturaController::class, 'subirComplemento'])->name('presupuestos.complementos.subir');
@@ -259,8 +258,6 @@ Route::get('/cotizacion/{token}/factura/{factura}', [PresupuestoPublicoControlle
     ->where(['token' => '[A-Za-z0-9]{32}', 'factura' => '[0-9]+'])->middleware('cuenta.enlace:presupuesto')->middleware('throttle:30,1')->name('presupuesto.factura');
 Route::post('/cotizacion/{token}/responder', [PresupuestoPublicoController::class, 'responder'])
     ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:presupuesto')->middleware('throttle:12,1')->name('presupuesto.responder');
-Route::post('/cotizacion/{token}/codigo', [PresupuestoPublicoController::class, 'pedirCodigo'])
-    ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:presupuesto')->middleware('throttle:4,10')->name('presupuesto.codigo');
 
 // Portal del cliente: un solo enlace con todas sus cotizaciones y proyectos
 Route::get('/cliente/{token}', [\App\Http\Controllers\ClientePortalController::class, 'show'])

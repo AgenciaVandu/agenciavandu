@@ -54,7 +54,7 @@
     // Si hay errores, abre la sección donde está el primero
     $camposSeccion = ['observaciones' => 'condiciones', 'consideraciones' => 'condiciones', 'notas_internas' => 'condiciones',
         'pago_intro' => 'pago', 'banco' => 'pago', 'clabe' => 'pago', 'beneficiario' => 'pago', 'nota_comprobante' => 'pago', 'nota_factura' => 'pago',
-        'emisor_nombre' => 'pago', 'emisor_telefono' => 'pago', 'emisor_sitio' => 'pago', 'emisor_email' => 'pago', 'facturas' => 'factura', 'complemento' => 'factura', 'pago_id' => 'factura', 'fecha_pago' => 'factura', 'metodo_sat' => 'factura', 'codigo' => 'envio'];
+        'emisor_nombre' => 'pago', 'emisor_telefono' => 'pago', 'emisor_sitio' => 'pago', 'emisor_email' => 'pago', 'facturas' => 'factura', 'complemento' => 'factura', 'pago_id' => 'factura', 'fecha_pago' => 'factura', 'metodo_sat' => 'factura'];
     $primerError = collect($errors->keys())->first();
     $seccionInicial = $primerError ? ($camposSeccion[\Illuminate\Support\Str::before($primerError, '.')] ?? 'contenido') : request('ver', 'contenido');
     if (! isset($seccionesCot[$seccionInicial])) $seccionInicial = 'contenido';
@@ -635,7 +635,7 @@
                         </div>
                         @if($wa)
                             <a class="btn btn-borde w-100 mt-2" target="_blank" rel="noopener" href="{{ route('admin.presupuestos.whatsapp', $p) }}"
-                               title="Incluye el código de verificación para aceptar en línea"><i class="bi bi-whatsapp me-1"></i> Enviar por WhatsApp</a>
+                               title="Abre WhatsApp con el mensaje y el enlace"><i class="bi bi-whatsapp me-1"></i> Enviar por WhatsApp</a>
                         @endif
                         <button type="button" class="btn btn-borde w-100 mt-2" data-correo="{{ $p->vigente && now()->diffInHours($p->vigente_hasta, false) <= 72 && ! in_array($p->estado, ['aceptada', 'rechazada']) ? 'por_vencer' : 'cotizacion' }}"><i class="bi bi-envelope me-1"></i> Enviar por correo</button>
                         <p class="secundario mt-3 mb-0">
@@ -971,7 +971,6 @@
         <form id="borrar-factura-{{ $f->id }}" method="post" action="{{ route('admin.presupuestos.facturas.borrar', [$p, $f]) }}" onsubmit="return confirm({{ Js::from('¿Quitar ' . $f->nombre . '? El cliente ya no podrá descargarlo.') }})">@csrf @method('delete')</form>
     @endforeach
     <form id="duplicar" method="post" action="{{ route('admin.presupuestos.duplicar', $p) }}">@csrf</form>
-    <form id="generar-codigo" method="post" action="{{ route('admin.presupuestos.codigo', $p) }}">@csrf</form>
     <form id="eliminar" method="post" action="{{ route('admin.presupuestos.destroy', $p) }}" onsubmit="return confirm({{ Js::from($p->proyecto ? '¿Eliminar ' . $p->folio . '? También se elimina su proyecto «' . $p->proyecto->nombre . '» con sus pagos y entregas, y deja de contar en tus ingresos. El enlace del cliente dejará de funcionar.' : '¿Eliminar ' . $p->folio . '? El enlace del cliente dejará de funcionar.') }})">@csrf @method('delete')</form>
     @include('admin.correos._modal', ['ctxTipo' => 'presupuesto', 'ctxId' => $p->id])
 @endunless

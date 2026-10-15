@@ -152,7 +152,6 @@
         .modal input[type=text], .modal textarea { width: 100%; font: inherit; border: 1.5px solid var(--line); border-radius: 10px; padding: 11px 13px; }
         .modal input:focus, .modal textarea:focus { border-color: var(--ink); outline: none; }
         .modal textarea { min-height: 130px; resize: vertical; }
-        .modal .codigo { font-size: 26px; letter-spacing: .32em; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
         .modal .ayuda { font-size: 13.5px; color: var(--muted); margin-top: 6px; }
         .modal .ayuda button { font: inherit; font-weight: 600; color: var(--ink); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
         .modal .check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; font-size: 14.5px; }
@@ -447,16 +446,6 @@
                     <input type="text" id="r-nombre" name="nombre" value="{{ $p->cliente_nombre }}" maxlength="120" autocomplete="name" required>
                 </div>
 
-                <div>
-                    <label for="r-codigo">Código de verificación</label>
-                    <input type="text" id="r-codigo" name="codigo" class="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="000 000" required>
-                    <div class="ayuda">Te lo enviamos junto con la cotización por correo o WhatsApp; vale 24 horas.
-                        @if($hayCorreo)<br>¿No lo tienes o ya venció? <button type="button" data-pedir-codigo>Enviarme un código a {{ \App\Support\Aceptacion::correoOculto($p->contacto->email) }}</button>
-                        @else<br>¿No lo tienes? <a href="https://wa.me/{{ $wa }}?text={{ rawurlencode('Hola, ¿me compartes el código de verificación de la cotización ' . $p->folio . '?') }}" target="_blank" rel="noopener" style="font-weight:600">Pídelo por WhatsApp</a>@endif
-                    </div>
-                    <div class="exito" data-codigo-ok hidden></div>
-                </div>
-
                 <label class="check" data-solo-aceptar><input type="checkbox" name="conforme" value="1"> <span>Acepto los conceptos, precios y condiciones de esta cotización.</span></label>
 
                 <div class="error" data-error role="alert" hidden></div>
@@ -485,7 +474,7 @@
         setTimeout(function () { b.textContent = 'Copiar'; }, 1600);
     });
 
-    // Aceptar o pedir cambios (con código de verificación)
+    // Aceptar o pedir cambios
     var dlg = document.getElementById('responder');
     if (dlg) {
         var f = dlg.querySelector('form'), err = f.querySelector('[data-error]'), enviar = f.querySelector('[data-enviar]');
@@ -498,32 +487,16 @@
             mostrar('[data-sub-aceptar], [data-solo-aceptar]', !cambios);
             mostrar('[data-sub-cambios], [data-solo-cambios]', cambios);
             dlg.showModal ? dlg.showModal() : dlg.setAttribute('open', '');
-            setTimeout(function () { (cambios ? f.mensaje : f.codigo).focus(); }, 50);
+            setTimeout(function () { (cambios ? f.mensaje : f.nombre).focus(); }, 50);
         };
         document.querySelectorAll('[data-responder]').forEach(function (b) { b.addEventListener('click', function () { abrir(b.dataset.responder); }); });
         f.querySelector('[data-cerrar]').addEventListener('click', function () { dlg.close(); });
-        f.codigo.addEventListener('input', function () {
-            var v = f.codigo.value.replace(/\D/g, '').slice(0, 6);
-            f.codigo.value = v.length > 3 ? v.slice(0, 3) + ' ' + v.slice(3) : v;
-        });
         var fallo = function (m, campo) { err.textContent = m; err.hidden = false; if (campo && f[campo]) f[campo].focus(); };
-        var pedir = f.querySelector('[data-pedir-codigo]');
-        if (pedir) pedir.addEventListener('click', async function () {
-            pedir.disabled = true; err.hidden = true;
-            var ok = f.querySelector('[data-codigo-ok]');
-            try {
-                var r = await fetch(@json(route('presupuesto.codigo', $p->token)), { method: 'POST', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': f._token.value } });
-                var d = await r.json();
-                if (d.ok) { ok.textContent = d.mensaje; ok.hidden = false; f.codigo.focus(); } else fallo(d.mensaje);
-            } catch (e) { fallo('No se pudo enviar el código. Intenta de nuevo.'); }
-            setTimeout(function () { pedir.disabled = false; }, 20000);
-        });
         f.addEventListener('submit', async function (e) {
             e.preventDefault(); err.hidden = true;
             var cambios = f.accion.value === 'cambios';
             if (cambios && f.mensaje.value.trim().length < 5) return fallo('Cuéntanos qué cambios necesitas.', 'mensaje');
             if (!f.nombre.value.trim()) return fallo('Escribe tu nombre.', 'nombre');
-            if (f.codigo.value.replace(/\D/g, '').length !== 6) return fallo('El código tiene 6 dígitos.', 'codigo');
             if (!cambios && !f.conforme.checked) return fallo('Marca la casilla para confirmar que estás de acuerdo.');
             enviar.disabled = true;
             try {

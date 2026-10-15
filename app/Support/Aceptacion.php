@@ -8,8 +8,8 @@ use App\Models\PresupuestoEvento;
 use Illuminate\Support\Facades\Hash;
 
 /**
- * Aceptar o pedir cambios en línea con código de verificación, e historial de la cotización.
- *  - El código es de 6 dígitos, vale 24 horas y se guarda cifrado (hash): ni en la base de datos se puede leer.
+ * Aceptar o pedir cambios en línea desde el enlace (con el nombre de quien responde), e historial de la cotización.
+ *  - (Antes se pedía un código de verificación; ya no. Las funciones de código quedan sin uso.)
  *  - Una cotización aceptada ya no se puede cambiar desde la vista del cliente (solo la agencia, a mano).
  */
 class Aceptacion

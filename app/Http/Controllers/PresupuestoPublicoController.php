@@ -68,7 +68,7 @@ class PresupuestoPublicoController extends Controller
         return $f->respuesta();
     }
 
-    /** El cliente acepta o pide cambios, verificando su identidad con el código de 24 horas */
+    /** El cliente acepta o pide cambios desde su enlace (con su nombre y su confirmación) */
     public function responder(Request $request, string $token)
     {
         $p = Presupuesto::where('token', $token)->with(['conceptos', 'cliente'])->firstOrFail();
@@ -77,12 +77,10 @@ class PresupuestoPublicoController extends Controller
             'accion'  => 'required|in:aceptar,cambios',
             'nombre'  => 'required|string|max:120',
             'mensaje' => 'required_if:accion,cambios|nullable|string|min:5|max:3000',
-            'codigo'  => 'required|string|max:12',
         ], [
             'nombre.required'     => 'Escribe tu nombre.',
             'mensaje.required_if' => 'Cuéntanos qué cambios necesitas.',
             'mensaje.min'         => 'Cuéntanos un poco más sobre los cambios.',
-            'codigo.required'     => 'Escribe tu código de verificación.',
         ]);
 
         if (! Aceptacion::puedeResponder($p)) {
@@ -92,18 +90,13 @@ class PresupuestoPublicoController extends Controller
             return $this->respuesta($request, $token, false, $motivo, 409);
         }
 
-        $ok = Aceptacion::verificar($p, $d['codigo']);
-        if ($ok !== true) {
-            return $this->respuesta($request, $token, false, $ok, 422, 'codigo');
-        }
-
         $nombre = trim($d['nombre']);
         $quien = $p->cliente_empresa ?: $p->cliente_nombre;
         if ($d['accion'] === 'aceptar') {
             $p->estado = 'aceptada';
             $p->aceptada_el = now(config('vandu.zona_horaria'))->toDateString();
             $p->save();
-            Aceptacion::registrar($p, 'aceptada', 'cliente', $nombre, 'Aceptada en línea con código de verificación', Aceptacion::foto($p));
+            Aceptacion::registrar($p, 'aceptada', 'cliente', $nombre, 'Aceptada en línea desde su enlace', Aceptacion::foto($p));
             Notificar::evento('cotizacion_aceptada', "$quien aceptó su cotización",
                 "{$p->folio} · " . $p->monto($p->modo_iva === 'desglosado' ? $p->total : $p->subtotal) . " · ya puedes crear el proyecto",
                 route('admin.proyectos.create', $p), 'cotizacion-' . $p->id);
@@ -119,39 +112,6 @@ class PresupuestoPublicoController extends Controller
             route('admin.presupuestos.edit', $p), 'cotizacion-' . $p->id);
         $this->avisarAgencia($p, "$nombre pidió cambios a la cotización {$p->folio}", "Lo que necesita:\n\n" . trim($d['mensaje']), route('admin.presupuestos.edit', $p), 'Ver cotización');
         return $this->respuesta($request, $token, true, 'Recibimos tus comentarios. Te enviaremos la cotización actualizada muy pronto.');
-    }
-
-    /** El cliente pide que le mandemos un código a su correo registrado */
-    public function pedirCodigo(Request $request, string $token)
-    {
-        $p = Presupuesto::where('token', $token)->with('cliente')->firstOrFail();
-        if (! Aceptacion::puedeResponder($p)) {
-            return $this->respuesta($request, $token, false, 'Esta cotización ya no se puede responder en línea.', 409);
-        }
-        $email = $p->contacto?->email;
-        if (! $email) {
-            return $this->respuesta($request, $token, false, 'No tenemos un correo registrado. Pídenos tu código por WhatsApp.', 422);
-        }
-        if ($p->codigos()->where('canal', 'cliente')->where('created_at', '>', now()->subHour())->count() >= 3) {
-            return $this->respuesta($request, $token, false, 'Ya enviamos varios códigos en la última hora. Revisa tu correo (también la carpeta de spam).', 429);
-        }
-
-        $c = Aceptacion::generarCodigo($p, 'cliente');
-        try {
-            Mail::to($email)->send(new CorreoVandu(
-                asunto: "Tu código de verificación: {$c['formateado']}",
-                titulo: 'Tu código de verificación',
-                cuerpo: 'Hola ' . \App\Support\Correos::primerNombre($p->cliente_nombre) . ",\n\nUsa este código para aceptar o pedir cambios a la cotización {$p->folio}. Es válido hasta el " . Aceptacion::vigenciaTexto($c['expira']) . ".\n\nSi no lo pediste tú, ignora este mensaje.",
-                boton: 'Volver a mi cotización', url: $p->url_publica,
-                resumen: ['Código' => $c['formateado'], 'Cotización' => $p->folio, 'Vigencia' => '24 horas'],
-            ));
-        } catch (\Throwable $e) {
-            Log::error('No se pudo enviar el código: ' . $e->getMessage());
-            return $this->respuesta($request, $token, false, 'No pudimos enviar el correo. Pídenos tu código por WhatsApp.', 500);
-        }
-        Aceptacion::registrar($p, 'codigo', 'sistema', null, 'Enviado por correo a ' . Aceptacion::correoOculto($email) . ' (a petición del cliente)', ['canal' => 'correo'], false);
-
-        return $this->respuesta($request, $token, true, 'Te enviamos un código a ' . Aceptacion::correoOculto($email) . '. Vigente 24 horas.');
     }
 
     private function avisarAgencia(Presupuesto $p, string $asunto, string $cuerpo, string $url, string $boton): void

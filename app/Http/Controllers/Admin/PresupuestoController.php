@@ -187,8 +187,7 @@ class PresupuestoController extends Controller
     }
 
     /**
-     * Enviar por WhatsApp: genera el código de verificación y abre WhatsApp con el mensaje ya escrito.
-     * (Si la cotización ya no se puede responder en línea, manda solo el enlace.)
+     * Enviar por WhatsApp: abre WhatsApp con el mensaje y el enlace ya escritos.
      */
     public function whatsapp(Presupuesto $presupuesto)
     {
@@ -199,9 +198,7 @@ class PresupuestoController extends Controller
         $nombre = \App\Support\Correos::primerNombre($p->cliente_nombre);
         $msg = "Hola {$nombre}, te comparto la cotización {$p->folio}: {$p->url_publica}";
         if (Aceptacion::puedeResponder($p)) {
-            $c = Aceptacion::generarCodigo($p, 'whatsapp');
-            $msg .= "\n\nDesde el enlace puedes aceptarla o pedir cambios con tu código de verificación: *{$c['formateado']}*\n(válido hasta el " . Aceptacion::vigenciaTexto($c['expira']) . ')';
-            Aceptacion::registrar($p, 'codigo', 'agencia', null, 'Código enviado por WhatsApp · vence el ' . Aceptacion::vigenciaTexto($c['expira']), ['canal' => 'whatsapp'], false);
+            $msg .= "\n\nDesde el enlace puedes aceptarla o pedirme cambios.";
         }
         if ($p->estado === 'borrador') {
             $p->update(['estado' => 'enviada']);
@@ -209,19 +206,6 @@ class PresupuestoController extends Controller
         Aceptacion::registrar($p, 'enviada', 'agencia', null, 'Por WhatsApp', ['canal' => 'whatsapp']);
 
         return redirect()->away('https://wa.me/' . $wa . '?text=' . rawurlencode($msg));
-    }
-
-    /** Generar un código a mano (por ejemplo, para dictarlo por teléfono) */
-    public function codigo(Presupuesto $presupuesto)
-    {
-        if (! Aceptacion::puedeResponder($presupuesto)) {
-            return back()->withErrors(['codigo' => 'Esta cotización ya no se puede responder en línea (está aceptada, rechazada o vencida).']);
-        }
-        $c = Aceptacion::generarCodigo($presupuesto, 'manual');
-        Aceptacion::registrar($presupuesto, 'codigo', 'agencia', null, 'Código generado a mano · vence el ' . Aceptacion::vigenciaTexto($c['expira']), ['canal' => 'manual'], false);
-
-        return back()->with('codigo_nuevo', ['formateado' => $c['formateado'], 'vence' => Aceptacion::vigenciaTexto($c['expira'])])
-            ->with('ok', "Código {$c['formateado']} generado. Vale 24 horas.");
     }
 
     /** Cambios rápidos desde el listado: estado o extender vigencia */
