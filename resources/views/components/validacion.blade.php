@@ -1,3 +1,6 @@
+@props(['aliados' => true])
+
+@if ($aliados)
 <section class="aliados">
     <div class="container">
         <div class="titular">
@@ -6,6 +9,7 @@
         </div>
     </div>
 </section>
+@endif
 <section class="clientes">
     <div class="container">
         <div class="row">

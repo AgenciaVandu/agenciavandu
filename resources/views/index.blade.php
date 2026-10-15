@@ -1,40 +1,11 @@
 @push('estilos')
-    @vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/index.scss', 'resources/js/app.js', 'resources/js/bg.js'])
+    @vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/index.scss', 'resources/scss/hero.scss', 'resources/js/app.js', 'resources/js/bg.js', 'resources/js/hero.js'])
 @endpush
 <x-layouts.guest titulo="Agencia de SEO y GEO: Posicionamos tu Marca en Google y ChatGPT"
     meta-description="Agencia de marketing digital especializada en SEO, optimización y estrategias de IA en 2026, fotografía empresarial, fotografía de alimentos y desarrollo web">
 
-    <x-header>
-        <x-slot name="header">
-            <h1>Diseñamos y construimos el futuro de tu empresa en el mundo digital</h1>
-        </x-slot>
-    </x-header>
+    <x-hero />
 
-    <section class="intro ">
-        <div class="container">
-            <div class="contenido">
-                <p>Somos una agencia de diseño y desarrollo web estratégico que ayuda a las empresas en momentos clave,
-                    nos enfocamos en lo esencial para desbloquear oportunidades significativas. Nuestras soluciones
-                    eficientes generan resultados tangibles.</p>
-                <p>¿Quieres ver un poco de nuestro trabajo?</p>
-                <div class="botones">
-                    <a href="{{ route('servicios') }}">Diseño web <span><img src="{{ asset('img/arrow-2.svg') }}"
-                                class="arrow1" width="10" alt=""></span></a>
-                   {{--  <a href="{{ route('productos') }}">Productos<span><img src="{{ asset('img/arrow-2.svg') }}"
-                                class="arrow1" width="10" alt=""></a> --}}
-                    <a href="{{ route('audiovisuales') }}">Audiovisuales<span><img src="{{ asset('img/arrow-2.svg') }}"
-                                class="arrow1" width="10" alt=""></a>
-                    {{-- <a href="{{ route('alianzas') }}">Marcas
-                        <span><img src="{{ asset('img/arrow-2.svg') }}" class="arrow1" width="10" alt="">
-                    </a> --}}
-                </div>
-                <div class="cta">
-                    <a href="{{ route('cotizar') }}">Contáctanos <span><img src="{{ asset('img/arrow-3.svg') }}"
-                                class="arrow1" width="10" alt=""></a>
-                </div>
-            </div>
-        </div>
-    </section>
     <section class="servicios">
         <div class="container">
             <div class="grid-contenido">
@@ -171,23 +142,8 @@
             </div>
         </div>
     </section>
-    <x-validacion>
-        <x-slot name="logos">
-            <div class="row logos">
-                <div class="col">
-                    <img src="{{ asset('img/mercadopago.svg') }}" alt="Logotipo mercadopago">
-                </div>
-                <div class="col">
-                    <img src="{{ asset('img/hostgator.svg') }}" alt="Logotipo mercadopago">
-                </div>
-                <div class="col">
-                    <img src="{{ asset('img/paypal.svg') }}" alt="Logotipo mercadopago">
-                </div>
-                <div class="col">
-                    <img src="{{ asset('img/stripe.svg') }}" alt="Logotipo mercadopago">
-                </div>
-            </div>
-        </x-slot>
+    {{-- Los logos de clientes ahora van en la marquesina del hero --}}
+    <x-validacion :aliados="false">
         <x-slot name="clientes">
             <div class="logos_clientes">
                 <div class="primera-fila">
