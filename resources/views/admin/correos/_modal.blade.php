@@ -13,7 +13,7 @@
     $facturasGuardadas = $presFactura?->facturas_ordenadas ?? collect();
     // Archivos guardados que cada plantilla adjunta: la factura, o cada complemento de pago
     $guardados = [];
-    if ($facturasGuardadas->isNotEmpty()) $guardados['factura'] = $facturasGuardadas->pluck('nombre')->all();
+    if ($facturasGuardadas->isNotEmpty()) $guardados[$presFactura->comprobante_corto] = $facturasGuardadas->pluck('nombre')->all();
     foreach ($presFactura?->complementos_lotes ?? [] as $lote => $c) $guardados["complemento@$lote"] = $c['archivos']->pluck('nombre')->all();
 @endphp
 <div x-data="correoVandu({{ Js::from(['plantillas' => $plantillasCorreo, 'previa' => route('admin.correos.vista-previa'), 'guardados' => (object) $guardados]) }})"
@@ -83,9 +83,6 @@
                         @endif
                         <label class="form-check" x-show="plantillas[clave] && plantillas[clave].miniaturas" x-cloak><input type="checkbox" class="form-check-input" name="incluir_miniaturas" value="1" x-model="miniaturas"> <span class="form-check-label"><i class="bi bi-images"></i> Fotos de la galería en el correo</span></label>
                         <label class="form-check"><input type="checkbox" class="form-check-input" name="incluir_banco" value="1" x-model="banco"> <span class="form-check-label">Datos bancarios</span></label>
-                        @if($ctxCorreo['presupuesto'] && \App\Support\Aceptacion::puedeResponder($ctxCorreo['presupuesto']))
-                            <label class="form-check"><input type="checkbox" class="form-check-input" name="incluir_codigo" value="1" x-model="codigo"> <span class="form-check-label"><i class="bi bi-shield-lock"></i> Código para aceptar o pedir cambios en línea <span class="secundario">(vale 24 h)</span></span></label>
-                        @endif
                         @if($hayPdf)
                             <label class="form-check"><input type="checkbox" class="form-check-input" name="adjuntar_pdf" value="1" x-model="pdf"> <span class="form-check-label"><i class="bi bi-paperclip"></i> Adjuntar PDF de {{ $ctxCorreo['presupuesto']->folio }}</span></label>
                         @endif
@@ -93,7 +90,7 @@
 
                     @if($guardados)
                         <label class="form-check correo-factura" x-show="guardados[clave]" x-cloak><input type="checkbox" class="form-check-input" name="adjuntar_factura" value="1" x-model="factura" :disabled="!guardados[clave]">
-                            <span class="form-check-label"><i class="bi bi-receipt"></i> <span x-text="clave.startsWith('complemento@') ? 'Adjuntar el complemento de pago' : 'Adjuntar la factura'"></span> de {{ $presFactura->folio }}
+                            <span class="form-check-label"><i class="bi bi-receipt"></i> <span x-text="clave.startsWith('complemento@') ? 'Adjuntar el complemento de pago' : (clave === 'nota' ? 'Adjuntar la nota de venta' : 'Adjuntar la factura')"></span> de {{ $presFactura->folio }}
                                 <span class="secundario d-block" style="font-size:12.5px" x-text="(guardados[clave] || []).join(' · ')"></span></span></label>
                     @endif
 

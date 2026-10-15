@@ -25,7 +25,7 @@
     // Lo que hay que atender con este cliente, en orden de urgencia
     $pendientes = collect();
     if ($vencido > 0) $pendientes->push(['bi-exclamation-octagon', 'rojo', 'Tiene ' . $dinero($vencido) . ' de pagos vencidos', 'Mándale un recordatorio desde su proyecto.', route('admin.clientes.show', [$cliente, 'ver' => 'proyectos']), 'Ver pagos']);
-    foreach ($facturaPorEnviar as $p) $pendientes->push(['bi-send', 'verde', "La factura de {$p->folio} está lista para enviar", $p->facturas_ordenadas->pluck('nombre')->join(' · '), route('admin.presupuestos.edit', [$p, 'correo' => 'factura']), 'Enviar factura']);
+    foreach ($facturaPorEnviar as $p) $pendientes->push(['bi-send', 'verde', "La " . ($p->es_nota ? 'nota de venta' : 'factura') . " de {$p->folio} está lista para enviar", $p->facturas_ordenadas->pluck('nombre')->join(' · '), route('admin.presupuestos.edit', [$p, 'correo' => $p->comprobante_corto]), 'Enviar factura']);
     // Facturas PPD: cada pago recibido lleva su complemento
     foreach ($ps as $p) {
         foreach ($p->complementos_lotes as $lote => $c) if (! $c['enviado']) $pendientes->push(['bi-receipt-cutoff', 'verde', "El complemento de pago de {$p->folio} está listo para enviar", $c['titulo'], route('admin.presupuestos.edit', [$p, 'correo' => "complemento@$lote"]), 'Enviar']);
@@ -132,12 +132,12 @@
             <ul class="dropdown-menu">
                 @foreach($conFactura as $p)
                     @php $env = $p->facturas->max('enviada_at'); @endphp
-                    <li><a class="dropdown-item" href="{{ route('admin.presupuestos.edit', [$p, 'correo' => 'factura']) }}"><i class="bi bi-send me-1"></i> {{ $env ? 'Reenviar' : 'Enviar' }} factura de {{ $p->folio }}
+                    <li><a class="dropdown-item" href="{{ route('admin.presupuestos.edit', [$p, 'correo' => $p->comprobante_corto]) }}"><i class="bi bi-send me-1"></i> {{ $env ? 'Reenviar' : 'Enviar' }} {{ $p->es_nota ? 'nota' : 'factura' }} de {{ $p->folio }}
                         <small>{{ $env ? 'Enviada ' . $env->locale('es')->diffForHumans() : 'Lista para enviar' }} · {{ \Illuminate\Support\Str::limit($p->conceptos->first()?->resumen ?: $p->titulo, 40) }}</small></a></li>
                 @endforeach
                 @if($conFactura->isNotEmpty() && $sinFactura->isNotEmpty())<li><hr class="dropdown-divider"></li>@endif
                 @foreach($sinFactura as $p)
-                    <li><a class="dropdown-item" href="{{ route('admin.presupuestos.edit', [$p, 'ver' => 'factura']) }}"><i class="bi bi-upload me-1"></i> Subir factura de {{ $p->folio }}
+                    <li><a class="dropdown-item" href="{{ route('admin.presupuestos.edit', [$p, 'ver' => 'factura']) }}"><i class="bi bi-upload me-1"></i> {{ $p->es_nota ? 'Hacer nota' : 'Subir factura' }} de {{ $p->folio }}
                         <small>{{ \Illuminate\Support\Str::limit($p->conceptos->first()?->resumen ?: $p->titulo, 50) }}</small></a></li>
                 @endforeach
             </ul>
@@ -308,7 +308,7 @@
                                 <button type="button" class="btn btn-fantasma btn-icono" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Acciones de {{ $p->folio }}"><i class="bi bi-three-dots"></i></button>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item" href="{{ route('admin.presupuestos.edit', [$p, 'correo' => 'cotizacion']) }}"><i class="bi bi-envelope me-2"></i>Enviar por correo</a></li>
-                                    @if($p->facturas->isNotEmpty())<li><a class="dropdown-item" href="{{ route('admin.presupuestos.edit', [$p, 'correo' => 'factura']) }}"><i class="bi bi-receipt me-2"></i>{{ $env ? 'Reenviar factura' : 'Enviar factura' }}</a></li>
+                                    @if($p->facturas->isNotEmpty())<li><a class="dropdown-item" href="{{ route('admin.presupuestos.edit', [$p, 'correo' => $p->comprobante_corto]) }}"><i class="bi bi-receipt me-2"></i>{{ $env ? 'Reenviar factura' : 'Enviar factura' }}</a></li>
                                     @elseif($p->estado === 'aceptada')<li><a class="dropdown-item" href="{{ route('admin.presupuestos.edit', [$p, 'ver' => 'factura']) }}"><i class="bi bi-upload me-2"></i>Subir factura</a></li>@endif
                                     @if($cliente->whatsapp)<li><a class="dropdown-item" href="{{ route('admin.presupuestos.whatsapp', $p) }}" target="_blank" rel="noopener"><i class="bi bi-whatsapp me-2"></i>Enviar por WhatsApp</a></li>@endif
                                     <li><button type="button" class="dropdown-item" data-copiar="{{ $p->url_publica }}"><i class="bi bi-link-45deg me-2"></i>Copiar enlace</button></li>
@@ -375,7 +375,7 @@
                                 · {{ $env ? 'Enviada ' . $env->locale('es')->diffForHumans() : 'Por enviar' }}
                             </div>
                         </div>
-                        <a href="{{ route('admin.presupuestos.edit', [$p, 'correo' => 'factura']) }}" class="btn {{ $env ? 'btn-borde' : 'btn-primario' }} btn-sm"><i class="bi bi-send me-1"></i> {{ $env ? 'Reenviar' : 'Enviar factura' }}</a>
+                        <a href="{{ route('admin.presupuestos.edit', [$p, 'correo' => $p->comprobante_corto]) }}" class="btn {{ $env ? 'btn-borde' : 'btn-primario' }} btn-sm"><i class="bi bi-send me-1"></i> {{ $env ? 'Reenviar' : 'Enviar factura' }}</a>
                     </div>
                 @endforeach
                 @foreach($sinFactura as $p)
@@ -384,7 +384,7 @@
                         <div class="t">
                             <a href="{{ route('admin.presupuestos.edit', [$p, 'ver' => 'factura']) }}" class="principal text-reset text-decoration-none num">{{ $p->folio }}</a>
                             <span class="secundario"> · {{ \Illuminate\Support\Str::limit($p->conceptos->first()?->resumen ?: $p->titulo, 50) }}</span>
-                            <div class="archivos">Aceptada · sin factura</div>
+                            <div class="archivos">Aceptada · sin {{ $p->es_nota ? 'nota de venta' : 'factura' }}</div>
                         </div>
                         <a href="{{ route('admin.presupuestos.edit', [$p, 'ver' => 'factura']) }}" class="btn btn-borde btn-sm"><i class="bi bi-upload me-1"></i> Subir factura</a>
                     </div>

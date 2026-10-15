@@ -8,9 +8,7 @@
     $ultAcept = $eventosTodos->firstWhere('tipo', 'aceptada');
     $ultCambios = $eventosTodos->firstWhere('tipo', 'cambios');
     $puede = Aceptacion::puedeResponder($p);
-    $vigentes = $p->codigos()->whereNull('usado_at')->where('expira_at', '>', now())->where('intentos', '<', Aceptacion::INTENTOS)->orderByDesc('expira_at')->get();
     $f = fn ($d) => $d->copy()->setTimezone(config('vandu.zona_horaria'))->locale('es')->isoFormat('D MMM, h:mm a');
-    $nuevoCodigo = session('codigo_nuevo');
 @endphp
 
 <section class="panel" id="respuesta-cliente">
@@ -23,7 +21,7 @@
         @if($p->estado === 'aceptada')
             <div>
                 @if($ultAcept && $ultAcept->actor === 'cliente')
-                    <b>Aceptada en línea</b> por {{ $ultAcept->autor }}<br><span class="secundario">{{ $f($ultAcept->created_at) }} · verificada con código</span>
+                    <b>Aceptada en línea</b> por {{ $ultAcept->autor }}<br><span class="secundario">{{ $f($ultAcept->created_at) }}</span>
                 @else
                     <b>Aceptada</b>{{ $p->aceptada_el ? ' el ' . $p->aceptada_el->locale('es')->isoFormat('D [de] MMMM') : '' }} <span class="secundario">· registrada por la agencia</span>
                 @endif
@@ -45,27 +43,7 @@
             @endif
 
             @if($puede)
-                <div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <b style="font-size:14px"><i class="bi bi-shield-lock me-1"></i> Código de verificación</b>
-                        {{-- El formulario vive fuera del de edición (no se pueden anidar formularios) --}}
-                        <button type="submit" form="generar-codigo" class="btn btn-fantasma btn-sm">Generar</button>
-                    </div>
-                    @if($nuevoCodigo)
-                        <div class="codigo-nuevo">
-                            <span class="num">{{ $nuevoCodigo['formateado'] }}</span>
-                            <button type="button" class="btn btn-borde btn-sm" data-copiar="{{ str_replace(' ', '', $nuevoCodigo['formateado']) }}"><i class="bi bi-clipboard"></i> Copiar</button>
-                        </div>
-                        <div class="secundario" style="font-size:12.5px">Vale hasta el {{ $nuevoCodigo['vence'] }}. Solo se muestra esta vez.</div>
-                    @endif
-                    <p class="secundario mt-1 mb-0" style="font-size:12.5px">
-                        @if($vigentes->count())
-                            {{ $vigentes->count() === 1 ? '1 código vigente' : $vigentes->count() . ' códigos vigentes' }} · el más reciente vence el {{ $f($vigentes->first()->expira_at) }}.
-                        @else
-                            Sin códigos vigentes. Se genera solo al enviar por correo o WhatsApp.
-                        @endif
-                    </p>
-                </div>
+                <p class="secundario m-0" style="font-size:12.5px"><i class="bi bi-link-45deg me-1"></i>El cliente puede aceptarla o pedir cambios desde su enlace.</p>
             @else
                 <p class="secundario m-0">No se puede responder en línea: {{ $p->estado === 'rechazada' ? 'está rechazada' : 'la vigencia ya pasó (extiéndela para habilitarlo)' }}.</p>
             @endif
@@ -98,8 +76,6 @@
 <style>
     .cambios-pedidos { border-left: 3px solid #6E32B5; background: #F7F2FD; border-radius: 0 10px 10px 0; padding: 10px 12px; }
     .cambios-pedidos .msg { white-space: pre-line; font-size: 14px; margin-top: 2px; }
-    .codigo-nuevo { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; padding: 10px 12px; border-radius: 10px; background: var(--green-soft); border: 1px solid #BDF2D6; }
-    .codigo-nuevo span { font-size: 24px; font-weight: 700; letter-spacing: .14em; }
     .historial { list-style: none; margin: 0; padding: 0; }
     .historial li { position: relative; padding: 0 0 16px 34px; }
     .historial li::before { content: ''; position: absolute; left: 12px; top: 26px; bottom: 2px; width: 1.5px; background: var(--line); }

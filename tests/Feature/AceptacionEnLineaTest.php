@@ -12,7 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
-/** El cliente acepta o pide cambios desde su enlace, con código de verificación de 24 h */
+/** El cliente acepta o pide cambios desde su enlace, solo con su nombre */
 class AceptacionEnLineaTest extends TestCase
 {
     use RefreshDatabase;
@@ -37,34 +37,30 @@ class AceptacionEnLineaTest extends TestCase
         return $this->postJson('/cotizacion/' . $this->p->token . '/responder', $datos + ['nombre' => 'Ana López']);
     }
 
-    public function test_whatsapp_lleva_el_codigo_y_queda_en_el_historial(): void
+    public function test_whatsapp_lleva_el_enlace_sin_codigo_y_queda_en_el_historial(): void
     {
         $r = $this->actingAs($this->u)->get('/admin/presupuestos/' . $this->p->id . '/whatsapp');
         $r->assertRedirect();
         $texto = urldecode(parse_url($r->headers->get('Location'), PHP_URL_QUERY));
-        $this->assertMatchesRegularExpression('/código de verificación: \*\d{3} \d{3}\*/u', $texto);
+        $this->assertStringNotContainsString('código', $texto);
+        $this->assertStringContainsString('puedes aceptarla o pedirme cambios', $texto);
         $this->assertStringContainsString($this->p->url_publica, $texto);
         $this->assertSame('enviada', $this->p->fresh()->estado);
-        $this->assertSame(['codigo', 'enviada'], PresupuestoEvento::orderBy('id')->pluck('tipo')->all());
+        $this->assertSame(['enviada'], PresupuestoEvento::orderBy('id')->pluck('tipo')->all());
     }
 
-    public function test_por_correo_va_el_codigo_y_con_el_se_acepta_una_sola_vez(): void
+    public function test_por_correo_y_se_acepta_desde_el_enlace_una_sola_vez(): void
     {
         $this->actingAs($this->u)->post('/admin/correos', [
             'contexto_tipo' => 'presupuesto', 'contexto_id' => $this->p->id, 'plantilla' => 'cotizacion',
-            'para' => 'ana@hotel.mx', 'asunto' => 'Cotización', 'cuerpo' => "Hola Ana,\n\nTu código es {codigo}.", 'incluir_codigo' => 1,
+            'para' => 'ana@hotel.mx', 'asunto' => 'Cotización', 'cuerpo' => "Hola Ana,\n\nTe comparto tu cotización.{codigo}",
         ])->assertSessionHasNoErrors();
-
-        $codigo = null;
-        Mail::assertSent(CorreoVandu::class, function ($m) use (&$codigo) {
-            $codigo = $m->codigo['formateado'] ?? null;
-            return $codigo && str_contains($m->cuerpo, $codigo);
-        });
+        Mail::assertSent(CorreoVandu::class, fn ($m) => $m->codigo === null && ! str_contains($m->cuerpo, '{codigo}'));
         $this->assertSame('enviada', $this->p->fresh()->estado);
 
         auth()->logout();
-        $this->responder(['accion' => 'aceptar', 'codigo' => '000 000'])->assertStatus(422)->assertJson(['campo' => 'codigo']);
-        $this->responder(['accion' => 'aceptar', 'codigo' => $codigo])->assertOk()->assertJson(['ok' => true]);
+        $this->get('/cotizacion/' . $this->p->token)->assertOk()->assertDontSee('Código de verificación');
+        $this->responder(['accion' => 'aceptar'])->assertOk()->assertJson(['ok' => true]);
 
         $p = $this->p->fresh();
         $this->assertSame('aceptada', $p->estado);
@@ -73,45 +69,31 @@ class AceptacionEnLineaTest extends TestCase
         $this->assertSame(['cliente', 'Ana López'], [$ev->actor, $ev->autor]);
 
         // Ya aceptada: el cliente no puede volver a responder
-        $this->responder(['accion' => 'cambios', 'mensaje' => 'Quiero otra cosa', 'codigo' => $codigo])->assertStatus(409);
+        $this->responder(['accion' => 'cambios', 'mensaje' => 'Quiero otra cosa'])->assertStatus(409);
         $this->get('/cotizacion/' . $this->p->token)->assertOk()->assertSee('Aceptada por')->assertDontSee('data-responder="aceptar"', false);
 
-        // En el panel se habilita crear proyecto
-        $this->actingAs($this->u)->get('/admin/presupuestos/' . $this->p->id . '/edit')->assertOk()->assertSee('Aceptada en línea')->assertSee('Crear proyecto');
+        // En el panel se habilita crear proyecto y ya no hay códigos
+        $this->actingAs($this->u)->get('/admin/presupuestos/' . $this->p->id . '/edit')->assertOk()->assertSee('Aceptada en línea')->assertSee('Crear proyecto')
+            ->assertDontSee('Código de verificación');
     }
 
     public function test_pedir_cambios_pasa_a_negociacion_y_se_ve_en_ambos_lados(): void
     {
-        $c = Aceptacion::generarCodigo($this->p, 'manual');
-        $this->responder(['accion' => 'cambios', 'codigo' => $c['codigo']])->assertStatus(422); // falta el mensaje
-        $this->responder(['accion' => 'cambios', 'mensaje' => 'Agregar 5 fotos aéreas con dron', 'codigo' => $c['formateado']])->assertOk();
+        $this->responder(['accion' => 'cambios'])->assertStatus(422); // falta el mensaje
+        $this->responder(['accion' => 'cambios', 'mensaje' => 'Agregar 5 fotos aéreas con dron'])->assertOk();
 
         $this->assertSame('negociacion', $this->p->fresh()->estado);
         $this->get('/cotizacion/' . $this->p->token)->assertSee('Recibimos tus comentarios')->assertSee('Agregar 5 fotos aéreas con dron')->assertSee('Historial de esta cotización');
         $this->actingAs($this->u)->get('/admin/presupuestos/' . $this->p->id . '/edit')->assertSee('Pidió cambios')->assertSee('Agregar 5 fotos aéreas con dron');
     }
 
-    public function test_el_codigo_vence_a_las_24_horas_y_se_bloquea_tras_5_intentos(): void
+    public function test_sin_nombre_no_se_acepta_y_vencida_tampoco(): void
     {
-        $c = Aceptacion::generarCodigo($this->p, 'manual');
-        $this->travel(25)->hours();
-        $this->responder(['accion' => 'aceptar', 'codigo' => $c['codigo']])->assertStatus(422)->assertJsonFragment(['campo' => 'codigo']);
-        $this->travelBack();
-
-        $c2 = Aceptacion::generarCodigo($this->p, 'manual');
-        $mal = $c2['codigo'] === '111111' ? '222222' : '111111';
-        for ($i = 0; $i < 5; $i++) $this->responder(['accion' => 'aceptar', 'codigo' => $mal]);
-        $this->responder(['accion' => 'aceptar', 'codigo' => $c2['codigo']])->assertStatus(422);
+        $this->postJson('/cotizacion/' . $this->p->token . '/responder', ['accion' => 'aceptar', 'nombre' => ''])->assertStatus(422);
+        $this->p->update(['vigente_hasta' => now()->subDay()]);
+        $this->responder(['accion' => 'aceptar'])->assertStatus(409);
         $this->assertSame('borrador', $this->p->fresh()->estado);
-    }
-
-    public function test_el_cliente_puede_pedir_su_codigo_por_correo_con_limite(): void
-    {
-        $this->postJson('/cotizacion/' . $this->p->token . '/codigo')->assertOk()->assertJsonFragment(['ok' => true]);
-        Mail::assertSent(CorreoVandu::class, fn ($m) => $m->hasTo('ana@hotel.mx') && preg_match('/\d{3} \d{3}/', $m->asunto));
-        $this->postJson('/cotizacion/' . $this->p->token . '/codigo');
-        $this->postJson('/cotizacion/' . $this->p->token . '/codigo');
-        $this->postJson('/cotizacion/' . $this->p->token . '/codigo')->assertStatus(429);
+        $this->postJson('/cotizacion/' . $this->p->token . '/codigo')->assertNotFound();
     }
 
     public function test_editar_deja_version_con_diferencias_y_la_agencia_cambia_estado_a_mano(): void

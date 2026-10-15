@@ -54,6 +54,7 @@
     .cq-tag.ambar { background: var(--amber-soft); color: var(--amber); }
     .cq-tag.verde { background: var(--green-soft); color: var(--green-ink); }
     .cq-acc { display: flex; justify-content: flex-end; gap: 2px; position: relative; z-index: 2; }
+    .cq-acc:has(.dropdown-menu.show) { z-index: 20; }   /* el menú abierto queda encima de la fila de abajo */
 
     .cq-vacio { text-align: center; padding: 48px 20px; }
     .cq-vacio .ico { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; margin: 0 auto 14px; background: var(--sunken); font-size: 24px; color: var(--text-2); }
@@ -166,9 +167,9 @@
                     @if(! in_array($p->estado, ['aceptada', 'rechazada'], true))@include('admin.presupuestos._vigencia', ['p' => $p])@endif
                     @if($p->estado === 'aceptada')
                         @if(! $p->proyecto)<a href="{{ route('admin.proyectos.create', $p) }}" class="cq-tag ambar"><i class="bi bi-kanban"></i> Crear proyecto</a>@endif
-                        @if($p->facturas->isEmpty())<a href="{{ route('admin.presupuestos.edit', [$p, 'ver' => 'factura']) }}" class="cq-tag ambar"><i class="bi bi-receipt"></i> Sin factura</a>
-                        @elseif(! $facEnv)<a href="{{ route('admin.presupuestos.edit', [$p, 'correo' => 'factura']) }}" class="cq-tag ambar"><i class="bi bi-send"></i> Enviar factura</a>
-                        @else<span class="cq-tag verde"><i class="bi bi-receipt"></i> Facturada</span>@endif
+                        @if($p->facturas->isEmpty())<a href="{{ route('admin.presupuestos.edit', [$p, 'ver' => 'factura']) }}" class="cq-tag ambar"><i class="bi bi-receipt"></i> Sin {{ $p->es_nota ? 'nota' : 'factura' }}</a>
+                        @elseif(! $facEnv)<a href="{{ route('admin.presupuestos.edit', [$p, 'correo' => $p->comprobante_corto]) }}" class="cq-tag ambar"><i class="bi bi-send"></i> Enviar {{ $p->es_nota ? 'nota' : 'factura' }}</a>
+                        @else<span class="cq-tag verde"><i class="bi bi-receipt"></i> {{ $p->es_nota ? 'Nota enviada' : 'Facturada' }}</span>@endif
                     @endif
                     @if($p->vistas && $p->estado !== 'aceptada')<span class="vistas" title="{{ $p->ultima_vista_at ? 'Última vez ' . $p->ultima_vista_at->locale('es')->diffForHumans() : '' }}"><i class="bi bi-eye"></i> {{ $p->vistas }}</span>@endif
                 </div>

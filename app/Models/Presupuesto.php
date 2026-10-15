@@ -29,7 +29,7 @@ class Presupuesto extends Model
     protected $fillable = [
         'cliente_id', 'prospecto_id', 'cliente_nombre', 'cliente_empresa', 'fecha', 'titulo', 'tipo',
         'emisor_nombre', 'emisor_telefono', 'emisor_sitio', 'emisor_email',
-        'modo_iva', 'metodo_sat', 'iva_porcentaje', 'consideraciones', 'observaciones',
+        'modo_iva', 'metodo_sat', 'comprobante', 'nota_folio', 'iva_porcentaje', 'consideraciones', 'observaciones',
         'mostrar_pago', 'pago_intro', 'banco', 'clabe', 'beneficiario',
         'nota_comprobante', 'nota_factura',
         'vigente_hasta', 'estado', 'aceptada_el', 'notas_internas',
@@ -126,7 +126,27 @@ class Presupuesto extends Model
     /** Archivos de su factura (PDF, XML) */
     public function facturas(): HasMany
     {
-        return $this->hasMany(PresupuestoFactura::class)->where('tipo', 'factura');
+        // El comprobante de la cotización: la factura, o la nota de venta si se paga sin factura
+        return $this->hasMany(PresupuestoFactura::class)->whereIn('tipo', ['factura', 'nota']);
+    }
+
+    /** ¿Se paga sin factura, con nota de venta? */
+    public function getEsNotaAttribute(): bool
+    {
+        return $this->comprobante === 'nota';
+    }
+
+    /** "factura" o "nota": sirve de texto corto y de clave de la plantilla de correo */
+    public function getComprobanteCortoAttribute(): string
+    {
+        return $this->es_nota ? 'nota' : 'factura';
+    }
+
+    /** Siguiente folio de nota de venta de la cuenta: NV-0001, NV-0002… */
+    public static function siguienteFolioNota(): string
+    {
+        $n = static::whereNotNull('nota_folio')->pluck('nota_folio')->map(fn ($f) => (int) preg_replace('/\D/', '', $f))->max() ?? 0;
+        return 'NV-' . str_pad((string) ($n + 1), 4, '0', STR_PAD_LEFT);
     }
 
     /** Complementos de pago (REP) de una factura PPD */

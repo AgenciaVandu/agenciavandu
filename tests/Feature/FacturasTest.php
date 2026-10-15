@@ -216,6 +216,79 @@ class FacturasTest extends TestCase
         $this->get(route('presupuesto.factura', [$this->p->token, $comps->first()->id]))->assertOk();
     }
 
+    public function test_lista_de_clientes_con_valor_y_pendientes(): void
+    {
+        $otro = Cliente::create(['nombre' => 'Luis', 'empresa' => 'Café Lima']);
+        $pr = \App\Models\Proyecto::desdePresupuesto($this->p->fresh('conceptos'), array_key_first(config('vandu.proyectos')));
+        $html = $this->get(route('admin.clientes.index'))->assertOk()
+            ->assertSee('Hotel X')->assertSee('Café Lima')->assertSee('$22,000')->assertSee('1 sin factura')->assertSee('1 en marcha')
+            ->assertSee('Con proyecto en marcha')->assertSee('Aceptado en')->getContent();
+        // Por valor: primero el que más ha comprado
+        $html = $this->get(route('admin.clientes.index', ['orden' => 'valor']))->getContent();
+        $this->assertLessThan(strpos($html, '>Café Lima<'), strpos($html, '>Hotel X<'));
+
+        $this->get(route('admin.clientes.index', ['ver' => 'activos']))->assertSee('Hotel X')->assertDontSee('Café Lima');
+        $this->get(route('admin.clientes.index', ['ver' => 'por_cobrar']))->assertSee('Hotel X');
+        $this->get(route('admin.clientes.index', ['ver' => 'sin_actividad']))->assertSee('Nadie en «Sin actividad en 3 meses»')->assertSee('Ver todos (2)');
+        $this->get(route('admin.clientes.index', ['orden' => 'nombre']))->assertOk();
+        $this->get(route('admin.clientes.index', ['q' => 'lima']))->assertSee('Café Lima')->assertDontSee('Hotel X');
+    }
+
+    public function test_nota_de_venta_para_quien_paga_sin_factura(): void
+    {
+        Mail::fake();
+        $edit = route('admin.presupuestos.edit', [$this->p, 'ver' => 'factura']);
+        $this->get($edit)->assertSee('¿Cómo le das comprobante?')->assertSee('Nota de venta');
+
+        // Se genera con los conceptos de la cotización
+        $this->post(route('admin.presupuestos.nota', $this->p), ['forma_pago' => 'efectivo'])->assertRedirect($edit)
+            ->assertSessionHas('ok', fn ($m) => str_contains($m, 'NV-0001'));
+        $p = $this->p->fresh();
+        $this->assertTrue($p->es_nota);
+        $this->assertSame('NV-0001', $p->nota_folio);
+        $nota = $p->facturas()->sole();
+        $this->assertSame('nota', $nota->tipo);
+        $this->assertSame('Nota de venta NV-0001.pdf', $nota->nombre);
+        $this->assertStringStartsWith('%PDF', $nota->contenido());
+
+        // Volver a generarla conserva el folio y reemplaza el archivo
+        $this->post(route('admin.presupuestos.nota', $this->p), ['con_iva' => 1]);
+        $this->assertSame(1, $p->facturas()->count());
+        $this->assertSame('NV-0001', $p->fresh()->nota_folio);
+        // Otra cotización toma el siguiente folio
+        $otra = Presupuesto::nuevaPara($p->cliente); $otra->save();
+        $otra->conceptos()->create(['titulo' => 'Logo', 'descripcion' => '', 'cantidad' => 1, 'precio' => 3000, 'orden' => 0]);
+        $this->post(route('admin.presupuestos.nota', $otra));
+        $this->assertSame('NV-0002', $otra->fresh()->nota_folio);
+
+        // Se ofrece la plantilla de nota (no la de factura) y adjunta la nota
+        $pl = \App\Support\Correos::plantillas(\App\Support\Correos::contexto('presupuesto', $p->id));
+        $this->assertArrayHasKey('nota', $pl);
+        $this->assertArrayNotHasKey('factura', $pl);
+        $this->get($edit)->assertSee('data-correo="nota"', false)->assertSee('Enviar nota de venta')->assertSee('Enviar la nota de venta');
+        $this->post('/admin/correos', [
+            'contexto_tipo' => 'presupuesto', 'contexto_id' => $p->id, 'plantilla' => 'nota',
+            'para' => 'ana@hotel.mx', 'asunto' => 'Nota de venta', 'cuerpo' => 'Hola', 'adjuntar_factura' => 1,
+        ])->assertSessionHasNoErrors();
+        Mail::assertSent(CorreoVandu::class, fn ($m) => array_column($m->archivos, 'nombre') === ['Nota de venta NV-0001.pdf']);
+        $this->assertNotNull($p->facturas()->first()->enviada_at);
+        $this->get(route('admin.presupuestos.index'))->assertSee('Nota enviada');
+
+        // El cliente la descarga
+        auth()->logout();
+        $this->get($p->url_publica)->assertSee('Nota de venta');
+        $this->get(route('presupuesto.factura', [$p->token, $p->facturas()->first()->id]))->assertOk();
+    }
+
+    public function test_subir_nota_propia_cambia_a_sin_factura(): void
+    {
+        $this->post(route('admin.presupuestos.facturas.subir', $this->p), ['tipo' => 'nota', 'facturas' => [$this->pdf('Mi nota.pdf')]])->assertRedirect();
+        $p = $this->p->fresh();
+        $this->assertTrue($p->es_nota);
+        $this->assertSame('nota', $p->facturas()->sole()->tipo);
+        $this->get(route('admin.clientes.show', $p->cliente))->assertSee('La nota de venta de ' . $p->folio . ' está lista para enviar');
+    }
+
     public function test_desde_el_proyecto_tambien_lleva_la_factura(): void
     {
         Mail::fake();

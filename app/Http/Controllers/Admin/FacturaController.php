@@ -25,12 +25,18 @@ class FacturaController extends Controller
             'facturas.*.max'    => 'Cada archivo puede pesar hasta 10 MB.',
         ]);
 
+        // Subir una nota de venta propia (en lugar de generarla) deja la cotización "sin factura"
+        if ($request->input('tipo') === 'nota' && ! $presupuesto->es_nota) {
+            $presupuesto->forceFill(['comprobante' => 'nota'])->saveQuietly();
+            $presupuesto->facturas()->get()->each->delete();
+        }
         foreach ($request->file('facturas') as $f) {
             $nombre = $f->getClientOriginalName() ?: 'factura.' . Str::lower($f->getClientOriginalExtension());
             // Si vuelves a subir un archivo con el mismo nombre, reemplaza al anterior
             $presupuesto->facturas()->where('nombre', $nombre)->get()->each->delete();
             $ruta = $f->storeAs("presupuestos/{$presupuesto->id}/facturas", Str::uuid() . '.' . Str::lower($f->getClientOriginalExtension()), 'local');
             $presupuesto->facturas()->create([
+                'tipo'   => $presupuesto->es_nota ? 'nota' : 'factura',
                 'nombre' => $nombre, 'ruta' => $ruta,
                 'mime'   => Str::lower($f->getClientOriginalExtension()) === 'xml' ? 'application/xml' : ($f->getMimeType() ?: 'application/octet-stream'),
                 'peso'   => $f->getSize(),
@@ -38,7 +44,39 @@ class FacturaController extends Controller
         }
 
         $n = count($request->file('facturas'));
-        return back()->with('ok', ($n === 1 ? 'Archivo de factura guardado' : "$n archivos de factura guardados") . " en {$presupuesto->folio}. El cliente ya puede descargarla.");
+        $que = $presupuesto->es_nota ? 'Nota de venta guardada' : ($n === 1 ? 'Archivo de factura guardado' : "$n archivos de factura guardados");
+        return back()->with('ok', "$que en {$presupuesto->folio}. El cliente ya puede descargarla.");
+    }
+
+    /**
+     * Nota de venta para quien paga sin factura: se arma con los conceptos de la cotización,
+     * se guarda como su comprobante y se envía y descarga igual que una factura.
+     */
+    public function generarNota(Request $request, Presupuesto $presupuesto)
+    {
+        $d = $request->validate([
+            'con_iva'    => 'nullable|boolean',
+            'forma_pago' => ['nullable', \Illuminate\Validation\Rule::in(array_keys(config('vandu.metodos_pago')))],
+            'nota_texto' => 'nullable|string|max:500',
+        ]);
+        $presupuesto->load('conceptos');
+        $presupuesto->forceFill(['comprobante' => 'nota', 'nota_folio' => $presupuesto->nota_folio ?: Presupuesto::siguienteFolioNota()])->saveQuietly();
+
+        $conIva = $request->boolean('con_iva');
+        $pdf = \App\Support\PresupuestoPdf::nota($presupuesto, $conIva, $d['forma_pago'] ?? null, $d['nota_texto'] ?? null);
+        $nombre = "Nota de venta {$presupuesto->nota_folio}.pdf";
+
+        // Una nota nueva reemplaza a la anterior
+        $presupuesto->facturas()->get()->each->delete();
+        $ruta = "presupuestos/{$presupuesto->id}/facturas/" . Str::uuid() . '.pdf';
+        \Illuminate\Support\Facades\Storage::disk('local')->put($ruta, $pdf->output());
+        $presupuesto->facturas()->create([
+            'tipo' => 'nota', 'nombre' => $nombre, 'ruta' => $ruta, 'mime' => 'application/pdf',
+            'peso' => \Illuminate\Support\Facades\Storage::disk('local')->size($ruta),
+        ]);
+
+        return redirect()->route('admin.presupuestos.edit', [$presupuesto, 'ver' => 'factura'])
+            ->with('ok', "Nota de venta {$presupuesto->nota_folio} lista. Ya la puedes enviar.");
     }
 
     /** Complemento de pago (REP) de una factura PPD: su PDF y XML, ligado al pago que ampara */

@@ -13,28 +13,73 @@ use Illuminate\Validation\Rule;
 
 class ClienteController extends Controller
 {
+    public const VISTAS = [
+        'todos'         => 'Todos',
+        'activos'       => 'Con proyecto en marcha',
+        'por_cobrar'    => 'Con saldo por cobrar',
+        'nuevos'        => 'Nuevos del sitio',
+        'sin_actividad' => 'Sin actividad en 3 meses',
+    ];
+
+    public const ORDENES = ['reciente' => 'Actividad reciente', 'valor' => 'Mayor valor', 'cobrar' => 'Más por cobrar', 'nombre' => 'Nombre (A–Z)'];
+
     public function index(Request $request)
     {
         $q = trim((string) $request->query('q'));
-        $soloNuevos = $request->query('ver') === 'nuevos';
-        $nuevos = Cliente::where('nuevo', true)->count();
+        $ver = $request->query('ver') ?? 'todos';
+        $ver = array_key_exists($ver, self::VISTAS) ? $ver : 'todos';
+        $orden = array_key_exists($request->query('orden'), self::ORDENES) ? $request->query('orden') : 'reciente';
+        $hace3m = now()->subMonths(3);
+
+        // Lo que vale cada cliente (aceptado, antes de IVA), lo que debe y cuándo fue lo último
+        $aceptado = 'SELECT COALESCE(SUM(pc.cantidad * pc.precio), 0) FROM presupuesto_conceptos pc JOIN presupuestos p ON p.id = pc.presupuesto_id WHERE p.cliente_id = clientes.id AND p.estado = \'aceptada\'';
+        $porCobrar = 'SELECT COALESCE(SUM(pg.monto), 0) FROM proyecto_pagos pg JOIN proyectos pr ON pr.id = pg.proyecto_id WHERE pr.cliente_id = clientes.id AND pg.pagado_el IS NULL';
+        $ultima = 'SELECT MAX(p.updated_at) FROM presupuestos p WHERE p.cliente_id = clientes.id';
+
+        $vista = fn (string $v) => function ($w) use ($v, $hace3m) {
+            match ($v) {
+                'activos'       => $w->whereHas('proyectos', fn ($p) => $p->where('estado', 'activo')),
+                'por_cobrar'    => $w->whereHas('proyectos.pagos', fn ($p) => $p->whereNull('pagado_el')),
+                'nuevos'        => $w->where('nuevo', true),
+                'sin_actividad' => $w->where('created_at', '<', $hace3m)->whereDoesntHave('presupuestos', fn ($p) => $p->where('updated_at', '>=', $hace3m)),
+                default         => $w,
+            };
+        };
 
         $clientes = Cliente::query()
-            ->withCount(['presupuestos', 'presupuestos as vigentes_count' => fn ($w) => $w->where('vigente_hasta', '>', now())])
-            ->withMax('presupuestos', 'fecha')
+            ->select('clientes.*')
+            ->selectRaw("($aceptado) as valor_aceptado")
+            ->selectRaw("($porCobrar) as por_cobrar")
+            ->selectRaw("COALESCE(($ultima), clientes.created_at) as ultima_actividad")
+            ->withCount(['presupuestos', 'proyectos as activos_count' => fn ($w) => $w->where('estado', 'activo')])
+            ->with(['presupuestos' => fn ($p) => $p->select('id', 'cliente_id', 'folio', 'estado', 'vigente_hasta', 'comprobante')->with('facturas:id,presupuesto_id,enviada_at')])
             ->when($q, fn ($query) => $query->where(fn ($w) => $w
                 ->where('nombre', 'like', "%$q%")
                 ->orWhere('empresa', 'like', "%$q%")
                 ->orWhere('email', 'like', "%$q%")
-                ->orWhere('telefono', 'like', "%$q%")))
-            ->when($soloNuevos, fn ($query) => $query->where('nuevo', true))
+                ->orWhere('telefono', 'like', "%$q%")
+                ->orWhere('rfc', 'like', "%$q%")))
+            ->where($vista($ver))
             ->orderByDesc('nuevo')
-            ->orderByRaw('CASE WHEN nuevo = 1 THEN contacto_at END DESC')
-            ->orderBy('nombre')
+            ->when($orden === 'reciente', fn ($o) => $o->orderByDesc('ultima_actividad'))
+            ->when($orden === 'valor', fn ($o) => $o->orderByDesc('valor_aceptado'))
+            ->when($orden === 'cobrar', fn ($o) => $o->orderByDesc('por_cobrar'))
+            ->orderByRaw('COALESCE(NULLIF(empresa, \'\'), nombre)')
             ->paginate(25)
             ->withQueryString();
 
-        return view('admin.clientes.index', compact('clientes', 'q', 'nuevos', 'soloNuevos'));
+        $conteos = collect(self::VISTAS)->map(fn ($t, $k) => Cliente::where($vista($k))->count())->all();
+        $anio = now(config('vandu.zona_horaria'))->startOfYear()->toDateString();
+        $resumen = [
+            'total'     => $conteos['todos'],
+            'nuevosMes' => Cliente::where('created_at', '>=', now(config('vandu.zona_horaria'))->startOfMonth())->count(),
+            'activos'   => $conteos['activos'],
+            'porCobrar' => (float) \App\Models\ProyectoPago::whereNull('pagado_el')->whereHas('proyecto')->sum('monto'),
+            'vencido'   => \App\Models\ProyectoPago::whereNull('pagado_el')->whereHas('proyecto')->get()->filter->vencido->sum('monto'),
+            'anio'      => \App\Models\Presupuesto::with('conceptos')->where('estado', 'aceptada')->where('aceptada_el', '>=', $anio)->get()->sum(fn ($p) => $p->subtotal),
+        ];
+
+        return view('admin.clientes.index', compact('clientes', 'q', 'ver', 'orden', 'conteos', 'resumen'));
     }
 
     /** Marcar un contacto nuevo como atendido (o volver a marcarlo como nuevo) */

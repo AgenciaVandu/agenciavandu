@@ -53,6 +53,13 @@ class Correos
             if ($clave === 'entrega_digital' && ! $ctx['proyecto']?->archivos->where('grupo', 'galeria')->where('visible', true)->count()) {
                 continue;
             }
+            // Factura o nota de venta: solo la que corresponde a la cotización
+            if (in_array($clave, ['factura', 'nota'], true) && ($pres = $ctx['presupuesto'] ?? $ctx['proyecto']?->presupuesto) && $pres->comprobante_corto !== $clave) {
+                continue;
+            }
+            if ($clave === 'nota' && ! ($ctx['presupuesto'] ?? $ctx['proyecto']?->presupuesto)) {
+                continue;
+            }
             // Un correo por cada complemento de pago subido (con sus archivos)
             if ($clave === 'complemento') {
                 $pres = $ctx['presupuesto'] ?? $ctx['proyecto']?->presupuesto;
@@ -94,7 +101,6 @@ class Correos
             'banco'   => ! empty($pl['banco']),
             'miniaturas' => ! empty($pl['miniaturas']),
             'adjuntos' => ! empty($pl['adjuntos']),
-            'codigo'   => ! empty($pl['codigo']) && $ctx['presupuesto'] && Aceptacion::puedeResponder($ctx['presupuesto']),
             'para'    => self::destinatario($ctx, $clave),
         ];
     }
@@ -130,7 +136,7 @@ class Correos
             '{entregables}'  => $pr?->entregables_texto ?? '',
             '{siguiente}'    => $pr ? Str::lcfirst($pr->siguiente_paso ?? 'te mantendremos al tanto') : '',
             '{firma}'        => config('vandu.emisor.nombre'),
-            '{codigo}'       => '{codigo}', // se genera al enviar
+            '{codigo}'       => '',   // ya no se usa: se quita de las plantillas que lo traigan
         ];
     }
 
