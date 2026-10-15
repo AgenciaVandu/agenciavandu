@@ -32,6 +32,9 @@ class PageController extends Controller
     public function alianzas() {
         return view('construccion');
     }
+    public function privacidad() {
+        return view('privacidad');
+    }
     public function construccion() {
         return view('construccion');
     }
@@ -44,6 +47,7 @@ class PageController extends Controller
             ['ruta' => 'inmobiliarias', 'prioridad' => '0.8', 'archivo' => 'inmobiliarias'],
             ['ruta' => 'audiovisuales', 'prioridad' => '0.9', 'archivo' => 'audiovisuales'],
             ['ruta' => 'cotizar', 'prioridad' => '0.7', 'archivo' => 'contacto'],
+            ['ruta' => 'privacidad', 'prioridad' => '0.2', 'archivo' => 'privacidad'],
         ];
 
         $dominio = 'https://agenciavandu.com';

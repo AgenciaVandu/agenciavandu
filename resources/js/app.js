@@ -1,5 +1,6 @@
 import './bootstrap';
 import './whatsapp';
+import './cookies';
 import '../scss/app.scss'
 import * as bootstrap from 'bootstrap'
 

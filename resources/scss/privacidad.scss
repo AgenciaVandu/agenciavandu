@@ -1,0 +1,160 @@
+// Aviso de privacidad: página de lectura, mismo lenguaje oscuro del index.
+@use 'colores';
+
+$fondo: #0c0e12;
+$superficie: #13161d;
+$tinta: #f1f5f3;
+$gris: #a7b0ab;
+$linea: rgba(241, 245, 243, .12);
+
+.body:has(.pv),
+.navbar:has(~ main .pv) {
+    background: $fondo;
+}
+
+.pv {
+    // la página no espera al efecto de aparición de las demás secciones
+    opacity: 1 !important;
+    transform: none !important;
+    background: $fondo;
+    color: $tinta;
+    padding: 150px 20px 96px;
+}
+
+.pv-contenedor {
+    max-width: 760px;
+    margin: 0 auto;
+
+    h1 {
+        margin: 0;
+        font-family: 'Geist-bold', 'Helvetica Neue', Arial, sans-serif;
+        font-size: clamp(36px, 6vw, 64px);
+        line-height: 1;
+        letter-spacing: -.02em;
+        text-transform: uppercase;
+    }
+
+    h2 {
+        margin: 48px 0 14px;
+        font-family: 'Geist-bold', sans-serif;
+        font-size: 22px;
+        letter-spacing: -.01em;
+        color: $tinta;
+        scroll-margin-top: 120px;
+    }
+
+    p,
+    li {
+        color: $gris;
+        font-size: 16px;
+        line-height: 1.7;
+    }
+
+    b {
+        color: $tinta;
+        font-family: 'Geist-medium', sans-serif;
+        font-weight: 500;
+    }
+
+    ul {
+        padding-left: 20px;
+        margin: 0 0 16px;
+        display: grid;
+        gap: 6px;
+    }
+
+    li::marker {
+        color: colores.$green;
+    }
+
+    a {
+        color: colores.$green;
+    }
+}
+
+.pv-ceja {
+    margin: 0 0 14px !important;
+    font-family: 'Geist-medium', sans-serif;
+    font-size: 12px !important;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: colores.$green !important;
+}
+
+.pv-fecha {
+    margin: 16px 0 0;
+    font-size: 14px !important;
+}
+
+.pv-indice {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 32px 0 8px;
+
+    a {
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid $linea;
+        color: $tinta !important;
+        font-size: 13px;
+        text-decoration: none;
+
+        &:hover {
+            border-color: colores.$green;
+        }
+    }
+}
+
+.pv-enlace {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: colores.$green;
+    text-decoration: underline;
+    font: inherit;
+    cursor: pointer;
+}
+
+.pv-tabla {
+    overflow-x: auto;
+    margin: 8px 0 16px;
+    border: 1px solid $linea;
+    border-radius: 14px;
+
+    table {
+        width: 100%;
+        min-width: 520px;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    th {
+        text-align: left;
+        padding: 12px 14px;
+        font-size: 11px;
+        font-weight: 400;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: $gris;
+        background: $superficie;
+    }
+
+    td {
+        padding: 12px 14px;
+        border-top: 1px solid $linea;
+        color: $gris;
+        vertical-align: top;
+
+        &:first-child {
+            color: $tinta;
+            white-space: nowrap;
+        }
+    }
+}
+
+@media (max-width: 560px) {
+    .pv {
+        padding-top: 120px;
+    }
+}

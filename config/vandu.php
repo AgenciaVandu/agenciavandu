@@ -144,6 +144,15 @@ return [
         'email'    => env('VANDU_EMISOR_EMAIL', 'ab@agenciavandu.com'),
     ],
 
+    // Aviso de privacidad del sitio (LFPDPPP 2025). El domicilio se puede completar con calle y número en el .env
+    'privacidad' => [
+        'responsable'  => env('VANDU_PRIVACIDAD_RESPONSABLE', env('VANDU_EMISOR_NOMBRE', 'Alvar Buenfil')),
+        'nombre_comercial' => 'Agencia Vandu',
+        'domicilio'    => env('VANDU_PRIVACIDAD_DOMICILIO', 'Mérida, Yucatán, México, C.P. 97000'),
+        'correo'       => env('VANDU_PRIVACIDAD_CORREO', 'proyectos@agenciavandu.com'),
+        'actualizado'  => '15 de octubre de 2026',
+    ],
+
     // WhatsApp (solo dígitos, con lada de país) para el botón de la vista del cliente
     'whatsapp' => env('VANDU_WHATSAPP', '529991460310'),
 

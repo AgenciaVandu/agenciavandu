@@ -67,6 +67,7 @@
         </div>
 
         <p class="wa-error" id="wa-error" role="alert" hidden></p>
+        <p class="wa-legal">Al continuar aceptas nuestro <a href="{{ route('privacidad') }}" target="_blank">aviso de privacidad</a>. Usamos tus datos solo para responderte y darte seguimiento.</p>
 
         <footer class="wa-acciones">
             <button type="submit" class="wa-enviar" id="wa-enviar">Abrir WhatsApp</button>

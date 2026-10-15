@@ -13,6 +13,7 @@ $fuentes : (
 @use 'footer';
 @use 'form';
 @use 'whatsapp';
+@use 'cookies';
 
 body {
     cursor: url(/public/img/cursor1.svg), auto;

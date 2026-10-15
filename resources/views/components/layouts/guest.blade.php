@@ -9,6 +9,26 @@
         function gtag() {
             dataLayer.push(arguments);
         }
+        // Consent Mode v2: en México se informa con la barra y se puede rechazar;
+        // en el Espacio Económico Europeo, Reino Unido y Suiza nada se guarda hasta que la persona acepte.
+        gtag('consent', 'default', {
+            analytics_storage: 'granted', ad_storage: 'granted', ad_user_data: 'granted', ad_personalization: 'granted'
+        });
+        gtag('consent', 'default', {
+            analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied',
+            wait_for_update: 500,
+            region: ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IS','IE','IT','LV','LI','LT','LU','MT','NL','NO','PL','PT','RO','SK','SI','ES','SE','GB','CH']
+        });
+        try {
+            var eleccionCookies = localStorage.getItem('vandu-cookies');
+            if (eleccionCookies) {
+                var estadoCookies = eleccionCookies === 'todas' ? 'granted' : 'denied';
+                gtag('consent', 'update', {
+                    analytics_storage: estadoCookies, ad_storage: estadoCookies, ad_user_data: estadoCookies, ad_personalization: estadoCookies
+                });
+            }
+        } catch (e) {}
+
         gtag('js', new Date());
 
         // Configuración de Google Analytics 4
@@ -120,6 +140,7 @@
     <x-footer />
 
     <x-whatsapp-modal />
+    <x-cookies />
 
 </body>
 @stack('js')

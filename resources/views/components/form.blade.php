@@ -45,6 +45,7 @@
             </select>
         </div>
     </div>
+   <p class="form-legal mt-3 mb-0">Al enviar aceptas nuestro <a href="{{ route('privacidad') }}" target="_blank">aviso de privacidad</a>.</p>
    <div class="col-12 mt-3">
         <button type="submit" class="btn btn-primary btn-send btn-block" id="btn-submit">
             <span class="spinner-border spinner-border-sm d-none" id="loader" role="status"></span>

@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Http;
 Route::get ('/', [PageController::class, 'index'])->name("home");
 
 Route::get('/sitemap.xml', [PageController::class, 'sitemap'])->name('sitemap');
+Route::get('/aviso-de-privacidad', [PageController::class, 'privacidad'])->name('privacidad');
 
 Route::get('/servicios', [Pagecontroller::class, 'servicios'])->name('servicios');
 

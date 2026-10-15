@@ -22,3 +22,12 @@ $fuentes : (
             color: colores.$green !important;
         }
     }
+.form-legal {
+    font-size: 13px;
+    opacity: .75;
+
+    a {
+        color: inherit;
+        text-decoration: underline;
+    }
+}

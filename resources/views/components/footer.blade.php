@@ -34,7 +34,12 @@
         </div>
         <div class="copy">
             <img src="{{asset('img/icono-vandu.svg')}}" class="14" alt="icono agencia vandu">Agencia de desarrollo web, fotografía y video en Mérida.
-            © 2026
+            © {{ date('Y') }}
+        </div>
+        <div class="copy legales">
+            <a href="{{ route('privacidad') }}">Aviso de privacidad</a>
+            <span aria-hidden="true">·</span>
+            <button type="button" data-cookies-abrir>Preferencias de cookies</button>
         </div>
     </div>
 </footer>

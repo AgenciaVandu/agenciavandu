@@ -321,3 +321,14 @@ html.wa-abierto {
         animation: none;
     }
 }
+
+.wa-legal {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: $wa-gris;
+
+    a {
+        color: colores.$green;
+    }
+}
