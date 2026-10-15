@@ -16,8 +16,8 @@
     // imagen fija {video}.webp; si el clip todavía no existe, el proyecto no se muestra.
     $sitios = collect([
         ['video' => 'web-nicxa1', 'cliente' => 'Grupo Nicxa', 'tipo' => 'Sitio para grupo de franquicias', 'detalle' => 'Un solo sitio para KFC, Burger King, Pizza Hut y Bisquets Obregón, con promociones por marca.'],
-        ['video' => 'web-maxispace', 'cliente' => 'Maxispace', 'tipo' => 'Sitio y captación de prospectos', 'detalle' => 'Renta de mini bodegas: sitio para cotizar por medidas y panel para dar seguimiento a cada prospecto.'],
-        ['video' => 'web-stev', 'cliente' => 'Stev Seguridad Privada', 'tipo' => 'Sitio corporativo', 'detalle' => 'Presencia profesional para una empresa de seguridad privada, pensada para generar contactos.'],
+        ['video' => 'web-maxispace', 'cliente' => 'Maxispace', 'tipo' => 'Sitio y captación de prospectos', 'detalle' => 'Mini bodegas en renta: tamaños, ubicaciones con mapa y formulario que llega directo a WhatsApp.'],
+        ['video' => 'web-stev', 'cliente' => 'Stev Seguridad Privada', 'tipo' => 'Sitio corporativo', 'detalle' => 'Traslado y custodia de valores con cobertura nacional: servicios, tecnología y contacto directo por WhatsApp.'],
         ['video' => 'web-osorio', 'cliente' => 'Grupo Osorio', 'tipo' => 'Sitio corporativo', 'detalle' => 'Sitio para un grupo con más de 30 años de experiencia y varias líneas de negocio.'],
         ['video' => 'web-rewear', 'cliente' => 'Rewear', 'tipo' => 'Tienda en línea', 'detalle' => 'Catálogo de ropa con fichas de producto, tallas y colores.'],
     ])->filter(fn ($s) => file_exists(public_path('img/inicio/' . $s['video'] . '.mp4')))->values();
