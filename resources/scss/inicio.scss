@@ -333,92 +333,6 @@ $verde-tinta: #03140b;
     }
 }
 
-// ---------- servicios ----------
-.vi-servicios {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-}
-
-.vi-servicio {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 14px 14px 22px;
-    border-radius: 20px;
-    background: $superficie;
-    border: 1px solid $linea;
-    color: $tinta;
-    text-decoration: none;
-    transition: border-color .3s ease, transform .3s ease;
-
-    > h3,
-    > p,
-    > ul,
-    > .vi-mas {
-        margin-inline: 8px;
-    }
-
-    p {
-        margin-block: 0;
-        font-size: 15px;
-    }
-
-    ul {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        padding: 0;
-        margin-block: 4px 0;
-        list-style: none;
-    }
-
-    li {
-        font-size: 12.5px;
-        padding: 4px 10px;
-        border-radius: 999px;
-        border: 1px solid $linea;
-        color: $tinta;
-    }
-
-    &:hover {
-        color: $tinta;
-        border-color: colores.$green;
-        transform: translateY(-4px);
-
-        .vi-mas {
-            color: colores.$green;
-        }
-
-        img {
-            transform: scale(1.05);
-        }
-    }
-}
-
-.vi-servicio-foto {
-    aspect-ratio: 16 / 10;
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 6px;
-
-    img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform .6s ease;
-    }
-}
-
-.vi-mas {
-    margin-top: auto;
-    padding-top: 6px;
-    font-family: 'Geist-medium', sans-serif;
-    font-size: 14px;
-    color: $gris;
-    transition: color .3s ease;
-}
-
 // ---------- banda CTA ----------
 .vi-banda {
     padding-block: 24px;
@@ -455,61 +369,7 @@ $verde-tinta: #03140b;
     }
 }
 
-// ---------- portal ----------
-.vi-portal {
-    display: grid;
-    grid-template-columns: 1fr 1.1fr;
-    gap: 56px;
-    align-items: center;
-
-    > * {
-        min-width: 0;
-    }
-
-    .vi-portal-texto > p {
-        margin: 20px 0 24px;
-        font-size: 17px;
-    }
-}
-
-.vi-checks {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    gap: 12px;
-
-    li {
-        position: relative;
-        padding-left: 30px;
-        color: $tinta;
-
-        &::before {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 3px;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: colores.$green;
-            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='10'/%3E%3C/svg%3E");
-        }
-
-        &::after {
-            content: "";
-            position: absolute;
-            left: 6px;
-            top: 7px;
-            width: 6px;
-            height: 9px;
-            border: solid $verde-tinta;
-            border-width: 0 2px 2px 0;
-            transform: rotate(45deg);
-        }
-    }
-}
-
+// ---------- panel (vistas de sistemas) ----------
 .vi-panel {
     border-radius: 20px;
     background: $superficie;
@@ -638,27 +498,6 @@ $verde-tinta: #03140b;
     }
 }
 
-.vi-miniaturas {
-    display: flex;
-    gap: 6px;
-
-    img,
-    span {
-        width: 44px;
-        height: 44px;
-        border-radius: 8px;
-        object-fit: cover;
-    }
-
-    span {
-        display: grid;
-        place-items: center;
-        background: $fondo;
-        font-size: 12px;
-        color: $gris;
-    }
-}
-
 .vi-aprobar div {
     display: flex;
     gap: 8px;
@@ -676,6 +515,368 @@ $verde-tinta: #03140b;
             color: $verde-tinta;
         }
     }
+}
+
+// ---------- sistemas ----------
+.vi-sistemas .vi-encabezado > p:last-child,
+.vi-video-texto > p:not(.vi-ceja) {
+    margin: 20px 0 0;
+    font-size: 17px;
+}
+
+.vi-sistemas-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 24px;
+    align-items: start;
+
+    > * {
+        min-width: 0;
+    }
+}
+
+.vi-pestanas {
+    display: grid;
+    gap: 8px;
+}
+
+.vi-pestana {
+    display: grid;
+    gap: 4px;
+    padding: 16px 18px;
+    border-radius: 14px;
+    border: 1px solid $linea;
+    background: transparent;
+    color: $tinta;
+    text-align: left;
+    transition: border-color .25s ease, background .25s ease;
+
+    b {
+        font-family: 'Geist-medium', sans-serif;
+        font-weight: 500;
+        font-size: 17px;
+    }
+
+    span {
+        display: none;
+        font-size: 14px;
+        line-height: 1.5;
+        color: $gris;
+    }
+
+    &:hover {
+        border-color: rgba(colores.$green, .5);
+    }
+
+    &:focus-visible {
+        outline: 2px solid colores.$green;
+        outline-offset: 2px;
+    }
+
+    &.activo {
+        background: $superficie;
+        border-color: colores.$green;
+
+        span {
+            display: block;
+        }
+    }
+}
+
+.vi-vista {
+    padding: 18px;
+    min-height: 300px;
+}
+
+.vi-vista-whatsapp {
+    display: grid;
+    gap: 16px;
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+.vi-chat {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    border-radius: 14px;
+    background: #0b141a; // fondo tipo chat
+}
+
+.vi-burbuja {
+    max-width: 78%;
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: $tinta !important;
+
+    &.cliente {
+        align-self: flex-start;
+        background: #202c33;
+        border-top-left-radius: 4px;
+    }
+
+    &.negocio {
+        align-self: flex-end;
+        background: #005c4b;
+        border-top-right-radius: 4px;
+    }
+}
+
+.vi-aviso {
+    display: grid;
+    gap: 6px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: $superficie-2;
+    border: 1px solid rgba(colores.$green, .4);
+
+    .vi-estado {
+        justify-self: start;
+    }
+
+    strong {
+        font-family: 'Geist-medium', sans-serif;
+        font-weight: 500;
+        color: $tinta;
+    }
+
+    small {
+        color: $gris;
+        font-size: 13px;
+    }
+}
+
+.vi-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+
+    th {
+        text-align: left;
+        font-size: 11px;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: $gris;
+        font-weight: 400;
+        padding: 0 8px 10px;
+    }
+
+    td {
+        padding: 12px 8px;
+        border-top: 1px solid $linea;
+        color: $tinta;
+    }
+
+    tr.bajo td {
+        color: colores.$green;
+    }
+}
+
+.vi-estado.alerta {
+    margin-left: 6px;
+}
+
+.vi-nota {
+    margin: 16px 0 0;
+    font-size: 13px !important;
+}
+
+.vi-embudo {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+
+    > div {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 14px;
+        border-radius: 14px;
+        background: $superficie-2;
+        border: 1px solid $linea;
+        min-width: 0;
+    }
+
+    small {
+        font-size: 11px;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: $gris;
+    }
+
+    strong {
+        font-family: 'Geist-bold', sans-serif;
+        font-size: 20px;
+        color: colores.$green;
+        font-variant-numeric: tabular-nums;
+    }
+
+    span {
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: $fondo;
+        font-size: 13px;
+        color: $tinta;
+    }
+}
+
+.vi-caso {
+    margin: 28px 0 0;
+    max-width: 760px;
+    padding-left: 16px;
+    border-left: 2px solid colores.$green;
+
+    b {
+        color: $tinta;
+    }
+}
+
+// ---------- video ----------
+.vi-video-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 56px;
+    align-items: center;
+
+    > * {
+        min-width: 0;
+    }
+}
+
+.vi-video-columnas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 28px;
+
+    > div {
+        padding: 20px;
+        border-radius: 16px;
+        background: $superficie;
+        border: 1px solid $linea;
+    }
+
+    .vi-ia {
+        border-color: rgba(colores.$green, .45);
+        background:
+            radial-gradient(ellipse 80% 60% at 100% 0%, rgba(colores.$green, .16), transparent 70%),
+            $superficie;
+    }
+
+    h3 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        font-size: 17px !important;
+        margin-bottom: 12px !important;
+    }
+
+    ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 8px;
+    }
+
+    li {
+        position: relative;
+        padding-left: 16px;
+        font-size: 15px;
+        color: $tinta;
+
+        &::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: .6em;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: colores.$green;
+        }
+    }
+}
+
+.vi-reel {
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    border: 1px solid $linea;
+    background: $superficie;
+    aspect-ratio: 16 / 9;
+
+    video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+}
+
+// ---------- lista de servicios ----------
+.vi-lista-servicios {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid $linea;
+
+    a {
+        display: grid;
+        grid-template-columns: 48px minmax(0, 1fr) minmax(0, 1.4fr) 32px;
+        align-items: center;
+        gap: 20px;
+        padding: 24px 4px;
+        border-bottom: 1px solid $linea;
+        color: $tinta;
+        text-decoration: none;
+        transition: background .25s ease, padding .25s ease;
+
+        &:hover {
+            color: $tinta;
+            padding-inline: 16px;
+            background: $superficie;
+
+            .vi-lista-flecha {
+                color: colores.$green;
+                transform: translateX(4px);
+            }
+        }
+    }
+
+    b {
+        font-family: 'Geist-bold', sans-serif;
+        font-size: clamp(20px, 2.2vw, 28px);
+        text-transform: uppercase;
+        letter-spacing: -.01em;
+        line-height: 1.1;
+    }
+}
+
+.vi-lista-num {
+    font-size: 13px;
+    color: colores.$green;
+    font-variant-numeric: tabular-nums;
+}
+
+.vi-lista-texto {
+    color: $gris;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.vi-lista-flecha {
+    color: $gris;
+    font-size: 20px;
+    transition: transform .25s ease, color .25s ease;
 }
 
 // ---------- proceso ----------
@@ -926,10 +1127,6 @@ $verde-tinta: #03140b;
         grid-auto-rows: 200px;
     }
 
-    .vi-servicios {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
     .vi-webs-grid {
         grid-template-columns: 1fr;
     }
@@ -938,7 +1135,8 @@ $verde-tinta: #03140b;
         grid-template-columns: repeat(2, 1fr);
     }
 
-    .vi-portal,
+    .vi-sistemas-grid,
+    .vi-video-grid,
     .vi-contacto-grid {
         grid-template-columns: 1fr;
         gap: 40px;
@@ -978,7 +1176,6 @@ $verde-tinta: #03140b;
         padding: 6px 9px;
     }
 
-    .vi-servicios,
     .vi-pasos,
     .vi-ventajas {
         grid-template-columns: 1fr;
@@ -988,8 +1185,26 @@ $verde-tinta: #03140b;
         grid-template-columns: 1fr;
     }
 
-    .vi-panel-cuerpo {
+    .vi-panel-cuerpo,
+    .vi-video-columnas,
+    .vi-embudo {
         grid-template-columns: 1fr;
+    }
+
+    .vi-lista-servicios a {
+        grid-template-columns: 32px minmax(0, 1fr) 20px;
+        gap: 10px 12px;
+        padding-block: 18px;
+    }
+
+    .vi-lista-texto {
+        grid-column: 2 / 3;
+        grid-row: 2;
+        font-size: 14px;
+    }
+
+    .vi-vista {
+        min-height: 0;
     }
 
     .vi-avance {

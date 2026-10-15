@@ -155,8 +155,24 @@ const iniciarSitios = () => {
     });
 };
 
+// Sistemas: pestañas que cambian la vista de ejemplo
+const iniciarSistemas = () => {
+    const pestanas = [...document.querySelectorAll('.vi-pestana')];
+    if (!pestanas.length) return;
+    const elegir = (p) => {
+        pestanas.forEach((x) => {
+            const activa = x === p;
+            x.classList.toggle('activo', activa);
+            x.setAttribute('aria-selected', activa ? 'true' : 'false');
+            document.getElementById(x.getAttribute('aria-controls')).hidden = !activa;
+        });
+    };
+    pestanas.forEach((p) => p.addEventListener('click', () => elegir(p)));
+};
+
 const iniciar = () => {
     iniciarHero();
+    iniciarSistemas();
     iniciarSitios();
     iniciarVideos();
 };

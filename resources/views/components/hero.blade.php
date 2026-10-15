@@ -1,6 +1,6 @@
 @php
     $whatsapp = 'https://wa.me/529991460310';
-    $servicios = ['sitios web que venden', 'fotografía de alimentos e interiores', 'video para tu marca', 'rótulos, lonas y bordados', 'redes sociales cada mes'];
+    $servicios = ['sitios web que venden', 'sistemas que funcionan con WhatsApp', 'videos con inteligencia artificial', 'fotografía que se antoja', 'rótulos, lonas y bordados'];
     $trabajos = [
         ['img' => 'antelar-41.webp', 'cliente' => 'Antelar', 'servicio' => 'Fotografía de interiores', 'alt' => 'Interior de hotel'],
         ['img' => 'kuro-23.webp', 'cliente' => 'Kuro', 'servicio' => 'Fotografía de alimentos', 'alt' => 'Platillo de sushi'],
@@ -37,7 +37,7 @@
 
         <p class="vh-lead">
             Creamos <span class="vh-escribe" data-palabras='@json($servicios)'>{{ $servicios[0] }}</span><span class="vh-cursor" aria-hidden="true"></span>
-            <small>Sitios web, fotografía, video y producción con un solo equipo. Desde Mérida para negocios de todo México que quieren vender más.</small>
+            <small>Sitios web, sistemas, video con IA, fotografía y producción con un solo equipo. Desde Mérida para negocios de todo México que quieren vender más.</small>
         </p>
 
         <div class="vh-botones">

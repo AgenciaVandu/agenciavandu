@@ -36,6 +36,10 @@
                 <option value="">Selecciona una opción...</option>
                 <option value="web">Diseño o rediseño de sitio web</option>
                 <option value="photo">Fotografía de interiores o alimentos.</option>
+                <option value="sistemas">Sistemas y automatización con WhatsApp</option>
+                <option value="video">Video y video con IA</option>
+                <option value="redes">Manejo de redes sociales</option>
+                <option value="produccion">Impresión, rotulación, bordado o promocionales</option>
                 <option value="digital">Diseño digital (Equipos de diseño on demand)</option>
                 <option value="ia-friendly">Servicios AI Friendly</option>
             </select>
