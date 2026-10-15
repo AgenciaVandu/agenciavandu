@@ -13,7 +13,7 @@
     $facturasGuardadas = $presFactura?->facturas_ordenadas ?? collect();
     // Archivos guardados que cada plantilla adjunta: la factura, o cada complemento de pago
     $guardados = [];
-    if ($facturasGuardadas->isNotEmpty()) $guardados['factura'] = $facturasGuardadas->pluck('nombre')->all();
+    if ($facturasGuardadas->isNotEmpty()) $guardados[$presFactura->comprobante_corto] = $facturasGuardadas->pluck('nombre')->all();
     foreach ($presFactura?->complementos_lotes ?? [] as $lote => $c) $guardados["complemento@$lote"] = $c['archivos']->pluck('nombre')->all();
 @endphp
 <div x-data="correoVandu({{ Js::from(['plantillas' => $plantillasCorreo, 'previa' => route('admin.correos.vista-previa'), 'guardados' => (object) $guardados]) }})"
@@ -93,7 +93,7 @@
 
                     @if($guardados)
                         <label class="form-check correo-factura" x-show="guardados[clave]" x-cloak><input type="checkbox" class="form-check-input" name="adjuntar_factura" value="1" x-model="factura" :disabled="!guardados[clave]">
-                            <span class="form-check-label"><i class="bi bi-receipt"></i> <span x-text="clave.startsWith('complemento@') ? 'Adjuntar el complemento de pago' : 'Adjuntar la factura'"></span> de {{ $presFactura->folio }}
+                            <span class="form-check-label"><i class="bi bi-receipt"></i> <span x-text="clave.startsWith('complemento@') ? 'Adjuntar el complemento de pago' : (clave === 'nota' ? 'Adjuntar la nota de venta' : 'Adjuntar la factura')"></span> de {{ $presFactura->folio }}
                                 <span class="secundario d-block" style="font-size:12.5px" x-text="(guardados[clave] || []).join(' · ')"></span></span></label>
                     @endif
 

@@ -384,6 +384,13 @@ return [
                 'cuerpo' => "Hola {nombre},\n\nTe comparto la factura correspondiente a {concepto}. Adjunto encontrarás el PDF y el XML para tu contabilidad.\n\nSi necesitas algún ajuste en los datos fiscales o que la enviemos a otro correo, respóndeme este mensaje y lo corregimos.\n\nGracias por tu confianza.",
                 'adjuntos' => true, 'para_factura' => true,
             ],
+            'nota' => [
+                'nombre' => 'Enviar nota de venta', 'icono' => 'bi-receipt', 'para' => ['proyecto', 'presupuesto'],
+                'asunto' => 'Nota de venta · {concepto}',
+                'titulo' => 'Tu nota de venta',
+                'cuerpo' => "Hola {nombre},\n\nTe comparto la nota de venta correspondiente a {concepto}. La encontrarás adjunta en PDF.\n\nSi más adelante necesitas factura, avísame dentro del mismo mes y la emitimos.\n\nGracias por tu confianza.",
+                'adjuntos' => true,
+            ],
             'complemento' => [
                 'nombre' => 'Enviar complemento de pago', 'icono' => 'bi-receipt-cutoff', 'para' => ['proyecto', 'presupuesto'],
                 'asunto' => 'Complemento de pago · {concepto}',

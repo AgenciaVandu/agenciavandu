@@ -268,6 +268,7 @@ class PresupuestoController extends Controller
             'emisor_email'     => 'nullable|string|max:255',
             'modo_iva'         => ['required', Rule::in(array_keys(Presupuesto::MODOS_IVA))],
             'metodo_sat'       => 'nullable|in:PUE,PPD',
+            'comprobante'      => 'nullable|in:factura,nota',
             'iva_porcentaje'   => 'required|numeric|min:0|max:100',
 
             'conceptos'               => 'required|array|min:1',
@@ -343,6 +344,7 @@ class PresupuestoController extends Controller
         // Para un prospecto: si ya se volvió cliente, la cotización queda a nombre de su cliente
         $datos['cliente_id'] = ($datos['cliente_id'] ?? null) ?: (! empty($datos['prospecto_id']) ? \App\Models\Prospecto::find($datos['prospecto_id'])?->cliente_id : null);
         $datos['prospecto_id'] = $datos['prospecto_id'] ?? null;
+        if (array_key_exists('comprobante', $datos) && ! $datos['comprobante']) unset($datos['comprobante']);
         $datos['mostrar_pago'] = $request->boolean('mostrar_pago');
         $datos['consideraciones'] = collect($v['consideraciones'] ?? [])->map(fn ($s) => [
             'titulo' => (string) ($s['titulo'] ?? ''),

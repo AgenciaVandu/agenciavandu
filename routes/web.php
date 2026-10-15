@@ -97,6 +97,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::get('presupuestos/{presupuesto}/whatsapp', [Admin\PresupuestoController::class, 'whatsapp'])->name('presupuestos.whatsapp');
     Route::post('presupuestos/{presupuesto}/codigo', [Admin\PresupuestoController::class, 'codigo'])->name('presupuestos.codigo');
     Route::post('presupuestos/{presupuesto}/facturas', [Admin\FacturaController::class, 'subir'])->name('presupuestos.facturas.subir');
+    Route::post('presupuestos/{presupuesto}/nota', [Admin\FacturaController::class, 'generarNota'])->name('presupuestos.nota');
     Route::post('presupuestos/{presupuesto}/complementos', [Admin\FacturaController::class, 'subirComplemento'])->name('presupuestos.complementos.subir');
     Route::get('presupuestos/{presupuesto}/facturas/{factura}', [Admin\FacturaController::class, 'ver'])->name('presupuestos.facturas.ver');
     Route::delete('presupuestos/{presupuesto}/facturas/{factura}', [Admin\FacturaController::class, 'borrar'])->name('presupuestos.facturas.borrar');

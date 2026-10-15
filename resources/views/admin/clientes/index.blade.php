@@ -185,7 +185,7 @@
                 <div class="cl-pend">
                     @if($c->activos_count)<a href="{{ route('admin.clientes.show', [$c, 'ver' => 'proyectos']) }}" class="cl-tag verde"><i class="bi bi-kanban"></i> {{ $c->activos_count }} en marcha</a>@endif
                     @if($esperan->isNotEmpty())<a href="{{ route('admin.clientes.show', [$c, 'ver' => 'cotizaciones']) }}" class="cl-tag azul"><i class="bi bi-hourglass-split"></i> {{ $esperan->count() }} por responder</a>@endif
-                    @foreach($facPorEnviar->take(1) as $p)<a href="{{ route('admin.presupuestos.edit', [$p, 'correo' => 'factura']) }}" class="cl-tag ambar"><i class="bi bi-send"></i> Enviar factura</a>@endforeach
+                    @foreach($facPorEnviar->take(1) as $p)<a href="{{ route('admin.presupuestos.edit', [$p, 'correo' => $p->comprobante_corto]) }}" class="cl-tag ambar"><i class="bi bi-send"></i> Enviar factura</a>@endforeach
                     @if($sinFactura->isNotEmpty())<a href="{{ route('admin.clientes.show', [$c, 'ver' => 'facturacion']) }}" class="cl-tag ambar"><i class="bi bi-receipt"></i> {{ $sinFactura->count() }} sin factura</a>@endif
                     @if($c->nuevo)<span class="cl-tag gris">{{ $c->interes ?: 'Llegó por el sitio' }}</span>@endif
                 </div>

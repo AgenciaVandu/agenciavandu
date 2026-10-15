@@ -55,7 +55,7 @@ class CorreoController extends Controller
                 \App\Models\PresupuestoFactura::whereIn('id', $archivos->pluck('id'))->update(['enviada_at' => now()]);
                 $esComp = str_starts_with($datos['plantilla'], 'complemento@');
                 \App\Support\Aceptacion::registrar($pf, $esComp ? 'complemento' : 'factura', 'agencia', null,
-                    ($esComp ? 'Complemento de pago enviado' : 'Factura enviada') . ' por correo a ' . implode(', ', array_map([\App\Support\Aceptacion::class, 'correoOculto'], $para)), ['canal' => 'correo'], false);
+                    ($esComp ? 'Complemento de pago enviado' : ($pf->es_nota ? 'Nota de venta enviada' : 'Factura enviada')) . ' por correo a ' . implode(', ', array_map([\App\Support\Aceptacion::class, 'correoOculto'], $para)), ['canal' => 'correo'], false);
             }
         } catch (\Throwable $e) {
             report($e);

@@ -183,6 +183,7 @@
     .metodo-sat label b { font-size: 14px; } .metodo-sat label span { font-size: 12px; color: var(--muted); }
     .metodo-sat label.activo { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
     .metodo-sat input { position: absolute; opacity: 0; pointer-events: none; }
+    .nota-gen { background: var(--sunken); border-radius: 10px; padding: 12px; }
     .comp-lista { list-style: none; margin: 0; padding: 0; }
     .comp-lista li { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--line); }
     .comp-lista .t { flex: 1; min-width: 0; }
@@ -248,7 +249,7 @@
                         @if($wa)<li><a class="dropdown-item" target="_blank" rel="noopener" href="{{ route('admin.presupuestos.whatsapp', $p) }}"><i class="bi bi-whatsapp me-2"></i>Por WhatsApp</a></li>@endif
                         <li><button type="button" class="dropdown-item" data-copiar="{{ $p->url_publica }}"><i class="bi bi-link-45deg me-2"></i>Copiar enlace</button></li>
                         <li><a class="dropdown-item" href="{{ route('admin.presupuestos.pdf', $p) }}" target="_blank"><i class="bi bi-file-earmark-pdf me-2"></i>Descargar PDF</a></li>
-                        @if($p->facturas->isNotEmpty())<li><hr class="dropdown-divider"></li><li><button type="button" class="dropdown-item" data-correo="factura"><i class="bi bi-receipt me-2"></i>Enviar factura</button></li>@endif
+                        @if($p->facturas->isNotEmpty())<li><hr class="dropdown-divider"></li><li><button type="button" class="dropdown-item" data-correo="{{ $p->comprobante_corto }}"><i class="bi bi-receipt me-2"></i>Enviar {{ $p->es_nota ? 'nota de venta' : 'factura' }}</button></li>@endif
                     </ul>
                 </div>
             @endunless
@@ -294,18 +295,20 @@
                         <span class="sig-n">@if($sigEnviada)<i class="bi bi-check-lg"></i>@else 2 @endif</span>
                         <div class="sig-txt">
                             @if($sigEnviada)
-                                <b>Factura enviada</b><span>{{ $sigEnviada->locale('es')->diffForHumans() }}</span>
+                                <b>{{ $p->es_nota ? 'Nota de venta enviada' : 'Factura enviada' }}</b><span>{{ $sigEnviada->locale('es')->diffForHumans() }}</span>
                             @elseif($sigFacturas->isNotEmpty())
-                                <b>Enviar la factura</b><span>{{ $sigFacturas->pluck('nombre')->join(' · ') }}</span>
+                                <b>{{ $p->es_nota ? 'Enviar la nota de venta' : 'Enviar la factura' }}</b><span>{{ $sigFacturas->pluck('nombre')->join(' · ') }}</span>
                             @else
-                                <b>Subir la factura</b><span>El PDF y el XML; el cliente la descarga desde su enlace</span>
+                                @if($p->es_nota)<b>Hacer la nota de venta</b><span>Se arma sola con los conceptos de la cotización</span>@else<b>Subir la factura</b><span>El PDF y el XML; el cliente la descarga desde su enlace</span>@endif
                             @endif
                         </div>
                         <div class="sig-acc">
                         @if($sigEnviada)
                             <a href="?ver=factura" class="btn btn-borde btn-sm" @click.prevent="irA('factura')" data-recargar>Ver</a>
                         @elseif($sigFacturas->isNotEmpty())
-                            <button type="button" class="btn btn-acento btn-sm" data-correo="factura"><i class="bi bi-send me-1"></i> Enviar factura</button>
+                            <button type="button" class="btn btn-acento btn-sm" data-correo="{{ $p->comprobante_corto }}"><i class="bi bi-send me-1"></i> Enviar {{ $p->es_nota ? 'nota' : 'factura' }}</button>
+                        @elseif($p->es_nota)
+                            <button type="submit" form="generar-nota" class="btn btn-acento btn-sm"><i class="bi bi-magic me-1"></i> Generar nota</button>
                         @else
                             <label class="btn btn-acento btn-sm mb-0"><i class="bi bi-upload me-1"></i> Subir PDF y XML
                                 <input type="file" name="facturas[]" form="subir-factura" multiple accept=".pdf,.xml,.zip" class="d-none" onchange="this.files.length && this.form.requestSubmit()">
@@ -658,8 +661,67 @@
                     $sueltos = $lotes->filter(fn ($c) => ! $c['pago'] || ! $pagosPr->contains('id', $c['pago']->id));
                     $pagadosSinComp = $pagosPr->filter(fn ($x) => $x->pagado && ! $lotePorPago->has($x->id));
                 @endphp
-                <div class="sec-cot" x-data="{ sat: {{ Js::from(old('metodo_sat', $p->metodo_sat_efectivo)) }} }">
-                <section class="panel" id="factura">
+                <div class="sec-cot" x-data="{ sat: {{ Js::from(old('metodo_sat', $p->metodo_sat_efectivo)) }}, comp: {{ Js::from(old('comprobante', $p->comprobante)) }} }">
+                {{-- ¿Factura o nota de venta? --}}
+                <section class="panel">
+                    <div class="panel-body">
+                        <span class="form-label d-block mb-2">¿Cómo le das comprobante?</span>
+                        <div class="metodo-sat" role="radiogroup" aria-label="Comprobante">
+                            <label :class="comp === 'factura' && 'activo'"><input type="radio" name="comprobante" value="factura" x-model="comp"><b><i class="bi bi-receipt me-1"></i> Factura</b><span>CFDI con PDF y XML</span></label>
+                            <label :class="comp === 'nota' && 'activo'"><input type="radio" name="comprobante" value="nota" x-model="comp"><b><i class="bi bi-file-earmark-text me-1"></i> Nota de venta</b><span>Para quien paga sin factura</span></label>
+                        </div>
+                    </div>
+                </section>
+
+                {{-- Nota de venta --}}
+                @php $nota = $p->es_nota ? $facturas->first() : null; @endphp
+                <section class="panel" id="nota" x-show="comp === 'nota'" @unless($p->es_nota) x-cloak @endunless>
+                    <div class="panel-head"><h2>Nota de venta{{ $p->nota_folio ? ' ' . $p->nota_folio : '' }}</h2>
+                        @if(! $nota)<span class="estado estado-borrador">Sin hacer</span>
+                        @elseif($enviada)<span class="estado estado-aceptada">Enviada</span>
+                        @else<span class="estado estado-enviada">Por enviar</span>@endif
+                    </div>
+                    <div class="panel-body">
+                        @if($nota)
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-file-earmark-pdf" style="font-size:18px; color: var(--text-2)"></i>
+                                <a href="{{ route('admin.presupuestos.facturas.ver', [$p, $nota]) }}" target="_blank" class="text-reset text-truncate flex-grow-1" style="font-size:13.5px">{{ $nota->nombre }}</a>
+                                <span class="secundario num" style="font-size:12px">{{ $nota->peso_texto }}</span>
+                                <button type="submit" form="borrar-factura-{{ $nota->id }}" class="btn btn-fantasma btn-icono btn-sm" aria-label="Quitar {{ $nota->nombre }}"><i class="bi bi-x-lg"></i></button>
+                            </div>
+                            @if($enviada)<div class="secundario mb-3" style="font-size:12.5px"><i class="bi bi-check2-circle"></i> Enviada por correo {{ $enviada->locale('es')->diffForHumans() }}</div>@endif
+                            <button type="button" class="btn {{ $enviada ? 'btn-borde' : 'btn-primario' }} btn-sm w-100 mb-3" data-correo="nota"><i class="bi bi-send me-1"></i> {{ $enviada ? 'Enviar de nuevo' : 'Enviar nota de venta' }}</button>
+                        @else
+                            <p class="secundario mt-0 mb-3" style="font-size:13.5px">La armamos con los conceptos de esta cotización. Queda guardada, el cliente la descarga desde su enlace y se la envías por correo.</p>
+                        @endif
+                        <div class="nota-gen">
+                            <div class="row g-2">
+                                <div class="col-sm-6">
+                                    <label class="form-label" for="nota-pago" style="font-size:12.5px">Forma de pago</label>
+                                    <select id="nota-pago" name="forma_pago" form="generar-nota" class="form-select form-select-sm">
+                                        <option value="">Sin indicar</option>
+                                        @foreach(config('vandu.metodos_pago') as $k => $v)<option value="{{ $k }}" @selected(($p->cliente?->metodo_pago ?: 'transferencia') === $k)>{{ $v }}</option>@endforeach
+                                    </select>
+                                </div>
+                                <div class="col-sm-6 d-flex align-items-end">
+                                    <label class="form-check mb-1"><input type="checkbox" class="form-check-input" name="con_iva" value="1" form="generar-nota"> <span class="form-check-label" style="font-size:13.5px">Cobrar IVA ({{ rtrim(rtrim(number_format($p->iva_porcentaje, 2), '0'), '.') }}%)</span></label>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" for="nota-texto" style="font-size:12.5px">Texto adicional <span class="text-secondary fw-normal">(opcional)</span></label>
+                                    <input id="nota-texto" name="nota_texto" form="generar-nota" class="form-control form-control-sm" maxlength="500" placeholder="p. ej. Pagado el 12 de octubre por transferencia">
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 mt-3">
+                                <button type="submit" form="generar-nota" class="btn {{ $nota ? 'btn-borde' : 'btn-acento' }} btn-sm"><i class="bi bi-magic me-1"></i> {{ $nota ? 'Volver a generar' : 'Generar nota de venta' }}</button>
+                                <label class="btn btn-fantasma btn-sm mb-0"><i class="bi bi-upload me-1"></i> O subir la tuya (PDF)
+                                    <input type="file" name="facturas[]" form="subir-nota" accept=".pdf" class="d-none" onchange="this.files.length && this.form.requestSubmit()">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel" id="factura" x-show="comp === 'factura'" @if($p->es_nota) x-cloak @endif>
                     <div class="panel-head"><h2>Factura</h2>
                         @if($facturas->isEmpty())<span class="estado estado-borrador">Sin subir</span>
                         @elseif($enviada)<span class="estado estado-aceptada">Enviada</span>
@@ -700,7 +762,7 @@
                 </section>
 
                 {{-- Complementos de pago (PPD) --}}
-                <section class="panel" id="complementos" x-show="sat === 'PPD' || {{ $lotes->isNotEmpty() ? 'true' : 'false' }}" @if($p->metodo_sat_efectivo !== 'PPD' && $lotes->isEmpty()) x-cloak @endif
+                <section class="panel" id="complementos" x-show="comp === 'factura' && (sat === 'PPD' || {{ $lotes->isNotEmpty() ? 'true' : 'false' }})" @if($p->es_nota || ($p->metodo_sat_efectivo !== 'PPD' && $lotes->isEmpty())) x-cloak @endif
                          x-data="{ subirPara(id) { this.$refs.compPago.value = id || ''; this.$refs.compFecha.value = ''; this.$refs.compArchivo.click(); } }">
                     <div class="panel-head"><h2>Complementos de pago</h2>
                         @if($pagosPr->isNotEmpty())<span class="ayuda">{{ $lotePorPago->count() }} de {{ $pagosPr->where('pagado', true)->count() ?: $pagosPr->count() }} {{ $pagosPr->where('pagado', true)->count() ? 'pagos recibidos' : 'pagos' }}</span>
@@ -775,7 +837,7 @@
                 </section>
                 </div>
             @endunless
-            @if(! $nuevo && $p->cliente)
+            @if(! $nuevo && $p->cliente && ! $p->es_nota)
                 @php $cl = $p->cliente; $csf = $cl->constancias()->first(); @endphp
                 <section class="panel">
                     <div class="panel-head"><h2>Datos fiscales</h2>
@@ -902,6 +964,8 @@
 @unless($nuevo)
     <form id="convertir" method="get" action="{{ route('admin.proyectos.create', $p) }}"></form>
     <form id="subir-factura" method="post" action="{{ route('admin.presupuestos.facturas.subir', $p) }}" enctype="multipart/form-data">@csrf</form>
+    <form id="generar-nota" method="post" action="{{ route('admin.presupuestos.nota', $p) }}">@csrf</form>
+    <form id="subir-nota" method="post" action="{{ route('admin.presupuestos.facturas.subir', $p) }}" enctype="multipart/form-data">@csrf<input type="hidden" name="tipo" value="nota"></form>
     <form id="subir-complemento" method="post" action="{{ route('admin.presupuestos.complementos.subir', $p) }}" enctype="multipart/form-data">@csrf</form>
     @foreach($p->archivosFiscales as $f)
         <form id="borrar-factura-{{ $f->id }}" method="post" action="{{ route('admin.presupuestos.facturas.borrar', [$p, $f]) }}" onsubmit="return confirm({{ Js::from('¿Quitar ' . $f->nombre . '? El cliente ya no podrá descargarlo.') }})">@csrf @method('delete')</form>

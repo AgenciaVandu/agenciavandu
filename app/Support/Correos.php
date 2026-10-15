@@ -53,6 +53,13 @@ class Correos
             if ($clave === 'entrega_digital' && ! $ctx['proyecto']?->archivos->where('grupo', 'galeria')->where('visible', true)->count()) {
                 continue;
             }
+            // Factura o nota de venta: solo la que corresponde a la cotización
+            if (in_array($clave, ['factura', 'nota'], true) && ($pres = $ctx['presupuesto'] ?? $ctx['proyecto']?->presupuesto) && $pres->comprobante_corto !== $clave) {
+                continue;
+            }
+            if ($clave === 'nota' && ! ($ctx['presupuesto'] ?? $ctx['proyecto']?->presupuesto)) {
+                continue;
+            }
             // Un correo por cada complemento de pago subido (con sus archivos)
             if ($clave === 'complemento') {
                 $pres = $ctx['presupuesto'] ?? $ctx['proyecto']?->presupuesto;

@@ -52,7 +52,7 @@ class ClienteController extends Controller
             ->selectRaw("($porCobrar) as por_cobrar")
             ->selectRaw("COALESCE(($ultima), clientes.created_at) as ultima_actividad")
             ->withCount(['presupuestos', 'proyectos as activos_count' => fn ($w) => $w->where('estado', 'activo')])
-            ->with(['presupuestos' => fn ($p) => $p->select('id', 'cliente_id', 'folio', 'estado', 'vigente_hasta')->with('facturas:id,presupuesto_id,enviada_at')])
+            ->with(['presupuestos' => fn ($p) => $p->select('id', 'cliente_id', 'folio', 'estado', 'vigente_hasta', 'comprobante')->with('facturas:id,presupuesto_id,enviada_at')])
             ->when($q, fn ($query) => $query->where(fn ($w) => $w
                 ->where('nombre', 'like', "%$q%")
                 ->orWhere('empresa', 'like', "%$q%")

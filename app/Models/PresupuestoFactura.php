@@ -57,6 +57,7 @@ class PresupuestoFactura extends Model
     /** Lo que ve el cliente en el botón: "Factura PDF", "Factura XML" */
     public function getEtiquetaAttribute(): string
     {
+        if ($this->tipo === 'nota') return 'Nota de venta' . ($this->ext === 'pdf' ? '' : ' ' . Str::upper($this->ext));
         return ($this->es_complemento ? 'Complemento de pago ' : 'Factura ') . (in_array($this->ext, ['pdf', 'xml', 'zip'], true) ? Str::upper($this->ext) : $this->nombre);
     }
 
