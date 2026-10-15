@@ -257,6 +257,28 @@ class ClienteController extends Controller
             ->with('ok', "Se quitó {$razon->nombre}." . ($n ? " Sus $n " . ($n === 1 ? 'cotización pasó' : 'cotizaciones pasaron') . ' a la empresa principal.' : ''));
     }
 
+    /** Une otro cliente (duplicado) a este: sus cotizaciones, proyectos y demás pasan aquí */
+    public function unir(Request $request, Cliente $cliente)
+    {
+        $d = $request->validate([
+            'otro'       => ['required', 'integer', \Illuminate\Validation\Rule::exists('clientes', 'id')],
+            'como_razon' => 'nullable|boolean',
+        ], ['otro.required' => 'Elige el cliente que quieres unir.'], ['otro' => 'cliente']);
+        $otro = Cliente::findOrFail($d['otro']);
+        abort_if($otro->id === $cliente->id, 422);
+        $quien = $otro->empresa ?: $otro->nombre;
+
+        $r = \App\Support\UnirClientes::unir($cliente, $otro, $request->boolean('como_razon'));
+
+        $partes = array_filter([
+            $r['cotizaciones'] ? $r['cotizaciones'] . ($r['cotizaciones'] === 1 ? ' cotización' : ' cotizaciones') : null,
+            $r['proyectos'] ? $r['proyectos'] . ($r['proyectos'] === 1 ? ' proyecto' : ' proyectos') : null,
+        ]);
+        return redirect()->route('admin.clientes.show', [$cliente, 'ver' => 'facturacion'])->with('ok', "Listo, $quien quedó unido a este cliente"
+            . ($partes ? ' (' . implode(' y ', $partes) . ')' : '') . '.'
+            . ($r['razon'] ? " Su empresa quedó como razón social “{$r['razon']->nombre}”." : ''));
+    }
+
     private function validarRazon(Request $request): array
     {
         $request->merge([

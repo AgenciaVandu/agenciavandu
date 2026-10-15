@@ -498,6 +498,38 @@
             @if($errors->hasAny(['nombre', 'rfc', 'cp_fiscal', 'regimen_fiscal', 'uso_cfdi', 'email_factura', 'razon_social']))
                 <div class="text-danger px-3 pb-3" style="font-size:13px">{{ $errors->first() }}</div>
             @endif
+
+            @php
+                // Posibles duplicados primero: mismo correo, teléfono o nombre
+                $tel = fn ($t) => substr(preg_replace('/\D/', '', (string) $t), -10);
+                $otros = \App\Models\Cliente::where('id', '!=', $cliente->id)->orderBy('empresa')->orderBy('nombre')->get(['id', 'nombre', 'empresa', 'email', 'telefono'])
+                    ->map(function ($o) use ($cliente, $tel) {
+                        $o->parecido = ($cliente->email && strcasecmp((string) $o->email, $cliente->email) === 0)
+                            || ($tel($cliente->telefono) !== '' && $tel($o->telefono) === $tel($cliente->telefono))
+                            || mb_strtolower(trim($o->nombre)) === mb_strtolower(trim($cliente->nombre));
+                        return $o;
+                    })->sortByDesc('parecido')->values();
+            @endphp
+            @if($otros->isNotEmpty())
+            <details class="razon razon-nueva" id="unir" @if($errors->has('otro')) open @endif>
+                <summary class="btn btn-fantasma btn-sm"><i class="bi bi-intersect me-1"></i> Unir con otro cliente</summary>
+                <form method="post" action="{{ route('admin.clientes.unir', $cliente) }}" class="mt-2 d-grid gap-2"
+                      onsubmit="var s=this.otro; return s.value && confirm('¿Unir ' + s.options[s.selectedIndex].dataset.nombre + ' a ' + {{ Js::from($quien) }} + '? Sus cotizaciones, proyectos, correos y archivos pasan aquí y ese registro se borra. No se puede deshacer.')">@csrf
+                    <p class="secundario mb-0" style="font-size:13px">¿Registraste a la misma persona dos veces (una por cada empresa)? Elige el otro registro: todo lo suyo pasa a este cliente y ese se borra.</p>
+                    <select name="otro" class="form-select form-select-sm @error('otro') is-invalid @enderror" required aria-label="Cliente a unir">
+                        <option value="">Elige el cliente duplicado…</option>
+                        @foreach($otros as $o)
+                            <option value="{{ $o->id }}" data-nombre="{{ $o->empresa ?: $o->nombre }}" @selected(old('otro') == $o->id)>{{ $o->parecido ? '★ ' : '' }}{{ $o->empresa ? $o->empresa . ' — ' . $o->nombre : $o->nombre }}{{ $o->email ? ' · ' . $o->email : '' }}</option>
+                        @endforeach
+                    </select>
+                    @error('otro')<div class="text-danger" style="font-size:13px">{{ $message }}</div>@enderror
+                    @if($otros->where('parecido', true)->isNotEmpty())<span class="secundario" style="font-size:12.5px">★ Mismo nombre, correo o teléfono que este cliente.</span>@endif
+                    <label class="form-check" style="font-size:13.5px"><input type="checkbox" name="como_razon" value="1" class="form-check-input" checked>
+                        <span class="form-check-label">Guardar su empresa como otra razón social de este cliente (sus cotizaciones quedan a nombre de ella)</span></label>
+                    <div><button class="btn btn-borde btn-sm"><i class="bi bi-intersect me-1"></i> Unir clientes</button></div>
+                </form>
+            </details>
+            @endif
         </section>
     </div>
 </div>

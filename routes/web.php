@@ -91,6 +91,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::post('correos/plantillas/{clave}/previa', [Admin\PlantillaCorreoController::class, 'previa'])->name('correos.plantillas.previa');
     Route::post('correos/plantillas/{clave}/restaurar', [Admin\PlantillaCorreoController::class, 'restaurar'])->name('correos.plantillas.restaurar');
     Route::delete('correos/plantillas/{clave}', [Admin\PlantillaCorreoController::class, 'destroy'])->name('correos.plantillas.destroy');
+    Route::post('clientes/{cliente}/unir', [Admin\ClienteController::class, 'unir'])->name('clientes.unir');
     Route::post('clientes/{cliente}/razones', [Admin\ClienteController::class, 'guardarRazon'])->name('clientes.razones.store');
     Route::put('clientes/{cliente}/razones/{razon}', [Admin\ClienteController::class, 'actualizarRazon'])->name('clientes.razones.update');
     Route::delete('clientes/{cliente}/razones/{razon}', [Admin\ClienteController::class, 'borrarRazon'])->name('clientes.razones.destroy');
