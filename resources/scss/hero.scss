@@ -1,0 +1,420 @@
+// Hero del index: fondo oscuro con luces verdes, frase que se escribe sola,
+// abanico de trabajo real y marquesina de clientes.
+// Todas las clases llevan prefijo "vh-" para no chocar con Bootstrap.
+@use 'colores';
+
+$fondo: #0c0e12;
+$tinta: #f1f5f3;
+$gris: #98a39e;
+$linea: rgba(241, 245, 243, .14);
+$verde-tinta: #03140b;
+
+.vh-hero,
+.vh-clientes {
+    // el hero no espera al efecto de aparición de las demás secciones
+    opacity: 1;
+    transform: none;
+    background: $fondo;
+    color: $tinta;
+    overflow: hidden;
+}
+
+// la franja de la barra de navegación toma el mismo fondo que el hero
+.navbar:has(~ main .vh-hero) {
+    background: $fondo;
+}
+
+.vh-hero {
+    position: relative;
+    isolation: isolate;
+    padding: 150px 20px 40px; // deja espacio a la barra de navegación fija
+
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background: radial-gradient(ellipse 60% 50% at 50% 38%, transparent 0%, rgba($fondo, .55) 70%, $fondo 100%);
+    }
+}
+
+.vh-luces {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.vh-contenido {
+    max-width: 1240px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 26px;
+}
+
+.vh-insignia {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 7px 16px 7px 7px;
+    border: 1px solid $linea;
+    border-radius: 999px;
+    background: rgba(colores.$black, .7);
+    backdrop-filter: blur(8px);
+    font-size: 14px;
+
+    b {
+        color: colores.$green;
+        font-family: 'Geist-medium', sans-serif;
+        font-weight: 600;
+    }
+}
+
+.vh-caras {
+    display: flex;
+
+    img {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid colores.$black;
+        margin-left: -8px;
+
+        &:first-child {
+            margin-left: 0;
+        }
+    }
+}
+
+.vh-titulo {
+    position: relative;
+    margin: 0;
+    max-width: 15ch;
+    font-family: 'Geist-bold', 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -.025em;
+    line-height: .98;
+    font-size: clamp(40px, 7.4vw, 96px);
+    text-wrap: balance;
+    color: $tinta;
+
+    span {
+        font-family: inherit;
+    }
+}
+
+.vh-verde {
+    color: colores.$green;
+}
+
+.vh-sticker {
+    position: absolute;
+    right: -.35em;
+    top: -.55em;
+    font-size: clamp(11px, 1.1vw, 14px) !important;
+    letter-spacing: .06em;
+    background: colores.$green;
+    color: $verde-tinta;
+    padding: 6px 12px;
+    border-radius: 8px;
+    transform: rotate(14deg);
+    box-shadow: 0 8px 24px rgba(colores.$green, .35);
+    animation: vh-meneo 4s ease-in-out infinite;
+}
+
+@keyframes vh-meneo {
+    0%, 100% { transform: rotate(14deg); }
+    50% { transform: rotate(8deg) translateY(-3px); }
+}
+
+.vh-lead {
+    margin: 0;
+    max-width: 40ch;
+    font-size: clamp(17px, 1.7vw, 21px);
+    color: $tinta;
+
+    small {
+        display: block;
+        margin-top: 6px;
+        color: $gris;
+        font-size: .82em;
+    }
+}
+
+.vh-escribe {
+    color: colores.$green;
+    font-family: 'Geist-medium', sans-serif;
+    white-space: nowrap;
+}
+
+.vh-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1.05em;
+    margin-left: 2px;
+    vertical-align: -.15em;
+    background: colores.$green;
+    animation: vh-parpadeo 1s steps(1) infinite;
+}
+
+@keyframes vh-parpadeo {
+    50% { opacity: 0; }
+}
+
+.vh-botones {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+}
+
+.vh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 24px;
+    border-radius: 999px;
+    font-family: 'Geist-medium', sans-serif;
+    font-size: 15px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: transform .2s ease, background .2s ease, color .2s ease, border-color .2s ease;
+
+    &:hover {
+        transform: translateY(-2px);
+    }
+
+    &:focus-visible {
+        outline: 2px solid colores.$green;
+        outline-offset: 3px;
+    }
+}
+
+.vh-btn-verde {
+    background: colores.$green;
+    color: $verde-tinta;
+
+    &:hover {
+        background: #3dffa4;
+        color: $verde-tinta;
+    }
+}
+
+.vh-btn-linea {
+    border: 1px solid $linea;
+    color: $tinta;
+
+    &:hover {
+        border-color: colores.$green;
+        color: colores.$green;
+    }
+}
+
+.vh-marca {
+    position: absolute;
+    z-index: 1;
+    width: 62px;
+    filter: drop-shadow(0 0 22px rgba(colores.$green, .55));
+    animation: vh-flota 6s ease-in-out infinite;
+
+    &.vh-m1 { left: 12%; top: 58%; }
+    &.vh-m2 { right: 10%; top: 26%; width: 30px; opacity: .7; animation-delay: -2s; }
+}
+
+@keyframes vh-flota {
+    0%, 100% { transform: translateY(0) rotate(-8deg); }
+    50% { transform: translateY(-14px) rotate(6deg); }
+}
+
+// ---------- abanico de trabajo ----------
+.vh-abanico {
+    position: relative;
+    width: min(900px, 100%);
+    height: clamp(250px, 30vw, 360px);
+    margin: 46px auto 0;
+}
+
+.vh-tarjeta {
+    --x: 0px;
+    --r: 0deg;
+    --y: 0px;
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    margin: 0;
+    width: clamp(150px, 19vw, 230px);
+    aspect-ratio: 3 / 4;
+    border-radius: 16px;
+    overflow: hidden;
+    background: colores.$black;
+    border: 1px solid $linea;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .55);
+    transform-origin: 50% 120%;
+    transform: translateX(calc(-50% + var(--x))) translateY(var(--y)) rotate(var(--r));
+    transition: transform .55s cubic-bezier(.2, .8, .2, 1), box-shadow .3s ease, opacity .3s ease;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    figcaption {
+        position: absolute;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: rgba($fondo, .78);
+        backdrop-filter: blur(6px);
+        font-size: 12px;
+        line-height: 1.3;
+        text-align: left;
+        opacity: 0;
+        transform: translateY(6px);
+        transition: .3s ease;
+
+        b {
+            display: block;
+            color: $tinta;
+            font-family: 'Geist-medium', sans-serif;
+        }
+
+        span {
+            color: colores.$green;
+        }
+    }
+
+    &:hover {
+        z-index: 10;
+        box-shadow: 0 30px 70px rgba(0, 0, 0, .6), 0 0 0 2px colores.$green;
+
+        figcaption {
+            opacity: 1;
+            transform: none;
+        }
+    }
+}
+
+.vh-t3 { z-index: 5; }
+.vh-t2, .vh-t4 { z-index: 4; }
+.vh-t1, .vh-t5 { z-index: 3; }
+
+.vh-abanico.vh-abierto {
+    .vh-t1 { --x: -300px; --r: -14deg; --y: 40px; }
+    .vh-t2 { --x: -155px; --r: -7deg; --y: 10px; }
+    .vh-t3 { --x: 0px; --r: 0deg; --y: -6px; }
+    .vh-t4 { --x: 155px; --r: 7deg; --y: 10px; }
+    .vh-t5 { --x: 300px; --r: 14deg; --y: 40px; }
+
+    .vh-tarjeta:hover { --y: -22px; }
+}
+
+// ---------- clientes ----------
+.vh-clientes {
+    padding: 34px 0 70px;
+    border-top: 1px solid $linea;
+
+    > p {
+        margin: 0 0 26px;
+        text-align: center;
+        font-family: 'Geist-medium', sans-serif;
+        font-size: 12px;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+        color: $gris;
+    }
+}
+
+.vh-marquesina {
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+
+    &:hover .vh-pista {
+        animation-play-state: paused;
+    }
+}
+
+.vh-pista {
+    display: flex;
+    align-items: center;
+    gap: 64px;
+    width: max-content;
+    animation: vh-desliza 38s linear infinite;
+
+    img {
+        height: 40px;
+        width: auto;
+        max-width: none;
+        filter: grayscale(1);
+        opacity: .85;
+        transition: .3s ease;
+
+        &.vh-cuadrado { height: 52px; }
+
+        &:hover {
+            filter: none;
+            opacity: 1;
+        }
+    }
+}
+
+@keyframes vh-desliza {
+    to { transform: translateX(-50%); }
+}
+
+// ---------- responsive ----------
+@media (max-width: 900px) {
+    .vh-abanico.vh-abierto {
+        .vh-t1 { --x: -210px; }
+        .vh-t2 { --x: -108px; }
+        .vh-t4 { --x: 108px; }
+        .vh-t5 { --x: 210px; }
+    }
+
+    .vh-marca.vh-m1 { left: 4%; top: auto; bottom: 38%; }
+}
+
+@media (max-width: 560px) {
+    .vh-hero { padding-top: 120px; }
+    .vh-contenido { gap: 22px; }
+    .vh-insignia { font-size: 12.5px; }
+    .vh-escribe { white-space: normal; }
+    .vh-lead { min-height: 7.5em; }
+    .vh-sticker { right: 0; top: -1.5em; }
+    .vh-marca { display: none; }
+
+    .vh-abanico.vh-abierto {
+        .vh-t1, .vh-t5 { --x: 0px; opacity: 0; }
+        .vh-t2 { --x: -82px; --r: -9deg; }
+        .vh-t4 { --x: 82px; --r: 9deg; }
+    }
+
+    .vh-tarjeta figcaption { opacity: 1; transform: none; font-size: 11px; }
+    .vh-tarjeta:not(.vh-t3) figcaption { display: none; }
+
+    .vh-botones { flex-direction: column; width: 100%; }
+    .vh-btn { justify-content: center; }
+
+    .vh-pista { gap: 44px; }
+    .vh-pista img { height: 30px; }
+    .vh-pista img.vh-cuadrado { height: 40px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vh-hero *, .vh-clientes * {
+        animation: none !important;
+        transition: none !important;
+    }
+}

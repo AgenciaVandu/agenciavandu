@@ -1,7 +1,7 @@
 @push ('estilos')
 @vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/construccion.scss', 'resources/js/app.js'])
 @endpush
-<x-layouts.guest title="Sección en construccion">
+<x-layouts.guest titulo="Sección en construcción" :noindex="true">
     <div class="container">
         <header class="header">
             <h1>Estamos construyendo un Vandú mejor</h1>

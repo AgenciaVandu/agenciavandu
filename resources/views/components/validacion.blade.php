@@ -1,7 +1,7 @@
 <section class="aliados">
     <div class="container">
         <div class="titular">
-            <h1 class="text-center">Somos una agencia validada <br><span style="color: #13161D;">por las mejores marcas</span></h1>
+            <h2 class="h1 text-center">Somos una agencia validada <br><span style="color: #13161D;">por las mejores marcas</span></h2>
             {{$logos ?? ''}}
         </div>
     </div>
@@ -10,7 +10,7 @@
     <div class="container">
         <div class="row">
             <div class="col-lg-6 col-md-12 col-sm-12 titular m-auto">
-                <h1>¿Platicamos sobre <br class="ocultar" /> tu proyecto?</h1>
+                <h2 class="h1">¿Platicamos sobre <br class="ocultar" /> tu proyecto?</h2>
                 <p>Cada proyecto sin importar el tamaño tiene requerimientos diferentes, acércate a nuestros expertos que te guiarán en el proceso de saber que es lo mejor para ti y para tus objetivos finales. </p>
                 <div class="contato darktxt">
                     <input type="text" id="url" class="correo darktxt" value="proyectos@agenciavandu.com"></input>

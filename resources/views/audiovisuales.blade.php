@@ -1,8 +1,8 @@
 @push('estilos')
     @vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/multimedia.scss', 'resources/js/app.js', 'resources/js/bguno.js', 'resources/js/observer.js'])
 @endpush
-<x-layouts.guest titulo="Vídeo y Fotografía para Marcas: Optimización Visual para Google y AI"
-    meta-description="Agencia de marketing digital especializada en optimización y estrategias de IA en 2026 para sitios web, fotografía empresarial, fotografía de alimentos y desarrollo web.">
+<x-layouts.guest titulo="Fotografía y video para empresas en Mérida"
+    meta-description="Fotografía de alimentos, interiores y retrato empresarial, video corporativo, reels, tomas con dron y video con IA para negocios de todo México.">
     <x-header>
         <x-slot name="header">
             <h1 class="mt-5">¿Por qué invertir en producción audiovisual profesional para tu empresa?</h1>

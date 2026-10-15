@@ -1,0 +1,1233 @@
+// Secciones del index después del hero. Mismo lenguaje visual que hero.scss:
+// fondo oscuro, verde Vandu como único acento, Geist. Prefijo "vi-".
+@use 'colores';
+
+$fondo: #0c0e12;
+$superficie: #13161d;
+$superficie-2: #191d26;
+$tinta: #f1f5f3;
+$gris: #98a39e;
+$linea: rgba(241, 245, 243, .12);
+$verde-tinta: #03140b;
+
+// toda la página del index en oscuro
+.body:has(.vh-hero) {
+    background: $fondo;
+}
+
+.vi-contenedor {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.vi-seccion,
+.vi-numeros,
+.vi-banda {
+    background: $fondo;
+    color: $tinta;
+}
+
+.vi-seccion {
+    padding-block: 96px;
+    border-top: 1px solid $linea;
+
+    h2 {
+        font-family: 'Geist-bold', 'Helvetica Neue', Arial, sans-serif;
+        font-size: clamp(30px, 4.2vw, 52px);
+        line-height: 1.02;
+        letter-spacing: -.02em;
+        text-transform: uppercase;
+        text-wrap: balance;
+        margin: 0;
+    }
+
+    h3 {
+        font-family: 'Geist-medium', sans-serif;
+        font-size: 20px;
+        margin: 0;
+    }
+
+    p {
+        color: $gris;
+        line-height: 1.6;
+    }
+}
+
+.vi-encabezado {
+    max-width: 760px;
+    margin-bottom: 48px;
+}
+
+.vi-ceja {
+    margin: 0 0 14px;
+    font-family: 'Geist-medium', sans-serif;
+    font-size: 12px !important;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: colores.$green !important;
+}
+
+// ---------- números ----------
+.vi-numeros {
+    padding-block: 8px 72px;
+
+    .vi-contenedor {
+        display: grid;
+        grid-template-columns: repeat(var(--columnas, 4), 1fr);
+        border: 1px solid $linea;
+        border-radius: 20px;
+        background: $superficie;
+    }
+}
+
+.vi-numero {
+    padding: 28px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    & + & {
+        border-left: 1px solid $linea;
+    }
+
+    strong {
+        font-family: 'Geist-bold', sans-serif;
+        font-size: clamp(34px, 4vw, 52px);
+        line-height: 1;
+        color: colores.$green;
+        font-variant-numeric: tabular-nums;
+    }
+
+    span {
+        color: $gris;
+        font-size: 15px;
+        line-height: 1.4;
+    }
+}
+
+// ---------- sitios web ----------
+.vi-webs {
+    .vi-encabezado > p:last-child {
+        margin: 20px 0 0;
+        font-size: 17px;
+    }
+
+    > .vi-contenedor > .vh-btn {
+        margin-top: 32px;
+    }
+}
+
+.vi-webs-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 24px;
+    align-items: start;
+
+    > * {
+        min-width: 0;
+    }
+}
+
+.vi-navegador {
+    border-radius: 18px;
+    overflow: hidden;
+    background: $superficie;
+    border: 1px solid $linea;
+    box-shadow: 0 40px 80px rgba(0, 0, 0, .45), 0 0 90px rgba(colores.$green, .08);
+}
+
+.vi-navegador-barra {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 16px;
+    border-bottom: 1px solid $linea;
+
+    span {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: $superficie-2;
+        border: 1px solid $linea;
+    }
+
+    em {
+        flex: 1;
+        margin-left: 12px;
+        padding: 4px 12px;
+        border-radius: 999px;
+        background: $fondo;
+        font-style: normal;
+        font-size: 12px;
+        color: $gris;
+        text-align: center;
+    }
+}
+
+.vi-navegador-video {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    object-position: top;
+    background: $fondo;
+}
+
+.vi-proyectos {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.vi-proyecto {
+    width: 100%;
+    display: grid;
+    gap: 2px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    border: 1px solid $linea;
+    background: transparent;
+    color: $tinta;
+    text-align: left;
+    transition: border-color .25s ease, background .25s ease;
+
+    b {
+        font-family: 'Geist-medium', sans-serif;
+        font-weight: 500;
+        font-size: 17px;
+    }
+
+    &:hover {
+        border-color: rgba(colores.$green, .5);
+    }
+
+    &:focus-visible {
+        outline: 2px solid colores.$green;
+        outline-offset: 2px;
+    }
+
+    &.activo {
+        background: $superficie;
+        border-color: colores.$green;
+
+        .vi-proyecto-detalle {
+            display: block;
+        }
+    }
+}
+
+.vi-proyecto-tipo {
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: colores.$green;
+}
+
+.vi-proyecto-detalle {
+    display: none;
+    margin-top: 6px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: $gris;
+}
+
+.vi-ventajas {
+    list-style: none;
+    margin: 40px 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+
+    li {
+        padding-top: 16px;
+        border-top: 2px solid colores.$green;
+        color: $gris;
+        font-size: 15px;
+        line-height: 1.5;
+    }
+
+    b {
+        display: block;
+        margin-bottom: 4px;
+        font-family: 'Geist-medium', sans-serif;
+        font-weight: 500;
+        color: $tinta;
+        font-size: 16px;
+    }
+}
+
+// ---------- galería ----------
+.vi-galeria {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 220px;
+    gap: 16px;
+}
+
+.vi-pieza {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: 18px;
+    background: $superficie;
+    border: 1px solid $linea;
+    color: $tinta;
+    text-decoration: none;
+
+    img,
+    video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform .6s cubic-bezier(.2, .8, .2, 1);
+    }
+
+    &:hover {
+        color: $tinta;
+
+        img,
+        video {
+            transform: scale(1.04);
+        }
+
+        .vi-etiqueta {
+            background: colores.$green;
+            color: $verde-tinta;
+
+            b {
+                color: $verde-tinta;
+            }
+        }
+    }
+
+    &.vi-grande { grid-column: span 2; grid-row: span 2; }
+    &.vi-alta { grid-row: span 2; }
+    &.vi-ancha { grid-column: span 2; }
+}
+
+.vi-etiqueta {
+    position: absolute;
+    left: 12px;
+    bottom: 12px;
+    max-width: calc(100% - 24px);
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: rgba($fondo, .8);
+    backdrop-filter: blur(6px);
+    font-size: 13px;
+    line-height: 1.3;
+    color: $gris;
+    transition: .3s ease;
+
+    b {
+        display: block;
+        font-family: 'Geist-medium', sans-serif;
+        font-weight: 500;
+        color: $tinta;
+    }
+}
+
+// ---------- banda CTA ----------
+.vi-banda {
+    padding-block: 24px;
+
+    .vi-contenedor {
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 14px;
+        padding-block: 64px;
+        border-radius: 28px;
+        background:
+            radial-gradient(ellipse 50% 80% at 50% 0%, rgba(colores.$green, .22), transparent 70%),
+            $superficie;
+        border: 1px solid rgba(colores.$green, .35);
+    }
+
+    h2 {
+        margin: 0;
+        font-family: 'Geist-bold', sans-serif;
+        font-size: clamp(28px, 4vw, 48px);
+        text-transform: uppercase;
+        letter-spacing: -.02em;
+        line-height: 1.05;
+    }
+
+    p {
+        margin: 0 0 8px;
+        color: $gris;
+        font-size: 17px;
+    }
+}
+
+// ---------- panel (vistas de sistemas) ----------
+.vi-panel {
+    border-radius: 20px;
+    background: $superficie;
+    border: 1px solid $linea;
+    box-shadow: 0 40px 80px rgba(0, 0, 0, .45), 0 0 80px rgba(colores.$green, .08);
+    overflow: hidden;
+}
+
+.vi-panel-barra {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 16px;
+    border-bottom: 1px solid $linea;
+
+    span {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: $superficie-2;
+        border: 1px solid $linea;
+    }
+
+    em {
+        margin-left: 12px;
+        font-style: normal;
+        font-size: 12px;
+        color: $gris;
+    }
+}
+
+.vi-panel-cuerpo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 16px;
+}
+
+.vi-tarjeta-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    border-radius: 14px;
+    background: $superficie-2;
+    border: 1px solid $linea;
+    min-width: 0;
+
+    small {
+        font-size: 11px;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: $gris;
+    }
+
+    strong {
+        font-family: 'Geist-medium', sans-serif;
+        font-weight: 500;
+        font-size: 16px;
+        color: $tinta;
+    }
+}
+
+.vi-estado {
+    align-self: flex-start;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    background: rgba(colores.$green, .15);
+    color: colores.$green;
+}
+
+.vi-avance {
+    grid-row: span 2;
+
+    ol {
+        list-style: none;
+        margin: 4px 0 0;
+        padding: 0;
+        display: grid;
+        gap: 14px;
+    }
+
+    li {
+        position: relative;
+        padding-left: 26px;
+        font-size: 14px;
+        color: $gris;
+
+        &::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 3px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid $linea;
+        }
+
+        &:not(:last-child)::after {
+            content: "";
+            position: absolute;
+            left: 6px;
+            top: 19px;
+            width: 2px;
+            height: 14px;
+            background: $linea;
+        }
+
+        &.hecho {
+            color: $tinta;
+
+            &::before { background: colores.$green; border-color: colores.$green; }
+            &::after { background: colores.$green; }
+        }
+
+        &.actual {
+            color: colores.$green;
+
+            &::before {
+                border-color: colores.$green;
+                box-shadow: 0 0 0 4px rgba(colores.$green, .18);
+            }
+        }
+    }
+}
+
+.vi-aprobar div {
+    display: flex;
+    gap: 8px;
+
+    span {
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        border: 1px solid $linea;
+        color: $tinta;
+
+        &.si {
+            background: colores.$green;
+            border-color: colores.$green;
+            color: $verde-tinta;
+        }
+    }
+}
+
+// ---------- sistemas ----------
+.vi-sistemas .vi-encabezado > p:last-child,
+.vi-video-texto > p:not(.vi-ceja) {
+    margin: 20px 0 0;
+    font-size: 17px;
+}
+
+.vi-sistemas-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 24px;
+    align-items: start;
+
+    > * {
+        min-width: 0;
+    }
+}
+
+.vi-pestanas {
+    display: grid;
+    gap: 8px;
+}
+
+.vi-pestana {
+    display: grid;
+    gap: 4px;
+    padding: 16px 18px;
+    border-radius: 14px;
+    border: 1px solid $linea;
+    background: transparent;
+    color: $tinta;
+    text-align: left;
+    transition: border-color .25s ease, background .25s ease;
+
+    b {
+        font-family: 'Geist-medium', sans-serif;
+        font-weight: 500;
+        font-size: 17px;
+    }
+
+    span {
+        display: none;
+        font-size: 14px;
+        line-height: 1.5;
+        color: $gris;
+    }
+
+    &:hover {
+        border-color: rgba(colores.$green, .5);
+    }
+
+    &:focus-visible {
+        outline: 2px solid colores.$green;
+        outline-offset: 2px;
+    }
+
+    &.activo {
+        background: $superficie;
+        border-color: colores.$green;
+
+        span {
+            display: block;
+        }
+    }
+}
+
+.vi-vista {
+    padding: 18px;
+    min-height: 300px;
+}
+
+.vi-vista-whatsapp {
+    display: grid;
+    gap: 16px;
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+.vi-chat {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    border-radius: 14px;
+    background: #0b141a; // fondo tipo chat
+}
+
+.vi-burbuja {
+    max-width: 78%;
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: $tinta !important;
+
+    &.cliente {
+        align-self: flex-start;
+        background: #202c33;
+        border-top-left-radius: 4px;
+    }
+
+    &.negocio {
+        align-self: flex-end;
+        background: #005c4b;
+        border-top-right-radius: 4px;
+    }
+}
+
+.vi-aviso {
+    display: grid;
+    gap: 6px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: $superficie-2;
+    border: 1px solid rgba(colores.$green, .4);
+
+    .vi-estado {
+        justify-self: start;
+    }
+
+    strong {
+        font-family: 'Geist-medium', sans-serif;
+        font-weight: 500;
+        color: $tinta;
+    }
+
+    small {
+        color: $gris;
+        font-size: 13px;
+    }
+}
+
+.vi-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+
+    th {
+        text-align: left;
+        font-size: 11px;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: $gris;
+        font-weight: 400;
+        padding: 0 8px 10px;
+    }
+
+    td {
+        padding: 12px 8px;
+        border-top: 1px solid $linea;
+        color: $tinta;
+    }
+
+    tr.bajo td {
+        color: colores.$green;
+    }
+}
+
+.vi-estado.alerta {
+    margin-left: 6px;
+}
+
+.vi-nota {
+    margin: 16px 0 0;
+    font-size: 13px !important;
+}
+
+.vi-embudo {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+
+    > div {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 14px;
+        border-radius: 14px;
+        background: $superficie-2;
+        border: 1px solid $linea;
+        min-width: 0;
+    }
+
+    small {
+        font-size: 11px;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: $gris;
+    }
+
+    strong {
+        font-family: 'Geist-bold', sans-serif;
+        font-size: 20px;
+        color: colores.$green;
+        font-variant-numeric: tabular-nums;
+    }
+
+    span {
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: $fondo;
+        font-size: 13px;
+        color: $tinta;
+    }
+}
+
+.vi-caso {
+    margin: 28px 0 0;
+    max-width: 760px;
+    padding-left: 16px;
+    border-left: 2px solid colores.$green;
+
+    b {
+        color: $tinta;
+    }
+}
+
+// ---------- video ----------
+.vi-video-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 56px;
+    align-items: center;
+
+    > * {
+        min-width: 0;
+    }
+}
+
+.vi-video-columnas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 28px;
+
+    > div {
+        padding: 20px;
+        border-radius: 16px;
+        background: $superficie;
+        border: 1px solid $linea;
+    }
+
+    .vi-ia {
+        border-color: rgba(colores.$green, .45);
+        background:
+            radial-gradient(ellipse 80% 60% at 100% 0%, rgba(colores.$green, .16), transparent 70%),
+            $superficie;
+    }
+
+    h3 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        font-size: 17px !important;
+        margin-bottom: 12px !important;
+    }
+
+    ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 8px;
+    }
+
+    li {
+        position: relative;
+        padding-left: 16px;
+        font-size: 15px;
+        color: $tinta;
+
+        &::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: .6em;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: colores.$green;
+        }
+    }
+}
+
+.vi-reel {
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    border: 1px solid $linea;
+    background: $superficie;
+    aspect-ratio: 16 / 9;
+
+    video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+}
+
+// ---------- lista de servicios ----------
+.vi-lista-servicios {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid $linea;
+
+    a {
+        display: grid;
+        grid-template-columns: 48px minmax(0, 1fr) minmax(0, 1.4fr) 32px;
+        align-items: center;
+        gap: 20px;
+        padding: 24px 4px;
+        border-bottom: 1px solid $linea;
+        color: $tinta;
+        text-decoration: none;
+        transition: background .25s ease, padding .25s ease;
+
+        &:hover {
+            color: $tinta;
+            padding-inline: 16px;
+            background: $superficie;
+
+            .vi-lista-flecha {
+                color: colores.$green;
+                transform: translateX(4px);
+            }
+        }
+    }
+
+    b {
+        font-family: 'Geist-bold', sans-serif;
+        font-size: clamp(20px, 2.2vw, 28px);
+        text-transform: uppercase;
+        letter-spacing: -.01em;
+        line-height: 1.1;
+    }
+}
+
+.vi-lista-num {
+    font-size: 13px;
+    color: colores.$green;
+    font-variant-numeric: tabular-nums;
+}
+
+.vi-lista-texto {
+    color: $gris;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.vi-lista-flecha {
+    color: $gris;
+    font-size: 20px;
+    transition: transform .25s ease, color .25s ease;
+}
+
+// ---------- proceso ----------
+.vi-pasos {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    counter-reset: none;
+
+    li {
+        position: relative;
+        padding: 26px 22px;
+        border-radius: 20px;
+        background: $superficie;
+        border: 1px solid $linea;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    p {
+        margin: 0;
+        font-size: 15px;
+    }
+}
+
+.vi-paso-num {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 6px;
+    border-radius: 50%;
+    font-family: 'Geist-bold', sans-serif;
+    font-size: 16px;
+    background: colores.$green;
+    color: $verde-tinta;
+}
+
+// ---------- testimonios ----------
+.vi-testimonios {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+
+    &.vi-uno {
+        grid-template-columns: 1fr;
+        max-width: 900px;
+
+        blockquote {
+            font-size: clamp(22px, 2.6vw, 32px);
+        }
+    }
+}
+
+.vi-testimonio {
+    margin: 0;
+    padding: 32px;
+    border-radius: 20px;
+    background: $superficie;
+    border: 1px solid $linea;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    blockquote {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.4;
+        color: $tinta;
+        text-wrap: pretty;
+    }
+
+    figcaption {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        color: $gris;
+        font-size: 14px;
+
+        b {
+            display: block;
+            color: $tinta;
+            font-family: 'Geist-medium', sans-serif;
+            font-weight: 500;
+            font-size: 15px;
+        }
+    }
+}
+
+.vi-iniciales {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex: none;
+    border-radius: 50%;
+    background: colores.$green;
+    color: $verde-tinta;
+    font-family: 'Geist-bold', sans-serif;
+}
+
+// ---------- contacto ----------
+.vi-contacto-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 56px;
+    align-items: start;
+
+    > * {
+        min-width: 0;
+    }
+
+    > div:first-child > p:not(.vi-ceja) {
+        margin: 20px 0 28px;
+        font-size: 17px;
+    }
+}
+
+.vi-correo {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 24px;
+    color: $gris;
+    font-size: 15px;
+
+    input {
+        background: transparent;
+        border: 0;
+        color: $tinta;
+        font-size: 15px;
+        width: 15.5em;
+        padding: 0;
+
+        &:focus {
+            outline: none;
+        }
+    }
+
+    button {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 1px solid $linea;
+        background: transparent;
+
+        img {
+            filter: invert(1);
+        }
+
+        &:hover {
+            border-color: colores.$green;
+        }
+    }
+
+    #message {
+        color: colores.$green;
+    }
+}
+
+.vi-formulario {
+    padding: 28px;
+    border-radius: 20px;
+    background: $superficie;
+    border: 1px solid $linea;
+
+    > p {
+        margin: 0 0 16px;
+        color: $tinta !important;
+    }
+
+    label {
+        color: $gris;
+        font-size: 14px;
+    }
+
+    .form-control {
+        background: $fondo;
+        border: 1px solid $linea;
+        color: $tinta;
+        border-radius: 12px;
+        padding: 11px 14px;
+        margin-bottom: 12px;
+
+        &::placeholder {
+            color: rgba($gris, .6);
+        }
+
+        &:focus {
+            background: $fondo;
+            color: $tinta;
+            border-color: colores.$green;
+            box-shadow: 0 0 0 3px rgba(colores.$green, .15);
+        }
+    }
+
+    select.form-control {
+        appearance: auto;
+    }
+
+    .btn-send.btn-primary {
+        width: 100%;
+        background: transparent !important;
+        border: 0 !important;
+        padding: 0;
+
+        #btn-text {
+            display: block;
+            border: 1px solid colores.$green !important;
+            background: transparent !important;
+            color: colores.$green !important;
+            border-radius: 999px !important;
+            padding: 12px 1em !important;
+            transition: .2s ease;
+        }
+
+        &:hover #btn-text {
+            background: colores.$green !important;
+            color: $verde-tinta !important;
+        }
+    }
+}
+
+// ---------- responsive ----------
+@media (max-width: 991px) {
+    .vi-numeros .vi-contenedor {
+        grid-template-columns: repeat(2, 1fr);
+        background: none;
+        border: 0;
+        gap: 12px;
+    }
+
+    .vi-numero {
+        border: 1px solid $linea !important;
+        border-radius: 16px;
+        background: $superficie;
+    }
+
+    .vi-galeria {
+        grid-template-columns: repeat(2, 1fr);
+        grid-auto-rows: 200px;
+    }
+
+    .vi-webs-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .vi-ventajas {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .vi-sistemas-grid,
+    .vi-video-grid,
+    .vi-contacto-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .vi-pasos {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .vi-testimonios {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 560px) {
+    .vi-seccion {
+        padding-block: 64px;
+    }
+
+    .vi-numero {
+        padding: 20px 18px;
+    }
+
+    .vi-galeria {
+        grid-auto-rows: 160px;
+        gap: 10px;
+
+        .vi-pieza.vi-grande {
+            grid-row: span 2;
+        }
+    }
+
+    .vi-etiqueta {
+        font-size: 11.5px;
+        left: 8px;
+        bottom: 8px;
+        padding: 6px 9px;
+    }
+
+    .vi-pasos,
+    .vi-ventajas {
+        grid-template-columns: 1fr;
+    }
+
+    .vi-numeros .vi-contenedor {
+        grid-template-columns: 1fr;
+    }
+
+    .vi-panel-cuerpo,
+    .vi-video-columnas,
+    .vi-embudo {
+        grid-template-columns: 1fr;
+    }
+
+    .vi-lista-servicios a {
+        grid-template-columns: 32px minmax(0, 1fr) 20px;
+        gap: 10px 12px;
+        padding-block: 18px;
+    }
+
+    .vi-lista-texto {
+        grid-column: 2 / 3;
+        grid-row: 2;
+        font-size: 14px;
+    }
+
+    .vi-vista {
+        min-height: 0;
+    }
+
+    .vi-avance {
+        grid-row: auto;
+    }
+
+    .vi-banda .vi-contenedor {
+        border-radius: 20px;
+        padding-block: 44px;
+        margin-inline: 16px;
+
+        .vh-btn {
+            white-space: normal;
+            justify-content: center;
+        }
+    }
+
+    .vi-testimonio,
+    .vi-formulario {
+        padding: 22px;
+    }
+
+    .vi-contacto .vh-btn {
+        white-space: normal;
+    }
+}

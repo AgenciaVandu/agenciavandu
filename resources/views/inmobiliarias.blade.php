@@ -1,7 +1,8 @@
 @push ('estilos')
 @vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/servicios.scss', 'resources/js/app.js', 'resources/js/observer.js', 'resources/js/portafolio.js', 'resources/js/diseno.js' ])
 @endpush
-<x-layouts.guest titulo="Diseño Web para Inmobiliarias y Bienes Raíces" meta-description="Desarrollo de páginas web para inmobiliarias y brokers. Sitios autoadministrables con filtros avanzados, mapas y optimización SEO en Mérida.">
+<x-layouts.guest titulo="Páginas web para inmobiliarias en México"
+    meta-description="Sitios para inmobiliarias y brokers con filtros avanzados, mapas y fichas de propiedad pensadas para captar prospectos. Autoadministrables y con SEO.">
     <x-header>
         <x-slot name="header">
             <h1>Páginas Web para Inmobiliarias: <br> Diseñadas para captar leads</h1>
