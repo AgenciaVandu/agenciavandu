@@ -46,12 +46,14 @@ class PageController extends Controller
             ['ruta' => 'cotizar', 'prioridad' => '0.7', 'archivo' => 'contacto'],
         ];
 
+        $dominio = 'https://agenciavandu.com';
+
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
         foreach ($paginas as $p) {
             $vista = resource_path('views/' . $p['archivo'] . '.blade.php');
             $fecha = date('Y-m-d', file_exists($vista) ? filemtime($vista) : time());
-            $xml .= '  <url><loc>' . route($p['ruta']) . '</loc><lastmod>' . $fecha . '</lastmod><priority>' . $p['prioridad'] . "</priority></url>\n";
+            $xml .= '  <url><loc>' . rtrim($dominio . route($p['ruta'], [], false), '/') . '</loc><lastmod>' . $fecha . '</lastmod><priority>' . $p['prioridad'] . "</priority></url>\n";
         }
         $xml .= '</urlset>';
 

@@ -22,12 +22,15 @@
     @php
         $tituloCompleto = ($titulo ?? 'Sitios web, sistemas, fotografía y video') . ' - Agencia Vandu';
         $descripcion = $metaDescription ?? 'Agencia con base en Mérida para negocios de todo México: sitios web con SEO y GEO, sistemas conectados a WhatsApp, video con IA, fotografía, redes sociales e impresión.';
-        $imagenSocial = asset('img/og-vandu.jpg');
+        // Dominio oficial fijo: así la canónica y las vistas previas nunca apuntan a .test ni a otro host.
+        $dominio = 'https://agenciavandu.com';
+        $urlCanonica = rtrim($dominio . '/' . ltrim(request()->path(), '/'), '/') ?: $dominio;
+        $imagenSocial = $dominio . '/img/og-vandu.jpg';
     @endphp
     <title>{{ $tituloCompleto }}</title>
     <link rel="icon" href="/favi.svg" type="image/svg+xml">
     <meta name="description" content="{{ $descripcion }}">
-    <link rel="canonical" href="{{ url()->current() }}">
+    <link rel="canonical" href="{{ $urlCanonica }}">
     @if ($noindex ?? false)
         <meta name="robots" content="noindex, follow">
     @endif
@@ -38,7 +41,7 @@
     <meta property="og:site_name" content="Agencia Vandu">
     <meta property="og:title" content="{{ $tituloCompleto }}">
     <meta property="og:description" content="{{ $descripcion }}">
-    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:url" content="{{ $urlCanonica }}">
     <meta property="og:image" content="{{ $imagenSocial }}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
