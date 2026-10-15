@@ -20,7 +20,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     @php
-        $tituloCompleto = ($titulo ?? 'Sitios web, sistemas, fotografía y video') . ' - Agencia Vandu';
+        $tituloCompleto = ($titulo ?? 'Páginas web, sistemas y video con IA') . ' | Agencia Vandu';
         $descripcion = $metaDescription ?? 'Agencia con base en Mérida para negocios de todo México: sitios web con SEO y GEO, sistemas conectados a WhatsApp, video con IA, fotografía, redes sociales e impresión.';
         // Dominio oficial fijo: así la canónica y las vistas previas nunca apuntan a .test ni a otro host.
         $dominio = 'https://agenciavandu.com';

@@ -1,8 +1,8 @@
 @push('estilos')
     @vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/servicios.scss', 'resources/js/app.js', 'resources/js/observer.js', 'resources/js/portafolio.js', 'resources/js/diseno.js'])
 @endpush
-<x-layouts.guest titulo="Diseño Web Profesional y Desarrollo a la Medida"
-    meta-description="Somos una agencia de desarrollo que utiliza la tecnología a tu favor para elevar la experiencia de atención a clientes y obtener leads de manera sostenida y eficiente.">
+<x-layouts.guest titulo="Diseño de páginas web en Mérida a la medida"
+    meta-description="Páginas web y tiendas en línea a la medida, rápidas y listas para Google y ChatGPT. Hosting, mantenimiento y panel para tus prospectos. Cotiza en 24 h.">
     <x-header>
         <x-slot name="header">
             <h1>Conectamos tecnología y estrategia para generar leads de alto impacto</h1>

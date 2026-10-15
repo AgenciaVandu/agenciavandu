@@ -69,8 +69,8 @@
         ],
     ];
 @endphp
-<x-layouts.guest titulo="Sitios web, fotografía y video para negocios en México"
-    meta-description="Agencia con base en Mérida para negocios de todo México: sitios web con SEO y GEO, sistemas conectados a WhatsApp, video con IA, fotografía, redes sociales e impresión.">
+<x-layouts.guest titulo="Páginas web, sistemas y video con IA en Mérida"
+    meta-description="Agencia en Mérida para negocios de todo México: páginas web con SEO, sistemas conectados a WhatsApp, video con IA, fotografía e impresión. Cotiza en 24 h.">
 
     <x-hero />
 
