@@ -248,6 +248,9 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::delete('roles/{rol}', [Admin\UsuariosController::class, 'rolDestroy'])->name('roles.destroy');
     Route::get('negocio', [Admin\NegocioController::class, 'show'])->name('negocio');
     Route::post('negocio', [Admin\NegocioController::class, 'update'])->name('negocio.update');
+    Route::get('negocio/correo', [Admin\CorreoEnvioController::class, 'show'])->name('negocio.correo');
+    Route::post('negocio/correo', [Admin\CorreoEnvioController::class, 'guardar'])->name('negocio.correo.guardar');
+    Route::delete('negocio/correo', [Admin\CorreoEnvioController::class, 'desactivar'])->name('negocio.correo.desactivar');
     Route::get('negocio/cotizaciones', [Admin\DocumentoController::class, 'show'])->name('negocio.documento');
     Route::post('negocio/cotizaciones', [Admin\DocumentoController::class, 'update'])->name('negocio.documento.guardar');
     Route::get('negocio/cotizaciones/muestra.pdf', [Admin\DocumentoController::class, 'muestra'])->name('negocio.documento.muestra');

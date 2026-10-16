@@ -94,6 +94,7 @@ class Cuentas
         self::$aplicada = $c->id;
 
         config(['vandu' => self::configDe($c, $v)]);
+        CorreoNegocio::aplicar($c);
         TiposProyecto::aplicar();
         PlantillasCorreo::limpiar();
         Dropbox::usar(null);
