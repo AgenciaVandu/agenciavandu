@@ -8,6 +8,8 @@
     try { $nuevosNav = \App\Models\Cliente::where('nuevo', true)->count(); } catch (\Throwable $e) { $nuevosNav = 0; } // antes de migrar
     try { $prospectosNav = \App\Models\Prospecto::where('nuevo', true)->count(); } catch (\Throwable $e) { $prospectosNav = 0; }
     $cuentaNav = \App\Support\Cuentas::actual();
+    // Productos en su mínimo: solo le importa a quien administra el inventario
+    try { $bajosNav = $cuentaNav?->tiene('stock') && $usuario?->puede('productos') ? \App\Models\Producto::activos()->bajos()->count() : 0; } catch (\Throwable $e) { $bajosNav = 0; }
     $viendoOtra = $usuario?->plataforma && $cuentaNav && $cuentaNav->id !== $usuario->cuenta_id;
     // Cada quien ve solo las secciones de su rol
     $puede = fn ($s) => $usuario?->puede($s) ?? false;
@@ -20,9 +22,10 @@
         ['ruta' => 'admin.proyectos.index',     'activo' => 'admin.proyectos.*',      'icono' => 'bi-kanban',          'texto' => 'Proyectos', 'cuenta' => $activosNav, 'seccion' => 'proyectos'],
         ['ruta' => 'admin.redes',               'activo' => 'admin.redes*',           'icono' => 'bi-grid-3x3-gap',    'texto' => 'Redes sociales', 'cuenta' => $redesNav ?? 0, 'seccion' => 'redes'],
         ['ruta' => 'admin.clientes.index',      'activo' => 'admin.clientes.*',       'icono' => 'bi-people',          'texto' => 'Clientes', 'cuenta' => $nuevosNav, 'nuevos' => true, 'seccion' => 'clientes'],
+        ['ruta' => 'admin.productos.index',     'activo' => 'admin.productos.*',      'icono' => 'bi-box-seam',        'texto' => 'Productos', 'cuenta' => $bajosNav, 'seccion' => ['productos', 'cotizaciones'], 'modulo' => 'stock'],
         ['ruta' => 'admin.proveedores.index',   'activo' => ['admin.proveedores.*', 'admin.ordenes.*'], 'icono' => 'bi-truck', 'texto' => 'Proveedores', 'seccion' => 'proveedores'],
         ['ruta' => 'admin.finanzas',            'activo' => 'admin.finanzas*',        'icono' => 'bi-graph-up-arrow',  'texto' => 'Finanzas', 'seccion' => 'finanzas'],
-    ], fn ($i) => $i['seccion'] === null || $puede($i['seccion'])));
+    ], fn ($i) => (! isset($i['modulo']) || $cuentaNav?->tiene($i['modulo'])) && ($i['seccion'] === null || collect((array) $i['seccion'])->contains(fn ($s) => $puede($s)))));
     $inicioNav = $usuario ? \App\Support\Permisos::inicio($usuario) : route('admin.resumen');
     // Barra inferior del celular: hasta 4 accesos (+ el botón de nueva cotización si la puede hacer)
     $tabs = array_slice(array_values(array_filter([
@@ -506,6 +509,9 @@
         @if(session('ok'))
             <div class="aviso aviso-ok" role="status"><i class="bi bi-check-circle-fill"></i> {{ session('ok') }}</div>
         @endif
+        @if(session('error'))
+            <div class="aviso aviso-error" role="alert"><i class="bi bi-exclamation-circle-fill"></i> {{ session('error') }}</div>
+        @endif
         @if($errors->any())
             <div class="aviso aviso-error" role="alert">
                 <i class="bi bi-exclamation-circle-fill align-self-start mt-1"></i>
@@ -549,6 +555,8 @@
             b.setAttribute('data-bs-popper-config', '{"strategy":"fixed"}');
         });
         prepararTablas();
+        // Las páginas que dibujan algo con JS (p. ej. un QR) lo vuelven a hacer cuando cambia el contenido
+        document.dispatchEvent(new Event('vandu:pagina'));
     }
 
     // En el celular cada fila se ve como tarjeta: cada celda lleva el nombre de su columna

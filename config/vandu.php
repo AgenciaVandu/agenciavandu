@@ -40,6 +40,63 @@ return [
                 ['nombre' => 'Diseñador', 'descripcion' => 'Ve sus tareas y sube sus diseños a la carpeta que le asignen.', 'permisos' => []],
             ],
         ],
+        'comercio' => [
+            'nombre'  => 'Venta de productos y servicios',
+            'icono'   => 'bi-shop',
+            'modulos' => ['stock'],
+            // El costo de cada producto entra solo al elegirlo del catálogo; lo demás se captura si aplica
+            'costeo'  => [
+                'utilidad'    => 35,
+                'componentes' => [
+                    ['clave' => 'producto',    'nombre' => 'Costo del producto', 'modo' => 'unidad', 'clase' => 'tercero'],
+                    ['clave' => 'flete',       'nombre' => 'Flete y envío',      'modo' => 'fijo',   'clase' => 'tercero'],
+                    ['clave' => 'instalacion', 'nombre' => 'Instalación',        'modo' => 'fijo',   'clase' => 'operativo'],
+                ],
+            ],
+            'proyectos' => [
+                'venta' => [
+                    'nombre' => 'Venta de productos', 'icono' => 'bi-bag-check', 'costeo' => true,
+                    'pagos'  => [
+                        ['clave' => 'anticipo', 'concepto' => 'Anticipo', 'porcentaje' => 50, 'antes_de' => 'surtido'],
+                        ['clave' => 'saldo', 'concepto' => 'Saldo contra entrega', 'porcentaje' => 50, 'antes_de' => 'entrega'],
+                    ],
+                    'etapas' => [
+                        ['clave' => 'pedido', 'nombre' => 'Confirmar pedido', 'dias' => 1, 'descripcion' => 'Modelos, colores, cantidades y dirección de entrega.'],
+                        ['clave' => 'surtido', 'nombre' => 'Surtir pedido', 'dias' => 5, 'descripcion' => 'Se aparta de almacén o se pide al proveedor lo que falte.'],
+                        ['clave' => 'entrega', 'nombre' => 'Entrega', 'dias' => 1, 'fecha' => true, 'descripcion' => 'Entrega en tu domicilio o recolección en tienda.'],
+                    ],
+                ],
+                'instalacion' => [
+                    'nombre' => 'Venta con instalación', 'icono' => 'bi-tools', 'costeo' => true,
+                    'pagos'  => [
+                        ['clave' => 'anticipo', 'concepto' => 'Anticipo', 'porcentaje' => 60, 'antes_de' => 'surtido'],
+                        ['clave' => 'saldo', 'concepto' => 'Saldo al instalar', 'porcentaje' => 40, 'antes_de' => 'entrega'],
+                    ],
+                    'etapas' => [
+                        ['clave' => 'medidas', 'nombre' => 'Visita y medidas', 'dias' => 2, 'fecha' => true, 'descripcion' => 'Revisamos el espacio para confirmar medidas y acomodo.'],
+                        ['clave' => 'surtido', 'nombre' => 'Surtir pedido', 'dias' => 7, 'descripcion' => 'Se aparta de almacén o se pide al proveedor lo que falte.'],
+                        ['clave' => 'instalacion', 'nombre' => 'Instalación', 'dias' => 2, 'fecha' => true, 'descripcion' => 'Entrega, armado e instalación en sitio.'],
+                        ['clave' => 'entrega', 'nombre' => 'Revisión y entrega', 'dias' => 1, 'descripcion' => 'Recorrido contigo y firma de conformidad.'],
+                    ],
+                ],
+                'servicio' => [
+                    'nombre' => 'Servicio', 'icono' => 'bi-wrench-adjustable',
+                    'pagos'  => [
+                        ['clave' => 'pago', 'concepto' => 'Pago del servicio', 'porcentaje' => 100, 'antes_de' => 'entrega'],
+                    ],
+                    'etapas' => [
+                        ['clave' => 'visita', 'nombre' => 'Visita', 'dias' => 1, 'fecha' => true, 'descripcion' => 'Diagnóstico en sitio.'],
+                        ['clave' => 'servicio', 'nombre' => 'Servicio', 'dias' => 2, 'descripcion' => 'Reparación, mantenimiento o ajuste.'],
+                        ['clave' => 'entrega', 'nombre' => 'Entrega', 'dias' => 1, 'descripcion' => 'Revisión final contigo.'],
+                    ],
+                ],
+            ],
+            'roles'   => [
+                ['nombre' => 'Vendedor', 'descripcion' => 'Atiende prospectos y clientes, y cotiza eligiendo productos del catálogo. No ve costos ni márgenes.', 'permisos' => ['ventas', 'cotizaciones', 'clientes']],
+                ['nombre' => 'Almacén', 'descripcion' => 'Da de alta productos, registra entradas y salidas, e importa el catálogo.', 'permisos' => ['productos', 'proveedores']],
+                ['nombre' => 'Administración', 'descripcion' => 'Cobros, finanzas, clientes, cotizaciones y costos del catálogo.', 'permisos' => ['finanzas', 'clientes', 'cotizaciones', 'productos']],
+            ],
+        ],
         'arquitectura' => [
             'nombre'  => 'Arquitectura y construcción',
             'icono'   => 'bi-buildings',

@@ -87,6 +87,12 @@ class User extends Authenticatable
         return strlen($tel) === 10 ? '52' . $tel : $tel;
     }
 
+    /** Código corto que va en los enlaces del catálogo que comparte (?v=…): así el WhatsApp de la página le llega a él */
+    public function getCodigoVendedorAttribute(): string
+    {
+        return substr(hash_hmac('sha256', 'vendedor:' . $this->id, (string) config('app.key')), 0, 8);
+    }
+
     public function getPrimerNombreAttribute(): string
     {
         return \Illuminate\Support\Str::before(trim($this->name), ' ') ?: $this->name;

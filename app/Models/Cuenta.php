@@ -24,9 +24,11 @@ class Cuenta extends Model
         return config("vandu.giros.{$this->giro}") ?? config('vandu.giros.agencia');
     }
 
+    /** Módulos del giro, más los que se le activen a un negocio en particular (ajustes.modulos) */
     public function tiene(string $modulo): bool
     {
-        return in_array($modulo, $this->giro_info['modulos'] ?? [], true);
+        return in_array($modulo, $this->giro_info['modulos'] ?? [], true)
+            || in_array($modulo, (array) $this->ajuste('modulos', []), true);
     }
 
     /** Logo como data URI (para el panel, la vista del cliente, el PDF y los correos) */

@@ -13,14 +13,21 @@
             ->map(fn ($g) => ['clave' => $g['clave'] ?? '', 'nombre' => $g['nombre'] ?? 'Costo', 'modo' => $g['modo'] ?? 'fijo', 'clase' => $g['clase'] ?? 'operativo', 'monto' => $g['monto'] ?? '']);
         return $lista->concat($extra)->map(fn ($k) => array_merge($k, ['monto' => $k['monto'] === null ? '' : $k['monto']]))->values()->all();
     };
-    $vacio = ['titulo' => '', 'descripcion' => '', 'cantidad' => 1, 'precio' => '', 'utilidad' => '', 'utilidad_modo' => 'pct', 'costear' => false, 'costos' => $armarCostos([])];
-    $conceptos = collect(old('conceptos', $p->conceptos->map(fn ($c) => $c->only(['titulo', 'descripcion', 'cantidad', 'precio', 'utilidad', 'utilidad_modo']) + ['costos' => $c->costos_lista])->values()->all()))
+    $vacio = ['producto_id' => '', 'titulo' => '', 'descripcion' => '', 'cantidad' => 1, 'precio' => '', 'utilidad' => '', 'utilidad_modo' => 'pct', 'costear' => false, 'costos' => $armarCostos([])];
+    $conceptos = collect(old('conceptos', $p->conceptos->map(fn ($c) => $c->only(['producto_id', 'titulo', 'descripcion', 'cantidad', 'precio', 'utilidad', 'utilidad_modo']) + ['costos' => $c->costos_lista])->values()->all()))
         ->map(function ($c) use ($vacio, $armarCostos) {
             $costos = $armarCostos(array_values((array) ($c['costos'] ?? [])));
             $base = array_merge($vacio, array_map(fn ($x) => $x ?? '', \Illuminate\Support\Arr::except($c, ['costos'])));
             return array_merge($base, ['costos' => $costos, 'costear' => collect($costos)->contains(fn ($k) => $k['monto'] !== '' && $k['monto'] !== null)]);
         })->all() ?: [$vacio];
     $tipos = config('vandu.proyectos');
+    // Inventario: elegir del catálogo y, para quien no administra productos, sin costos ni márgenes
+    $inventario = \App\Support\Inventario::activo();
+    $veCostos = \App\Support\Inventario::veCostos();
+    $productosInfo = $inventario
+        ? \App\Models\Producto::whereIn('id', collect($conceptos)->pluck('producto_id')->filter())->get()
+            ->mapWithKeys(fn ($x) => [$x->id => ['nombre' => $x->nombre, 'unidad' => $x->unidad, 'controla' => $x->controla_existencia, 'existencia' => $x->existencia, 'miniatura' => $x->miniatura_url, 'activo' => $x->activo]])
+        : collect();
     // Para quién: un cliente, o un prospecto que todavía no es cliente ("p12")
     $cliSel = old('cliente_id', $p->cliente_id);
     $proSel = old('prospecto_id', $p->prospecto_id);
@@ -40,7 +47,13 @@
         'clientes'        => $clientes->keyBy('id')->union(($prospectos ?? collect())->keyBy(fn ($x) => 'p' . $x->id)),
         'estadoSel'       => old('estado', $p->estado),
         'tipo'            => old('tipo', $p->tipo ?? \App\Models\Proyecto::tipoSugerido($p)),
-        'tiposCosteo'     => collect($tipos)->filter(fn ($m) => ! empty($m['costeo']))->keys()->values(),
+        'tiposCosteo'     => $veCostos ? collect($tipos)->filter(fn ($m) => ! empty($m['costeo']))->keys()->values() : [],
+        'inventario'      => $inventario,
+        'veCostos'        => $veCostos,
+        'productosInfo'   => (object) $productosInfo->all(),
+        'urlBuscar'       => $inventario ? route('admin.productos.buscar') : null,
+        'estadoOriginal'  => $p->estado,
+        'cantidadOriginal' => (object) ($p->exists ? $p->conceptos->whereNotNull('producto_id')->groupBy('producto_id')->map(fn ($g) => (float) $g->sum('cantidad'))->all() : []),
         'utilidadBase'    => \App\Support\Costeo::utilidad(),
         'vacio'           => $vacio,
         'observaciones'   => (string) old('observaciones', $p->observaciones),
@@ -101,6 +114,28 @@
     .lateral .utilidad div { display: flex; justify-content: space-between; }
     .agregar { display: flex; align-items: center; gap: 8px; width: 100%; padding: 12px 20px; border: 0; background: transparent; color: var(--text-2); font-weight: 500; text-align: left; }
     .agregar:hover { background: var(--sunken); color: var(--text); }
+    .agregar-fila { display: flex; }
+    .agregar-fila .agregar + .agregar { border-left: 1px solid var(--line); }
+    .del-catalogo { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-2); margin-bottom: 6px; min-width: 0; }
+    .del-catalogo img { width: 22px; height: 22px; border-radius: 5px; object-fit: cover; }
+    .del-catalogo .exis { color: var(--green-ink); }
+    .del-catalogo .exis.mal { color: var(--red); font-weight: 500; }
+    .del-catalogo .soltar { border: 0; background: transparent; color: var(--faint); padding: 0 2px; margin-left: auto; line-height: 1; }
+    .del-catalogo .soltar:hover { color: var(--red); }
+    .catalogo { margin: 0 16px 14px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: 0 12px 32px rgba(16,24,40,.10); }
+    .catalogo .buscador input { width: 100%; min-width: 0; }
+    .catalogo ul { max-height: 340px; overflow: auto; }
+    .opcion-prod { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto 20px; gap: 12px; align-items: center; width: 100%; padding: 8px; border: 0; border-radius: 10px; background: transparent; text-align: left; color: inherit; }
+    .opcion-prod:hover, .opcion-prod:focus-visible { background: var(--sunken); }
+    .opcion-prod.agotado { opacity: .75; }
+    .opcion-prod .ft { width: 40px; height: 40px; border-radius: 8px; background: var(--sunken); border: 1px solid var(--line); display: grid; place-items: center; overflow: hidden; color: var(--faint); }
+    .opcion-prod .ft img { width: 100%; height: 100%; object-fit: cover; }
+    .opcion-prod .nm, .opcion-prod .dt { display: flex; flex-direction: column; min-width: 0; }
+    .opcion-prod .nm b { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .opcion-prod small { font-size: 12px; color: var(--muted); }
+    .opcion-prod .dt { text-align: right; }
+    .opcion-prod > .bi { font-size: 17px; color: var(--muted); }
+    @media (max-width: 575.98px) { .agregar-fila { flex-direction: column; } .agregar-fila .agregar + .agregar { border-left: 0; border-top: 1px solid var(--line); } .opcion-prod { grid-template-columns: 40px minmax(0, 1fr) 20px; } .opcion-prod .dt { display: none; } }
     .totales { padding: 16px 20px 20px; border-top: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: end; }
     .totales dl { margin: 0; }
     .totales dl div { display: flex; justify-content: space-between; padding: 5px 0; }
@@ -407,6 +442,16 @@
                     <div class="concepto">
                         <span class="n num" x-text="i + 1"></span>
                         <div class="desc">
+                            <input type="hidden" :name="`conceptos[${i}][producto_id]`" :value="c.producto_id || ''">
+                            <template x-if="c.producto_id && productosInfo[c.producto_id]">
+                                <div class="del-catalogo">
+                                    <img :src="productosInfo[c.producto_id].miniatura" alt="" x-show="productosInfo[c.producto_id].miniatura">
+                                    <i class="bi bi-box-seam" x-show="!productosInfo[c.producto_id].miniatura"></i>
+                                    <span>Del catálogo</span>
+                                    <span class="exis" :class="avisoExistencia(c, i) ? 'mal' : ''" x-text="textoExistencia(c, i)"></span>
+                                    <button type="button" class="soltar" @click="c.producto_id = ''" title="Ya no ligarlo al catálogo (no descontará inventario)" aria-label="Quitar liga con el catálogo"><i class="bi bi-x"></i></button>
+                                </div>
+                            </template>
                             <label class="visually-hidden" :for="'tit'+i">Título</label>
                             <input class="form-control fw-semibold mb-2" :id="'tit'+i" :name="`conceptos[${i}][titulo]`" x-model="c.titulo" placeholder="Título, p. ej. Caja personalizada" :required="!c.descripcion">
                             <label class="visually-hidden" :for="'desc'+i">Descripción</label>
@@ -414,7 +459,7 @@
                         </div>
                         <div>
                             <label class="form-label d-md-none" :for="'cant'+i">Cantidad</label>
-                            <input type="number" step="0.01" min="0" class="form-control num" :id="'cant'+i" :name="`conceptos[${i}][cantidad]`" x-model.number="c.cantidad" required @input="if (conCosteo(c)) recalcularPrecio(c)">
+                            <input type="number" step="0.01" min="0" class="form-control num" :id="'cant'+i" :name="`conceptos[${i}][cantidad]`" x-model.number="c.cantidad" required @input="if (conCosteo(c)) alCambiarCosto(c)">
                         </div>
                         <div>
                             <label class="form-label d-md-none" :for="'precio'+i">Precio unitario</label>
@@ -437,6 +482,7 @@
                                 </ul>
                             </div>
                         </div>
+                        @if($veCostos)
                         <template x-if="! c.costear">
                             <div class="costear"><button type="button" @click="activarCosteo(c)"><i class="bi bi-calculator me-1"></i>Calcular precio con costos</button></div>
                         </template>
@@ -447,7 +493,7 @@
                                         <div>
                                             <label class="form-label" :for="'cos'+i+'_'+j"><span x-text="k.nombre + (k.modo === 'unidad' ? ' (c/u)' : ' (total)')"></span><span class="cl" x-text="k.clase === 'tercero' ? 'Tercero' : 'Operativo'"></span></label>
                                             <div class="input-group"><span class="input-group-text">$</span>
-                                                <input type="number" step="0.01" min="0" class="form-control num" :id="'cos'+i+'_'+j" :name="`conceptos[${i}][costos][${j}][monto]`" x-model="k.monto" placeholder="0.00" @input="recalcularPrecio(c)"></div>
+                                                <input type="number" step="0.01" min="0" class="form-control num" :id="'cos'+i+'_'+j" :name="`conceptos[${i}][costos][${j}][monto]`" x-model="k.monto" placeholder="0.00" @input="alCambiarCosto(c)"></div>
                                             <input type="hidden" :name="`conceptos[${i}][costos][${j}][clave]`" :value="k.clave">
                                             <input type="hidden" :name="`conceptos[${i}][costos][${j}][nombre]`" :value="k.nombre">
                                             <input type="hidden" :name="`conceptos[${i}][costos][${j}][modo]`" :value="k.modo">
@@ -475,11 +521,46 @@
                                 </div>
                             </div>
                         </template>
+                        @endif
                     </div>
                 </template>
-                <button type="button" class="agregar" @click="conceptos.push(nuevoConcepto()); $nextTick(() => document.getElementById('tit' + (conceptos.length - 1)).focus())">
-                    <i class="bi bi-plus-circle"></i> Agregar concepto
-                </button>
+                <div class="agregar-fila">
+                    <button type="button" class="agregar" @click="conceptos.push(nuevoConcepto()); $nextTick(() => document.getElementById('tit' + (conceptos.length - 1)).focus())">
+                        <i class="bi bi-plus-circle"></i> Agregar concepto
+                    </button>
+                    @if($inventario)
+                        <button type="button" class="agregar" @click="abrirCatalogo()" :aria-expanded="catalogo.abierto">
+                            <i class="bi bi-box-seam"></i> Elegir del catálogo
+                        </button>
+                    @endif
+                </div>
+                @if($inventario)
+                    <div class="catalogo" x-show="catalogo.abierto" x-cloak @keydown.escape.stop="catalogo.abierto = false" @click.outside="if (! $event.target.closest('.agregar-fila')) catalogo.abierto = false">
+                        <div class="buscador mb-2">
+                            <i class="bi bi-search"></i>
+                            <input type="search" class="form-control" x-ref="buscarProducto" x-model="catalogo.q" @input.debounce.250ms="buscarProductos()"
+                                   @keydown.enter.prevent="catalogo.resultados[0] && elegirProducto(catalogo.resultados[0])" placeholder="Busca por nombre, clave o categoría" aria-label="Buscar en el catálogo" autocomplete="off">
+                        </div>
+                        <div class="secundario small px-1 py-2" x-show="catalogo.cargando">Buscando…</div>
+                        <div class="secundario small px-1 py-2" x-show="! catalogo.cargando && catalogo.listo && ! catalogo.resultados.length">No encontramos productos con esa búsqueda.</div>
+                        <ul class="list-unstyled mb-0">
+                            <template x-for="r in catalogo.resultados" :key="r.id">
+                                <li>
+                                    <button type="button" class="opcion-prod" @click="elegirProducto(r)" :class="r.agotado && 'agotado'">
+                                        <span class="ft"><img :src="r.miniatura" alt="" x-show="r.miniatura"><i class="bi bi-image" x-show="!r.miniatura"></i></span>
+                                        <span class="nm"><b x-text="r.nombre"></b><small x-text="[r.clave, r.categoria].filter(Boolean).join(' · ')"></small></span>
+                                        <span class="dt"><b class="num" x-text="dinero(r.precio)"></b><small :class="r.agotado ? 'text-danger' : (r.bajo ? 'text-warning' : '')" x-text="r.controla ? r.existencia_texto : 'Sin inventario'"></small></span>
+                                        <i class="bi" :class="catalogo.agregados.includes(r.id) ? 'bi-check-circle-fill text-success' : 'bi-plus-circle'"></i>
+                                    </button>
+                                </li>
+                            </template>
+                        </ul>
+                        <div class="d-flex justify-content-between align-items-center mt-2 small secundario">
+                            <span>Enter agrega el primero · Esc cierra</span>
+                            <button type="button" class="btn btn-borde btn-sm" @click="catalogo.abierto = false">Listo</button>
+                        </div>
+                    </div>
+                @endif
 
                 <div class="totales">
                     <div class="row g-2">
@@ -925,6 +1006,7 @@
                 <div class="secundario num" x-show="modoIva !== 'sin_iva'">
                     <span x-text="dinero(subtotal)"></span> + IVA <span x-text="dinero(iva)"></span>
                 </div>
+                @if($veCostos)
                 <div class="utilidad num" x-show="usaCosteo && costoTotal > 0" x-cloak>
                     <div><span class="secundario">Costo total</span> <span x-text="dinero(costoTotal)"></span></div>
                     <div x-show="costoTerceros > 0 && costoOperativo > 0"><span class="secundario">· Terceros</span> <span x-text="dinero(costoTerceros)"></span></div>
@@ -933,6 +1015,7 @@
                     <div><span class="secundario" title="Qué parte de lo vendido (con costeo) es utilidad">Margen</span> <b x-text="margen === null ? '—' : margen + '%'"></b></div>
                     <div class="secundario" style="font-size: 12px" x-show="conceptos.some(c => ! conCosteo(c))">Solo cuenta los conceptos con costeo.</div>
                 </div>
+                @endif
                 <div class="secundario mt-2" x-show="modoIva === 'mas_iva'"><i class="bi bi-info-circle me-1"></i>El cliente ve los precios con “+ IVA”.</div>
                 <button class="btn btn-primario w-100 mt-3">{{ $nuevo ? 'Crear cotización' : 'Guardar cambios' }}</button>
                 <div class="secundario text-center mt-2" style="font-size:12.5px">Atajo: Ctrl / ⌘ + S</div>
@@ -1027,6 +1110,66 @@ function editor(init) {
             else if (! base && eraBase) this.observaciones = '';   // no dejar el texto de otro tipo sin tocar
         },
         clon(c) { return JSON.parse(JSON.stringify(c)); },
+        /* ---------- Catálogo de productos ---------- */
+        catalogo: { abierto: false, q: '', resultados: [], cargando: false, listo: false, agregados: [], pedido: 0 },
+        abrirCatalogo() {
+            this.catalogo.abierto = ! this.catalogo.abierto;
+            if (! this.catalogo.abierto) return;
+            this.catalogo.agregados = [];
+            if (! this.catalogo.listo) this.buscarProductos();
+            this.$nextTick(() => this.$refs.buscarProducto?.focus());
+        },
+        async buscarProductos() {
+            const n = ++this.catalogo.pedido;
+            this.catalogo.cargando = true;
+            try {
+                const r = await fetch(this.urlBuscar + '?q=' + encodeURIComponent(this.catalogo.q), { headers: { 'Accept': 'application/json', 'X-Requested-With': 'fetch' }, credentials: 'same-origin' });
+                const datos = r.ok ? await r.json() : [];
+                if (n === this.catalogo.pedido) { this.catalogo.resultados = datos; this.catalogo.listo = true; }
+            } catch (e) {
+                if (n === this.catalogo.pedido) this.catalogo.resultados = [];
+            } finally {
+                if (n === this.catalogo.pedido) this.catalogo.cargando = false;
+            }
+        },
+        elegirProducto(r) {
+            this.productosInfo[r.id] = { nombre: r.nombre, unidad: r.unidad, controla: !! r.controla, existencia: +r.existencia || 0, miniatura: r.miniatura || null, activo: true };
+            // Si ya está en la cotización, solo sube la cantidad
+            const ya = this.conceptos.find((c) => String(c.producto_id) === String(r.id));
+            if (ya) { ya.cantidad = (+ya.cantidad || 0) + 1; if (this.conCosteo(ya)) this.recalcularUtilidad(ya); }
+            else {
+                const c = this.clon(this.vacio);
+                Object.assign(c, { producto_id: r.id, titulo: r.nombre, descripcion: r.descripcion || '', cantidad: 1, precio: +r.precio || 0 });
+                if (this.veCostos && r.costo !== undefined && r.costo !== null) {
+                    let k = c.costos.find((x) => x.clave === 'producto');
+                    if (! k) { k = { clave: 'producto', nombre: 'Costo del producto', modo: 'unidad', clase: 'tercero', monto: '' }; c.costos.unshift(k); }
+                    k.monto = +r.costo;
+                    c.costear = true;
+                    c.utilidad_modo = 'pct';
+                    this.recalcularUtilidad(c);
+                }
+                // La primera fila vacía de una cotización nueva se reemplaza
+                const vacia = this.conceptos.length === 1 && ! this.conceptos[0].titulo && ! this.conceptos[0].descripcion && ! +this.conceptos[0].precio;
+                if (vacia) this.conceptos.splice(0, 1, c); else this.conceptos.push(c);
+            }
+            if (! this.catalogo.agregados.includes(r.id)) this.catalogo.agregados.push(r.id);
+        },
+        // Lo que ya salió por esta cotización (si estaba aceptada) cuenta como disponible para ella
+        disponible(c) {
+            const info = this.productosInfo[c.producto_id];
+            if (! info || ! info.controla) return null;
+            const propio = this.estadoOriginal === 'aceptada' ? (this.cantidadOriginal[c.producto_id] || 0) : 0;
+            return Math.round((info.existencia + propio) * 100) / 100;
+        },
+        pedidoDe(id) { return this.conceptos.filter((x) => String(x.producto_id) === String(id)).reduce((s, x) => s + (+x.cantidad || 0), 0); },
+        avisoExistencia(c) { const d = this.disponible(c); return d !== null && this.pedidoDe(c.producto_id) > d; },
+        textoExistencia(c) {
+            const info = this.productosInfo[c.producto_id], d = this.disponible(c);
+            if (! info.activo) return 'Producto desactivado';
+            if (d === null) return 'Sin inventario';
+            if (d <= 0) return 'Agotado';
+            return (this.avisoExistencia(c) ? 'Solo hay ' : 'Hay ') + (Number.isInteger(d) ? d : d.toFixed(2)) + ' ' + info.unidad + (d === 1 || ['kg', 'g', 'ml', 'cm', 'mm', 'm', 'lt', 'pza', 'pz'].includes(info.unidad) || /s$/i.test(info.unidad) || ! /[a-záéíóú]$/i.test(info.unidad) ? '' : (/[aeiouáéíóú]$/i.test(info.unidad) ? 's' : 'es'));
+        },
         nuevoConcepto() {
             const c = this.clon(this.vacio);
             if (this.tiposCosteo.includes(this.tipo)) this.activarCosteo(c);
@@ -1039,6 +1182,8 @@ function editor(init) {
         },
         // Costos o utilidad cambian → precio sugerido. El precio sigue siendo editable.
         recalcularPrecio(c) { if (this.conCosteo(c)) c.precio = this.precioCosteo(c); },
+        // Un producto del catálogo conserva su precio de lista: lo que cambia es la utilidad
+        alCambiarCosto(c) { c.producto_id ? this.recalcularUtilidad(c) : this.recalcularPrecio(c); },
         // Escribes el precio → la utilidad se ajusta (en % sobre el costo o en $, según elegiste)
         recalcularUtilidad(c) {
             if (! this.conCosteo(c)) return;

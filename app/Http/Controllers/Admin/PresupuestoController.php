@@ -101,6 +101,7 @@ class PresupuestoController extends Controller
             [$datos, $conceptos] = $this->validar($request);
             $p = Presupuesto::create($datos);
             $p->conceptos()->createMany($conceptos);
+            if (\App\Support\Inventario::activo()) \App\Support\Inventario::sincronizarCotizacion($p);
             // Ya se le está atendiendo: deja de aparecer como contacto nuevo
             if ($p->cliente_id) Cliente::whereKey($p->cliente_id)->where('nuevo', true)->update(['nuevo' => false]);
             Aceptacion::registrar($p, 'creada', 'agencia', null, null, ['version' => 1] + Aceptacion::foto($p->fresh('conceptos')), false);
@@ -145,6 +146,7 @@ class PresupuestoController extends Controller
             $presupuesto->update($datos);
             $presupuesto->conceptos()->delete();
             $presupuesto->conceptos()->createMany($conceptos);
+            if (\App\Support\Inventario::activo()) \App\Support\Inventario::sincronizarCotizacion($presupuesto);
 
             // Historial: versión nueva si cambió el contenido, y cambio de estado si lo hubo
             $despues = Aceptacion::foto($presupuesto->fresh('conceptos'));
@@ -261,6 +263,7 @@ class PresupuestoController extends Controller
             'iva_porcentaje'   => 'required|numeric|min:0|max:100',
 
             'conceptos'               => 'required|array|min:1',
+            'conceptos.*.producto_id' => 'nullable|integer',
             'conceptos.*.titulo'      => 'nullable|required_without:conceptos.*.descripcion|string|max:255',
             'conceptos.*.descripcion' => 'nullable|string|max:5000',
             'conceptos.*.cantidad'    => 'required|numeric|min:0',
@@ -299,8 +302,29 @@ class PresupuestoController extends Controller
 
         $num = fn ($x) => ($x === null || $x === '') ? null : (float) $x;
 
-        $conceptos = collect($v['conceptos'])->values()->map(function ($c, $i) use ($num) {
+        // Inventario: productos del negocio que se pueden ligar, y si quien guarda puede ver costos
+        $veCostos = \App\Support\Inventario::veCostos($request->user());
+        $productos = \App\Support\Inventario::activo()
+            ? \App\Models\Producto::whereIn('id', collect($v['conceptos'])->pluck('producto_id')->filter())->get()->keyBy('id')
+            : collect();
+        // Quien no ve costos no puede tocarlos: se conservan los que ya tenía cada concepto (por su posición)
+        $previos = (! $veCostos && $request->route('presupuesto'))
+            ? $request->route('presupuesto')->conceptos()->orderBy('orden')->get()->values()
+            : collect();
+
+        $conceptos = collect($v['conceptos'])->values()->map(function ($c, $i) use ($num, $veCostos, $productos, $previos) {
+            $producto = $productos->get((int) ($c['producto_id'] ?? 0));
+            if (! $veCostos) {
+                $previo = $previos->get($i);
+                $c['costos'] = $producto ? [] : ($previo?->costos_lista ?? []);
+                $c['utilidad_modo'] = $previo?->utilidad_modo ?? 'pct';
+            }
+            // Un producto con costo lleva su costo por unidad, aunque quien cotiza no lo vea
+            if ($producto && $producto->costo !== null && ! collect($c['costos'] ?? [])->contains(fn ($x) => ($x['clave'] ?? '') === 'producto' && $num($x['monto'] ?? null) !== null)) {
+                $c['costos'] = array_merge([['clave' => 'producto', 'nombre' => 'Costo del producto', 'modo' => 'unidad', 'clase' => 'tercero', 'monto' => $producto->costo]], (array) ($c['costos'] ?? []));
+            }
             $fila = [
+                'producto_id'     => $producto?->id,
                 'titulo'          => trim((string) ($c['titulo'] ?? '')) ?: null,
                 'descripcion'     => (string) ($c['descripcion'] ?? ''),
                 'cantidad'        => $c['cantidad'],

@@ -61,6 +61,12 @@ class Presupuesto extends Model
             }
         });
 
+        // Inventario: al aceptarse descuenta su mercancía; si deja de estar aceptada, la regresa
+        static::saved(function (Presupuesto $p) {
+            if (! ($p->wasChanged('estado') || $p->wasRecentlyCreated) || ! \App\Support\Inventario::activo()) return;
+            \App\Support\Inventario::sincronizarCotizacion($p);
+        });
+
         // Ventas: al aceptarse, el prospecto ligado pasa a Ganado con el valor de la cotización
         static::saved(function (Presupuesto $p) {
             if ($p->estado !== 'aceptada' || ! ($p->wasChanged('estado') || $p->wasRecentlyCreated)) return;

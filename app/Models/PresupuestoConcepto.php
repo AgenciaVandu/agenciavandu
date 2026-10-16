@@ -8,9 +8,12 @@ class PresupuestoConcepto extends Model
 {
     use \App\Models\Concerns\DeCuenta;
 
-    public const COPIABLES = ['titulo', 'descripcion', 'cantidad', 'precio', 'orden', 'costos', 'utilidad', 'utilidad_modo', 'costo_proveedor', 'gasolina'];
+    public const COPIABLES = ['producto_id', 'titulo', 'descripcion', 'cantidad', 'precio', 'orden', 'costos', 'utilidad', 'utilidad_modo', 'costo_proveedor', 'gasolina'];
 
     protected $fillable = self::COPIABLES;
+
+    public function producto(): \Illuminate\Database\Eloquent\Relations\BelongsTo { return $this->belongsTo(Producto::class); }
+    public function presupuesto(): \Illuminate\Database\Eloquent\Relations\BelongsTo { return $this->belongsTo(Presupuesto::class); }
 
     protected $casts = [
         'cantidad'        => 'float',

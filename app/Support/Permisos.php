@@ -19,6 +19,7 @@ class Permisos
         'tareas'        => ['texto' => 'Gestionar tareas',      'icono' => 'bi-check2-square',     'ayuda' => 'Crear y asignar tareas, elegir la carpeta de entrega y ver las de todo el equipo'],
         'redes'         => ['texto' => 'Redes sociales',        'icono' => 'bi-grid-3x3-gap',      'ayuda' => 'Calendario de contenido y aprobaciones de los clientes'],
         'clientes'      => ['texto' => 'Clientes',              'icono' => 'bi-people',            'ayuda' => 'Fichas, datos fiscales y contactos del sitio'],
+        'productos'     => ['texto' => 'Productos e inventario', 'icono' => 'bi-box-seam',         'ayuda' => 'Catálogo, existencias, costos, entradas y salidas, e importar desde Excel'],
         'proveedores'   => ['texto' => 'Proveedores',           'icono' => 'bi-truck',             'ayuda' => 'Proveedores, órdenes de compra, sus facturas y archivos'],
         'finanzas'      => ['texto' => 'Finanzas',              'icono' => 'bi-graph-up-arrow',    'ayuda' => 'Cobros, ingresos y exportar a Excel'],
         'archivos'      => ['texto' => 'Archivos',              'icono' => 'bi-folder2-open',      'ayuda' => 'Explorar todo el Dropbox de la agencia desde el panel'],
@@ -27,7 +28,7 @@ class Permisos
     ];
 
     /** Secciones que solo existen en ciertos giros: sección => módulo del giro */
-    public const MODULOS = ['redes' => 'redes'];
+    public const MODULOS = ['redes' => 'redes', 'productos' => 'stock'];
 
     /** Secciones disponibles para la cuenta activa (para armar roles) */
     public static function disponibles(): array
@@ -46,6 +47,11 @@ class Permisos
         ['admin.proyectos.store', 'proyectos'],
         ['admin.proyectos.*', 'proyectos'],
         ['admin.presupuestos.*', 'cotizaciones'],
+        // Quien cotiza consulta el catálogo y elige productos; administrarlo (costos, existencias, importar) es de Productos
+        ['admin.productos.index', ['productos', 'cotizaciones']],
+        ['admin.productos.buscar', ['productos', 'cotizaciones']],
+        ['admin.productos.show', ['productos', 'cotizaciones']],
+        ['admin.productos.*', 'productos'],
         ['admin.ventas.*', 'ventas'],
         ['admin.clientes.*', 'clientes'],
         ['admin.proveedores.*', 'proveedores'],
