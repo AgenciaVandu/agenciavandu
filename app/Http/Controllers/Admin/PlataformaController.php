@@ -55,7 +55,7 @@ class PlataformaController extends Controller
             'dueno_email.unique'    => 'Ese correo ya tiene acceso a la plataforma.',
         ]);
 
-        [$cuenta, $dueno, $url] = DB::transaction(fn () => self::crearCuenta($d));
+        [$cuenta, $dueno, $url] = DB::transaction(fn () => self::crearCuenta($d + ['ejemplos' => $request->boolean('ejemplos', true)]));
         $correo = false;
         if ($request->boolean('enviar_correo', true)) {
             $correo = Cuentas::como($cuenta, function () use ($dueno, $url, $cuenta) {
@@ -96,6 +96,8 @@ class PlataformaController extends Controller
                 'password' => Str::random(40), 'rol_id' => $super->id, 'activo' => true, 'puesto' => 'Director',
             ]);
             $cuenta->update(['ajustes' => ['emisor' => ['nombre' => $d['dueno_nombre'], 'email' => $d['dueno_email'], 'telefono' => $d['dueno_tel'] ?? '']]]);
+            // Con inventario, arranca con productos de ejemplo para aprender a usarlo
+            if (($d['ejemplos'] ?? false) && $cuenta->tiene('stock')) \App\Support\ProductosEjemplo::cargar();
             return [$cuenta, $dueno, $dueno->nuevoEnlace()];
         });
     }

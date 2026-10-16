@@ -148,4 +148,29 @@ class GirosDominiosTest extends TestCase
         $this->put("/admin/plataforma/{$b->id}", ['nombre' => 'Dos', 'giro' => 'comercio', 'activa' => 1, 'dominio' => $principal])->assertSessionHasErrors('dominio');
         $this->put("/admin/plataforma/{$b->id}", ['nombre' => 'Dos', 'giro' => 'comercio', 'activa' => 1, 'dominio' => 'no es dominio'])->assertSessionHasErrors('dominio');
     }
+
+    public function test_negocio_con_inventario_arranca_con_productos_de_ejemplo_que_se_quitan(): void
+    {
+        [$c, $dueno] = $this->negocio('comercio');
+        Cuentas::activar($c);
+        $this->assertSame(10, \App\Models\Producto::where('ejemplo', true)->count());
+        $this->assertEquals(12, \App\Models\Producto::where('clave', 'EJ-001')->value('existencia'));
+        $this->assertSame(1, \App\Models\Producto::activos()->bajos()->where('existencia', '>', 0)->count());   // escritorio en su mínimo
+
+        // Otro negocio no ve esos productos; uno sin inventario no los recibe
+        [$agencia] = $this->negocio('agencia', 'Estudio', 'e@x.mx');
+        Cuentas::activar($agencia);
+        $this->assertSame(0, \App\Models\Producto::count());
+
+        $dueno->forceFill(['password' => bcrypt('x'), 'invitacion_hash' => null])->save();
+        $this->actingAs($dueno->fresh())->get('/admin/productos')->assertOk()->assertSee('productos de ejemplo');
+        $this->delete('/admin/productos/ejemplos')->assertRedirect('/admin/productos');
+        Cuentas::activar($c);
+        $this->assertSame(0, \App\Models\Producto::count());
+        $this->assertSame(0, \App\Models\ProductoCategoria::count());
+
+        // Se pueden volver a cargar desde la página vacía
+        $this->post('/admin/productos/ejemplos')->assertRedirect('/admin/productos');
+        $this->assertSame(10, \App\Models\Producto::count());
+    }
 }

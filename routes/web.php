@@ -128,6 +128,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
 
     // Productos e inventario
     Route::get('productos/buscar', [Admin\ProductoController::class, 'buscar'])->name('productos.buscar');
+    Route::post('productos/ejemplos', [Admin\ProductoController::class, 'cargarEjemplos'])->name('productos.ejemplos');
+    Route::delete('productos/ejemplos', [Admin\ProductoController::class, 'quitarEjemplos'])->name('productos.ejemplos.quitar');
     Route::post('productos/ajustes', [Admin\ProductoController::class, 'ajustes'])->name('productos.ajustes');
     Route::get('productos/importar', [Admin\ProductoImportController::class, 'create'])->name('productos.importar');
     Route::post('productos/importar', [Admin\ProductoImportController::class, 'revisar'])->name('productos.importar.revisar');

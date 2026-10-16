@@ -60,6 +60,15 @@
     @endif
 </div>
 
+@if($ejemplos)
+    <div class="aviso" style="background: var(--blue-soft); color: var(--blue); border: 1px solid #cddcff; flex-wrap: wrap">
+        <i class="bi bi-lightbulb"></i>
+        <span class="flex-grow-1">Tienes {{ $ejemplos }} productos de ejemplo para que pruebes cotizar, mover existencias y compartir. Cuando cargues los tuyos, quítalos.</span>
+        <form method="post" action="{{ route('admin.productos.ejemplos.quitar') }}" onsubmit="return confirm('¿Quitar los productos de ejemplo?')">@csrf @method('delete')
+            <button class="btn btn-borde btn-sm">Quitar ejemplos</button></form>
+    </div>
+@endif
+
 @if($resumen['activos'])
     <div class="panel resumen-inv">
         <a href="{{ route('admin.productos.index') }}"><div class="k">Productos activos</div><div class="v num">{{ number_format($resumen['activos']) }}</div></a>
@@ -108,6 +117,8 @@
                     <a href="{{ route('admin.productos.importar') }}" class="btn btn-primario"><i class="bi bi-file-earmark-spreadsheet me-1"></i> Importar de Excel</a>
                     <a href="{{ route('admin.productos.create') }}" class="btn btn-borde">Agregar uno</a>
                 </div>
+                <form method="post" action="{{ route('admin.productos.ejemplos') }}" class="mt-3">@csrf
+                    <button class="btn btn-link btn-sm text-secondary">O carga 10 productos de ejemplo para probar</button></form>
             @else
                 <h3>Todavía no hay productos</h3>
                 <p>Cuando el equipo cargue el catálogo, aquí vas a ver precios y existencias.</p>

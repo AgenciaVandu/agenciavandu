@@ -53,8 +53,9 @@ class ProductoController extends Controller
             'valor'     => $admin ? (float) Producto::activos()->where('controla_existencia', true)->where('existencia', '>', 0)->selectRaw('SUM(existencia * COALESCE(costo, 0)) as v')->value('v') : 0,
         ];
         $mostrarPrecio = (bool) Cuentas::actual()?->ajuste('catalogo.mostrar_precio', true);
+        $ejemplos = $admin ? Producto::where('ejemplo', true)->count() : 0;
 
-        return view('admin.productos.index', compact('productos', 'q', 'categoria', 'estado', 'categorias', 'resumen', 'admin', 'mostrarPrecio'));
+        return view('admin.productos.index', compact('productos', 'q', 'categoria', 'estado', 'categorias', 'resumen', 'admin', 'mostrarPrecio', 'ejemplos'));
     }
 
     public function create(Request $request)
@@ -146,6 +147,19 @@ class ProductoController extends Controller
             'agotado' => $p->agotado, 'bajo' => $p->bajo_minimo, 'miniatura' => $p->miniatura_url,
             'costo' => $costos ? $p->costo : null,
         ], fn ($v) => $v !== null)));
+    }
+
+    /** Diez productos de ejemplo para conocer el módulo */
+    public function cargarEjemplos()
+    {
+        $n = \App\Support\ProductosEjemplo::cargar();
+        return redirect()->route('admin.productos.index')->with('ok', $n ? "Listo: $n productos de ejemplo. Cuando cargues los tuyos, quítalos con un clic." : 'Los productos de ejemplo ya estaban cargados.');
+    }
+
+    public function quitarEjemplos()
+    {
+        $n = \App\Support\ProductosEjemplo::quitar();
+        return redirect()->route('admin.productos.index')->with('ok', "Se quitaron $n productos de ejemplo.");
     }
 
     /** Lo que el catálogo público muestra por defecto */

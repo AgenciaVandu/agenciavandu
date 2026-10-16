@@ -18,13 +18,13 @@ class Producto extends Model
     use \App\Models\Concerns\DeCuenta;
 
     protected $fillable = ['categoria_id', 'proveedor_id', 'clave', 'nombre', 'descripcion', 'unidad', 'precio', 'costo',
-                           'controla_existencia', 'minimo', 'foto', 'publico', 'mostrar_precio', 'activo'];
+                           'controla_existencia', 'minimo', 'foto', 'publico', 'mostrar_precio', 'activo', 'ejemplo'];
 
     protected $attributes = ['unidad' => 'pieza', 'precio' => 0, 'existencia' => 0, 'controla_existencia' => true, 'publico' => true, 'activo' => true];
 
     protected $casts = [
         'precio' => 'float', 'costo' => 'float', 'existencia' => 'float', 'minimo' => 'float',
-        'controla_existencia' => 'boolean', 'publico' => 'boolean', 'mostrar_precio' => 'boolean', 'activo' => 'boolean',
+        'controla_existencia' => 'boolean', 'publico' => 'boolean', 'mostrar_precio' => 'boolean', 'activo' => 'boolean', 'ejemplo' => 'boolean',
     ];
 
     protected static function booted(): void
