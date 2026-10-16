@@ -133,7 +133,7 @@ class Producto extends Model
 
     public function getUrlAttribute(): string
     {
-        return route('catalogo.producto', $this->slug);
+        return Cuentas::enlace(route('catalogo.producto', $this->slug), $this->cuenta_id);
     }
 
     public function getFotoUrlAttribute(): ?string

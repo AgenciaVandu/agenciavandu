@@ -59,7 +59,7 @@
                 <span class="form-label d-block">Giro</span>
                 <div class="giro-op">
                     @foreach($giros as $k => $g)
-                        <label><input type="radio" name="giro" value="{{ $k }}" @checked(old('giro', 'arquitectura') === $k)><i class="bi {{ $g['icono'] }}"></i><div><b style="font-weight:600">{{ $g['nombre'] }}</b><div class="secundario" style="font-size:12.5px">{{ count($g['proyectos'] ?? config('vandu.proyectos')) }} tipos de proyecto · {{ count($g['roles']) + 1 }} roles</div></div></label>
+                        <label><input type="radio" name="giro" value="{{ $k }}" @checked(old('giro', array_key_first($giros)) === $k)><i class="bi {{ $g['icono'] }}"></i><div><b style="font-weight:600">{{ $g['nombre'] }}</b><div class="secundario" style="font-size:12.5px">{{ count($g['proyectos'] ?? config('vandu.proyectos')) }} tipos de proyecto · {{ count($g['roles']) + 1 }} roles</div></div></label>
                     @endforeach
                 </div>
             </div>
@@ -93,6 +93,7 @@
                     <div><b>{{ $cotiz[$c->id] ?? 0 }}</b><span>Cotizac.</span></div>
                     <div><b>{{ $proyectos[$c->id] ?? 0 }}</b><span>Proyectos</span></div>
                 </div>
+                @if($c->dominio)<p class="mb-2" style="font-size:13px"><i class="bi bi-globe2"></i> <a href="https://{{ $c->dominio }}/admin" target="_blank" rel="noopener" class="num">{{ $c->dominio }}</a></p>@endif
                 <p class="secundario mb-3" style="font-size:12.5px">Alta {{ $c->created_at->locale('es')->isoFormat('D MMM YYYY') }} · último acceso {{ $ultimo ? \Illuminate\Support\Carbon::parse($ultimo)->locale('es')->diffForHumans() : 'nunca' }}</p>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
                     <form method="post" action="{{ route('admin.plataforma.entrar', $c) }}">@csrf
@@ -107,6 +108,13 @@
                     <select name="giro" class="form-select form-select-sm" aria-label="Giro">
                         @foreach($giros as $k => $gg)<option value="{{ $k }}" @selected($c->giro === $k)>{{ $gg['nombre'] }}</option>@endforeach
                     </select>
+                    @if($c->id !== $principal)
+                        <div>
+                            <label class="form-label small mb-1" for="dom-{{ $c->id }}">Dominio propio <span class="secundario fw-normal">(opcional)</span></label>
+                            <input id="dom-{{ $c->id }}" name="dominio" class="form-control form-control-sm num" value="{{ old('dominio', $c->dominio) }}" maxlength="190" placeholder="app.sunegocio.mx" autocomplete="off" spellcheck="false">
+                            <div class="secundario" style="font-size:12px; margin-top:4px">Su equipo entra en ese dominio con su marca, y sus enlaces de cotizaciones y productos salen con él. Antes hay que apuntarlo a este servidor.</div>
+                        </div>
+                    @endif
                     <textarea name="notas" class="form-control form-control-sm" rows="2" maxlength="2000" placeholder="Notas internas (plan, contacto, pagos…)">{{ $c->notas }}</textarea>
                     @if($c->id !== $principal)
                         <label class="form-check form-switch m-0"><input type="checkbox" class="form-check-input" role="switch" name="activa" value="1" @checked($c->activa)> <span class="form-check-label" style="font-size:13.5px">Activa (si la suspendes, su equipo no puede entrar ni se abren sus enlaces)</span></label>
@@ -118,5 +126,41 @@
         </section>
     @endforeach
 </div>
+
+<section class="mt-5" id="giros">
+    <div class="page-head">
+        <div>
+            <h2 class="fs-5 fw-semibold mb-1">Tipos de empresa</h2>
+            <p class="sub mb-0">Con qué arranca cada negocio: módulos, roles y tipos de proyecto. Después cada uno los ajusta en su panel.</p>
+        </div>
+        <a href="{{ route('admin.plataforma.giros.create') }}" class="btn btn-borde"><i class="bi bi-plus-lg me-1"></i> Nuevo tipo de empresa</a>
+    </div>
+    @error('giro')<div class="aviso aviso-error">{{ $message }}</div>@enderror
+    <div class="pf-grid">
+        @foreach($giros as $k => $g)
+            @php $propio = $propios[$k] ?? null; $nP = count($g['proyectos'] ?? \App\Support\Cuentas::proyectosDeFabrica(new \App\Models\Cuenta(['giro' => $k]))); @endphp
+            <section class="panel pf-card">
+                <div class="panel-body">
+                    <div class="cab">
+                        <span class="avatar" style="background: var(--sunken); color: var(--ink); border: 1px solid var(--line)"><i class="bi {{ $g['icono'] }}"></i></span>
+                        <div class="min-w-0 flex-grow-1">
+                            <div class="n text-truncate">{{ $g['nombre'] }}</div>
+                            <div class="g">{{ $propio ? 'Creado en plataforma' : 'De fábrica' }} · {{ $porGiro[$k] ?? 0 }} {{ ($porGiro[$k] ?? 0) === 1 ? 'negocio' : 'negocios' }}</div>
+                        </div>
+                        @if($propio)<a href="{{ route('admin.plataforma.giros.edit', $propio) }}" class="btn btn-fantasma btn-icono" title="Editar" aria-label="Editar {{ $g['nombre'] }}"><i class="bi bi-pencil"></i></a>@endif
+                    </div>
+                    @if(! empty($g['descripcion']))<p class="secundario mt-2 mb-0" style="font-size:13px">{{ $g['descripcion'] }}</p>@endif
+                    <div class="d-flex flex-wrap gap-2 mt-3" style="font-size:12.5px">
+                        <span class="estado estado-borrador">{{ $nP }} {{ $nP === 1 ? 'tipo de proyecto' : 'tipos de proyecto' }}</span>
+                        <span class="estado estado-borrador">{{ count($g['roles'] ?? []) + 1 }} roles</span>
+                        @foreach($g['modulos'] ?? [] as $m)
+                            @if(isset(\App\Support\Giros::MODULOS[$m]))<span class="estado estado-enviada">{{ \App\Support\Giros::MODULOS[$m]['texto'] }}</span>@endif
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+        @endforeach
+    </div>
+</section>
 </div>
 @endsection

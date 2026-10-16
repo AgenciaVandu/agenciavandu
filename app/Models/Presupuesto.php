@@ -420,7 +420,7 @@ class Presupuesto extends Model
 
     public function getUrlPublicaAttribute(): string
     {
-        return route('presupuesto.publico', $this->token);
+        return \App\Support\Cuentas::enlace(route('presupuesto.publico', $this->token), $this->cuenta_id);
     }
 
     public function getNombreArchivoAttribute(): string

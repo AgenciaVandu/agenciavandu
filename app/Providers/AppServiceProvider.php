@@ -23,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
         // Compatibilidad con MySQL/MariaDB del hosting (índices de máx. 1000 bytes)
         Schema::defaultStringLength(191);
         // Por defecto se trabaja con la cuenta principal (sitio web, comandos); el panel activa la de cada usuario
+        // Tipos de empresa creados en Plataforma, junto a los de fábrica
+        \App\Support\Giros::cargar();
         \App\Support\Cuentas::reiniciar();
         try {
             \App\Support\Cuentas::activar(\App\Support\Cuentas::principalId());

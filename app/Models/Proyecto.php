@@ -77,10 +77,12 @@ class Proyecto extends Model
         if (config('vandu.proyectos.redes') && Str::contains($texto, config('vandu.palabras_redes', []))) {
             return 'redes';
         }
-        if (Str::contains($texto, config('vandu.palabras_audiovisual', []))) {
+        if (Str::contains($texto, config('vandu.palabras_audiovisual', [])) && config('vandu.proyectos.audiovisual')) {
             return 'audiovisual';
         }
-        return Str::contains($texto, config('vandu.palabras_produccion', [])) ? 'produccion' : 'web';
+        $t = Str::contains($texto, config('vandu.palabras_produccion', [])) ? 'produccion' : 'web';
+        // Negocios con sus propios tipos: el primero que tengan
+        return config("vandu.proyectos.$t") ? $t : (array_key_first(config('vandu.proyectos') ?? []) ?? $t);
     }
 
     /**
@@ -329,7 +331,7 @@ class Proyecto extends Model
 
     public function getUrlPublicaAttribute(): string
     {
-        return route('proyecto.publico', $this->token);
+        return \App\Support\Cuentas::enlace(route('proyecto.publico', $this->token), $this->cuenta_id);
     }
 
     public function getCarpetaAttribute(): string

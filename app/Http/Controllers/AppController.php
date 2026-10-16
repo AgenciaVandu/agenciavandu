@@ -13,8 +13,8 @@ class AppController extends Controller
     public function manifiesto()
     {
         return response()->json([
-            'name'             => 'Vandu · Panel',
-            'short_name'       => 'Vandu',
+            'name'             => (\App\Support\Cuentas::esPrincipal() ? 'Vandu' : \App\Support\Cuentas::actual()?->nombre) . ' · Panel',
+            'short_name'       => \Illuminate\Support\Str::limit(\App\Support\Cuentas::esPrincipal() ? 'Vandu' : (string) \App\Support\Cuentas::actual()?->nombre, 12, ''),
             'description'      => 'Cotizaciones, proyectos y entregas de Agencia Vandu',
             'id'               => '/admin',
             'start_url'        => '/admin',

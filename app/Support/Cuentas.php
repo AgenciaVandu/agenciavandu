@@ -27,6 +27,7 @@ class Cuentas
     {
         self::$id = self::$aplicada = null;
         self::$cuenta = null;
+        self::$dominios = [];
         self::$base = config('vandu');
         self::$fabrica = config('vandu.proyectos');
         self::$costeoFabrica = config('vandu.costeo');
@@ -109,6 +110,27 @@ class Cuentas
         } finally {
             $antes ? self::activar($antes) : self::activar(self::principalId());
         }
+    }
+
+    private static array $dominios = [];
+
+    /**
+     * Enlace para el cliente con el dominio propio del negocio (app.losos.mx), si tiene;
+     * así sus cotizaciones y productos se comparten con su dirección y no la de la plataforma.
+     */
+    public static function enlace(string $url, ?int $cuentaId = null): string
+    {
+        $cuentaId ??= self::id();
+        if (! array_key_exists($cuentaId, self::$dominios)) {
+            try { self::$dominios[$cuentaId] = Cuenta::whereKey($cuentaId)->value('dominio'); } catch (Throwable) { self::$dominios[$cuentaId] = null; }
+        }
+        $dom = self::$dominios[$cuentaId];
+        return $dom ? (string) preg_replace('#^https?://[^/]+#', 'https://' . $dom, $url) : $url;
+    }
+
+    public static function olvidarDominios(): void
+    {
+        self::$dominios = [];
     }
 
     /** Llave de caché propia de la cuenta (los Dropbox de cada negocio son distintos) */

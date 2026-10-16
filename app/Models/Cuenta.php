@@ -8,11 +8,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /** Un negocio dentro de la plataforma (una agencia, un estudio de arquitectura…) */
 class Cuenta extends Model
 {
-    protected $fillable = ['nombre', 'giro', 'activa', 'ajustes', 'notas'];
+    protected $fillable = ['nombre', 'giro', 'dominio', 'activa', 'ajustes', 'notas'];
 
     protected $casts = ['ajustes' => 'array', 'activa' => 'boolean'];
 
     public function usuarios(): HasMany { return $this->hasMany(User::class)->withoutGlobalScope('cuenta'); }
+
+    /** "https://app.losos.mx" si tiene dominio propio */
+    public function getUrlBaseAttribute(): ?string
+    {
+        return $this->dominio ? 'https://' . $this->dominio : null;
+    }
 
     public function ajuste(string $clave, $defecto = null)
     {

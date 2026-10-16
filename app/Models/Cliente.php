@@ -133,7 +133,7 @@ class Cliente extends Model
         if (! $this->portal_token) {
             $this->forceFill(['portal_token' => \Illuminate\Support\Str::random(32)])->saveQuietly();
         }
-        return route('cliente.portal', $this->portal_token);
+        return \App\Support\Cuentas::enlace(route('cliente.portal', $this->portal_token), $this->cuenta_id);
     }
 
     /** Teléfono solo con dígitos y lada 52 para wa.me */

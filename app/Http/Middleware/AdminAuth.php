@@ -25,6 +25,16 @@ class AdminAuth
 
         // Cada quien trabaja dentro de su negocio; la plataforma puede entrar a otro para dar soporte
         $vista = $u->plataforma ? $request->session()->get('cuenta_vista') : null;
+        // En el dominio propio de un negocio solo entra su equipo (y la plataforma, que ve esa cuenta)
+        $dominio = $request->attributes->get('cuenta_dominio');
+        if ($dominio && $u->cuenta_id !== $dominio->id) {
+            if (! $u->plataforma) {
+                Auth::logout();
+                $request->session()->invalidate();
+                return redirect()->route('login')->withErrors(['email' => "Tu usuario no pertenece a {$dominio->nombre}."]);
+            }
+            $vista = $dominio->id;
+        }
         $cuenta = \App\Support\Cuentas::activar($vista ?: $u->cuenta_id) ?? \App\Support\Cuentas::activar($u->cuenta_id);
         if (! $cuenta || (! $cuenta->activa && ! $u->plataforma)) {
             Auth::logout();

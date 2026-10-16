@@ -103,7 +103,7 @@ class User extends Authenticatable
     {
         $token = \Illuminate\Support\Str::random(48);
         $this->forceFill(['invitacion_hash' => hash('sha256', $token), 'invitacion_expira' => now()->addDays($dias)])->save();
-        return route('invitacion', $token);
+        return \App\Support\Cuentas::enlace(route('invitacion', $token), $this->cuenta_id);
     }
 
     public static function porInvitacion(string $token): ?self

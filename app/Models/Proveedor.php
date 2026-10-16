@@ -53,7 +53,7 @@ class Proveedor extends Model
         if (! $this->portal_token) {
             $this->forceFill(['portal_token' => Str::random(32)])->saveQuietly();
         }
-        return route('proveedor.portal', $this->portal_token);
+        return \App\Support\Cuentas::enlace(route('proveedor.portal', $this->portal_token), $this->cuenta_id);
     }
 
     public function getWhatsappAttribute(): ?string

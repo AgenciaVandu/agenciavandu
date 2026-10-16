@@ -40,7 +40,7 @@ class Redes
 
     public static function urlCliente(Cliente $c, ?string $mes = null): string
     {
-        return route('redes.publico', array_filter(['token' => self::token($c), 'mes' => $mes]));
+        return Cuentas::enlace(route('redes.publico', array_filter(['token' => self::token($c), 'mes' => $mes])), $c->cuenta_id);
     }
 
     public static function perfiles(Cliente $c): array

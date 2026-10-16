@@ -43,6 +43,14 @@ class LoginController extends Controller
             ]);
         }
 
+        // En el dominio de un negocio solo entra su equipo
+        $dominio = $request->attributes->get('cuenta_dominio');
+        if ($dominio && Auth::user()->cuenta_id !== $dominio->id && ! Auth::user()->plataforma) {
+            Auth::logout();
+            RateLimiter::hit($llave, 60);
+            throw ValidationException::withMessages(['email' => "Ese correo no tiene acceso a {$dominio->nombre}."]);
+        }
+
         RateLimiter::clear($llave);
         $request->session()->regenerate();
 

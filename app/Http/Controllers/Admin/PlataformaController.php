@@ -32,6 +32,8 @@ class PlataformaController extends Controller
             'proyectos' => $cuenta(Proyecto::class),
             'acceso'    => User::sinCuenta()->selectRaw('cuenta_id, max(ultimo_acceso_at) as u')->groupBy('cuenta_id')->pluck('u', 'cuenta_id'),
             'giros'     => config('vandu.giros'),
+            'propios'   => \App\Models\Giro::all()->keyBy('clave'),
+            'porGiro'   => Cuenta::selectRaw('giro, count(*) as n')->groupBy('giro')->pluck('n', 'giro'),
             'principal' => Cuentas::principalId(),
             'viendo'    => session('cuenta_vista'),
         ]);
@@ -100,14 +102,35 @@ class PlataformaController extends Controller
 
     public function update(Request $request, Cuenta $cuenta)
     {
+        $request->merge(['dominio' => self::limpiarDominio($request->input('dominio'))]);
+        $principal = self::limpiarDominio(parse_url((string) config('app.url'), PHP_URL_HOST));
         $d = $request->validate([
-            'nombre' => 'required|string|max:120',
-            'giro'   => ['required', Rule::in(array_keys(config('vandu.giros')))],
-            'notas'  => 'nullable|string|max:2000',
+            'nombre'  => 'required|string|max:120',
+            'giro'    => ['required', Rule::in(array_keys(config('vandu.giros')))],
+            'notas'   => 'nullable|string|max:2000',
+            'dominio' => ['nullable', 'max:190', 'regex:/^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/', Rule::unique('cuentas', 'dominio')->ignore($cuenta->id),
+                          Rule::notIn(array_filter([$principal, $principal ? 'www.' . $principal : null]))],
+        ], [
+            'dominio.regex'  => 'Escribe solo el dominio, por ejemplo app.sunegocio.mx',
+            'dominio.unique' => 'Ese dominio ya lo usa otro negocio.',
+            'dominio.not_in' => 'Ese es el dominio principal de la plataforma.',
         ]);
+        if ($cuenta->id === Cuentas::principalId()) $d['dominio'] = null;
         $d['activa'] = $cuenta->id === Cuentas::principalId() ? true : $request->boolean('activa');
         $cuenta->update($d);
+        \App\Http\Middleware\CuentaPorDominio::olvidar();
+        Cuentas::olvidarDominios();
         return back()->with('ok', "Cuenta “{$cuenta->nombre}” guardada.");
+    }
+
+    /** "https://App.Losos.mx/admin" → "app.losos.mx" */
+    public static function limpiarDominio(?string $d): ?string
+    {
+        $d = mb_strtolower(trim((string) $d));
+        $d = preg_replace('#^[a-z]+://#', '', $d);
+        $d = trim(explode('/', $d)[0], '. ');
+        $d = explode(':', $d)[0];
+        return $d === '' ? null : $d;
     }
 
     /** Ver el panel de otro negocio (soporte); todo lo que hagas queda en esa cuenta */

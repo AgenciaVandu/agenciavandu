@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="robots" content="noindex, nofollow">
-    <title>Iniciar sesión · Vandu</title>
+    <title>Iniciar sesión · {{ request()->attributes->get('cuenta_dominio')?->nombre ?? 'Vandu' }}</title>
     <link rel="icon" href="/favi.svg" type="image/svg+xml">
     <link rel="manifest" href="{{ route('app.manifiesto') }}">
     <meta name="theme-color" content="#13161D">
@@ -81,7 +81,7 @@
         <h1>Clientes y cotizaciones</h1>
         <p>Da de alta clientes, arma sus cotizaciones y compárteles un enlace con vigencia.</p>
     </div>
-    <span class="pie">agenciavandu.com</span>
+    <span class="pie">{{ request()->attributes->get('cuenta_dominio')?->dominio ?? 'agenciavandu.com' }}</span>
     <x-logo-vandu archivo="icono-vandu.svg" alt="" class="eco" aria-hidden="true" />
 </aside>
 
@@ -90,7 +90,7 @@
           onsubmit="this.querySelector('.entrar').disabled = true; this.querySelector('.entrar').textContent = 'Entrando…';">
         @csrf
         <h2>Inicia sesión</h2>
-        <p class="sub">Entra con tu correo de Vandu.</p>
+        <p class="sub">Entra con tu correo de {{ request()->attributes->get('cuenta_dominio')?->nombre ?? 'Vandu' }}.</p>
 
         @if(session('ok'))
             <div class="aviso" role="status">{{ session('ok') }}</div>
@@ -119,7 +119,12 @@
         <button type="submit" class="entrar">Entrar</button>
 
         <p style="font-size:13.5px;color:var(--muted);margin:18px 0 0">¿Olvidaste tu contraseña? Pídele a quien administra el panel un enlace para crear una nueva.</p>
-        <a href="/" class="volver">Ir al sitio web</a>
+        @php $dom = request()->attributes->get('cuenta_dominio'); $sitio = $dom ? $dom->ajuste('marca.sitio') : null; @endphp
+        @if(! $dom)
+            <a href="/" class="volver">Ir al sitio web</a>
+        @elseif($sitio)
+            <a href="https://{{ preg_replace('#^https?://#', '', $sitio) }}" class="volver" rel="noopener">Ir a {{ preg_replace('#^https?://#', '', $sitio) }}</a>
+        @endif
     </form>
 </main>
 
