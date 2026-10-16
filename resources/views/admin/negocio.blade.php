@@ -4,6 +4,7 @@
 @php
     $val = fn ($k, $def = '') => old(str_replace(['[', ']'], ['.', ''], $k), data_get($a, str_replace(['[', ']'], ['.', ''], $k)) ?? $def);
     $logo = $c->logo(true);
+    $logoClaro = $c->ajuste('marca.logo') ? $c->logo(false) : null;
 @endphp
 
 @push('head')
@@ -40,7 +41,7 @@
                 <div><label class="form-label" for="ng-ciudad">Ciudad</label><input id="ng-ciudad" name="marca[ciudad]" class="form-control" value="{{ $val('marca[ciudad]', $v['marca']['ciudad'] ?? '') }}" maxlength="80" placeholder="Mérida, Yucatán"></div>
                 <div><label class="form-label" for="ng-sitio">Sitio web</label><input id="ng-sitio" name="marca[sitio]" class="form-control" value="{{ $val('marca[sitio]', $v['marca']['sitio'] ?? '') }}" maxlength="120" placeholder="tuestudio.com"></div>
                 <div class="ancho">
-                    <label class="form-label" for="ng-logo">Logo <span class="secundario fw-normal">(versión clara, se muestra sobre fondo oscuro)</span></label>
+                    <label class="form-label" for="ng-logo">Logo para fondo oscuro <span class="secundario fw-normal">(versión blanca o clara)</span></label>
                     @if($principal)
                         <p class="secundario m-0" style="font-size:13.5px">La cuenta principal usa el logo de Vandu.</p>
                     @else
@@ -49,6 +50,15 @@
                         @if($logo)<label class="form-check mt-2"><input type="checkbox" class="form-check-input" name="quitar_logo" value="1"> <span class="form-check-label">Quitar el logo</span></label>@endif
                     @endif
                 </div>
+                @unless($principal)
+                    <div class="ancho">
+                        <label class="form-label" for="ng-logo-claro">Logo para fondo blanco <span class="secundario fw-normal">(versión a color u oscura)</span></label>
+                        @if($logoClaro)<div class="mb-2 p-3 d-inline-flex" style="background:#fff; border:1px solid var(--line); border-radius:12px"><img src="{{ $logoClaro }}" alt="Logo para fondo blanco" style="max-height:48px; max-width:220px; object-fit:contain"></div>@endif
+                        <input id="ng-logo-claro" type="file" name="logo_claro" class="form-control" accept=".png,.jpg,.jpeg,.svg">
+                        <div class="form-text">Se usa en los diseños de cotización con fondo blanco (Minimal y Elegante) y en la página de cada producto. Si no lo subes, se usa el de arriba.</div>
+                        @if($logoClaro)<label class="form-check mt-2"><input type="checkbox" class="form-check-input" name="quitar_logo_claro" value="1"> <span class="form-check-label">Quitar este logo</span></label>@endif
+                    </div>
+                @endunless
             </div>
         </section>
 

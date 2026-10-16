@@ -43,10 +43,12 @@ class NegocioController extends Controller
             'correo_responder'    => 'nullable|email|max:190',
             'dropbox_carpeta'     => ['nullable', 'string', 'max:60', 'regex:/^[^\\\\\/<>:"|?*]+$/'],
             'logo'                => 'nullable|file|mimes:png,jpg,jpeg,svg|max:2048',
+            'logo_claro'          => 'nullable|file|mimes:png,jpg,jpeg,svg|max:2048',
         ], [
             'folio_prefijo.regex'   => 'El prefijo del folio solo lleva letras, números y guiones.',
             'dropbox_carpeta.regex' => 'El nombre de la carpeta no puede llevar / ni caracteres especiales.',
             'logo.mimes'            => 'El logo debe ser PNG, JPG o SVG.',
+            'logo_claro.mimes'      => 'El logo debe ser PNG, JPG o SVG.',
         ]);
 
         $a = $c->ajustes ?? [];
@@ -64,14 +66,17 @@ class NegocioController extends Controller
         }
         $a['correo_nombre'] = $d['nombre'];
 
-        if ($request->hasFile('logo')) {
-            $f = $request->file('logo');
-            $ext = strtolower($f->getClientOriginalExtension()) === 'svg' ? 'svg' : ($f->extension() === 'png' ? 'png' : 'jpg');
-            Storage::disk('local')->deleteDirectory("cuentas/{$c->id}/logo");
-            $a['marca']['logo_oscuro'] = $f->storeAs("cuentas/{$c->id}/logo", 'logo.' . $ext, 'local');
-        } elseif ($request->boolean('quitar_logo')) {
-            Storage::disk('local')->deleteDirectory("cuentas/{$c->id}/logo");
-            unset($a['marca']['logo_oscuro']);
+        // Dos versiones: la que va sobre fondo oscuro (marca.logo_oscuro) y la que va sobre blanco (marca.logo)
+        foreach (['logo' => ['logo_oscuro', 'logo'], 'logo_claro' => ['logo', 'claro']] as $campo => [$clave, $archivo]) {
+            $quitar = $request->boolean($campo === 'logo' ? 'quitar_logo' : 'quitar_logo_claro');
+            if (! $request->hasFile($campo) && ! $quitar) continue;
+            if (! empty($a['marca'][$clave])) Storage::disk('local')->delete($a['marca'][$clave]);
+            unset($a['marca'][$clave]);
+            if ($request->hasFile($campo)) {
+                $f = $request->file($campo);
+                $ext = strtolower($f->getClientOriginalExtension()) === 'svg' ? 'svg' : ($f->extension() === 'png' ? 'png' : 'jpg');
+                $a['marca'][$clave] = $f->storeAs("cuentas/{$c->id}/logo", $archivo . '-' . \Illuminate\Support\Str::lower(\Illuminate\Support\Str::random(5)) . '.' . $ext, 'local');
+            }
         }
 
         $c->update(['nombre' => $d['nombre'], 'ajustes' => $a]);

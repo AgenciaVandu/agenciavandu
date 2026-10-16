@@ -103,4 +103,26 @@ class DisenoDocumentoTest extends TestCase
         $v = User::factory()->create(['rol_id' => $rol->id]);
         $this->actingAs($v)->get('/admin/negocio/cotizaciones')->assertForbidden();
     }
+
+    public function test_logo_para_fondo_oscuro_y_para_fondo_blanco(): void
+    {
+        $c = \App\Models\Cuenta::create(['nombre' => 'Losos', 'giro' => 'comercio', 'activa' => true]);
+        Cuentas::activar($c);
+        $rol = \App\Models\Rol::create(['nombre' => 'Super admin', 'todo' => true]);
+        $dueno = User::factory()->create(['cuenta_id' => $c->id, 'rol_id' => $rol->id]);
+
+        $this->actingAs($dueno)->post('/admin/negocio', [
+            'nombre' => 'Losos', 'logo' => UploadedFile::fake()->image('blanco.png', 300, 100), 'logo_claro' => UploadedFile::fake()->image('color.png', 300, 100),
+        ])->assertRedirect();
+        $c->refresh();
+        $this->assertNotSame($c->ajuste('marca.logo'), $c->ajuste('marca.logo_oscuro'));
+        Storage::disk('local')->assertExists([$c->ajuste('marca.logo'), $c->ajuste('marca.logo_oscuro')]);
+
+        // Quitar uno no borra el otro
+        $oscuro = $c->ajuste('marca.logo_oscuro');
+        $this->post('/admin/negocio', ['nombre' => 'Losos', 'quitar_logo_claro' => 1])->assertRedirect();
+        $c->refresh();
+        $this->assertNull($c->ajuste('marca.logo'));
+        Storage::disk('local')->assertExists($oscuro);
+    }
 }
