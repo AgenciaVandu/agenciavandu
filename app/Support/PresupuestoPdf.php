@@ -16,10 +16,11 @@ class PresupuestoPdf
             @mkdir($dir, 0775, true);
         }
 
+        $papel = DisenoDocumento::de()['papel'] === 'carta' ? 'letter' : 'a4';
         return Pdf::loadView('presupuestos.pdf', ['p' => $p])
-            ->setPaper('a4')
+            ->setPaper($papel)
             ->setOption([
-                'chroot'               => [resource_path(), public_path()],
+                'chroot'               => [resource_path(), public_path(), \Illuminate\Support\Facades\Storage::disk('local')->path('membretes')],
                 'fontDir'              => storage_path('fonts'),
                 'fontCache'            => storage_path('fonts'),
                 'defaultFont'          => 'Geist',

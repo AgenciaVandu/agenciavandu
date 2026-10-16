@@ -248,6 +248,9 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::delete('roles/{rol}', [Admin\UsuariosController::class, 'rolDestroy'])->name('roles.destroy');
     Route::get('negocio', [Admin\NegocioController::class, 'show'])->name('negocio');
     Route::post('negocio', [Admin\NegocioController::class, 'update'])->name('negocio.update');
+    Route::get('negocio/cotizaciones', [Admin\DocumentoController::class, 'show'])->name('negocio.documento');
+    Route::post('negocio/cotizaciones', [Admin\DocumentoController::class, 'update'])->name('negocio.documento.guardar');
+    Route::get('negocio/cotizaciones/muestra.pdf', [Admin\DocumentoController::class, 'muestra'])->name('negocio.documento.muestra');
     Route::get('plataforma', [Admin\PlataformaController::class, 'index'])->name('plataforma');
     Route::post('plataforma', [Admin\PlataformaController::class, 'store'])->name('plataforma.store');
     Route::put('plataforma/{cuenta}', [Admin\PlataformaController::class, 'update'])->name('plataforma.update');

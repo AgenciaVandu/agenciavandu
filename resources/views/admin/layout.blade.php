@@ -463,8 +463,11 @@
         </a>
         @endif
         @if($puede('configuracion'))
-        <a href="{{ route('admin.negocio') }}" class="{{ request()->routeIs('admin.negocio*') ? 'activo' : '' }}">
+        <a href="{{ route('admin.negocio') }}" class="{{ request()->routeIs('admin.negocio') ? 'activo' : '' }}">
             <i class="bi bi-shop"></i> Mi negocio
+        </a>
+        <a href="{{ route('admin.negocio.documento') }}" class="{{ request()->routeIs('admin.negocio.documento*') ? 'activo' : '' }}">
+            <i class="bi bi-file-earmark-richtext"></i> Diseño de cotización
         </a>
         @endif
         @if($puede('usuarios'))

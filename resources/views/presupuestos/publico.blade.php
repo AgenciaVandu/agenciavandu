@@ -18,6 +18,14 @@
     $ultimaAceptacion = $eventos->firstWhere('tipo', 'aceptada');
     $ultimosCambios = $p->estado === 'negociacion' ? $eventos->firstWhere('tipo', 'cambios') : null;
     $hayCorreo = (bool) $p->contacto?->email;
+    // Diseño del negocio (plantilla, color, letra y franjas de su hoja membretada)
+    $dd = \App\Support\DisenoDocumento::de();
+    $ddOscuro = \App\Support\DisenoDocumento::encabezadoOscuro($dd);
+    $ddTinta = \App\Support\DisenoDocumento::tintaSobre($dd['color']);
+    $ddSuave = $dd['color'] === '#242424' ? '#F3F3F3' : \App\Support\DisenoDocumento::tinte($dd['color'], .88);
+    $franjaSup = \App\Support\DisenoDocumento::dataUri($dd['franja_sup']);
+    $franjaInf = \App\Support\DisenoDocumento::dataUri($dd['franja_inf']);
+    $conHdr = ! $franjaSup || $dd['con_encabezado'];
     $fechaEv = fn ($d) => $d->copy()->setTimezone(config('vandu.zona_horaria'))->locale('es')->isoFormat('D MMM YYYY, h:mm a');
 @endphp
 <!DOCTYPE html>
@@ -193,6 +201,32 @@
         .mi-espacio:hover { border-color: #13161D; }
         .mi-espacio svg { width: 17px; height: 17px; }
         @media print { .mi-espacio { display: none; } }
+
+        /* Diseño del negocio */
+        :root { --hdr: {{ $dd['color'] }}; --mist: {{ $ddSuave }}; }
+        body { font-family: {!! \App\Support\DisenoDocumento::LETRAS[$dd['letra']]['web'] !!}; }
+        .hdr { color: {{ $ddTinta }}; }
+        .hdr .emisor a { color: inherit; opacity: .85; }
+        .franja { display: block; width: 100%; height: auto; border-radius: 10px; }
+        .franja.inf { margin-top: 40px; }
+        @if(! $dd['membrete'] || $dd['con_encabezado'])
+        @if($dd['plantilla'] === 'moderna')
+            .hdr { border-radius: 0; }
+            .tabla th { background: var(--hdr); color: {{ $ddTinta }}; }
+        @elseif($dd['plantilla'] === 'minimal')
+            .hdr { background: none; color: var(--ink); border-radius: 0; padding: 8px 0 18px; border-bottom: 2px solid var(--hdr); }
+        @elseif($dd['plantilla'] === 'elegante')
+            .hdr { background: none; color: var(--ink); border-radius: 0; padding: 4px 0 18px; border-bottom: 4px double var(--hdr); flex-direction: column; justify-content: center; text-align: center; }
+            .hdr .emisor { text-align: center !important; }
+            .tabla th { background: none; border-top: 1px solid var(--hdr); border-bottom: 1px solid var(--hdr); text-transform: uppercase; letter-spacing: .06em; font-size: 13px; }
+        @endif
+        @endif
+        @if($dd['plantilla'] === 'minimal')
+            .tabla th { background: none; border-bottom: 2px solid var(--hdr); }
+        @endif
+        @if($dd['color'] !== '#242424')
+            .tot .final { background: var(--hdr); color: {{ $ddTinta }}; }
+        @endif
     </style>
 </head>
 <body>
@@ -223,8 +257,12 @@
 </div>
 
 <main class="doc">
+    @if($franjaSup)<img class="franja" src="{{ $franjaSup }}" alt="{{ config('vandu.marca.nombre') }}">@endif
+    @if($conHdr)
     <header class="hdr">
-        <x-logo-vandu width="112" height="36" />
+        @php $ddLogo = \App\Support\DisenoDocumento::logo($ddOscuro); @endphp
+        @if($ddOscuro && \App\Support\Cuentas::esPrincipal())<x-logo-vandu width="112" height="36" />
+        @elseif($ddLogo)<img src="{{ $ddLogo }}" alt="{{ config('vandu.marca.nombre') }}" style="max-height:40px; width:auto; max-width:180px; object-fit:contain">@else<b style="font-size:20px">{{ config('vandu.marca.nombre') }}</b>@endif
         <div class="emisor">
             @if($p->emisor_nombre)<b>{{ $p->emisor_nombre }}</b><br>@endif
             @if($p->emisor_telefono)<b><a href="tel:{{ preg_replace('/\D/', '', $p->emisor_telefono) }}">{{ $p->emisor_telefono }}</a></b><br>@endif
@@ -232,6 +270,7 @@
             @if($p->emisor_email)<a href="mailto:{{ $p->emisor_email }}">{{ $p->emisor_email }}</a>@endif
         </div>
     </header>
+    @endif
 
     @if($p->cliente && ! request()->boolean('pdf'))
         <a class="mi-espacio" href="{{ $p->cliente->portal_url }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg> Ver todos mis proyectos y cotizaciones</a>
@@ -435,6 +474,7 @@
         </dialog>
     @endif
 
+    @if($franjaInf)<img class="franja inf" src="{{ $franjaInf }}" alt="">@endif
     <footer class="pie">
         <span>Folio {{ $p->folio }}</span>
         <span>{{ config('vandu.marca.nombre') }}{{ config('vandu.marca.ciudad') ? ', ' . config('vandu.marca.ciudad') : '' }}</span>
