@@ -83,8 +83,8 @@ class AceptacionEnLineaTest extends TestCase
         $this->responder(['accion' => 'cambios', 'mensaje' => 'Agregar 5 fotos aéreas con dron'])->assertOk();
 
         $this->assertSame('negociacion', $this->p->fresh()->estado);
-        $this->get('/cotizacion/' . $this->p->token)->assertSee('Recibimos tus comentarios')->assertSee('Agregar 5 fotos aéreas con dron')->assertSee('Historial de esta cotización');
-        $this->actingAs($this->u)->get('/admin/presupuestos/' . $this->p->id . '/edit')->assertSee('Pidió cambios')->assertSee('Agregar 5 fotos aéreas con dron');
+        $this->get('/cotizacion/' . $this->p->token)->assertSee('Recibimos tus comentarios')->assertSee('Agregar 5 fotos aéreas con dron')->assertDontSee('Historial de esta cotización');
+        $this->actingAs($this->u)->get('/admin/presupuestos/' . $this->p->id . '/edit')->assertSee('Pidió cambios')->assertSee('Agregar 5 fotos aéreas con dron')->assertSee('Historial');
     }
 
     public function test_sin_nombre_no_se_acepta_y_vencida_tampoco(): void
@@ -110,7 +110,10 @@ class AceptacionEnLineaTest extends TestCase
         $this->assertStringContainsString('Se agregó: Fotos aéreas', $ev->detalle);
         $this->assertStringContainsString('Precio de “Video 60 s”', $ev->detalle);
         $this->assertTrue($this->p->eventos()->where('tipo', 'estado')->exists());
+        // El historial de versiones es solo para el panel: el cliente ve la cotización actual, sin los cambios internos
+        $this->get('/admin/presupuestos/' . $this->p->id . '/edit')->assertSee('Versión 2')->assertSee('Se agregó: Fotos aéreas');
         auth()->logout();
-        $this->get('/cotizacion/' . $this->p->token)->assertSee('Versión 2')->assertSee('Se agregó: Fotos aéreas');
+        $this->get('/cotizacion/' . $this->p->token)->assertOk()->assertSee('Fotos aéreas')
+            ->assertDontSee('Versión 2')->assertDontSee('Se agregó: Fotos aéreas')->assertDontSee('Historial de esta cotización');
     }
 }

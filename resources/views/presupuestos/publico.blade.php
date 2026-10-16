@@ -14,7 +14,7 @@
         : ($cancelada ? "Hola, quisiera retomar la cotización {$p->folio}." : "Hola, la cotización {$p->folio} venció. ¿Me pueden enviar una actualizada?"));
     $n = 0;
     $puedeResponder = \App\Support\Aceptacion::puedeResponder($p);
-    $eventos = $p->eventos; // solo los visibles para el cliente, del más reciente al más antiguo
+    $eventos = $p->eventos; // solo para el aviso de aceptación o cambios; el historial completo vive en el panel
     $ultimaAceptacion = $eventos->firstWhere('tipo', 'aceptada');
     $ultimosCambios = $p->estado === 'negociacion' ? $eventos->firstWhere('tipo', 'cambios') : null;
     $hayCorreo = (bool) $p->contacto?->email;
@@ -163,17 +163,6 @@
         .modal .btn[disabled] { opacity: .6; cursor: wait; }
         .modal [hidden] { display: none !important; }
 
-        /* Historial */
-        .hist { list-style: none; margin: 8px 0 0; padding: 0; }
-        .hist li { position: relative; padding: 0 0 18px 30px; }
-        .hist li::before { content: ''; position: absolute; left: 8px; top: 22px; bottom: 0; width: 1.5px; background: var(--line); }
-        .hist li:last-child::before { display: none; }
-        .hist .pt { position: absolute; left: 0; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: var(--mist); border: 1.5px solid var(--line); }
-        .hist li.aceptada .pt { background: var(--green); border-color: var(--green); }
-        .hist li.cambios .pt { background: var(--amber); border-color: var(--amber); }
-        .hist .t { font-weight: 600; }
-        .hist .f { font-size: 13.5px; color: var(--muted); }
-        .hist .d { margin-top: 4px; font-size: 14.5px; white-space: pre-line; color: #3f4450; }
 
         /* Vencida */
         .vencida-card { margin-top: 32px; background: var(--mist); border-radius: 14px; padding: 32px; }
@@ -197,7 +186,7 @@
             .vig .reloj span { font-size: 16px; }
         }
         @media print {
-            .vig, .acciones, .copiar, .resp, .hist-sec, dialog { display: none !important; }
+            .vig, .acciones, .copiar, .resp, dialog { display: none !important; }
             .doc { padding-top: 0; }
         }
             .mi-espacio { display: inline-flex; align-items: center; gap: 8px; margin: 18px 0 0; padding: 8px 14px; border: 1.5px solid #E3E4E8; border-radius: 10px; text-decoration: none; font-weight: 500; font-size: 15px; color: #13161D; background: #fff; }
@@ -414,21 +403,6 @@
         </section>
     @endif
 
-    @if($eventos->isNotEmpty())
-        <section class="hist-sec" aria-label="Historial">
-            <h2>Historial de esta cotización</h2>
-            <ul class="hist">
-                @foreach($eventos as $ev)
-                    <li class="{{ $ev->tipo }}">
-                        <span class="pt" aria-hidden="true"></span>
-                        <div class="t">{{ $ev->titulo }}</div>
-                        <div class="f">{{ $fechaEv($ev->created_at) }}@if($ev->actor === 'cliente' && $ev->autor) · {{ $ev->autor }}@elseif($ev->actor === 'agencia') · {{ config('vandu.marca.nombre') }} @endif</div>
-                        @if($ev->detalle && in_array($ev->tipo, ['cambios', 'editada', 'vigencia'], true))<div class="d">{{ $ev->detalle }}</div>@endif
-                    </li>
-                @endforeach
-            </ul>
-        </section>
-    @endif
 
     @if($vigente && $puedeResponder)
         <dialog class="modal" id="responder" aria-labelledby="resp-titulo">
