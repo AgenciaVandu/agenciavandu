@@ -202,4 +202,32 @@ class AutosTest extends TestCase
         $this->post('/admin/sucursales', ['nombre' => 'Norte'])->assertSessionHas('ok');
         $this->assertSame(2, Sucursal::count());
     }
+
+    public function test_lote_de_ejemplo_con_clientes_al_corriente_y_morosos(): void
+    {
+        $this->actingAs($this->admin)->post('/admin/unidades/ejemplos')->assertRedirect('/admin/unidades')->assertSessionHas('ok');
+        $this->assertSame(10, Unidad::where('ejemplo', true)->count());
+        $this->assertSame(5, Unidad::where('estado', 'vendido')->count());
+        $this->assertSame(1, Unidad::where('estado', 'apartado')->count());
+        $this->assertSame(10, \App\Models\UnidadFoto::count());
+        $this->assertSame(5, \App\Models\Cliente::where('ejemplo', true)->count());
+
+        $niveles = Credito::with('letras')->get()->map(fn ($c) => $c->termometro['nombre'])->countBy()->all();
+        $this->assertSame(['Saludable' => 2, 'Atención' => 1, 'Riesgo' => 2], collect($niveles)->sortKeys()->sortBy(fn ($n, $k) => array_search($k, ['Saludable', 'Atención', 'Riesgo']))->all());
+        $this->assertGreaterThan(0, \App\Models\CreditoPago::count());
+
+        // Se ve en las pantallas y no se duplica
+        $this->get('/admin/unidades')->assertOk()->assertSee('Quitar ejemplos');
+        $this->get('/admin/cobranza')->assertOk()->assertSee('Roberto Ek Balam');
+        $this->get('/admin')->assertOk()->assertSee('Gabriela Tun Poot');
+        $this->post('/admin/unidades/ejemplos');
+        $this->assertSame(10, Unidad::count());
+
+        $this->delete('/admin/unidades/ejemplos')->assertSessionHas('ok');
+        $this->assertSame(0, Unidad::count());
+        $this->assertSame(0, Credito::count());
+        $this->assertSame(0, \App\Models\CreditoLetra::count());
+        $this->assertSame(0, \App\Models\Cliente::where('ejemplo', true)->count());
+        $this->assertSame([], Storage::disk('local')->allFiles('unidades'));
+    }
 }

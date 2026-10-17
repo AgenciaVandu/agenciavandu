@@ -98,6 +98,8 @@ class PlataformaController extends Controller
             $cuenta->update(['ajustes' => ['emisor' => ['nombre' => $d['dueno_nombre'], 'email' => $d['dueno_email'], 'telefono' => $d['dueno_tel'] ?? '']]]);
             // Con inventario, arranca con productos de ejemplo para aprender a usarlo
             if (($d['ejemplos'] ?? false) && $cuenta->tiene('stock')) \App\Support\ProductosEjemplo::cargar();
+            // Lote de autos: 10 unidades y 5 clientes con créditos (al corriente y morosos)
+            if (($d['ejemplos'] ?? false) && $cuenta->tiene('autos')) \App\Support\AutosEjemplo::cargar();
             return [$cuenta, $dueno, $dueno->nuevoEnlace()];
         });
     }

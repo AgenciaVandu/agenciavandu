@@ -13,7 +13,7 @@ class Cliente extends Model
     protected $fillable = [
         'nombre', 'empresa', 'email', 'telefono',
         'rfc', 'razon_social', 'regimen_fiscal', 'cp_fiscal', 'uso_cfdi', 'metodo_pago', 'dias_credito', 'email_factura', 'notas',
-        'origen', 'nuevo', 'interes', 'contacto_at',
+        'origen', 'nuevo', 'interes', 'contacto_at', 'ejemplo',
     ];
 
     protected $casts = ['nuevo' => 'boolean', 'contacto_at' => 'datetime', 'portal_visto_at' => 'datetime'];

@@ -37,7 +37,8 @@ class UnidadController extends Controller
         $conteo = Unidad::selectRaw('estado, count(*) as n')->groupBy('estado')->pluck('n', 'estado');
         $valor = (float) Unidad::where('estado', '!=', 'vendido')->sum('precio');
         return view('admin.unidades.index', ['unidades' => $unidades, 'q' => $q, 'estado' => $estado, 'sucursal' => $sucursal, 'conteo' => $conteo, 'valor' => $valor,
-            'sucursales' => Sucursal::orderBy('nombre')->get(), 'admin' => $request->user()->puede('unidades')]);
+            'sucursales' => Sucursal::orderBy('nombre')->get(), 'admin' => $request->user()->puede('unidades'),
+            'ejemplos' => $request->user()->puede('unidades') && \App\Support\AutosEjemplo::hay()]);
     }
 
     public function create(Request $request)
@@ -80,6 +81,18 @@ class UnidadController extends Controller
         foreach ($unidad->fotos as $f) FotoUnidad::quitar($f);
         $unidad->delete();
         return redirect()->route('admin.unidades.index')->with('ok', 'Unidad eliminada.');
+    }
+
+    public function cargarEjemplos()
+    {
+        $n = \App\Support\AutosEjemplo::cargar();
+        return redirect()->route('admin.unidades.index')->with('ok', $n ? 'Listo: 10 unidades y 5 clientes con créditos de ejemplo para que pruebes todo.' : 'Los datos de ejemplo ya estaban cargados.');
+    }
+
+    public function quitarEjemplos()
+    {
+        $n = \App\Support\AutosEjemplo::quitar();
+        return redirect()->route('admin.unidades.index')->with('ok', "Se quitaron $n unidades de ejemplo con sus ventas, pagos y clientes.");
     }
 
     public function quitarFoto(Unidad $unidad, UnidadFoto $foto)

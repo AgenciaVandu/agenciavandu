@@ -145,6 +145,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::delete('sucursales/{sucursal}', [Admin\SucursalesController::class, 'destroy'])->name('sucursales.destroy');
     Route::get('credito', [Admin\CreditoAjustesController::class, 'show'])->name('credito-ajustes');
     Route::post('credito', [Admin\CreditoAjustesController::class, 'update'])->name('credito-ajustes.guardar');
+    Route::post('unidades/ejemplos', [Admin\UnidadController::class, 'cargarEjemplos'])->name('unidades.ejemplos');
+    Route::delete('unidades/ejemplos', [Admin\UnidadController::class, 'quitarEjemplos'])->name('unidades.ejemplos.quitar');
     Route::delete('unidades/{unidad}/fotos/{foto}', [Admin\UnidadController::class, 'quitarFoto'])->name('unidades.foto.quitar');
     Route::post('unidades/{unidad}/fotos/orden', [Admin\UnidadController::class, 'ordenFotos'])->name('unidades.fotos.orden');
     Route::get('unidades/{unidad}/vender', [Admin\CreditoController::class, 'create'])->name('creditos.create');

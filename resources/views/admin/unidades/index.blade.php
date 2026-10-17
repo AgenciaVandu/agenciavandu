@@ -32,6 +32,15 @@
     @if($admin)<a href="{{ route('admin.unidades.create') }}" class="btn btn-primario"><i class="bi bi-plus-lg me-1"></i> Nueva unidad</a>@endif
 </div>
 
+@if($ejemplos)
+    <div class="aviso" style="background: var(--blue-soft); color: var(--blue); border: 1px solid #cddcff; flex-wrap: wrap">
+        <i class="bi bi-lightbulb"></i>
+        <span class="flex-grow-1">Estás viendo un lote de ejemplo: 10 unidades y 5 clientes con créditos (2 al corriente y 3 con atrasos) para que pruebes vender, cobrar y el termómetro. Cuando cargues tus autos, quítalos.</span>
+        <form method="post" action="{{ route('admin.unidades.ejemplos.quitar') }}" onsubmit="return confirm('¿Quitar las unidades, ventas, pagos y clientes de ejemplo?')">@csrf @method('delete')
+            <button class="btn btn-borde btn-sm">Quitar ejemplos</button></form>
+    </div>
+@endif
+
 <div class="panel kpis-u">
     <a href="{{ route('admin.unidades.index', ['estado' => 'disponible']) }}"><div class="k">Disponibles</div><div class="v num">{{ $conteo['disponible'] ?? 0 }}</div></a>
     <a href="{{ route('admin.unidades.index', ['estado' => 'apartado']) }}"><div class="k">Apartadas</div><div class="v num">{{ $conteo['apartado'] ?? 0 }}</div></a>
@@ -69,7 +78,10 @@
         <div class="ico"><i class="bi bi-car-front"></i></div>
         <h3>{{ $q || $estado ? 'Ninguna unidad coincide' : 'Todavía no hay unidades' }}</h3>
         <p>{{ $q || $estado ? 'Prueba con otra búsqueda.' : 'Da de alta el primer auto con sus fotos y datos; su página queda lista para compartir.' }}</p>
-        @if($admin && ! $q && ! $estado)<a href="{{ route('admin.unidades.create') }}" class="btn btn-primario">Agregar unidad</a>@endif
+        @if($admin && ! $q && ! $estado)
+            <a href="{{ route('admin.unidades.create') }}" class="btn btn-primario">Agregar unidad</a>
+            <form method="post" action="{{ route('admin.unidades.ejemplos') }}" class="mt-3">@csrf<button class="btn btn-link btn-sm text-secondary">O carga un lote de ejemplo con clientes y cobranza</button></form>
+        @endif
     </div></div>
 @else
     <div class="rejilla-u">

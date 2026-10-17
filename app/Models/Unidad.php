@@ -28,9 +28,9 @@ class Unidad extends Model
     public const COMBUSTIBLES = ['Gasolina', 'Diésel', 'Híbrido', 'Eléctrico', 'Gas'];
 
     protected $fillable = ['sucursal_id', 'vendedor_id', 'marca', 'modelo', 'version', 'anio', 'tipo', 'color', 'kilometraje', 'transmision',
-                           'combustible', 'placas', 'serie', 'precio', 'costo', 'descripcion', 'ficha', 'estado', 'publico'];
+                           'combustible', 'placas', 'serie', 'precio', 'costo', 'descripcion', 'ficha', 'estado', 'publico', 'ejemplo'];
 
-    protected $casts = ['precio' => 'float', 'costo' => 'float', 'publico' => 'boolean', 'anio' => 'integer', 'kilometraje' => 'integer'];
+    protected $casts = ['precio' => 'float', 'costo' => 'float', 'publico' => 'boolean', 'ejemplo' => 'boolean', 'anio' => 'integer', 'kilometraje' => 'integer'];
 
     protected $attributes = ['estado' => 'disponible', 'publico' => true, 'precio' => 0];
 
