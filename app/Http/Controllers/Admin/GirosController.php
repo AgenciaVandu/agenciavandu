@@ -123,7 +123,7 @@ class GirosController extends Controller
         $roles = collect($d['roles'] ?? [])->map(fn ($r) => [
             'nombre' => trim($r['nombre']),
             'descripcion' => trim((string) ($r['descripcion'] ?? '')),
-            'permisos' => array_values(array_filter(array_unique($r['permisos'] ?? []), fn ($s) => ! isset(Permisos::MODULOS[$s]) || in_array(Permisos::MODULOS[$s], $modulos, true))),
+            'permisos' => array_values(array_filter(array_unique($r['permisos'] ?? []), fn ($s) => $s === 'proyectos' ? ! in_array('sin_proyectos', $modulos, true) : (! isset(Permisos::MODULOS[$s]) || in_array(Permisos::MODULOS[$s], $modulos, true)))),
         ])->filter(fn ($r) => mb_strtolower($r['nombre']) !== 'super admin')->values()->all();
 
         return ['nombre' => trim($d['nombre']), 'icono' => $d['icono'], 'descripcion' => $d['descripcion'] ?? null,

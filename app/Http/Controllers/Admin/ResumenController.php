@@ -11,6 +11,8 @@ class ResumenController extends Controller
 {
     public function index()
     {
+        // Lote de autos: su propio resumen (por vender, por cobrar, adeudos y termómetro)
+        if (\App\Support\Cuentas::actual()?->tiene('autos')) return $this->autos();
         $tz = config('vandu.zona_horaria');
         $ahora = now();
         $inicioMes = now($tz)->startOfMonth()->setTimezone(config('app.timezone'));
@@ -88,5 +90,36 @@ class ResumenController extends Controller
             $hora->hour < 19 => 'Buenas tardes',
             default          => 'Buenas noches',
         };
+    }
+
+    private function autos()
+    {
+        $tz = config('vandu.zona_horaria');
+        $hoy = now($tz)->startOfDay();
+        $mes = now($tz)->format('Y-m');
+        $unidades = \App\Models\Unidad::where('estado', '!=', 'vendido')->get(['id', 'estado', 'precio', 'costo']);
+        $ventas = \App\Models\Credito::where('estado', '!=', 'cancelado')->get(['id', 'tipo', 'precio', 'fecha']);
+        $ventasMes = $ventas->filter(fn ($v) => $v->fecha->format('Y-m') === $mes);
+        $activos = \App\Models\Credito::conCobranza()->with(['letras', 'cliente', 'unidad'])->get();
+        $pagos = \App\Models\CreditoPago::whereHas('credito')->where('fecha', '>=', now($tz)->startOfMonth()->subMonths(5)->toDateString())->get(['monto', 'fecha']);
+        $rangos = \App\Support\Credito::ajustes()['termometro'];
+
+        $meses = collect(range(5, 0))->map(function ($i) use ($tz, $pagos) {
+            $m = now($tz)->startOfMonth()->subMonths($i);
+            return ['etiqueta' => rtrim(ucfirst($m->locale('es')->isoFormat('MMM')), '.'), 'monto' => round($pagos->filter(fn ($p) => $p->fecha->format('Y-m') === $m->format('Y-m'))->sum('monto'), 2)];
+        });
+
+        return view('admin.resumen-autos', [
+            'porVender' => ['n' => $unidades->where('estado', 'disponible')->count(), 'apartadas' => $unidades->where('estado', 'apartado')->count(), 'valor' => $unidades->sum('precio')],
+            'ventasMes' => ['n' => $ventasMes->count(), 'monto' => $ventasMes->sum('precio'), 'tipos' => $ventasMes->groupBy('tipo')->map->count()],
+            'cobranza' => ['por_cobrar' => $activos->sum(fn ($c) => $c->por_cobrar), 'vencido' => $activos->sum(fn ($c) => $c->vencido),
+                           'cobrado_mes' => $pagos->filter(fn ($p) => $p->fecha->format('Y-m') === $mes)->sum('monto')],
+            'adeudos' => $activos->filter(fn ($c) => $c->atrasadas()->isNotEmpty())->sortByDesc(fn ($c) => [$c->atrasadas()->count(), $c->vencido])->take(10)->values(),
+            'proximos' => $activos->map(fn ($c) => [$c, $c->proxima])->filter(fn ($x) => $x[1] && $x[1]->vence_el->between($hoy, $hoy->copy()->addDays(7)))->sortBy(fn ($x) => $x[1]->vence_el)->take(8)->values(),
+            'rangos' => $rangos,
+            'porNivel' => collect($rangos)->mapWithKeys(fn ($r) => [$r['nombre'] => $activos->filter(fn ($c) => $c->termometro['nombre'] === $r['nombre'])->count()]),
+            'totalActivos' => $activos->count(),
+            'meses' => $meses,
+        ]);
     }
 }

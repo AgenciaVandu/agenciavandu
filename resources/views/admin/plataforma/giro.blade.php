@@ -146,7 +146,10 @@ function giroForm(d) {
     return {
         roles: (d.roles || []).map((r) => ({ nombre: r.nombre || '', descripcion: r.descripcion || '', permisos: r.permisos || [] })),
         modulos: d.modulos || [],
-        disponible(s) { const m = d.modulosSeccion[s]; return !m || this.modulos.includes(m); },
+        disponible(s) {
+            if (s === 'proyectos') return !this.modulos.includes('sin_proyectos');
+            const m = d.modulosSeccion[s]; return !m || this.modulos.includes(m);
+        },
     };
 }
 </script>

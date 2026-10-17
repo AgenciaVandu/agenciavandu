@@ -261,7 +261,7 @@ class InventarioTest extends TestCase
         $p = Producto::create(['nombre' => 'Algo', 'precio' => 1]);
 
         $this->actingAs($this->admin)->get('/admin/productos')->assertNotFound();
-        $this->get('/admin/resumen')->assertDontSee('bi-box-seam', false);
+        $this->get('/admin')->assertOk()->assertDontSee('bi-box-seam', false);
         $this->get('/catalogo/' . $p->slug)->assertNotFound();
     }
 

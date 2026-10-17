@@ -110,6 +110,7 @@ class PlataformaController extends Controller
             'nombre'  => 'required|string|max:120',
             'giro'    => ['required', Rule::in(array_keys(config('vandu.giros')))],
             'notas'   => 'nullable|string|max:2000',
+            'sucursales_max' => 'nullable|integer|min:1|max:50',
             'dominio' => ['nullable', 'max:190', 'regex:/^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/', Rule::unique('cuentas', 'dominio')->ignore($cuenta->id),
                           Rule::notIn(array_filter([$principal, $principal ? 'www.' . $principal : null]))],
         ], [
@@ -118,6 +119,11 @@ class PlataformaController extends Controller
             'dominio.not_in' => 'Ese es el dominio principal de la plataforma.',
         ]);
         if ($cuenta->id === Cuentas::principalId()) $d['dominio'] = null;
+        // Sucursales contratadas (se cobran aparte)
+        $a = $cuenta->ajustes ?? [];
+        $a['sucursales_max'] = (int) ($d['sucursales_max'] ?? 1);
+        $d['ajustes'] = $a;
+        unset($d['sucursales_max']);
         $d['activa'] = $cuenta->id === Cuentas::principalId() ? true : $request->boolean('activa');
         $cuenta->update($d);
         \App\Http\Middleware\CuentaPorDominio::olvidar();

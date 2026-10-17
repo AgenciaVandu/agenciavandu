@@ -40,6 +40,26 @@ return [
                 ['nombre' => 'Diseñador', 'descripcion' => 'Ve sus tareas y sube sus diseños a la carpeta que le asignen.', 'permisos' => []],
             ],
         ],
+        'autos' => [
+            'nombre'  => 'Venta de autos seminuevos',
+            'icono'   => 'bi-car-front',
+            'modulos' => ['autos', 'sin_proyectos'],
+            'proyectos' => [
+                'general' => [
+                    'nombre' => 'Trámite de entrega', 'icono' => 'bi-car-front',
+                    'pagos'  => [['clave' => 'pago', 'concepto' => 'Pago', 'porcentaje' => 100, 'antes_de' => 'entrega']],
+                    'etapas' => [
+                        ['clave' => 'documentos', 'nombre' => 'Documentos', 'dias' => 2, 'descripcion' => 'Contrato, pagarés e identificación.'],
+                        ['clave' => 'entrega', 'nombre' => 'Entrega de la unidad', 'dias' => 1, 'fecha' => true, 'descripcion' => ''],
+                    ],
+                ],
+            ],
+            'roles'   => [
+                ['nombre' => 'Gerente', 'descripcion' => 'Ve todo el lote: unidades, ventas, cobranza y reportes.', 'permisos' => ['resumen', 'ventas', 'cotizaciones', 'clientes', 'unidades', 'cobranza', 'finanzas', 'tareas']],
+                ['nombre' => 'Vendedor', 'descripcion' => 'Da de alta y comparte unidades y atiende prospectos.', 'permisos' => ['ventas', 'clientes', 'unidades']],
+                ['nombre' => 'Cobranza', 'descripcion' => 'Registra ventas y pagos, y da seguimiento a los atrasos.', 'permisos' => ['clientes', 'cobranza']],
+            ],
+        ],
         'comercio' => [
             'nombre'  => 'Venta de productos y servicios',
             'icono'   => 'bi-shop',

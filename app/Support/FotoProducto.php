@@ -52,7 +52,7 @@ class FotoProducto
         return is_file($ruta) ? $ruta : null;
     }
 
-    private static function escribir(\GdImage $img, int $max, string $destino): void
+    public static function escribir(\GdImage $img, int $max, string $destino): void
     {
         $w = imagesx($img);
         $h = imagesy($img);
@@ -69,7 +69,7 @@ class FotoProducto
     }
 
     /** Las fotos del celular vienen giradas según su EXIF */
-    private static function enderezar(\GdImage $img, string $ruta): \GdImage
+    public static function enderezar(\GdImage $img, string $ruta): \GdImage
     {
         if (! function_exists('exif_read_data')) return $img;
         $exif = @exif_read_data($ruta);

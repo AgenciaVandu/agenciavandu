@@ -116,6 +116,10 @@
                             <div class="secundario" style="font-size:12px; margin-top:4px">Su equipo entra en ese dominio con su marca, y sus enlaces de cotizaciones y productos salen con él. Antes hay que apuntarlo a este servidor.</div>
                         </div>
                     @endif
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="small m-0" for="suc-{{ $c->id }}">Sucursales contratadas</label>
+                        <input id="suc-{{ $c->id }}" type="number" name="sucursales_max" min="1" max="50" class="form-control form-control-sm num" style="width: 80px" value="{{ $c->ajuste('sucursales_max', 1) }}">
+                    </div>
                     <textarea name="notas" class="form-control form-control-sm" rows="2" maxlength="2000" placeholder="Notas internas (plan, contacto, pagos…)">{{ $c->notas }}</textarea>
                     @if($c->id !== $principal)
                         <label class="form-check form-switch m-0"><input type="checkbox" class="form-check-input" role="switch" name="activa" value="1" @checked($c->activa)> <span class="form-check-label" style="font-size:13.5px">Activa (si la suspendes, su equipo no puede entrar ni se abren sus enlaces)</span></label>

@@ -138,6 +138,25 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::post('productos/{producto}/movimiento', [Admin\ProductoController::class, 'movimiento'])->name('productos.movimiento');
     Route::resource('productos', Admin\ProductoController::class);
 
+    // Lote de autos: sucursales, unidades, ventas y cobranza
+    Route::get('sucursales', [Admin\SucursalesController::class, 'index'])->name('sucursales');
+    Route::post('sucursales', [Admin\SucursalesController::class, 'store'])->name('sucursales.store');
+    Route::put('sucursales/{sucursal}', [Admin\SucursalesController::class, 'update'])->name('sucursales.update');
+    Route::delete('sucursales/{sucursal}', [Admin\SucursalesController::class, 'destroy'])->name('sucursales.destroy');
+    Route::get('credito', [Admin\CreditoAjustesController::class, 'show'])->name('credito-ajustes');
+    Route::post('credito', [Admin\CreditoAjustesController::class, 'update'])->name('credito-ajustes.guardar');
+    Route::delete('unidades/{unidad}/fotos/{foto}', [Admin\UnidadController::class, 'quitarFoto'])->name('unidades.foto.quitar');
+    Route::post('unidades/{unidad}/fotos/orden', [Admin\UnidadController::class, 'ordenFotos'])->name('unidades.fotos.orden');
+    Route::get('unidades/{unidad}/vender', [Admin\CreditoController::class, 'create'])->name('creditos.create');
+    Route::post('unidades/{unidad}/vender', [Admin\CreditoController::class, 'store'])->name('creditos.store');
+    Route::resource('unidades', Admin\UnidadController::class)->parameters(['unidades' => 'unidad']);
+    Route::get('cobranza', [Admin\CreditoController::class, 'index'])->name('creditos.index');
+    Route::get('cobranza/{credito}', [Admin\CreditoController::class, 'show'])->name('creditos.show');
+    Route::get('cobranza/{credito}/cotizar', [Admin\CreditoController::class, 'cotizar'])->name('creditos.cotizar');
+    Route::post('cobranza/{credito}/pago', [Admin\CreditoController::class, 'pagar'])->name('creditos.pagar');
+    Route::delete('cobranza/{credito}/pago/{pago}', [Admin\CreditoController::class, 'cancelarPago'])->name('creditos.pago.cancelar');
+    Route::post('cobranza/{credito}/cancelar', [Admin\CreditoController::class, 'cancelar'])->name('creditos.cancelar');
+
     // Proveedores y órdenes de compra
     Route::resource('proveedores', Admin\ProveedorController::class)->parameters(['proveedores' => 'proveedor']);
     Route::resource('ordenes', Admin\OrdenCompraController::class)->parameters(['ordenes' => 'orden']);
@@ -304,6 +323,12 @@ Route::get('/catalogo/foto/{producto}/{archivo}', [\App\Http\Controllers\Catalog
     ->where(['producto' => '[0-9]+', 'archivo' => '[A-Za-z0-9._-]+'])->name('catalogo.foto');
 Route::get('/catalogo/{slug}', [\App\Http\Controllers\CatalogoController::class, 'producto'])
     ->where('slug', '[a-z0-9-]+')->middleware('throttle:120,1')->name('catalogo.producto');
+
+// Página pública de cada auto y sus fotos
+Route::get('/autos/foto/{unidad}/{archivo}', [\App\Http\Controllers\AutosController::class, 'foto'])
+    ->where(['unidad' => '[0-9]+', 'archivo' => '[A-Za-z0-9._-]+'])->name('autos.foto');
+Route::get('/autos/{slug}', [\App\Http\Controllers\AutosController::class, 'unidad'])
+    ->where('slug', '[a-z0-9-]+')->middleware('throttle:120,1')->name('autos.unidad');
 
 // Portal del cliente: un solo enlace con todas sus cotizaciones y proyectos
 Route::get('/cliente/{token}', [\App\Http\Controllers\ClientePortalController::class, 'show'])

@@ -8,6 +8,8 @@
     try { $nuevosNav = \App\Models\Cliente::where('nuevo', true)->count(); } catch (\Throwable $e) { $nuevosNav = 0; } // antes de migrar
     try { $prospectosNav = \App\Models\Prospecto::where('nuevo', true)->count(); } catch (\Throwable $e) { $prospectosNav = 0; }
     $cuentaNav = \App\Support\Cuentas::actual();
+    // Lote de autos: clientes con letras vencidas
+    try { $atrasoNav = $cuentaNav?->tiene('autos') && $usuario?->puede('cobranza') ? \App\Models\Credito::conCobranza()->with('letras')->get()->filter(fn ($c) => $c->atrasadas()->isNotEmpty())->count() : 0; } catch (\Throwable $e) { $atrasoNav = 0; }
     // Productos en su mínimo: solo le importa a quien administra el inventario
     try { $bajosNav = $cuentaNav?->tiene('stock') && $usuario?->puede('productos') ? \App\Models\Producto::activos()->bajos()->count() : 0; } catch (\Throwable $e) { $bajosNav = 0; }
     $viendoOtra = $usuario?->plataforma && $cuentaNav && $cuentaNav->id !== $usuario->cuenta_id;
@@ -19,6 +21,8 @@
         ['ruta' => 'admin.tareas.index',        'activo' => 'admin.tareas.*',         'icono' => 'bi-check2-square',   'texto' => $puede('tareas') ? 'Tareas' : 'Mis tareas', 'cuenta' => $tareasNav, 'seccion' => null],
         ['ruta' => 'admin.ventas.index',        'activo' => 'admin.ventas.*',         'icono' => 'bi-funnel',          'texto' => 'Ventas', 'cuenta' => $prospectosNav, 'nuevos' => true, 'seccion' => 'ventas'],
         ['ruta' => 'admin.presupuestos.index',  'activo' => 'admin.presupuestos.*',   'icono' => 'bi-file-earmark-text','texto' => 'Cotizaciones', 'cuenta' => $vigentesNav, 'seccion' => 'cotizaciones'],
+        ['ruta' => 'admin.unidades.index',      'activo' => 'admin.unidades.*',       'icono' => 'bi-car-front',       'texto' => 'Unidades', 'seccion' => ['unidades', 'cobranza'], 'modulo' => 'autos'],
+        ['ruta' => 'admin.creditos.index',      'activo' => 'admin.creditos.*',       'icono' => 'bi-cash-coin',       'texto' => 'Cobranza', 'cuenta' => $atrasoNav, 'seccion' => 'cobranza', 'modulo' => 'autos'],
         ['ruta' => 'admin.proyectos.index',     'activo' => 'admin.proyectos.*',      'icono' => 'bi-kanban',          'texto' => 'Proyectos', 'cuenta' => $activosNav, 'seccion' => 'proyectos'],
         ['ruta' => 'admin.redes',               'activo' => 'admin.redes*',           'icono' => 'bi-grid-3x3-gap',    'texto' => 'Redes sociales', 'cuenta' => $redesNav ?? 0, 'seccion' => 'redes'],
         ['ruta' => 'admin.clientes.index',      'activo' => 'admin.clientes.*',       'icono' => 'bi-people',          'texto' => 'Clientes', 'cuenta' => $nuevosNav, 'nuevos' => true, 'seccion' => 'clientes'],
@@ -31,6 +35,8 @@
     $tabs = array_slice(array_values(array_filter([
         $puede('resumen') ? ['url' => route('admin.resumen'), 'activo' => 'admin.resumen', 'icono' => 'bi-grid-1x2', 'lleno' => 'bi-grid-1x2-fill', 'texto' => 'Inicio'] : null,
         $puede('cotizaciones') ? ['url' => route('admin.presupuestos.index'), 'activo' => 'admin.presupuestos.*', 'icono' => 'bi-file-earmark-text', 'lleno' => 'bi-file-earmark-text-fill', 'texto' => 'Cotizaciones', 'cuenta' => $vigentesNav] : null,
+        $puede('unidades') ? ['url' => route('admin.unidades.index'), 'activo' => 'admin.unidades.*', 'icono' => 'bi-car-front', 'lleno' => 'bi-car-front-fill', 'texto' => 'Unidades'] : null,
+        $puede('cobranza') ? ['url' => route('admin.creditos.index'), 'activo' => 'admin.creditos.*', 'icono' => 'bi-cash-coin', 'lleno' => 'bi-cash-coin', 'texto' => 'Cobranza', 'cuenta' => $atrasoNav] : null,
         $puede('proyectos') ? ['url' => route('admin.proyectos.index'), 'activo' => 'admin.proyectos.*', 'icono' => 'bi-kanban', 'lleno' => 'bi-kanban-fill', 'texto' => 'Proyectos'] : null,
         ['url' => route('admin.tareas.index'), 'activo' => 'admin.tareas.*', 'icono' => 'bi-check2-square', 'lleno' => 'bi-check2-square', 'texto' => 'Tareas', 'cuenta' => $tareasNav],
         $puede('finanzas') ? ['url' => route('admin.finanzas'), 'activo' => 'admin.finanzas*', 'icono' => 'bi-graph-up-arrow', 'lleno' => 'bi-graph-up-arrow', 'texto' => 'Finanzas'] : null,
@@ -452,9 +458,11 @@
             <i class="bi bi-dropbox"></i> Dropbox
             <span class="ms-auto" title="{{ $dbxNav ? 'Conectado' : 'Sin conectar' }}" style="width:8px;height:8px;border-radius:50%;background:{{ $dbxNav ? 'var(--green, #00C46A)' : '#E5484D' }}"></span>
         </a>
+        @if($cuentaNav?->tiene('proyectos'))
         <a href="{{ route('admin.tipos') }}" class="{{ request()->routeIs('admin.tipos*') ? 'activo' : '' }}">
             <i class="bi bi-diagram-3"></i> Tipos de proyecto
         </a>
+        @endif
         <a href="{{ route('admin.costeo') }}" class="{{ request()->routeIs('admin.costeo*') ? 'activo' : '' }}">
             <i class="bi bi-calculator"></i> Costeo
         </a>
@@ -466,6 +474,14 @@
         <a href="{{ route('admin.negocio') }}" class="{{ request()->routeIs('admin.negocio') ? 'activo' : '' }}">
             <i class="bi bi-shop"></i> Mi negocio
         </a>
+        @if($cuentaNav?->tiene('autos'))
+        <a href="{{ route('admin.sucursales') }}" class="{{ request()->routeIs('admin.sucursales*') ? 'activo' : '' }}">
+            <i class="bi bi-geo-alt"></i> Sucursales
+        </a>
+        <a href="{{ route('admin.credito-ajustes') }}" class="{{ request()->routeIs('admin.credito-ajustes*') ? 'activo' : '' }}">
+            <i class="bi bi-percent"></i> Crédito y cobranza
+        </a>
+        @endif
         <a href="{{ route('admin.negocio.correo') }}" class="{{ request()->routeIs('admin.negocio.correo*') ? 'activo' : '' }}">
             <i class="bi bi-envelope-at"></i> Correo de envío
         </a>

@@ -33,6 +33,8 @@ class Cuenta extends Model
     /** Módulos del giro, más los que se le activen a un negocio en particular (ajustes.modulos) */
     public function tiene(string $modulo): bool
     {
+        // Proyectos viene prendido; un tipo de empresa lo apaga con el módulo "sin_proyectos"
+        if ($modulo === 'proyectos') return ! $this->tiene('sin_proyectos');
         return in_array($modulo, $this->giro_info['modulos'] ?? [], true)
             || in_array($modulo, (array) $this->ajuste('modulos', []), true);
     }

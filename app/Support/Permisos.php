@@ -19,6 +19,8 @@ class Permisos
         'tareas'        => ['texto' => 'Gestionar tareas',      'icono' => 'bi-check2-square',     'ayuda' => 'Crear y asignar tareas, elegir la carpeta de entrega y ver las de todo el equipo'],
         'redes'         => ['texto' => 'Redes sociales',        'icono' => 'bi-grid-3x3-gap',      'ayuda' => 'Calendario de contenido y aprobaciones de los clientes'],
         'clientes'      => ['texto' => 'Clientes',              'icono' => 'bi-people',            'ayuda' => 'Fichas, datos fiscales y contactos del sitio'],
+        'unidades'      => ['texto' => 'Unidades',               'icono' => 'bi-car-front',         'ayuda' => 'Autos del lote: fichas, fotos, precios y su página para compartir'],
+        'cobranza'      => ['texto' => 'Ventas a crédito y cobranza', 'icono' => 'bi-cash-coin',    'ayuda' => 'Vender unidades, registrar pagos, moratorios y el termómetro de clientes'],
         'productos'     => ['texto' => 'Productos e inventario', 'icono' => 'bi-box-seam',         'ayuda' => 'Catálogo, existencias, costos, entradas y salidas, e importar desde Excel'],
         'proveedores'   => ['texto' => 'Proveedores',           'icono' => 'bi-truck',             'ayuda' => 'Proveedores, órdenes de compra, sus facturas y archivos'],
         'finanzas'      => ['texto' => 'Finanzas',              'icono' => 'bi-graph-up-arrow',    'ayuda' => 'Cobros, ingresos y exportar a Excel'],
@@ -28,7 +30,7 @@ class Permisos
     ];
 
     /** Secciones que solo existen en ciertos giros: sección => módulo del giro */
-    public const MODULOS = ['redes' => 'redes', 'productos' => 'stock'];
+    public const MODULOS = ['redes' => 'redes', 'productos' => 'stock', 'proyectos' => 'proyectos', 'unidades' => 'autos', 'cobranza' => 'autos'];
 
     /** Secciones disponibles para la cuenta activa (para armar roles) */
     public static function disponibles(): array
@@ -53,6 +55,13 @@ class Permisos
         ['admin.productos.show', ['productos', 'cotizaciones']],
         ['admin.productos.*', 'productos'],
         ['admin.ventas.*', 'ventas'],
+        // Lote de autos: quien vende consulta las unidades; venderlas y cobrar es de Cobranza
+        ['admin.unidades.index', ['unidades', 'cobranza']],
+        ['admin.unidades.show', ['unidades', 'cobranza']],
+        ['admin.unidades.*', 'unidades'],
+        ['admin.creditos.*', 'cobranza'],
+        ['admin.sucursales*', 'configuracion'],
+        ['admin.credito-ajustes*', 'configuracion'],
         ['admin.clientes.*', 'clientes'],
         ['admin.proveedores.*', 'proveedores'],
         ['admin.ordenes.*', 'proveedores'],
@@ -102,7 +111,7 @@ class Permisos
     /** Primera página a la que puede entrar (para el inicio) */
     public static function inicio(User $u): string
     {
-        foreach (['resumen' => 'admin.resumen', 'proyectos' => 'admin.proyectos.index', 'cotizaciones' => 'admin.presupuestos.index', 'redes' => 'admin.redes'] as $s => $r) {
+        foreach (['resumen' => 'admin.resumen', 'proyectos' => 'admin.proyectos.index', 'unidades' => 'admin.unidades.index', 'cobranza' => 'admin.creditos.index', 'cotizaciones' => 'admin.presupuestos.index', 'redes' => 'admin.redes'] as $s => $r) {
             if ($u->puede($s)) return route($r);
         }
         return route('admin.tareas.index');
