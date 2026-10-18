@@ -1,0 +1,5 @@
+@extends('admin.layout')
+@section('titulo','Historial de ventas')
+@section('contenido')
+<div class="page-head"><div><h1>Historial de ventas</h1></div><a class="btn btn-primario" href="{{ route('admin.pos.index') }}">Nueva venta</a></div><section class="panel"><div class="panel-body"><div class="table-responsive"><table class="table"><thead><tr><th>Folio</th><th>Fecha</th><th>Estado</th><th>Pago</th><th>Total</th><th></th></tr></thead><tbody>@forelse($ventas as $v)<tr><td>{{ $v->folio }}</td><td>{{ $v->created_at->format('d/m/Y H:i') }}</td><td>{{ $v->estado }}</td><td>{{ ucfirst($v->forma_pago) }}</td><td>{{ number_format($v->total,2) }}</td><td><a class="btn btn-borde btn-sm" href="{{ route('admin.pos.ticket',$v) }}">Ticket</a></td></tr>@empty<tr><td colspan="6">No hay ventas.</td></tr>@endforelse</tbody></table></div>{{ $ventas->links() }}</div></section>
+@endsection
