@@ -26,6 +26,7 @@
         ['ruta' => 'admin.proyectos.index',     'activo' => 'admin.proyectos.*',      'icono' => 'bi-kanban',          'texto' => 'Proyectos', 'cuenta' => $activosNav, 'seccion' => 'proyectos'],
         ['ruta' => 'admin.redes',               'activo' => 'admin.redes*',           'icono' => 'bi-grid-3x3-gap',    'texto' => 'Redes sociales', 'cuenta' => $redesNav ?? 0, 'seccion' => 'redes'],
         ['ruta' => 'admin.clientes.index',      'activo' => 'admin.clientes.*',       'icono' => 'bi-people',          'texto' => 'Clientes', 'cuenta' => $nuevosNav, 'nuevos' => true, 'seccion' => 'clientes'],
+        ['ruta' => 'admin.pos.index', 'activo' => 'admin.pos.*', 'icono' => 'bi-upc-scan', 'texto' => 'Punto de venta', 'seccion' => 'pos', 'modulo' => 'pos'],
         ['ruta' => 'admin.productos.index',     'activo' => 'admin.productos.*',      'icono' => 'bi-box-seam',        'texto' => 'Productos', 'cuenta' => $bajosNav, 'seccion' => ['productos', 'cotizaciones'], 'modulo' => 'stock'],
         ['ruta' => 'admin.proveedores.index',   'activo' => ['admin.proveedores.*', 'admin.ordenes.*'], 'icono' => 'bi-truck', 'texto' => 'Proveedores', 'seccion' => 'proveedores'],
         ['ruta' => 'admin.finanzas',            'activo' => 'admin.finanzas*',        'icono' => 'bi-graph-up-arrow',  'texto' => 'Finanzas', 'seccion' => 'finanzas'],
