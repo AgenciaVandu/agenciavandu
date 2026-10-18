@@ -67,6 +67,9 @@
                 <input name="clave" id="clave" class="form-control num @error('clave') is-invalid @enderror" value="{{ old('clave', $producto->clave) }}" maxlength="60" autocomplete="off">
                 @error('clave')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
+            @if(\App\Support\Cuentas::actual()?->tiene('pos'))
+            <div class="col-md-4"><label class="form-label" for="codigo_barras">Código de barras</label><input name="codigo_barras" id="codigo_barras" class="form-control num" value="{{ old('codigo_barras', $producto->codigo_barras) }}" maxlength="80" autocomplete="off"></div>
+            @endif
             <div class="col-md-6">
                 <label class="form-label" for="categoria">Categoría</label>
                 <input name="categoria" id="categoria" class="form-control" value="{{ old('categoria', $producto->categoria?->nombre) }}" list="lista-categorias" autocomplete="off" maxlength="80" placeholder="Sillas, Escritorios…">
