@@ -123,6 +123,10 @@ class PlataformaController extends Controller
         if ($cuenta->id === Cuentas::principalId()) $d['dominio'] = null;
         // Sucursales contratadas (se cobran aparte)
         $a = $cuenta->ajustes ?? [];
+        $modulos = (array) data_get($a, 'modulos', []);
+        $modulos = array_values(array_diff($modulos, ['pos']));
+        if ($request->boolean('pos_activo')) $modulos[] = 'pos';
+        $a['modulos'] = $modulos;
         $a['sucursales_max'] = (int) ($d['sucursales_max'] ?? 1);
         $d['ajustes'] = $a;
         unset($d['sucursales_max']);
