@@ -34,6 +34,8 @@ class Cuenta extends Model
     public function tiene(string $modulo): bool
     {
         // Proyectos viene prendido; un tipo de empresa lo apaga con el módulo "sin_proyectos"
+        if ($modulo === 'pos') return in_array('pos', (array) $this->ajuste('modulos', []), true);
+        if ($modulo === 'stock' && $this->tiene('pos')) return true;
         if ($modulo === 'proyectos') return ! $this->tiene('sin_proyectos');
         return in_array($modulo, $this->giro_info['modulos'] ?? [], true)
             || in_array($modulo, (array) $this->ajuste('modulos', []), true);
