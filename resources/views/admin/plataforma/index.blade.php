@@ -120,6 +120,7 @@
                         <label class="small m-0" for="suc-{{ $c->id }}">Sucursales contratadas</label>
                         <input id="suc-{{ $c->id }}" type="number" name="sucursales_max" min="1" max="50" class="form-control form-control-sm num" style="width: 80px" value="{{ $c->ajuste('sucursales_max', 1) }}">
                     </div>
+                    <label class="form-check form-switch m-0"><input type="checkbox" class="form-check-input" name="pos_activo" value="1" @checked($c->tiene('pos'))><span class="form-check-label" style="font-size:13.5px">Punto de venta (POS) · habilitación exclusiva de plataforma</span></label>
                     <textarea name="notas" class="form-control form-control-sm" rows="2" maxlength="2000" placeholder="Notas internas (plan, contacto, pagos…)">{{ $c->notas }}</textarea>
                     @if($c->id !== $principal)
                         <label class="form-check form-switch m-0"><input type="checkbox" class="form-check-input" role="switch" name="activa" value="1" @checked($c->activa)> <span class="form-check-label" style="font-size:13.5px">Activa (si la suspendes, su equipo no puede entrar ni se abren sus enlaces)</span></label>
