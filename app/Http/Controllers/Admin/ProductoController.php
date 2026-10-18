@@ -188,6 +188,7 @@ class ProductoController extends Controller
         $d = $request->validate([
             'nombre'              => 'required|string|max:200',
             'clave'               => ['nullable', 'string', 'max:60', Rule::unique('productos', 'clave')->where('cuenta_id', Cuentas::id())->ignore($p?->id)],
+            'codigo_barras'       => ['nullable', 'string', 'max:80', Rule::unique('productos', 'codigo_barras')->where('cuenta_id', Cuentas::id())->ignore($p?->id)],
             'categoria'           => 'nullable|string|max:80',
             'unidad'              => 'nullable|string|max:30',
             'descripcion'         => 'nullable|string|max:5000',
@@ -213,6 +214,7 @@ class ProductoController extends Controller
         $datos = [
             'nombre'              => trim($d['nombre']),
             'clave'               => filled($d['clave'] ?? null) ? trim($d['clave']) : null,
+            'codigo_barras'       => filled($d['codigo_barras'] ?? null) ? trim($d['codigo_barras']) : null,
             'categoria_id'        => ProductoCategoria::porNombre($d['categoria'] ?? null)?->id,
             'unidad'              => trim($d['unidad'] ?? '') ?: 'pieza',
             'descripcion'         => $d['descripcion'] ?? null,
