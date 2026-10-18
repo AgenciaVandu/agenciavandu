@@ -12,18 +12,20 @@ use Illuminate\Support\Str;
 
 class PosController extends Controller
 {
-    public function __construct()
+    private function disponible(): void
     {
         abort_unless(Cuentas::actual()?->tiene('pos'), 404);
     }
 
     public function index()
     {
+        $this->disponible();
         return view('admin.pos.index', ['solicitudId' => (string) Str::uuid()]);
     }
 
     public function buscar(Request $request)
     {
+        $this->disponible();
         $texto = trim((string) $request->query('q'));
         abort_if($texto === '', 422);
         $productos = Producto::activos()->where(function ($q) use ($texto) {
@@ -35,6 +37,7 @@ class PosController extends Controller
 
     public function cobrar(Request $request, Ventas $ventas)
     {
+        $this->disponible();
         $d = $request->validate([
             'solicitud_id' => 'required|uuid',
             'forma_pago' => 'required|in:efectivo,tarjeta,transferencia',
@@ -49,16 +52,19 @@ class PosController extends Controller
 
     public function historial()
     {
+        $this->disponible();
         return view('admin.pos.historial', ['ventas' => PosVenta::latest()->paginate(30)]);
     }
 
     public function ticket(PosVenta $venta)
     {
+        $this->disponible();
         return view('admin.pos.ticket', ['venta' => $venta->load('detalles'), 'cuenta' => Cuentas::actual()]);
     }
 
     public function cancelar(Request $request, PosVenta $venta, Ventas $ventas)
     {
+        $this->disponible();
         abort_unless($request->user()->esSuperAdmin(), 403);
         $d = $request->validate(['motivo' => 'required|string|max:255']);
         $ventas->cancelar($venta, $d['motivo']);
