@@ -126,6 +126,14 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::post('ventas/prospectos/{prospecto}/convertir', [Admin\VentasController::class, 'convertir'])->name('ventas.convertir');
     Route::post('ventas/prospectos/{prospecto}/seguimiento', [Admin\VentasController::class, 'seguimiento'])->name('ventas.seguimiento');
 
+    // Punto de venta (activación por cuenta desde plataforma)
+    Route::get('pos', [Admin\PosController::class, 'index'])->name('pos.index');
+    Route::get('pos/buscar', [Admin\PosController::class, 'buscar'])->name('pos.buscar');
+    Route::post('pos/cobrar', [Admin\PosController::class, 'cobrar'])->name('pos.cobrar');
+    Route::get('pos/historial', [Admin\PosController::class, 'historial'])->name('pos.historial');
+    Route::get('pos/{venta}/ticket', [Admin\PosController::class, 'ticket'])->name('pos.ticket');
+    Route::post('pos/{venta}/cancelar', [Admin\PosController::class, 'cancelar'])->name('pos.cancelar');
+
     // Productos e inventario
     Route::get('productos/buscar', [Admin\ProductoController::class, 'buscar'])->name('productos.buscar');
     Route::post('productos/ejemplos', [Admin\ProductoController::class, 'cargarEjemplos'])->name('productos.ejemplos');
