@@ -21,6 +21,7 @@ class Permisos
         'clientes'      => ['texto' => 'Clientes',              'icono' => 'bi-people',            'ayuda' => 'Fichas, datos fiscales y contactos del sitio'],
         'unidades'      => ['texto' => 'Unidades',               'icono' => 'bi-car-front',         'ayuda' => 'Autos del lote: fichas, fotos, precios y su página para compartir'],
         'cobranza'      => ['texto' => 'Ventas a crédito y cobranza', 'icono' => 'bi-cash-coin',    'ayuda' => 'Vender unidades, registrar pagos, moratorios y el termómetro de clientes'],
+        'pos'           => ['texto' => 'Punto de venta', 'icono' => 'bi-upc-scan', 'ayuda' => 'Ventas de mostrador, tickets y cobros'],
         'productos'     => ['texto' => 'Productos e inventario', 'icono' => 'bi-box-seam',         'ayuda' => 'Catálogo, existencias, costos, entradas y salidas, e importar desde Excel'],
         'proveedores'   => ['texto' => 'Proveedores',           'icono' => 'bi-truck',             'ayuda' => 'Proveedores, órdenes de compra, sus facturas y archivos'],
         'finanzas'      => ['texto' => 'Finanzas',              'icono' => 'bi-graph-up-arrow',    'ayuda' => 'Cobros, ingresos y exportar a Excel'],
@@ -30,7 +31,7 @@ class Permisos
     ];
 
     /** Secciones que solo existen en ciertos giros: sección => módulo del giro */
-    public const MODULOS = ['redes' => 'redes', 'productos' => 'stock', 'proyectos' => 'proyectos', 'unidades' => 'autos', 'cobranza' => 'autos'];
+    public const MODULOS = ['pos' => 'pos', 'redes' => 'redes', 'productos' => 'stock', 'proyectos' => 'proyectos', 'unidades' => 'autos', 'cobranza' => 'autos'];
 
     /** Secciones disponibles para la cuenta activa (para armar roles) */
     public static function disponibles(): array
@@ -50,6 +51,7 @@ class Permisos
         ['admin.proyectos.*', 'proyectos'],
         ['admin.presupuestos.*', 'cotizaciones'],
         // Quien cotiza consulta el catálogo y elige productos; administrarlo (costos, existencias, importar) es de Productos
+        ['admin.pos.*', 'pos'],
         ['admin.productos.index', ['productos', 'cotizaciones']],
         ['admin.productos.buscar', ['productos', 'cotizaciones']],
         ['admin.productos.show', ['productos', 'cotizaciones']],
