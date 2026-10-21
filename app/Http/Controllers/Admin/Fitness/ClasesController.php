@@ -63,6 +63,9 @@ class ClasesController extends FitnessController
             'dias' => $dias, 'semana' => $semana, 'lunes' => $lunes, 'domingo' => $domingo, 'soloMias' => $soloMias,
             'sucursales' => Sucursal::orderBy('nombre')->get(), 'coaches' => $this->coaches(), 'sucursal' => $sucursal, 'coach' => $coach,
             'horaIni' => $horaIni, 'horaFin' => $horaFin, 'abierta' => $abierta,
+            // Desde Horarios: abre la ventana de programar en ese día, hora y tipo de clase
+            'programar' => $u->puede('clases') && $fecha && preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', (string) $request->query('programar'))
+                ? ['fecha' => $fecha->toDateString(), 'hora' => $request->query('programar'), 'tipo' => (string) ((int) $request->query('tipo') ?: '')] : null,
             'tipos' => $u->puede('clases') ? ClaseTipo::activos()->ordenados()->get(['id', 'nombre', 'duracion', 'cupo', 'color']) : collect(),
             'resumen' => [
                 'clases' => $clases->where('estado', 'programada')->count(),

@@ -70,5 +70,6 @@ Route::post('seguimiento/{atleta}/tarea', [Fitness\SeguimientoController::class,
 
 // Reportes y reglas
 Route::get('gimnasio/reportes', [Fitness\ReportesController::class, 'index'])->name('fitness-reportes');
+Route::get('gimnasio/reportes/horarios', [Fitness\ReportesController::class, 'horarios'])->name('fitness-reportes.horarios');
 Route::get('gimnasio/reglas', [Fitness\AjustesController::class, 'show'])->name('fitness-ajustes');
 Route::post('gimnasio/reglas', [Fitness\AjustesController::class, 'update'])->name('fitness-ajustes.guardar');

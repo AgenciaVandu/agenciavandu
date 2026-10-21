@@ -129,6 +129,7 @@
         'horaIni' => $horaIni, 'px' => $px, 'ahora' => $ahora->format('Y-m-d H:i'),
         'tipos' => $tipos->mapWithKeys(fn ($t) => [$t->id => ['duracion' => $t->duracion, 'cupo' => $t->cupo]]),
         'abrirNueva' => $errors->any() && old('volver') === 'agenda',
+        'programar' => $programar,
         'viejo' => ['fecha' => old('fecha'), 'hora' => old('hora'), 'tipo' => (string) old('clase_tipo_id'), 'duracion' => (int) old('duracion', 60), 'cupo' => (int) old('cupo', 12),
                     'repetir' => (bool) old('repetir'), 'dias' => array_map('strval', (array) old('dias', []))],
         'scrollA' => max(0, ($abierta ? (int) $abierta['c']->inicio->format('G') : min(max($ahora->hour - 1, 6), 18)) - $horaIni) * $px,
@@ -240,6 +241,11 @@ window.agendaFx = function (cfg) {
             const s = this.$refs.scroll;
             if (s) s.scrollTop = mem.scroll ?? cfg.scrollA;
             if (cfg.abrirNueva) this.f = Object.assign(this.f, cfg.viejo);
+            else if (cfg.programar) {
+                this.abrirNueva(cfg.programar.fecha, cfg.programar.hora);
+                if (cfg.programar.tipo && cfg.tipos[cfg.programar.tipo]) this.ponerTipo(cfg.programar.tipo);
+                const u = new URL(location.href); ['programar', 'tipo'].forEach((k) => u.searchParams.delete(k)); history.replaceState(null, '', u.href);
+            }
         },
         guardarScroll() { (window.__agenda[cfg.clave] ||= {}).scroll = this.$refs.scroll.scrollTop; },
         elegirDia(i) { this.dia = i; (window.__agenda[cfg.clave] ||= {}).dia = i; },

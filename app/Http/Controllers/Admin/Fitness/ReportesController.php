@@ -15,4 +15,14 @@ class ReportesController extends FitnessController
         [$desde, $hasta] = FinanzasController::rangoDe($periodo);
         return view('admin.fitness.reportes', Reportes::datos($desde, $hasta) + ['periodo' => $periodo]);
     }
+
+    /** Horarios: mapa de ocupación (día × hora) y hallazgos sobre qué abrir, mover o cuidar */
+    public function horarios(Request $request)
+    {
+        $semanas = in_array((int) $request->query('semanas'), [4, 8, 12], true) ? (int) $request->query('semanas') : 8;
+        $sucursales = \App\Models\Sucursal::orderBy('nombre')->get(['id', 'nombre']);
+        $sucursal = $sucursales->count() > 1 ? ((int) $request->query('sucursal') ?: null) : null;
+        return view('admin.fitness.horarios', \App\Support\Fitness\Horarios\Horarios::analizar($semanas, $sucursal)
+            + ['semanas' => $semanas, 'sucursales' => $sucursales, 'sucursal' => $sucursal]);
+    }
 }

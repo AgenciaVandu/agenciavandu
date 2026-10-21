@@ -26,6 +26,11 @@
     </nav>
 </div>
 
+<nav class="segmento mb-3" aria-label="Reportes">
+    <a href="{{ route('admin.fitness-reportes') }}" class="activo" aria-current="page"><i class="bi bi-bar-chart-line"></i> Resumen</a>
+    <a href="{{ route('admin.fitness-reportes.horarios') }}"><i class="bi bi-grid-3x3"></i> Horarios</a>
+</nav>
+
 <div class="panel fx-kpis">
     <div><div class="k"><i class="bi bi-person-check"></i> Asistencias</div><div class="v num">{{ number_format($kpi['asistencias']) }}</div><div class="s">{{ $kpi['asistieron'] }} atletas distintos</div></div>
     <div><div class="k"><i class="bi bi-speedometer2"></i> Ocupación</div><div class="v num">{{ $kpi['ocupacion'] }}%</div><div class="s">{{ $kpi['reservas'] }} lugares en {{ $kpi['clases'] }} clases</div></div>
