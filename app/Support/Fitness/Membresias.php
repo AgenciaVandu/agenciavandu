@@ -22,6 +22,9 @@ class Membresias
         $vence = ! empty($d['vence_el']) ? Carbon::parse($d['vence_el'], $tz)
             : $inicio->copy()->addDays(max(1, (int) ($p->vigencia_dias ?: 30)) - 1);
 
+        // Si estaba descartado en el seguimiento, vuelve a contar
+        if ($c->descartado_at) $c->forceFill(['descartado_at' => null, 'motivo_descarte' => null])->saveQuietly();
+
         $pagado = ($d['pagado'] ?? false) ? ($d['pagado_el'] ?? now($tz)->toDateString()) : null;
         return Membresia::create([
             'cliente_id'  => $c->id,

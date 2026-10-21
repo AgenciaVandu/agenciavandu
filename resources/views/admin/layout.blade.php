@@ -23,7 +23,8 @@
     $nav = array_values(array_filter([
         ['ruta' => 'admin.resumen',             'activo' => 'admin.resumen',          'icono' => 'bi-grid-1x2',        'texto' => 'Resumen', 'seccion' => 'resumen'],
         ['ruta' => 'admin.tareas.index',        'activo' => 'admin.tareas.*',         'icono' => 'bi-check2-square',   'texto' => $puede('tareas') ? 'Tareas' : 'Mis tareas', 'cuenta' => $tareasNav, 'seccion' => null],
-        ['ruta' => 'admin.ventas.index',        'activo' => 'admin.ventas.*',         'icono' => 'bi-funnel',          'texto' => 'Ventas', 'cuenta' => $prospectosNav, 'nuevos' => true, 'seccion' => 'ventas'],
+        $gymNav ? ['ruta' => 'admin.seguimiento', 'activo' => 'admin.seguimiento*', 'icono' => 'bi-person-plus', 'texto' => 'Seguimiento', 'seccion' => 'ventas']
+                : ['ruta' => 'admin.ventas.index',        'activo' => 'admin.ventas.*',         'icono' => 'bi-funnel',          'texto' => 'Ventas', 'cuenta' => $prospectosNav, 'nuevos' => true, 'seccion' => 'ventas'],
         ['ruta' => 'admin.clases.index',        'activo' => ['admin.clases.*', 'admin.clase-tipos*', 'admin.ejercicios*'], 'icono' => 'bi-calendar-week', 'texto' => 'Agenda', 'cuenta' => $hoyNav, 'seccion' => ['clases', 'asistencia'], 'modulo' => 'fitness'],
         ['ruta' => 'admin.escanear',            'activo' => 'admin.escanear*',        'icono' => 'bi-qr-code-scan',    'texto' => 'Escanear', 'seccion' => 'asistencia', 'modulo' => 'fitness'],
         ['ruta' => 'admin.presupuestos.index',  'activo' => 'admin.presupuestos.*',   'icono' => 'bi-file-earmark-text','texto' => 'Cotizaciones', 'cuenta' => $vigentesNav, 'seccion' => 'cotizaciones', 'modulo' => 'cotizaciones'],

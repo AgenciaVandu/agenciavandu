@@ -22,6 +22,8 @@ class VentasController extends Controller
 
     public function index(Request $request)
     {
+        // El gimnasio no cotiza: sus ventas son interesados, pruebas y renovaciones
+        if (\App\Support\Cuentas::actual()?->tiene('fitness')) return redirect()->route('admin.seguimiento');
         $vista = array_key_exists($request->query('ver'), self::VISTAS) ? $request->query('ver') : 'embudo';
         $periodo = array_key_exists($request->query('periodo'), self::PERIODOS) ? $request->query('periodo') : 'trimestre';
         $desde = $this->desde($periodo);

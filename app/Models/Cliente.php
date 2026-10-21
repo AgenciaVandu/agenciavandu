@@ -27,7 +27,8 @@ class Cliente extends Model implements AuthenticatableContract
     ];
 
     protected $casts = ['nuevo' => 'boolean', 'contacto_at' => 'datetime', 'portal_visto_at' => 'datetime',
-                        'activo' => 'boolean', 'password' => 'hashed', 'acceso_expira' => 'datetime', 'ultimo_acceso_at' => 'datetime'];
+                        'activo' => 'boolean', 'password' => 'hashed', 'acceso_expira' => 'datetime', 'ultimo_acceso_at' => 'datetime',
+                        'descartado_at' => 'datetime'];
 
     protected static function booted(): void
     {

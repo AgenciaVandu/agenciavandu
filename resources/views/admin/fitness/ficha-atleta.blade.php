@@ -10,6 +10,8 @@
     $historial = $a->reservaciones()->with('clase.tipo')->whereIn('estado', ['asistio', 'falta', 'cancelada'])->take(25)->get();
     $asistencias = $a->reservaciones()->where('estado', 'asistio')->count();
     $paquetes = \App\Models\Paquete::where('activo', true)->orderBy('precio')->get();
+    // Desde Seguimiento llega con el paquete que toca (prueba, primer paquete o el mismo para renovar)
+    $propuesto = $paquetes->firstWhere('id', (int) request('paquete')) ?? $paquetes->first();
     $u = auth()->user();
     $gestiona = $u->puede('membresias');
     $acceso = session('acceso');
@@ -55,7 +57,7 @@
                     <div class="panel-body secundario">Primero crea tus paquetes. <a href="{{ route('admin.paquetes') }}">Crear paquetes</a></div>
                 @else
                 <form method="post" action="{{ route('admin.membresias.store', $a) }}" class="panel-body"
-                      x-data="{ paquetes: {{ Js::from($paquetes->mapWithKeys(fn ($p) => [$p->id => ['precio' => $p->precio, 'vigencia' => $p->vigencia_texto, 'creditos' => $p->creditos_texto]])) }}, sel: '{{ old('producto_id', $paquetes->first()->id) }}', precio: {{ (float) old('precio', $paquetes->first()->precio) }}, pagado: {{ old('pagado', true) ? 'true' : 'false' }} }">
+                      x-data="{ paquetes: {{ Js::from($paquetes->mapWithKeys(fn ($p) => [$p->id => ['precio' => $p->precio, 'vigencia' => $p->vigencia_texto, 'creditos' => $p->creditos_texto]])) }}, sel: '{{ old('producto_id', $propuesto->id) }}', precio: {{ (float) old('precio', $propuesto->precio) }}, pagado: {{ old('pagado', true) ? 'true' : 'false' }} }">
                     @csrf
                     <div class="fx-grid-form">
                         <div style="grid-column: span 2"><label class="form-label small" for="paq">Paquete</label>

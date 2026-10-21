@@ -59,6 +59,7 @@ class Permisos
         ['admin.productos.show', ['productos', 'cotizaciones']],
         ['admin.productos.*', 'productos'],
         ['admin.ventas.*', 'ventas'],
+        ['admin.seguimiento*', 'ventas'],     // gimnasio: interesados y renovaciones
         // Lote de autos: quien vende consulta las unidades; venderlas y cobrar es de Cobranza
         ['admin.unidades.index', ['unidades', 'cobranza']],
         ['admin.unidades.show', ['unidades', 'cobranza']],

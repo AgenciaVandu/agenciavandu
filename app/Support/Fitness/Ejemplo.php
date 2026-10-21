@@ -58,6 +58,14 @@ class Ejemplo
         ['Andrés Pool Chi', '999 677 0912', 'andres@ejemplo.mx', 3, 3, 8, false],
         ['Mariana Uc Dzib', '999 145 3366', 'mariana@ejemplo.mx', 1, 1, 4, true],
         ['Rodrigo Kú Balam', '999 803 5521', 'rodrigo@ejemplo.mx', 0, 0, 1, true],
+        ['Fernando Cauich May', '999 412 7735', 'fernando@ejemplo.mx', 2, 8, 45, true],
+    ];
+
+    // Seguimiento: preguntaron pero aún no vienen. nombre, teléfono, cómo llegó, qué busca, hace cuántos días
+    public const INTERESADOS = [
+        ['Paola Chan Euán', '999 233 8104', 'whatsapp', 'Quiere prepararse para su primer HYROX', 1],
+        ['Luis Arjona Tec', '999 690 4471', 'redes', 'Clases en la mañana antes del trabajo', 3],
+        ['Karla Pech Moo', '999 158 9926', 'referido', 'La invitó Sofía; busca bajar de peso', 6],
     ];
 
     public static function hay(): bool
@@ -97,6 +105,10 @@ class Ejemplo
                 foreach ($proximas->slice($i * 2, 2) as $clase) {
                     try { Reservas::reservar($clase, $c, 'panel'); } catch (\Throwable) {}
                 }
+            }
+            foreach (self::INTERESADOS as [$nombre, $tel, $origen, $interes, $hace]) {
+                Cliente::create(['nombre' => $nombre, 'telefono' => $tel, 'origen' => $origen, 'interes' => $interes,
+                    'contacto_at' => now()->subDays($hace), 'ejemplo' => true]);
             }
         });
     }

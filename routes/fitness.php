@@ -61,6 +61,13 @@ Route::post('atletas/{atleta}/qr', [Fitness\AtletasController::class, 'nuevoQr']
 Route::patch('atletas/{atleta}/activo', [Fitness\AtletasController::class, 'activo'])->name('atletas.activo');
 Route::get('atletas/{atleta}/credencial', [Fitness\AtletasController::class, 'credencial'])->name('atletas.credencial');
 
+// Seguimiento: interesados, pruebas, renovaciones y vencidos (las "ventas" del gimnasio)
+Route::get('seguimiento', [Fitness\SeguimientoController::class, 'index'])->name('seguimiento');
+Route::post('seguimiento', [Fitness\SeguimientoController::class, 'store'])->name('seguimiento.store');
+Route::post('seguimiento/{atleta}/descartar', [Fitness\SeguimientoController::class, 'descartar'])->name('seguimiento.descartar');
+Route::post('seguimiento/{atleta}/recuperar', [Fitness\SeguimientoController::class, 'recuperar'])->name('seguimiento.recuperar');
+Route::post('seguimiento/{atleta}/tarea', [Fitness\SeguimientoController::class, 'tarea'])->name('seguimiento.tarea');
+
 // Reportes y reglas
 Route::get('gimnasio/reportes', [Fitness\ReportesController::class, 'index'])->name('fitness-reportes');
 Route::get('gimnasio/reglas', [Fitness\AjustesController::class, 'show'])->name('fitness-ajustes');
