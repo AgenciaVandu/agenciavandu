@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 /** El portal del atleta como app instalable: su manifiesto (con la marca del gimnasio) y su service worker (avisos) */
 class AppController extends Controller
 {
-    public const VERSION = '2026-10-29.1';
+    public const VERSION = '2026-10-21.2';
 
     public function manifiesto(Request $request)
     {

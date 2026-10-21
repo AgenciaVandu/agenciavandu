@@ -38,7 +38,7 @@ self.addEventListener('fetch', (e) => {
 });
 
 // ---------- Notificaciones push ----------
-const ICONO = @json(route('app.icono', 'icono-192.png'));
+const ICONO = @json(\App\Support\IconoApp::url(null, 'icono-192.png'));
 
 self.addEventListener('push', (e) => {
     let d = {};

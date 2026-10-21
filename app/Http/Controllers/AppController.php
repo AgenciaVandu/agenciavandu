@@ -8,7 +8,7 @@ namespace App\Http\Controllers;
  */
 class AppController extends Controller
 {
-    public const VERSION = '2026-10-21.1'; // súbela cuando cambien los archivos que guarda el service worker
+    public const VERSION = '2026-10-21.2'; // súbela cuando cambien los archivos que guarda el service worker
 
     /** El negocio de quien instala: el del dominio propio o el de su usuario (el manifiesto no pasa por el middleware del panel) */
     private function cuenta(): ?\App\Models\Cuenta
@@ -55,7 +55,7 @@ class AppController extends Controller
         }
         $ruta = resource_path('img/app/' . basename($archivo));
         abort_unless(is_file($ruta), 404);
-        return response()->file($ruta, ['Content-Type' => 'image/png', 'Cache-Control' => 'public, max-age=604800']);
+        return response()->file($ruta, ['Content-Type' => 'image/png', 'Cache-Control' => request()->has('v') ? 'public, max-age=31536000, immutable' : 'public, max-age=3600']);
     }
 
     public function sinConexion()
@@ -70,7 +70,7 @@ class AppController extends Controller
             'guardar' => [
                 route('app.sin-conexion'),
                 route('vandu.fuente'),
-                route('app.icono', 'icono-192.png'),
+                \App\Support\IconoApp::url(null, 'icono-192.png'),
                 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css',
                 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css',
                 'https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js',

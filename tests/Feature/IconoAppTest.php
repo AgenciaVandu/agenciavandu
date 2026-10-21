@@ -23,7 +23,7 @@ class IconoAppTest extends TestCase
         $this->actingAs($dueno);
 
         // Sin ícono propio: el de la plataforma
-        $this->assertSame(route('app.icono', 'icono-192.png'), IconoApp::url($gym, 'icono-192.png'));
+        $this->assertSame(route('app.icono', ['archivo' => 'icono-192.png', 'v' => IconoApp::versionBase()]), IconoApp::url($gym, 'icono-192.png'));
 
         $this->post(route('admin.negocio.update'), ['nombre' => 'Axion Fit', 'icono' => UploadedFile::fake()->image('isotipo.png', 600, 400), 'icono_fondo' => '#1A103D'])
             ->assertSessionHasNoErrors();

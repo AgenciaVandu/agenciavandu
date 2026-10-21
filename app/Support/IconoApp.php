@@ -33,7 +33,14 @@ class IconoApp
     {
         return self::tiene($c)
             ? route('app.icono', ['archivo' => $archivo, 'c' => $c->id, 'v' => $c->ajuste('app.icono')])
-            : route('app.icono', $archivo);
+            : route('app.icono', ['archivo' => $archivo, 'v' => self::versionBase()]);
+    }
+
+    /** Versión del ícono de la plataforma: cambia cuando cambian los archivos, así nadie se queda con uno viejo en caché */
+    public static function versionBase(): string
+    {
+        static $v = null;
+        return $v ??= substr(md5((string) @md5_file(resource_path('img/app/icono-512.png'))), 0, 8);
     }
 
     public static function ruta(Cuenta $c, string $archivo): ?string

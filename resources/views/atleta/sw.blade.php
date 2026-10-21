@@ -3,7 +3,7 @@
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 
-const ICONO = @json(route('app.icono', 'icono-192.png'));
+const ICONO = @json(\App\Support\IconoApp::url(null, 'icono-192.png'));
 self.addEventListener('push', (e) => {
     let d = {};
     try { d = e.data ? e.data.json() : {}; } catch (err) { d = { titulo: 'Tu gimnasio', cuerpo: e.data ? e.data.text() : '' }; }

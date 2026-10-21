@@ -12,8 +12,8 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Vandu">
-    <link rel="apple-touch-icon" href="{{ route('app.icono', 'apple-touch-icon.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ route('app.icono', 'favicon-32.png') }}">
+    <link rel="apple-touch-icon" href="{{ \App\Support\IconoApp::url(null, 'apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ \App\Support\IconoApp::url(null, 'favicon-32.png') }}">
     <link rel="preload" href="{{ route('vandu.fuente') }}" as="font" type="font/woff2" crossorigin>
     <style>
         @font-face { font-family: 'Geist'; src: url('{{ route('vandu.fuente') }}') format('woff2'); font-weight: 100 900; font-display: swap; }
