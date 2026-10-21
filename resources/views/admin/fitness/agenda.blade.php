@@ -70,7 +70,7 @@
         .ag-dias-m button .p { display: block; height: 5px; }
         .ag-dias-m button .p i { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: var(--ink); }
         .ag-dias-m button.sel { background: var(--ink); border-color: var(--ink); color: #C9CDD6; }
-        .ag-dias-m button.sel b { color: #fff; } .ag-dias-m button.sel .p i { background: var(--green); }
+        .ag-dias-m button.sel b { color: #fff; } .ag-dias-m button.sel .p i { background: var(--cian); }
         .ag-dias-m button.hoy:not(.sel) b { color: var(--green-ink); }
         .ag-c { font-size: 13px; padding: 6px 9px; }
     }

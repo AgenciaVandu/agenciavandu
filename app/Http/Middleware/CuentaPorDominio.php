@@ -16,7 +16,7 @@ use Throwable;
 class CuentaPorDominio
 {
     /** Lo que sí se sirve en el dominio de un negocio */
-    public const PERMITIDAS = ['admin', 'admin/*', 'cotizacion/*', 'proyecto/*', 'cliente/*', 'proveedor/*', 'redes/*', 'catalogo/*', 'autos/*', 'atleta', 'atleta/*', 'vandu-fuente.woff2'];
+    public const PERMITIDAS = ['admin', 'admin/*', 'cotizacion/*', 'proyecto/*', 'cliente/*', 'proveedor/*', 'redes/*', 'catalogo/*', 'autos/*', 'atleta', 'atleta/*', 'vandu-fuente.woff2', 'plataforma/*'];
 
     private static array $cache = [];
 

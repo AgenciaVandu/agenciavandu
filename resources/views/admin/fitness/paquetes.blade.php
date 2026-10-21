@@ -12,7 +12,7 @@
         @forelse($paquetes as $p)
             <details class="panel fx-editar" @if($errors->any() && old('_paquete') == $p->id) open @endif>
                 <summary class="fx-fila">
-                    <div class="fx-avatar" style="background: var(--ink); color: var(--green)"><i class="bi {{ $p->ilimitado ? 'bi-infinity' : 'bi-ticket-perforated' }}"></i></div>
+                    <div class="fx-avatar" style="background: var(--ink); color: var(--cian)"><i class="bi {{ $p->ilimitado ? 'bi-infinity' : 'bi-ticket-perforated' }}"></i></div>
                     <div class="flex-grow-1 min-w-0">
                         <div class="principal">{{ $p->nombre }}
                             @if($p->es_prueba)<span class="fx-pastilla ms-1">Prueba</span>@endif

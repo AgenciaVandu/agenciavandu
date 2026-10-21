@@ -66,7 +66,7 @@
     <title>@yield('titulo', 'Panel') · {{ \App\Support\Cuentas::esPrincipal() ? 'Vandu' : \App\Support\Cuentas::actual()?->nombre }}</title>
     <link rel="icon" href="/favi.svg" type="image/svg+xml">
     <link rel="manifest" href="{{ route('app.manifiesto') }}">
-    <meta name="theme-color" content="#13161D">
+    <meta name="theme-color" content="#1A103D">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -82,10 +82,12 @@
 
         /* ===================== Tokens ===================== */
         :root {
-            --ink: #13161D;  --ink-2: #1B1F28; --ink-3: #262B36; --ink-line: #2C313D;
-            --canvas: #F4F5F7; --surface: #FFFFFF; --sunken: #F8F9FA;
-            --line: #E5E7EB; --line-strong: #D5D8DE;
-            --text: #13161D; --text-2: #454A57; --muted: #6B7080; --faint: #9AA0AC;
+            /* Identidad de la plataforma: morado oscuro de base, púrpura para actuar, cian como chispa */
+            --ink: #1A103D;  --ink-2: #241750; --ink-3: #2F2066; --ink-line: #352870;
+            --marca: #6B3BFF; --marca-2: #5A2BEE; --marca-soft: #EFE9FF; --cian: #41C9FF; --amarillo: #FFD447; --rosa: #FF6EDB;
+            --canvas: #F5F4F9; --surface: #FFFFFF; --sunken: #F8F7FB;
+            --line: #E6E3EE; --line-strong: #D6D1E2;
+            --text: #1A103D; --text-2: #4A4460; --muted: #6D6884; --faint: #A09BB4;
             --green: #00F385; --green-ink: #047A4B; --green-soft: #E3FBEF;
             --blue: #2557D6; --blue-soft: #E8EEFC;
             --amber: #A35A00; --amber-soft: #FFF3DD;
@@ -96,15 +98,15 @@
             --bs-body-font-family: 'Geist', system-ui, -apple-system, sans-serif;
             --bs-body-color: var(--text); --bs-body-bg: var(--canvas); --bs-body-font-size: .9375rem;
             --bs-border-color: var(--line); --bs-border-radius: var(--radius-sm);
-            --bs-link-color-rgb: 19,22,29; --bs-link-hover-color-rgb: 0,0,0;
+            --bs-link-color-rgb: 26,16,61; --bs-link-hover-color-rgb: 107,59,255;
             --bs-emphasis-color: var(--text); --bs-secondary-color: var(--muted);
         }
         body { -webkit-font-smoothing: antialiased; }
         .num { font-variant-numeric: tabular-nums; }
-        :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+        :focus-visible { outline: 2px solid var(--marca); outline-offset: 2px; }
 
         /* ===================== Shell ===================== */
-        .side { position: fixed; inset: 0 auto 0 0; width: var(--side); background: var(--ink); color: #C9CDD6;
+        .side { position: fixed; inset: 0 auto 0 0; width: var(--side); background: var(--ink); color: #D3CEE6;
                 display: flex; flex-direction: column; z-index: 1040; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
                 -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: var(--ink-line) transparent; }
         .side > * { flex-shrink: 0; } /* con muchas secciones el menú hace su propio scroll en vez de apretarse */
@@ -112,17 +114,17 @@
         .side-brand img { height: 26px; width: auto; }
         .side-cta { margin: 6px 16px 18px; }
         .side-cta a { display: flex; align-items: center; justify-content: center; gap: 8px; height: 40px; border-radius: 10px;
-                      background: var(--green); color: var(--ink); font-weight: 600; font-size: 14px; text-decoration: none; }
-        .side-cta a:hover { background: #2bffa0; }
-        .side-label { padding: 0 22px 8px; font-size: 12px; color: #727887; }
+                      background: var(--marca); color: #fff; font-weight: 600; font-size: 14px; text-decoration: none; box-shadow: 0 6px 18px rgba(107,59,255,.35); }
+        .side-cta a:hover { background: var(--marca-2); color: #fff; }
+        .side-label { padding: 0 22px 8px; font-size: 12px; color: #8E86B0; }
         .side nav a { position: relative; display: flex; align-items: center; gap: 12px; margin: 2px 12px; padding: 9px 12px;
                       border-radius: 8px; color: #C9CDD6; text-decoration: none; font-size: 14.5px; }
-        .side nav a i { font-size: 17px; width: 18px; text-align: center; color: #8D93A1; }
+        .side nav a i { font-size: 17px; width: 18px; text-align: center; color: #9C94C2; }
         .side nav a:hover { background: var(--ink-2); color: #fff; }
         .side nav a.activo { background: var(--ink-3); color: #fff; }
-        .side nav a.activo i { color: var(--green); }
-        .side nav a.activo::before { content: ''; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--green); }
-        .side nav .cuenta.nuevos { background: var(--green); color: var(--ink); font-weight: 600; }
+        .side nav a.activo i { color: var(--cian); }
+        .side nav a.activo::before { content: ''; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--cian); }
+        .side nav .cuenta.nuevos { background: var(--cian); color: var(--ink); font-weight: 600; }
         .side nav .cuenta { margin-left: auto; font-size: 12px; padding: 1px 8px; border-radius: 99px; background: var(--ink-line); color: #E4E6EB; }
         .side-foot { margin-top: auto; padding: 14px 16px; border-top: 1px solid var(--ink-line); display: flex; align-items: center; gap: 10px; position: relative; z-index: 1; }
         .side-foot .yo { min-width: 0; flex: 1; line-height: 1.25; }
@@ -131,10 +133,13 @@
         .side-foot button { border: 0; background: transparent; color: #8D93A1; width: 34px; height: 34px; border-radius: 8px; }
         .side-foot button:hover { background: var(--ink-2); color: #fff; }
         .side-eco { position: absolute; right: -46px; bottom: 40px; width: 190px; opacity: .05; pointer-events: none; }
+        .side-plataforma { display: flex; align-items: center; gap: 8px; margin: 18px 22px 10px; font-size: 12px; color: #8E86B0; text-decoration: none; }
+        .side-plataforma img { height: 18px; width: auto; }
+        .side-plataforma b { color: #E9E5F7; font-weight: 700; letter-spacing: -.01em; font-size: 13.5px; }
 
         .avatar { flex: none; width: 34px; height: 34px; border-radius: 50%; display: inline-grid; place-items: center;
                   font-size: 13px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
-        .avatar.av-yo { background: var(--green); color: var(--ink); }
+        .avatar.av-yo { background: var(--cian); color: var(--ink); }
 
         .main { margin-left: var(--side); min-height: 100vh; }
         .page { max-width: 1240px; margin: 0 auto; padding: 32px 36px 64px; }
@@ -150,14 +155,15 @@
         /* ===================== Componentes ===================== */
         .btn { font-weight: 500; border-radius: var(--radius-sm); padding: .5rem .95rem; font-size: 14.5px; }
         .btn-sm { padding: .3rem .65rem; font-size: 13.5px; }
-        .btn-primario { background: var(--ink); color: #fff; border: 1px solid var(--ink); }
-        .btn-primario:hover, .btn-primario:focus { background: #000; color: #fff; border-color: #000; }
-        .btn-acento { background: var(--green); color: var(--ink); border: 1px solid var(--green); font-weight: 600; }
-        .btn-acento:hover { background: #2bffa0; border-color: #2bffa0; color: var(--ink); }
+        .btn-primario { background: var(--marca); color: #fff; border: 1px solid var(--marca); }
+        .btn-primario:hover, .btn-primario:focus { background: var(--marca-2); color: #fff; border-color: var(--marca-2); }
+        .btn-primario:disabled, .btn-primario.disabled { background: var(--marca); border-color: var(--marca); color: #fff; }
+        .btn-acento { background: var(--cian); color: var(--ink); border: 1px solid var(--cian); font-weight: 600; }
+        .btn-acento:hover { background: #2DB8F2; border-color: #2DB8F2; color: var(--ink); }
         .btn-borde { background: var(--surface); color: var(--text); border: 1px solid var(--line-strong); }
         .btn-borde:hover { background: var(--sunken); border-color: #C3C7CF; color: var(--text); }
         .btn-fantasma { background: transparent; color: var(--text-2); border: 1px solid transparent; }
-        .btn-fantasma:hover { background: #ECEEF1; color: var(--text); }
+        .btn-fantasma:hover { background: #EDEAF5; color: var(--text); }
         .btn-icono { width: 34px; height: 34px; padding: 0; display: inline-grid; place-items: center; }
 
         .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
@@ -170,10 +176,10 @@
         .form-control, .form-select { background-color: var(--surface); border-color: var(--line-strong); border-radius: var(--radius-sm); padding: .55rem .8rem; font-size: 14.5px; }
         .form-control::placeholder { color: var(--faint); }
         .form-control[readonly] { background-color: var(--sunken); }
-        .form-control:focus, .form-select:focus { border-color: var(--ink); box-shadow: 0 0 0 3px rgba(19,22,29,.12); }
+        .form-control:focus, .form-select:focus { border-color: var(--marca); box-shadow: 0 0 0 3px rgba(107,59,255,.16); }
         .input-group-text { background: var(--sunken); border-color: var(--line-strong); color: var(--muted); }
-        .form-check-input:checked { background-color: var(--ink); border-color: var(--ink); }
-        .form-check-input:focus { box-shadow: 0 0 0 3px rgba(19,22,29,.12); border-color: var(--ink); }
+        .form-check-input:checked { background-color: var(--marca); border-color: var(--marca); }
+        .form-check-input:focus { box-shadow: 0 0 0 3px rgba(107,59,255,.16); border-color: var(--marca); }
 
         /* Tablas */
         .tabla { width: 100%; margin: 0; border-collapse: separate; border-spacing: 0; }
@@ -201,7 +207,7 @@
         /* Órdenes de compra */
         .estado-en_proceso { background: var(--amber-soft); color: var(--amber); }
         .estado-entregada, .estado-facturada { background: var(--green-soft); color: var(--green-ink); }
-        .estado-pagada { background: #13161D; color: #fff; }
+        .estado-pagada { background: var(--ink); color: #fff; }
         .estado-cancelada, .estado-cancelado { background: #EEF0F3; color: #4E5463; text-decoration: line-through; }
         .vig { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; white-space: nowrap; }
         .vig-ok { color: var(--text-2); } .vig-ok i { color: var(--green-ink); }
@@ -221,6 +227,10 @@
 
         .vacio { text-align: center; padding: 56px 24px; }
         .vacio .ico { width: 52px; height: 52px; border-radius: 14px; background: var(--sunken); border: 1px solid var(--line); display: inline-grid; place-items: center; font-size: 22px; color: var(--muted); margin-bottom: 14px; }
+        /* En las pantallas vacías aparece el personaje de la plataforma en lugar del ícono */
+        .vacio .ico { width: 96px; height: 104px; border: 0; border-radius: 0; background: url('{{ route('plataforma.img', 'mascota-chica.webp') }}') center bottom / contain no-repeat; margin-bottom: 10px; }
+        .vacio .ico > * { display: none; }
+        .vacio.py-4 .ico, .vacio.chico .ico { width: 64px; height: 70px; }
         .vacio h3 { font-size: 16px; font-weight: 600; margin: 0 0 4px; }
         .vacio p { color: var(--muted); margin: 0 0 18px; }
 
@@ -231,7 +241,7 @@
                             background: var(--ink); color: #fff; border: 0; box-shadow: 0 12px 32px rgba(16,24,40,.25); animation: toast 4s ease forwards; }
         .page > .aviso-ok i { color: var(--green); }
         @keyframes toast { 0% { opacity: 0; transform: translateY(8px); } 6%, 85% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(8px); visibility: hidden; } }
-        .cargando-barra { position: fixed; top: 0; left: 0; height: 3px; width: 0; background: var(--green); z-index: 1090; transition: width .4s ease, opacity .3s; opacity: 0; }
+        .cargando-barra { position: fixed; top: 0; left: 0; height: 3px; width: 0; background: linear-gradient(90deg, var(--marca), var(--cian)); z-index: 1090; transition: width .4s ease, opacity .3s; opacity: 0; }
         .cargando-barra.activa { opacity: 1; width: 70%; transition: width 4s cubic-bezier(.1,.6,.2,1); }
         .cargando-barra.lista { opacity: 0; width: 100%; transition: width .2s, opacity .3s .2s; }
         form.enviando button[type=submit], form.enviando button:not([type]) { pointer-events: none; opacity: .7; }
@@ -330,7 +340,7 @@
             .side { transform: translateX(-100%); transition: transform .2s ease; box-shadow: 0 0 40px rgba(0,0,0,.3); height: 100dvh; bottom: auto;
                     padding-bottom: env(safe-area-inset-bottom); }
             .side.abierta { transform: none; }
-            .velo { position: fixed; inset: 0; background: rgba(19,22,29,.45); z-index: 1035; }
+            .velo { position: fixed; inset: 0; background: rgba(26,16,61,.45); z-index: 1035; }
             .main { margin-left: 0; }
             .topbar-m { display: flex; align-items: center; justify-content: space-between; gap: 12px; position: sticky; top: 0; z-index: 1030;
                         background: var(--ink); padding: 10px 16px; }
@@ -351,8 +361,8 @@
             .tabbar a.activo i { color: var(--ink); }
             .tabbar a .burbuja { position: absolute; top: 0; left: calc(50% + 6px); min-width: 16px; height: 16px; border-radius: 99px; background: var(--ink); color: #fff; font-size: 10px; display: grid; place-items: center; padding: 0 4px; }
             .tabbar .mas { align-self: center; }
-            .tabbar .mas span { width: 50px; height: 50px; margin-top: -22px; border-radius: 16px; background: var(--ink); color: var(--green); display: grid; place-items: center;
-                                font-size: 26px; box-shadow: 0 6px 18px rgba(19,22,29,.28); border: 3px solid #fff; }
+            .tabbar .mas span { width: 50px; height: 50px; margin-top: -22px; border-radius: 16px; background: var(--marca); color: #fff; display: grid; place-items: center;
+                                font-size: 26px; box-shadow: 0 6px 18px rgba(26,16,61,.28); border: 3px solid #fff; }
         }
         @media (min-width: 992px) { .tabbar { display: none; } }
         @media (display-mode: standalone) { .solo-navegador { display: none !important; } }
@@ -365,15 +375,15 @@
         .ios-instalar .t i { color: #00F385; }
         .ios-instalar button { border: 0; background: transparent; color: #9AA0AC; font-size: 16px; padding: 2px 4px; }
         .instalar { margin: 0 12px 10px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; border: 1px dashed var(--ink-line, #2C313D); color: #C9CDD6; font-size: 13px; background: transparent; text-align: left; width: calc(100% - 24px); }
-        .instalar:hover { border-color: var(--green); color: #fff; }
-        .instalar i { color: var(--green); font-size: 18px; }
+        .instalar:hover { border-color: var(--cian); color: #fff; }
+        .instalar i { color: var(--cian); font-size: 18px; }
         @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
         /* Buscador de todo el panel */
         .side-buscar { display: flex; align-items: center; gap: 10px; width: calc(100% - 32px); margin: 0 16px 16px; height: 38px; padding: 0 12px;
                        border-radius: 10px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.06); color: #b9bdc6; font-size: 14px; text-align: left; }
         .side-buscar:hover { border-color: rgba(255,255,255,.3); color: #fff; }
         .side-buscar kbd { margin-left: auto; background: rgba(255,255,255,.1); color: #cfd2d8; font-size: 11px; padding: 2px 6px; border-radius: 5px; font-family: inherit; }
-        .bus-velo { position: fixed; inset: 0; z-index: 1090; background: rgba(19,22,29,.45); backdrop-filter: blur(2px); display: none; }
+        .bus-velo { position: fixed; inset: 0; z-index: 1090; background: rgba(26,16,61,.45); backdrop-filter: blur(2px); display: none; }
         .bus-velo.abierto { display: block; }
         .bus-caja { position: absolute; left: 50%; top: 9vh; transform: translateX(-50%); width: min(640px, calc(100vw - 32px)); max-height: 78vh;
                     background: var(--surface, #fff); border-radius: 16px; box-shadow: 0 24px 64px rgba(0,0,0,.25); display: flex; flex-direction: column; overflow: hidden; }
@@ -387,7 +397,7 @@
         .bus-item { display: flex; gap: 12px; align-items: center; padding: 9px 18px; text-decoration: none; color: inherit; }
         .bus-item.sel, .bus-item:hover { background: #F3F4F6; }
         .bus-item .ic { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: #EEF0F3; flex: none; font-size: 15px; }
-        .bus-item.sel .ic { background: #13161D; color: var(--green); }
+        .bus-item.sel .ic { background: var(--ink); color: var(--cian); }
         .bus-item .tx { min-width: 0; flex: 1; }
         .bus-item .t { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .bus-item .s { font-size: 13px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -531,6 +541,7 @@
     </nav>
 
     <x-logo-vandu archivo="icono-vandu.svg" alt="" class="side-eco" aria-hidden="true" />
+    <div class="side-plataforma" title="{{ config('vandu.plataforma.lema') }}"><img src="{{ route('plataforma.img', 'n.webp') }}" alt="">con <b>{{ config('vandu.plataforma.nombre') }}</b></div>
 
     <div x-data="instalarApp()" x-show="visible" x-cloak class="solo-navegador">
         <button type="button" class="instalar" @click="instalar()"><i class="bi bi-phone"></i> <span><b class="d-block text-white" style="font-weight:600">Instalar la app</b><span x-text="ios ? 'En Safari: Compartir → Agregar a inicio' : 'Abre el panel como app, con su ícono'"></span></span></button>

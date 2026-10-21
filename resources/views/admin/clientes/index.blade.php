@@ -41,7 +41,7 @@
     .cl-fila:hover { background: #FAFBFC; }
     .cl-fila.cabeza { padding-top: 10px; padding-bottom: 10px; font-size: 12.5px; color: var(--muted); background: var(--sunken); border-radius: 16px 16px 0 0; }
     .cl-fila.cabeza:hover { background: var(--sunken); }
-    .cl-fila.es-nuevo { box-shadow: inset 3px 0 0 var(--green); }
+    .cl-fila.es-nuevo { box-shadow: inset 3px 0 0 var(--marca); }
     .cl-quien { display: flex; align-items: center; gap: 12px; min-width: 0; text-decoration: none; color: var(--text); }
     .cl-quien::after { content: ""; position: absolute; inset: 0; }   /* toda la fila abre al cliente */
     .cl-quien .t { min-width: 0; }

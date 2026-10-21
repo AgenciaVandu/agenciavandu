@@ -38,7 +38,7 @@
     .tl > li.hecho::before { background: var(--ink); }
     .nodo { position: relative; z-index: 1; margin: 14px auto 0; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
             background: var(--surface); border: 2px solid var(--line-strong); color: var(--muted); font-size: 12px; }
-    .hecho .nodo { background: var(--ink); border-color: var(--ink); color: var(--green); }
+    .hecho .nodo { background: var(--ink); border-color: var(--ink); color: var(--cian); }
     .curso .nodo { border-color: var(--ink); color: var(--ink); box-shadow: 0 0 0 4px rgba(19,22,29,.08); }
     .curso .nodo::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--ink); }
     .pago .nodo { border-radius: 8px; }

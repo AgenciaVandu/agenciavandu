@@ -34,7 +34,7 @@
         <section class="panel">
             @if($actual)
                 <div class="paquete-actual">
-                    <div class="fx-avatar g" style="background: var(--ink); color: var(--green)"><i class="bi {{ $actual->ilimitada ? 'bi-infinity' : 'bi-ticket-perforated' }}"></i></div>
+                    <div class="fx-avatar g" style="background: var(--ink); color: var(--cian)"><i class="bi {{ $actual->ilimitada ? 'bi-infinity' : 'bi-ticket-perforated' }}"></i></div>
                     <div class="min-w-0">
                         <div class="principal">{{ $actual->nombre }} @if(! $actual->pagada)<span class="estado estado-rechazada ms-1">Pago pendiente</span>@endif</div>
                         <div class="secundario small">Vence el {{ $actual->vence_el->locale('es')->isoFormat('D [de] MMMM') }} ({{ $actual->dias_restantes <= 0 ? 'hoy' : 'en ' . $actual->dias_restantes . ' ' . ($actual->dias_restantes === 1 ? 'día' : 'días') }}) · {{ $asistencias }} {{ $asistencias === 1 ? 'clase tomada' : 'clases tomadas' }} en total</div>

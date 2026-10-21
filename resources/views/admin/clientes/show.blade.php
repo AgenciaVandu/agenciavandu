@@ -106,7 +106,7 @@
     @media (max-width: 767.98px) {
         .subnav { flex-wrap: wrap; border-bottom: 0; gap: 6px; }
         .subnav a { border: 1px solid var(--line); border-radius: 99px; padding: 6px 12px; font-size: 13.5px; margin: 0; }
-        .subnav a.activo { background: var(--ink); color: #fff; border-color: var(--ink); } .subnav a.activo i { color: var(--green); }
+        .subnav a.activo { background: var(--ink); color: #fff; border-color: var(--ink); } .subnav a.activo i { color: var(--cian); }
         .rapidas .btn { flex: 1 1 calc(50% - 8px); justify-content: center; }
         .rapidas .dropdown { flex: 1 1 calc(50% - 8px); } .rapidas .dropdown .btn { width: 100%; }
         .pend li { flex-wrap: wrap; } .pend .t { flex-basis: calc(100% - 50px); } .pend .btn { margin-left: 46px; }
@@ -140,7 +140,7 @@
     @if($conFactura->isNotEmpty() || $sinFactura->isNotEmpty())
         <div class="dropdown">
             <button type="button" class="btn btn-borde dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-receipt"></i> Factura
-                @if($facturaPorEnviar->isNotEmpty())<span class="badge rounded-pill" style="background: var(--green); color: var(--ink)">{{ $facturaPorEnviar->count() }}</span>@endif</button>
+                @if($facturaPorEnviar->isNotEmpty())<span class="badge rounded-pill" style="background: var(--marca); color: #fff">{{ $facturaPorEnviar->count() }}</span>@endif</button>
             <ul class="dropdown-menu">
                 @foreach($conFactura as $p)
                     @php $env = $p->facturas->max('enviada_at'); @endphp

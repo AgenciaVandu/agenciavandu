@@ -7,7 +7,7 @@
     <title>{{ $u && $u->pendiente ? 'Bienvenido' : 'Nueva contraseña' }} · Vandu</title>
     <link rel="icon" href="/favi.svg" type="image/svg+xml">
     <link rel="manifest" href="{{ route('app.manifiesto') }}">
-    <meta name="theme-color" content="#13161D">
+    <meta name="theme-color" content="#1A103D">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,7 +17,7 @@
     <link rel="preload" href="{{ route('vandu.fuente') }}" as="font" type="font/woff2" crossorigin>
     <style>
         @font-face { font-family: 'Geist'; src: url('{{ route('vandu.fuente') }}') format('woff2'); font-weight: 100 900; font-display: swap; }
-        :root { --ink: #13161D; --ink-2: #1d212b; --green: #00F385; --line: #E3E4E8; --muted: #5d6270; --red: #b42318; }
+        :root { --ink: #1A103D; --ink-2: #241750; --green: #6B3BFF; --line: #E3E4E8; --muted: #5d6270; --red: #b42318; }
         * { box-sizing: border-box; }
         body { margin: 0; min-height: 100vh; font-family: 'Geist', system-ui, sans-serif; color: var(--ink);
                background: #fff; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); }
@@ -42,7 +42,7 @@
         input[type=email], input[type=password], input[type=text] {
             width: 100%; height: 48px; padding: 0 14px; font: inherit; font-size: 16px; color: var(--ink);
             border: 1.5px solid var(--line); border-radius: 10px; background: #fff; transition: border-color .15s, box-shadow .15s; }
-        input:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 4px rgba(0,243,133,.35); }
+        input:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 4px rgba(107,59,255,.18); }
         .pass { position: relative; }
         .pass input { padding-right: 76px; }
         .ver { position: absolute; right: 6px; top: 6px; height: 36px; padding: 0 12px; border: 0; border-radius: 7px;
@@ -52,11 +52,11 @@
         input.mal { border-color: var(--red); }
         .recordar { display: flex; align-items: center; gap: 10px; margin: 4px 0 28px; font-size: 15px; cursor: pointer; }
         .recordar input { width: 18px; height: 18px; accent-color: var(--ink); margin: 0; }
-        button.entrar { width: 100%; height: 50px; border: 0; border-radius: 10px; background: var(--ink); color: #fff;
+        button.entrar { width: 100%; height: 50px; border: 0; border-radius: 10px; background: #6B3BFF; color: #fff;
                         font: inherit; font-size: 16px; font-weight: 600; cursor: pointer; transition: background .15s, color .15s; }
-        button.entrar:hover { background: #000; color: var(--green); }
+        button.entrar:hover { background: #5A2BEE; }
         button.entrar:disabled { opacity: .7; cursor: wait; }
-        :focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
+        :focus-visible { outline: 3px solid #6B3BFF; outline-offset: 2px; }
         .aviso { background: #e7fbf1; color: #087a46; padding: 12px 14px; border-radius: 10px; font-size: 15px; margin-bottom: 24px; }
         .volver { display: inline-block; margin-top: 28px; color: var(--muted); font-size: 14px; text-decoration: none; }
         .volver:hover { color: var(--ink); }

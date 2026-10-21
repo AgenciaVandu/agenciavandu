@@ -23,6 +23,12 @@ return [
     ],
     'cuenta_principal' => (int) env('VANDU_CUENTA_PRINCIPAL', 1),
 
+    // La plataforma (el producto que usan todos los negocios). Agencia Vandu es quien la hace y la vende
+    'plataforma' => [
+        'nombre' => env('PLATAFORMA_NOMBRE', 'Nerby'),
+        'lema'   => 'Tu negocio, todo en orden.',
+    ],
+
     'marca' => [
         'nombre' => 'Agencia Vandu',
         'ciudad' => 'Mérida, Yucatán',

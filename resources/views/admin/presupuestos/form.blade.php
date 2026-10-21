@@ -197,7 +197,7 @@
     .sig-titulo { display: flex; align-items: center; gap: 12px; }
     .sig-titulo b { display: block; font-size: 16px; }
     .sig-titulo div span { display: block; font-size: 13px; color: var(--muted); }
-    .sig-ico { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: var(--green); color: var(--ink); flex: none; }
+    .sig-ico { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: var(--marca); color: #fff; flex: none; }
     .sig-ico i { font-size: 19px; line-height: 1; }
     .sig-pasos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
     .sig-paso { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-width: 0; }
@@ -238,7 +238,7 @@
     @media (max-width: 767.98px) {
         .subnav { position: static; flex-wrap: wrap; border-bottom: 0; gap: 6px; background: none; }
         .subnav a { border: 1px solid var(--line); border-radius: 99px; padding: 6px 12px; font-size: 13.5px; margin: 0; background: var(--surface); }
-        .subnav a.activo { background: var(--ink); color: #fff; border-color: var(--ink); } .subnav a.activo i { color: var(--green); }
+        .subnav a.activo { background: var(--ink); color: #fff; border-color: var(--ink); } .subnav a.activo i { color: var(--cian); }
         .cot-acciones { width: 100%; } .cot-acciones > * { flex: 1 1 auto; } .cot-acciones .dropdown .btn { width: 100%; }
         .conceptos-head { display: none; }
         .concepto { grid-template-columns: 1fr 1fr; }

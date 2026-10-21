@@ -8,7 +8,7 @@ namespace App\Http\Controllers;
  */
 class AppController extends Controller
 {
-    public const VERSION = '2026-10-09.4'; // súbela cuando cambien los archivos que guarda el service worker
+    public const VERSION = '2026-10-21.1'; // súbela cuando cambien los archivos que guarda el service worker
 
     public function manifiesto()
     {
@@ -21,8 +21,8 @@ class AppController extends Controller
             'scope'            => '/admin',
             'display'          => 'standalone',
             'orientation'      => 'any',
-            'background_color' => '#13161D',
-            'theme_color'      => '#13161D',
+            'background_color' => '#1A103D',
+            'theme_color'      => '#1A103D',
             'lang'             => 'es-MX',
             'icons' => [
                 ['src' => route('app.icono', 'icono-192.png'), 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'],
