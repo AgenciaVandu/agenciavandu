@@ -15,6 +15,7 @@ class ResumenController extends Controller
         if (\App\Support\Cuentas::actual()?->tiene('autos')) return $this->autos();
         // Gimnasio: clases de hoy, reservaciones, asistencia y paquetes por renovar
         if (\App\Support\Cuentas::actual()?->tiene('fitness')) return view('admin.fitness.resumen', \App\Support\Fitness\Tablero::datos(auth()->user()));
+        if (\App\Support\Cuentas::actual()?->tiene('lealtad')) return view('admin.lealtad.resumen', \App\Support\Lealtad\Tablero::datos() + ['cuenta' => \App\Support\Cuentas::actual()]);
         $tz = config('vandu.zona_horaria');
         $ahora = now();
         $inicioMes = now($tz)->startOfMonth()->setTimezone(config('app.timezone'));

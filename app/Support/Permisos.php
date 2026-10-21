@@ -26,6 +26,9 @@ class Permisos
         'membresias'    => ['texto' => 'Paquetes y membresías', 'icono' => 'bi-ticket-perforated', 'ayuda' => 'Crear paquetes de clases con su precio y asignarlos a los atletas'],
         'productos'     => ['texto' => 'Productos e inventario', 'icono' => 'bi-box-seam',         'ayuda' => 'Catálogo, existencias, costos, entradas y salidas, e importar desde Excel'],
         'proveedores'   => ['texto' => 'Proveedores',           'icono' => 'bi-truck',             'ayuda' => 'Proveedores, órdenes de compra, sus facturas y archivos'],
+        'lealtad'       => ['texto' => 'Programa de lealtad',   'icono' => 'bi-gift',              'ayuda' => 'Crear campañas con su vigencia, meta de visitas y premios'],
+        'canjes'        => ['texto' => 'Escanear visitas y premios', 'icono' => 'bi-qr-code-scan', 'ayuda' => 'Escanear el QR del comensal para sumar su visita, unirlo al programa y entregarle premios'],
+        'comensales'    => ['texto' => 'Comensales',            'icono' => 'bi-person-hearts',     'ayuda' => 'Ver a los comensales del programa con su nombre, teléfono, correo y visitas'],
         'finanzas'      => ['texto' => 'Finanzas',              'icono' => 'bi-graph-up-arrow',    'ayuda' => 'Cobros, ingresos y exportar a Excel'],
         'archivos'      => ['texto' => 'Archivos',              'icono' => 'bi-folder2-open',      'ayuda' => 'Explorar todo el Dropbox de la agencia desde el panel'],
         'configuracion' => ['texto' => 'Configuración',         'icono' => 'bi-sliders',           'ayuda' => 'Conexión con Dropbox, tipos de proyecto y plantillas de correo'],
@@ -34,7 +37,8 @@ class Permisos
 
     /** Secciones que solo existen en ciertos giros: sección => módulo del giro */
     public const MODULOS = ['redes' => 'redes', 'productos' => 'stock', 'proyectos' => 'proyectos', 'unidades' => 'autos', 'cobranza' => 'autos',
-                               'clases' => 'fitness', 'asistencia' => 'fitness', 'membresias' => 'fitness', 'cotizaciones' => 'cotizaciones', 'proveedores' => 'proveedores', 'archivos' => 'archivos', 'tareas' => 'tareas'];
+                               'clases' => 'fitness', 'asistencia' => 'fitness', 'membresias' => 'fitness', 'cotizaciones' => 'cotizaciones', 'proveedores' => 'proveedores', 'archivos' => 'archivos', 'tareas' => 'tareas',
+                               'clientes' => 'clientes', 'ventas' => 'ventas', 'finanzas' => 'finanzas', 'lealtad' => 'lealtad', 'canjes' => 'lealtad', 'comensales' => 'lealtad'];
 
     /** Secciones disponibles para la cuenta activa (para armar roles) */
     public static function disponibles(): array
@@ -59,6 +63,11 @@ class Permisos
         ['admin.productos.show', ['productos', 'cotizaciones']],
         ['admin.productos.*', 'productos'],
         ['admin.ventas.*', 'ventas'],
+        // Restaurante: caja escanea; el gerente arma campañas y ve comensales
+        ['admin.lealtad.escanear*', 'canjes'],
+        ['admin.lealtad.qr', ['lealtad', 'canjes']],
+        ['admin.lealtad.*', 'lealtad'],
+        ['admin.comensales*', 'comensales'],
         ['admin.seguimiento*', 'ventas'],     // gimnasio: interesados y renovaciones
         // Lote de autos: quien vende consulta las unidades; venderlas y cobrar es de Cobranza
         ['admin.unidades.index', ['unidades', 'cobranza']],
@@ -133,7 +142,7 @@ class Permisos
     /** Primera página a la que puede entrar (para el inicio) */
     public static function inicio(User $u): string
     {
-        foreach (['resumen' => 'admin.resumen', 'clases' => 'admin.clases.index', 'asistencia' => 'admin.clases.index', 'proyectos' => 'admin.proyectos.index', 'unidades' => 'admin.unidades.index', 'cobranza' => 'admin.creditos.index', 'cotizaciones' => 'admin.presupuestos.index', 'redes' => 'admin.redes'] as $s => $r) {
+        foreach (['resumen' => 'admin.resumen', 'canjes' => 'admin.lealtad.escanear', 'clases' => 'admin.clases.index', 'asistencia' => 'admin.clases.index', 'proyectos' => 'admin.proyectos.index', 'unidades' => 'admin.unidades.index', 'cobranza' => 'admin.creditos.index', 'cotizaciones' => 'admin.presupuestos.index', 'redes' => 'admin.redes'] as $s => $r) {
             if ($u->puede($s)) return route($r);
         }
         return Cuentas::actual()?->tiene('tareas') === false ? route('admin.cuenta') : route('admin.tareas.index');

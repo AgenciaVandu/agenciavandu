@@ -77,6 +77,16 @@ return [
                 ['nombre' => 'Entrenador', 'descripcion' => 'Ve sus clases y sus asistentes, y escanea el QR o pasa lista.', 'permisos' => ['asistencia']],
             ],
         ],
+        'restaurante' => [
+            'nombre'  => 'Restaurante (programa de lealtad)',
+            'icono'   => 'bi-cup-hot',
+            // Lealtad con el QR de Nerby: campañas con premios por visitas. Sin cotizaciones, proyectos, proveedores ni tareas.
+            'modulos' => ['lealtad', 'sin_proyectos', 'sin_cotizaciones', 'sin_proveedores', 'sin_archivos', 'sin_tareas', 'sin_clientes', 'sin_ventas', 'sin_finanzas'],
+            'roles'   => [
+                ['nombre' => 'Gerente', 'descripcion' => 'Campañas y premios, comensales con sus datos y los resultados del programa.', 'permisos' => ['resumen', 'lealtad', 'comensales', 'canjes']],
+                ['nombre' => 'Caja / Mesero', 'descripcion' => 'Escanea el QR del comensal para sumar su visita y entregarle sus premios.', 'permisos' => ['canjes']],
+            ],
+        ],
         'comercio' => [
             'nombre'  => 'Venta de productos y servicios',
             'icono'   => 'bi-shop',

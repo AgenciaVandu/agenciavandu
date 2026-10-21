@@ -45,6 +45,11 @@ return [
             'driver' => 'session',
             'provider' => 'atletas',
         ],
+        // Comensales del programa de lealtad (giro Restaurante): son de la plataforma, entran a /lealtad
+        'comensal' => [
+            'driver' => 'session',
+            'provider' => 'comensales',
+        ],
     ],
 
     /*
@@ -72,6 +77,10 @@ return [
         'atletas' => [
             'driver' => 'vandu',
             'model' => App\Models\Cliente::class,
+        ],
+        'comensales' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Comensal::class,
         ],
 
         // 'users' => [

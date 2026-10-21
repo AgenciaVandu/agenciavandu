@@ -64,7 +64,7 @@ Route::get('/vandu-fuente.woff2', fn () => response()->file(resource_path('fonts
 Route::get('/plataforma/{archivo}', fn (string $archivo) => response()->file(resource_path('img/nerby/' . basename($archivo)), [
     'Content-Type'  => str_ends_with($archivo, '.svg') ? 'image/svg+xml' : 'image/webp',
     'Cache-Control' => 'public, max-age=604800',
-]))->where('archivo', '(mascota|mascota-chica|n)\.webp|logo-(blanco|palabra)\.svg')->name('plataforma.img');
+]))->where('archivo', '(mascota|mascota-chica|n)\.webp|logo-(blanco|oscuro|palabra|palabra-oscuro)\.svg')->name('plataforma.img');
 
 // Inicio de sesión del panel
 // El panel como app instalable (públicos: el navegador los pide antes de iniciar sesión)
@@ -145,6 +145,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
 
     // Gimnasio (giro Fitness): agenda, reservaciones, QR, paquetes y reportes
     require __DIR__ . '/fitness.php';
+    require __DIR__ . '/lealtad.php';
 
     // Lote de autos: sucursales, unidades, ventas y cobranza
     Route::get('sucursales', [Admin\SucursalesController::class, 'index'])->name('sucursales');
@@ -380,3 +381,4 @@ if (config('vandu.dropbox.simulado') && app()->environment('local', 'testing')) 
 
 // Portal del atleta (gimnasios)
 require __DIR__ . '/atleta.php';
+require __DIR__ . '/comensal.php';

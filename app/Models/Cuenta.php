@@ -49,7 +49,7 @@ class Cuenta extends Model
     public function tiene(string $modulo): bool
     {
         // Proyectos, Cotizaciones, Proveedores, Archivos (Dropbox) y Tareas vienen prendidos; un tipo de empresa los apaga con "sin_…"
-        if (in_array($modulo, ['proyectos', 'cotizaciones', 'proveedores', 'archivos', 'tareas'], true)) return ! $this->tiene('sin_' . $modulo);
+        if (in_array($modulo, ['proyectos', 'cotizaciones', 'proveedores', 'archivos', 'tareas', 'clientes', 'ventas', 'finanzas'], true)) return ! $this->tiene('sin_' . $modulo);
         return in_array($modulo, $this->giro_info['modulos'] ?? [], true)
             || in_array($modulo, (array) $this->ajuste('modulos', []), true);
     }

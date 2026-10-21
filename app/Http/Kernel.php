@@ -68,6 +68,7 @@ class Kernel extends HttpKernel
         'admin.vandu' => \App\Http\Middleware\AdminAuth::class,
         'cuenta.enlace' => \App\Http\Middleware\CuentaPorEnlace::class,
         'atleta' => \App\Http\Middleware\AtletaAuth::class,
+        'comensal' => \App\Http\Middleware\ComensalAuth::class,
     ];
 
     /**

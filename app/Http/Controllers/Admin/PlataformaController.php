@@ -102,6 +102,8 @@ class PlataformaController extends Controller
             if (($d['ejemplos'] ?? false) && $cuenta->tiene('autos')) \App\Support\AutosEjemplo::cargar();
             // Gimnasio: tipos de clase HYROX, paquetes, horario de la semana y atletas con reservaciones
             if (($d['ejemplos'] ?? false) && $cuenta->tiene('fitness')) \App\Support\Fitness\Ejemplo::cargar();
+            // Restaurante: campañas y comensales con visitas para ver el programa de lealtad funcionando
+            if (($d['ejemplos'] ?? false) && $cuenta->tiene('lealtad')) \App\Support\Lealtad\Ejemplo::cargar();
             return [$cuenta, $dueno, $dueno->nuevoEnlace()];
         });
     }

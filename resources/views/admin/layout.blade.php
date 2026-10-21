@@ -26,6 +26,9 @@
         $gymNav ? ['ruta' => 'admin.seguimiento', 'activo' => 'admin.seguimiento*', 'icono' => 'bi-person-plus', 'texto' => 'Seguimiento', 'seccion' => 'ventas']
                 : ['ruta' => 'admin.ventas.index',        'activo' => 'admin.ventas.*',         'icono' => 'bi-funnel',          'texto' => 'Ventas', 'cuenta' => $prospectosNav, 'nuevos' => true, 'seccion' => 'ventas'],
         ['ruta' => 'admin.clases.index',        'activo' => ['admin.clases.*', 'admin.clase-tipos*', 'admin.ejercicios*'], 'icono' => 'bi-calendar-week', 'texto' => 'Agenda', 'cuenta' => $hoyNav, 'seccion' => ['clases', 'asistencia'], 'modulo' => 'fitness'],
+        ['ruta' => 'admin.lealtad.escanear',    'activo' => 'admin.lealtad.escanear*', 'icono' => 'bi-qr-code-scan',  'texto' => 'Escanear', 'seccion' => 'canjes', 'modulo' => 'lealtad'],
+        ['ruta' => 'admin.lealtad.campanas',    'activo' => ['admin.lealtad.campanas*', 'admin.lealtad.qr'], 'icono' => 'bi-gift', 'texto' => 'Campañas', 'seccion' => 'lealtad', 'modulo' => 'lealtad'],
+        ['ruta' => 'admin.comensales',          'activo' => 'admin.comensales*',      'icono' => 'bi-person-hearts',   'texto' => 'Comensales', 'seccion' => 'comensales', 'modulo' => 'lealtad'],
         ['ruta' => 'admin.escanear',            'activo' => 'admin.escanear*',        'icono' => 'bi-qr-code-scan',    'texto' => 'Escanear', 'seccion' => 'asistencia', 'modulo' => 'fitness'],
         ['ruta' => 'admin.presupuestos.index',  'activo' => 'admin.presupuestos.*',   'icono' => 'bi-file-earmark-text','texto' => 'Cotizaciones', 'cuenta' => $vigentesNav, 'seccion' => 'cotizaciones', 'modulo' => 'cotizaciones'],
         ['ruta' => 'admin.unidades.index',      'activo' => 'admin.unidades.*',       'icono' => 'bi-car-front',       'texto' => 'Unidades', 'seccion' => ['unidades', 'cobranza'], 'modulo' => 'autos'],
@@ -45,6 +48,9 @@
         $puede('resumen') ? ['url' => route('admin.resumen'), 'activo' => 'admin.resumen', 'icono' => 'bi-grid-1x2', 'lleno' => 'bi-grid-1x2-fill', 'texto' => 'Inicio'] : null,
         $gymNav && ($puede('clases') || $puede('asistencia')) ? ['url' => route('admin.clases.index'), 'activo' => 'admin.clases.*', 'icono' => 'bi-calendar-week', 'lleno' => 'bi-calendar-week-fill', 'texto' => 'Agenda', 'cuenta' => $hoyNav] : null,
         $gymNav && $puede('asistencia') ? ['url' => route('admin.escanear'), 'activo' => 'admin.escanear*', 'icono' => 'bi-qr-code-scan', 'lleno' => 'bi-qr-code-scan', 'texto' => 'Escanear'] : null,
+        $puede('canjes') ? ['url' => route('admin.lealtad.escanear'), 'activo' => 'admin.lealtad.escanear*', 'icono' => 'bi-qr-code-scan', 'lleno' => 'bi-qr-code-scan', 'texto' => 'Escanear'] : null,
+        $puede('comensales') ? ['url' => route('admin.comensales'), 'activo' => 'admin.comensales*', 'icono' => 'bi-person-hearts', 'lleno' => 'bi-person-hearts', 'texto' => 'Comensales'] : null,
+        $puede('lealtad') ? ['url' => route('admin.lealtad.campanas'), 'activo' => 'admin.lealtad.campanas*', 'icono' => 'bi-gift', 'lleno' => 'bi-gift-fill', 'texto' => 'Campañas'] : null,
         $gymNav && $puede('clientes') ? ['url' => route('admin.clientes.index'), 'activo' => 'admin.clientes.*', 'icono' => 'bi-people', 'lleno' => 'bi-people-fill', 'texto' => 'Atletas'] : null,
         $puede('cotizaciones') ? ['url' => route('admin.presupuestos.index'), 'activo' => 'admin.presupuestos.*', 'icono' => 'bi-file-earmark-text', 'lleno' => 'bi-file-earmark-text-fill', 'texto' => 'Cotizaciones', 'cuenta' => $vigentesNav] : null,
         $puede('unidades') ? ['url' => route('admin.unidades.index'), 'activo' => 'admin.unidades.*', 'icono' => 'bi-car-front', 'lleno' => 'bi-car-front-fill', 'texto' => 'Unidades'] : null,
@@ -449,6 +455,10 @@
     @elseif($puede('tareas'))
         <div class="side-cta">
             <a href="{{ route('admin.tareas.create') }}"><i class="bi bi-plus-lg"></i> Nueva tarea</a>
+        </div>
+    @elseif($puede('canjes'))
+        <div class="side-cta">
+            <a href="{{ route('admin.lealtad.escanear') }}"><i class="bi bi-qr-code-scan"></i> Escanear QR</a>
         </div>
     @elseif($gymNav && $puede('clientes'))
         <div class="side-cta">
