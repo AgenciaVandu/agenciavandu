@@ -10,12 +10,21 @@ class AppController extends Controller
 {
     public const VERSION = '2026-10-21.1'; // súbela cuando cambien los archivos que guarda el service worker
 
+    /** El negocio de quien instala: el del dominio propio o el de su usuario (el manifiesto no pasa por el middleware del panel) */
+    private function cuenta(): ?\App\Models\Cuenta
+    {
+        return request()->attributes->get('cuenta_dominio')
+            ?? (auth()->user()?->cuenta_id ? \App\Models\Cuenta::find(auth()->user()->cuenta_id) : null);
+    }
+
     public function manifiesto()
     {
+        $c = $this->cuenta();
+        $nombre = ! $c || $c->id === \App\Support\Cuentas::principalId() ? 'Vandu' : $c->nombre;
         return response()->json([
-            'name'             => (\App\Support\Cuentas::esPrincipal() ? 'Vandu' : \App\Support\Cuentas::actual()?->nombre) . ' · Panel',
-            'short_name'       => \Illuminate\Support\Str::limit(\App\Support\Cuentas::esPrincipal() ? 'Vandu' : (string) \App\Support\Cuentas::actual()?->nombre, 12, ''),
-            'description'      => 'Cotizaciones, proyectos y entregas de Agencia Vandu',
+            'name'             => $nombre . ' · Panel',
+            'short_name'       => \Illuminate\Support\Str::limit($nombre, 12, ''),
+            'description'      => 'El panel de tu negocio en ' . config('vandu.plataforma.nombre'),
             'id'               => '/admin',
             'start_url'        => '/admin',
             'scope'            => '/admin',
@@ -25,20 +34,25 @@ class AppController extends Controller
             'theme_color'      => '#1A103D',
             'lang'             => 'es-MX',
             'icons' => [
-                ['src' => route('app.icono', 'icono-192.png'), 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'],
-                ['src' => route('app.icono', 'icono-512.png'), 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any'],
-                ['src' => route('app.icono', 'icono-maskable-512.png'), 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'maskable'],
+                ['src' => \App\Support\IconoApp::url($c, 'icono-192.png'), 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'],
+                ['src' => \App\Support\IconoApp::url($c, 'icono-512.png'), 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any'],
+                ['src' => \App\Support\IconoApp::url($c, 'icono-maskable-512.png'), 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'maskable'],
             ],
             'shortcuts' => [
-                ['name' => 'Nueva cotización', 'url' => '/admin/presupuestos/create', 'icons' => [['src' => route('app.icono', 'icono-192.png'), 'sizes' => '192x192']]],
+                ['name' => 'Nueva cotización', 'url' => '/admin/presupuestos/create', 'icons' => [['src' => \App\Support\IconoApp::url($c, 'icono-192.png'), 'sizes' => '192x192']]],
                 ['name' => 'Proyectos', 'url' => '/admin/proyectos'],
                 ['name' => 'Finanzas', 'url' => '/admin/finanzas'],
             ],
-        ], 200, ['Content-Type' => 'application/manifest+json', 'Cache-Control' => 'public, max-age=3600']);
+        ], 200, ['Content-Type' => 'application/manifest+json', 'Cache-Control' => 'private, max-age=3600']);   // cambia por negocio
     }
 
     public function icono(string $archivo)
     {
+        // ?c= el negocio: su propio ícono si lo subió en "Mi negocio"
+        $c = request()->integer('c') ? \App\Models\Cuenta::find(request()->integer('c')) : null;
+        if ($c && ($propia = \App\Support\IconoApp::ruta($c, basename($archivo)))) {
+            return response()->file($propia, ['Content-Type' => 'image/png', 'Cache-Control' => 'public, max-age=31536000, immutable']);
+        }
         $ruta = resource_path('img/app/' . basename($archivo));
         abort_unless(is_file($ruta), 404);
         return response()->file($ruta, ['Content-Type' => 'image/png', 'Cache-Control' => 'public, max-age=604800']);

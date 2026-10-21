@@ -14,6 +14,8 @@
     .ng-campos .ancho { grid-column: 1 / -1; }
     .ng-logo { background: var(--ink); border-radius: 12px; padding: 18px; display: flex; align-items: center; justify-content: center; min-height: 92px; color: #fff; font-weight: 650; font-size: 20px; }
     .ng-logo img { max-height: 56px; max-width: 220px; object-fit: contain; }
+    .ng-icono { width: 76px; height: 76px; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); flex: none; box-shadow: 0 4px 12px rgba(26,16,61,.12); }
+    .ng-icono img { width: 100%; height: 100%; display: block; }
     .ng-previa { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; font-size: 13px; }
     .ng-previa .top { background: var(--ink); color: #fff; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
     .ng-previa .top img { max-height: 30px; max-width: 140px; }
@@ -59,6 +61,26 @@
                         @if($logoClaro)<label class="form-check mt-2"><input type="checkbox" class="form-check-input" name="quitar_logo_claro" value="1"> <span class="form-check-label">Quitar este logo</span></label>@endif
                     </div>
                 @endunless
+                {{-- Ícono de la app --}}
+                <div class="ancho" x-data="{ fondo: '{{ old('icono_fondo', $c->ajuste('app.fondo') ?? '#FFFFFF') }}', vista: null }">
+                    <label class="form-label" for="ng-icono">Ícono de la app <span class="secundario fw-normal">(al instalar el panel{{ $c->tiene('fitness') ? ' y el portal de tus atletas' : '' }})</span></label>
+                    <div class="d-flex flex-wrap align-items-start gap-3">
+                        <div class="ng-icono" :style="'background:' + fondo">
+                            <img :src="vista || {{ Js::from(\App\Support\IconoApp::url($c, 'icono-192.png')) }}" alt="Ícono actual" :style="vista ? 'object-fit: contain' : ''">
+                        </div>
+                        <div class="flex-grow-1" style="min-width: 220px">
+                            <input id="ng-icono" type="file" name="icono" class="form-control" accept=".png,.jpg,.jpeg,.webp"
+                                   @change="const f = $event.target.files[0]; vista = f ? URL.createObjectURL(f) : null">
+                            <div class="d-flex align-items-center gap-2 mt-2">
+                                <label class="small secundario m-0" for="ng-icono-fondo">Color de fondo</label>
+                                <input id="ng-icono-fondo" type="color" name="icono_fondo" x-model="fondo" class="form-control form-control-color" style="width: 44px; height: 32px; padding: 2px">
+                            </div>
+                            <div class="form-text">Imagen cuadrada de al menos 512 × 512 px (PNG o JPG), por ejemplo tu isotipo. Si no es cuadrada se centra sobre el color de fondo. Las apps ya instaladas lo actualizan solas en unos días; en iPhone hay que volver a agregarla a inicio.</div>
+                            @error('icono')<div class="text-danger small">{{ $message }}</div>@enderror
+                            @if(\App\Support\IconoApp::tiene($c))<label class="form-check mt-2"><input type="checkbox" class="form-check-input" name="quitar_icono" value="1"> <span class="form-check-label">Quitar y usar el de {{ config('vandu.plataforma.nombre') }}</span></label>@endif
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 

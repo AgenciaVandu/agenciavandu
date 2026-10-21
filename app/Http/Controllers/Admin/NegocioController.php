@@ -44,7 +44,11 @@ class NegocioController extends Controller
             'dropbox_carpeta'     => ['nullable', 'string', 'max:60', 'regex:/^[^\\\\\/<>:"|?*]+$/'],
             'logo'                => 'nullable|file|mimes:png,jpg,jpeg,svg|max:2048',
             'logo_claro'          => 'nullable|file|mimes:png,jpg,jpeg,svg|max:2048',
+            'icono'               => 'nullable|image|mimes:png,jpg,jpeg,webp|max:4096|dimensions:min_width=192,min_height=192',
+            'icono_fondo'         => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ], [
+            'icono.mimes'           => 'El ícono debe ser PNG o JPG.',
+            'icono.dimensions'      => 'El ícono debe medir al menos 192 × 192 px (mejor 512 × 512).',
             'folio_prefijo.regex'   => 'El prefijo del folio solo lleva letras, números y guiones.',
             'dropbox_carpeta.regex' => 'El nombre de la carpeta no puede llevar / ni caracteres especiales.',
             'logo.mimes'            => 'El logo debe ser PNG, JPG o SVG.',
@@ -76,6 +80,19 @@ class NegocioController extends Controller
                 $f = $request->file($campo);
                 $ext = strtolower($f->getClientOriginalExtension()) === 'svg' ? 'svg' : ($f->extension() === 'png' ? 'png' : 'jpg');
                 $a['marca'][$clave] = $f->storeAs("cuentas/{$c->id}/logo", $archivo . '-' . \Illuminate\Support\Str::lower(\Illuminate\Support\Str::random(5)) . '.' . $ext, 'local');
+            }
+        }
+
+        // Ícono de la app (panel instalado y portal del atleta): se generan todos los tamaños
+        $fondo = strtoupper($d['icono_fondo'] ?? ($a['app']['fondo'] ?? '#FFFFFF'));
+        if ($request->boolean('quitar_icono')) {
+            \App\Support\IconoApp::quitar($c);
+            unset($a['app']);
+        } elseif ($request->hasFile('icono')) {
+            try {
+                $a['app'] = ['icono' => \App\Support\IconoApp::generar($c, $request->file('icono'), $fondo), 'fondo' => $fondo];
+            } catch (\RuntimeException $e) {
+                return back()->withInput()->withErrors(['icono' => $e->getMessage()]);
             }
         }
 

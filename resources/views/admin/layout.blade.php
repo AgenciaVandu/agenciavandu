@@ -71,8 +71,8 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="{{ \App\Support\Cuentas::esPrincipal() ? 'Vandu' : \App\Support\Cuentas::actual()?->nombre }}">
-    <link rel="apple-touch-icon" href="{{ route('app.icono', 'apple-touch-icon.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ route('app.icono', 'favicon-32.png') }}">
+    <link rel="apple-touch-icon" href="{{ \App\Support\IconoApp::url(\App\Support\Cuentas::actual(), 'apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ \App\Support\IconoApp::url(\App\Support\Cuentas::actual(), 'favicon-32.png') }}">
     <link rel="preload" href="{{ route('vandu.fuente') }}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -419,9 +419,9 @@
 {{-- iPhone: cómo instalar la app (Apple no deja mostrar un botón de "Instalar") --}}
 <div class="ios-instalar" x-data="avisoIos()" x-show="visible" x-cloak role="note">
     <div class="ios-in">
-        <img src="{{ route('app.icono', 'icono-192.png') }}" alt="" width="40" height="40">
+        <img src="{{ \App\Support\IconoApp::url($cuentaNav, 'icono-192.png') }}" alt="" width="40" height="40">
         <div class="t">
-            <b>Instala Vandu en tu iPhone</b>
+            <b>Instala {{ \App\Support\Cuentas::esPrincipal() ? 'Vandu' : $cuentaNav?->nombre }} en tu iPhone</b>
             <template x-if="paso === 'safari'"><span>Toca <i class="bi bi-box-arrow-up"></i> <b>Compartir</b> abajo y luego <b>«Agregar a inicio»</b>.</span></template>
             <template x-if="paso === 'chrome'"><span>Toca <i class="bi bi-box-arrow-up"></i> <b>Compartir</b> en la barra de arriba y luego <b>«Agregar a pantalla de inicio»</b>.</span></template>
             <template x-if="paso === 'abrir'"><span>Esta ventana no permite instalar. Abre <b>agenciavandu.com/admin</b> en <b>Safari</b> y ahí sigue los pasos.</span></template>

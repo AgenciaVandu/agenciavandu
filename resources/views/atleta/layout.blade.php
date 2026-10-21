@@ -22,7 +22,8 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="{{ \Illuminate\Support\Str::limit((string) $cuenta?->nombre, 14, '') }}">
-    <link rel="apple-touch-icon" href="{{ route('app.icono', 'apple-touch-icon.png') }}">
+    <link rel="apple-touch-icon" href="{{ \App\Support\IconoApp::url($cuenta, 'apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ \App\Support\IconoApp::url($cuenta, 'favicon-32.png') }}">
     <link rel="preload" href="{{ route('vandu.fuente') }}" as="font" type="font/woff2" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;1,600;1,700&display=swap">
