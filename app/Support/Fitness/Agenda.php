@@ -72,4 +72,38 @@ class Agenda
             $c->update(['coach_id' => $s->coach_id, 'sucursal_id' => $s->sucursal_id, 'cupo' => max($s->cupo, $c->ocupados)]);
         });
     }
+
+    /**
+     * Cambió el día, la hora o la duración del horario fijo: sus próximas clases se acomodan al nuevo horario.
+     * Las que no tienen a nadie se quitan y se vuelven a generar; las que ya tienen inscritos se mueven
+     * (si su día sigue en el horario) y se les avisa. Devuelve cuántas movió y cuántas dejó como estaban.
+     * @return array{movidas:int, quedan:int}
+     */
+    public static function reprogramar(ClaseSerie $s): array
+    {
+        $tz = config('vandu.zona_horaria');
+        [$h, $m] = array_map('intval', explode(':', $s->hora) + [0, 0]);
+        $dias = array_map('intval', $s->dias ?? []);
+        $movidas = 0; $quedan = 0;
+        $futuras = $s->clases()->where('inicia_at', '>', now())->where('estado', 'programada')->withCount('ocupadas')->get();
+        foreach ($futuras as $c) {
+            $dia = $c->inicio;
+            $nuevo = Carbon::create($dia->year, $dia->month, $dia->day, $h, $m, 0, $tz);
+            $igual = $nuevo->equalTo($c->inicio) && $c->termina_at->diffInMinutes($c->inicia_at, true) === (int) $s->duracion;
+            if ($igual && in_array($dia->dayOfWeekIso, $dias, true)) continue;
+            if ($c->ocupadas_count === 0) { $c->delete(); continue; }
+            if (! in_array($dia->dayOfWeekIso, $dias, true) || $nuevo->isPast()) { $c->update(['serie_id' => null]); $quedan++; continue; }
+            $antes = $c->horario;
+            $c->update(['inicia_at' => $nuevo->copy()->utc(), 'termina_at' => $nuevo->copy()->addMinutes($s->duracion)->utc()]);
+            $movidas++;
+            if (! $nuevo->equalTo($dia)) {
+                foreach ($c->ocupadas()->with('cliente')->get() as $r) {
+                    Avisos::atleta($r->cliente, 'Cambió el horario de tu clase de ' . $c->nombre,
+                        $c->fecha_texto . ': ahora es ' . $c->fresh()->horario . ' (antes ' . $antes . ').', 'clase-' . $c->id);
+                }
+            }
+        }
+        self::generar($s);
+        return ['movidas' => $movidas, 'quedan' => $quedan];
+    }
 }

@@ -23,7 +23,7 @@ class SeriesController extends FitnessController
         ]);
     }
 
-    /** Cambiar entrenador, sucursal o cupo: aplica a sus clases que vienen */
+    /** Cambiar días, hora, duración, entrenador, sucursal o cupo: aplica a sus clases que vienen */
     public function update(Request $request, ClaseSerie $serie)
     {
         $cuenta = Cuentas::id();
@@ -32,12 +32,21 @@ class SeriesController extends FitnessController
             'sucursal_id' => ['nullable', Rule::exists('sucursales', 'id')->where('cuenta_id', $cuenta)],
             'cupo'        => 'required|integer|min:1|max:500',
             'hasta'       => 'nullable|date',
-        ]);
+            'dias'        => 'sometimes|array|min:1',
+            'dias.*'      => 'integer|between:1,7',
+            'hora'        => ['sometimes', 'regex:/^([01]\d|2[0-3]):[0-5]\d$/'],
+            'duracion'    => 'sometimes|integer|min:10|max:480',
+        ], ['dias.min' => 'Deja al menos un día.', 'hora.regex' => 'Escribe la hora como 07:00.']);
+        if (isset($d['dias'])) $d['dias'] = array_values(array_unique(array_map('intval', $d['dias'])));
         $serie->update($d);
+        $cambio = $serie->wasChanged(['dias', 'hora', 'duracion']) ? Agenda::reprogramar($serie) : ['movidas' => 0, 'quedan' => 0];
         Agenda::actualizarFuturas($serie);
         if ($serie->hasta) $serie->clases()->where('inicia_at', '>', $serie->hasta->copy()->endOfDay())->doesntHave('ocupadas')->delete();
         Agenda::generar($serie);
-        return back()->with('ok', 'Horario guardado; se aplicó a sus próximas clases.');
+        $msg = 'Horario fijo guardado; se aplicó a sus próximas clases.';
+        if ($cambio['movidas']) $msg .= " {$cambio['movidas']} " . ($cambio['movidas'] === 1 ? 'clase con inscritos se movió' : 'clases con inscritos se movieron') . ' y se les avisó.';
+        if ($cambio['quedan']) $msg .= " {$cambio['quedan']} " . ($cambio['quedan'] === 1 ? 'clase con inscritos se quedó' : 'clases con inscritos se quedaron') . ' en su día; cancélalas si no se van a dar.';
+        return back()->with('ok', $msg);
     }
 
     public function destroy(ClaseSerie $serie)

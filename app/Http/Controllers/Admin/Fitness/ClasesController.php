@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Support\Cuentas;
 use App\Support\Fitness\Agenda;
 use App\Support\Fitness\Avisos;
+use App\Support\Fitness\Calendario;
 use App\Support\Fitness\Reservas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -23,8 +24,13 @@ class ClasesController extends FitnessController
     public function index(Request $request)
     {
         $tz = config('vandu.zona_horaria');
-        $semana = max(-52, min(52, (int) $request->query('semana', 0)));
-        $lunes = now($tz)->startOfWeek(Carbon::MONDAY)->addWeeks($semana);
+        $hoy = now($tz);
+        // ?fecha=2026-10-21 lleva a la semana de ese día (así regresa después de programar)
+        $fecha = $request->query('fecha') && strtotime((string) $request->query('fecha')) ? Carbon::parse($request->query('fecha'), $tz) : null;
+        $semana = $fecha
+            ? (int) round($hoy->copy()->startOfWeek(Carbon::MONDAY)->diffInDays($fecha->copy()->startOfWeek(Carbon::MONDAY), false) / 7)
+            : max(-52, min(52, (int) $request->query('semana', 0)));
+        $lunes = $hoy->copy()->startOfWeek(Carbon::MONDAY)->addWeeks($semana);
         $domingo = $lunes->copy()->addDays(6)->endOfDay();
         $u = $request->user();
         $soloMias = ! $u->puede('clases');   // el entrenador ve sus clases
@@ -39,18 +45,49 @@ class ClasesController extends FitnessController
             ->when($coach, fn ($q) => $q->where('coach_id', $coach))
             ->orderBy('inicia_at')->get();
 
+        [$horaIni, $horaFin] = Calendario::horas($clases);
         $dias = collect(range(0, 6))->map(fn ($i) => $lunes->copy()->addDays($i))
-            ->mapWithKeys(fn ($d) => [$d->toDateString() => ['fecha' => $d, 'clases' => $clases->filter(fn ($c) => $c->inicio->toDateString() === $d->toDateString())->values()]]);
+            ->mapWithKeys(function ($d) use ($clases, $horaIni) {
+                $delDia = $clases->filter(fn ($c) => $c->inicio->toDateString() === $d->toDateString())->values();
+                return [$d->toDateString() => ['fecha' => $d, 'clases' => $delDia, 'bloques' => Calendario::acomodar($delDia, $horaIni)]];
+            });
+
+        // La clase abierta en el panel lateral (?clase=ID)
+        $abierta = null;
+        if ($id = (int) $request->query('clase')) {
+            $c = Clase::find($id);
+            if ($c && ($u->puede('clases') || $c->coach_id === $u->id)) $abierta = $this->datosClase($c, $u);
+        }
 
         return view('admin.fitness.agenda', [
             'dias' => $dias, 'semana' => $semana, 'lunes' => $lunes, 'domingo' => $domingo, 'soloMias' => $soloMias,
             'sucursales' => Sucursal::orderBy('nombre')->get(), 'coaches' => $this->coaches(), 'sucursal' => $sucursal, 'coach' => $coach,
+            'horaIni' => $horaIni, 'horaFin' => $horaFin, 'abierta' => $abierta,
+            'tipos' => $u->puede('clases') ? ClaseTipo::activos()->ordenados()->get(['id', 'nombre', 'duracion', 'cupo', 'color']) : collect(),
             'resumen' => [
                 'clases' => $clases->where('estado', 'programada')->count(),
                 'lugares' => $clases->where('estado', 'programada')->sum('cupo'),
                 'ocupados' => $clases->where('estado', 'programada')->sum('ocupadas_count'),
             ],
         ]);
+    }
+
+    /** Todo lo de una clase: su lista, a quién se puede inscribir y su horario fijo (página y panel de la agenda) */
+    private function datosClase(Clase $clase, User $u): array
+    {
+        $clase->load(['tipo', 'coach', 'sucursal', 'serie.tipo', 'reservaciones' => fn ($q) => $q->with(['cliente', 'membresia', 'registro'])->orderByRaw("estado = 'cancelada'")->orderBy('id')]);
+        $inscritos = $clase->reservaciones->pluck('cliente_id');
+        $atletas = $u->puede('clases') || $u->puede('membresias') || $u->puede('asistencia')
+            ? Cliente::where(fn ($w) => $w->whereNull('activo')->orWhere('activo', true))->whereNotIn('id', $inscritos)
+                ->with(['membresias' => fn ($m) => $m->reorder()->vigentes($clase->inicio->toDateString())])
+                ->whereHas('membresias', fn ($q) => $q->vigentes($clase->inicio->toDateString()))->orderBy('nombre')->get(['id', 'nombre', 'telefono'])
+                ->filter(fn ($a) => $a->membresias->contains(fn ($m) => $m->con_creditos && $m->permiteTipo($clase->clase_tipo_id)))->values()   // con clases disponibles para este tipo
+            : collect();
+        return [
+            'c' => $clase,
+            'atletas' => $atletas,
+            'puedeEditar' => $u->puede('clases'),
+        ];
     }
 
     public function create(Request $request)
@@ -76,6 +113,8 @@ class ClasesController extends FitnessController
             ]);
             $n = Agenda::generar($s);
             if (! empty($d['entrenamiento'])) $s->clases()->orderBy('inicia_at')->first()?->update(['entrenamiento' => $d['entrenamiento']]);
+            $msg = "Horario fijo creado: {$s->tipo->nombre}, {$s->dias_texto} a las {$s->hora}. Se programaron $n clases de las próximas " . Agenda::SEMANAS . ' semanas.';
+            if ($request->input('volver') === 'agenda') return redirect()->route('admin.clases.index', ['fecha' => $d['fecha']])->with('ok', $msg);
             return redirect()->route('admin.clases.series')->with('ok', "Horario fijo creado: {$s->tipo->nombre}, {$s->dias_texto} a las {$s->hora}. Se programaron $n clases de las próximas " . Agenda::SEMANAS . ' semanas.');
         }
         $inicio = Carbon::parse($d['fecha'] . ' ' . $d['hora'], $tz);
@@ -84,6 +123,7 @@ class ClasesController extends FitnessController
             'inicia_at' => $inicio->copy()->utc(), 'termina_at' => $inicio->copy()->addMinutes($d['duracion'])->utc(), 'cupo' => $d['cupo'],
             'entrenamiento' => $d['entrenamiento'] ?: null, 'notas' => $d['notas'] ?? null,
         ]);
+        if ($request->input('volver') === 'agenda') return redirect()->route('admin.clases.index', ['fecha' => $d['fecha'], 'clase' => $c->id])->with('ok', 'Clase programada.');
         return redirect()->route('admin.clases.show', $c)->with('ok', 'Clase programada.');
     }
 
@@ -91,15 +131,7 @@ class ClasesController extends FitnessController
     {
         $u = $request->user();
         abort_if(! $u->puede('clases') && $clase->coach_id !== $u->id, 403, 'Esta clase no es tuya.');
-        $clase->load(['tipo', 'coach', 'sucursal', 'serie', 'reservaciones' => fn ($q) => $q->with(['cliente', 'membresia', 'registro'])->orderByRaw("estado = 'cancelada'")->orderBy('id')]);
-        $inscritos = $clase->reservaciones->pluck('cliente_id');
-        return view('admin.fitness.clase', [
-            'c' => $clase,
-            'atletas' => $u->puede('clases') || $u->puede('membresias') || $u->puede('asistencia')
-                ? Cliente::where('activo', '!=', false)->whereNotIn('id', $inscritos)->whereHas('membresias', fn ($q) => $q->vigentes($clase->inicio->toDateString()))->orderBy('nombre')->get(['id', 'nombre'])
-                : collect(),
-            'puedeEditar' => $u->puede('clases'),
-        ]);
+        return view('admin.fitness.clase', $this->datosClase($clase, $u));
     }
 
     public function edit(Clase $clase)
@@ -116,7 +148,7 @@ class ClasesController extends FitnessController
             'inicia_at' => $inicio->copy()->utc(), 'termina_at' => $inicio->copy()->addMinutes($d['duracion'])->utc(), 'cupo' => $d['cupo'],
             'entrenamiento' => $d['entrenamiento'] ?: null, 'notas' => $d['notas'] ?? null,
         ]);
-        return redirect()->route('admin.clases.show', $clase)->with('ok', 'Clase guardada.');
+        return redirect()->route('admin.clases.index', ['fecha' => $inicio->toDateString(), 'clase' => $clase->id])->with('ok', 'Clase guardada.');
     }
 
     /** El gimnasio cancela la clase: se devuelve el crédito a todos y se les avisa */
@@ -129,14 +161,15 @@ class ClasesController extends FitnessController
             Avisos::atleta($r->cliente, 'Se canceló tu clase de ' . $clase->nombre,
                 $clase->fecha_texto . ', ' . $clase->horario . '. ' . trim($d['motivo']) . ' Te regresamos tu clase.', 'clase-' . $clase->id);
         }
-        return redirect()->route('admin.clases.show', $clase)->with('ok', 'Clase cancelada.' . ($afectados->count() ? " A {$afectados->count()} " . ($afectados->count() === 1 ? 'atleta se le regresó su clase' : 'atletas se les regresó su clase') . ' y se les avisó.' : ''));
+        return back()->with('ok', 'Clase cancelada.' . ($afectados->count() ? " A {$afectados->count()} " . ($afectados->count() === 1 ? 'atleta se le regresó su clase' : 'atletas se les regresó su clase') . ' y se les avisó.' : ''));
     }
 
     public function destroy(Clase $clase)
     {
         if ($clase->reservaciones()->exists()) return back()->with('error', 'Esta clase ya tiene reservaciones. Mejor cancélala para devolverles su clase.');
+        $fecha = $clase->inicio->toDateString();
         $clase->delete();
-        return redirect()->route('admin.clases.index')->with('ok', 'Clase eliminada.');
+        return redirect()->route('admin.clases.index', ['fecha' => $fecha])->with('ok', 'Clase eliminada.');
     }
 
     private function datosForm(Clase $c): array
