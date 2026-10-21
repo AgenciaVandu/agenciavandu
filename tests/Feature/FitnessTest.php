@@ -328,6 +328,17 @@ class FitnessTest extends TestCase
         $this->post("/atleta/reservaciones/{$r->id}/cancelar")->assertSessionHas('ok', fn ($m) => str_contains($m, 'regresamos'));
         $this->assertSame(0, $a->fresh()->membresia_actual->usados);
 
+        // Membresía ilimitada: cancelar a tiempo no "descuenta" nada y el mensaje lo dice
+        $ili = $this->atleta('Beto Ilimitado', $this->paquete(['nombre' => 'Ilimitada', 'creditos' => null, 'precio' => 1600]));
+        $ili->forceFill(['password' => 'fuerza2026'])->save();
+        $this->post('/atleta/salir');
+        $this->actingAs($ili, 'atleta');
+        $this->post("/atleta/clases/{$clase->id}/reservar")->assertSessionHas('ok');
+        $ri = Reservacion::where('cliente_id', $ili->id)->firstOrFail();
+        $this->get("/atleta/clases/{$clase->id}")->assertOk()->assertSee('membresía ilimitada');
+        $this->post("/atleta/reservaciones/{$ri->id}/cancelar")->assertSessionHas('ok', fn ($m) => str_contains($m, 'no se descuenta nada'));
+        $this->actingAs($a, 'atleta');
+
         // Salir y volver a entrar con su correo
         $this->post('/atleta/salir')->assertRedirect(route('atleta.entrar', 'axion-fit'));
         $this->get('/atleta/inicio')->assertRedirect();

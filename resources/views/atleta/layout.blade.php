@@ -17,18 +17,21 @@
     <meta name="robots" content="noindex, nofollow">
     <title>@yield('titulo', 'Mis clases') · {{ $cuenta?->nombre }}</title>
     <link rel="manifest" href="{{ route('atleta.manifiesto', ['n' => $cuenta?->slug]) }}">
-    <meta name="theme-color" content="#13161D">
+    <meta name="theme-color" content="#0D1124">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="{{ \Illuminate\Support\Str::limit((string) $cuenta?->nombre, 14, '') }}">
     <link rel="apple-touch-icon" href="{{ route('app.icono', 'apple-touch-icon.png') }}">
     <link rel="preload" href="{{ route('vandu.fuente') }}" as="font" type="font/woff2" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;1,600;1,700&display=swap">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     @include('atleta._estilos')
     @stack('head')
 </head>
-<body>
+<body class="{{ $a ? 'con-tabs' : 'sin-tabs' }}">
+@if($a)
 <header class="cab">
     <div class="in">
         @if($logo)<img src="{{ $logo }}" alt="{{ $cuenta?->nombre }}" class="logo">@else<b class="marca">{{ $cuenta?->nombre }}</b>@endif
@@ -36,6 +39,7 @@
             @if($a->foto)<img src="{{ route('atleta.foto', ['v' => substr(md5((string) $a->foto), 0, 8)]) }}" alt="">@else<span>{{ $a->iniciales }}</span>@endif</a>@endif
     </div>
 </header>
+@endif
 <main class="doc">
     @if(session('ok'))<div class="aviso ok" role="status"><i class="bi bi-check-circle-fill"></i> {{ session('ok') }}</div>@endif
     @if($errors->any())<div class="aviso error" role="alert"><i class="bi bi-exclamation-triangle-fill"></i> {{ $errors->first() }}</div>@endif

@@ -1,7 +1,9 @@
 @extends('atleta.layout')
 @section('titulo', 'Olvidé mi contraseña')
 @section('contenido')
-<div style="max-width: 420px; margin: 18px auto 0">
+<div class="entrada">
+    <div class="marca-g">@if($cuenta?->logo(true))<img src="{{ $cuenta->logo(true) }}" alt="{{ $cuenta->nombre }}">@else<b>{{ $cuenta?->nombre }}</b>@endif</div>
+
     <h1>¿Olvidaste tu contraseña?</h1>
     <p class="sub">Escribe tu correo y te mandamos un enlace para crear una nueva.</p>
     <form method="post" class="tarjeta" style="margin-top: 18px">

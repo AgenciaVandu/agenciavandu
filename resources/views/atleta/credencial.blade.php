@@ -1,14 +1,19 @@
 @extends('atleta.layout')
 @section('titulo', 'Mi credencial')
 @section('contenido')
-<h1 style="text-align: center">Tu credencial</h1>
-<p class="sub" style="text-align: center">Muéstrala en la entrada para registrar tu asistencia.</p>
-<div class="qr-grande" style="margin-top: 16px"><div id="qr" data-qr="{{ $a->qr }}" aria-label="Tu código QR"></div></div>
-<p style="text-align: center; font-weight: 650; font-size: 19px; margin: 14px 0 2px">{{ $a->nombre }}</p>
-<p class="sub" style="text-align: center; font-size: 14px">Puedes guardarla como captura de pantalla. Es personal: no la compartas.</p>
-<div style="margin-top: 16px">@include('atleta._creditos')</div>
+<h1 style="text-align: center">Tu pase de entrada</h1>
+<p class="sub" style="text-align: center">Muéstralo en recepción para registrar tu asistencia.</p>
+<div class="credencial">
+    <div id="qr" data-qr="{{ $a->qr }}" role="img" aria-label="Tu código QR de entrada"></div>
+    <div class="quien">
+        <div><b>{{ $a->nombre }}</b><br><span>{{ \App\Support\Cuentas::actual()?->nombre }}</span></div>
+        @if($membresia)<div style="text-align: right"><span class="cifra">{{ $membresia->ilimitada ? '∞' : $membresia->restantes }}</span><br><span>{{ $membresia->ilimitada ? 'ilimitada' : ($membresia->restantes === 1 ? 'clase' : 'clases') }}</span></div>@endif
+    </div>
+</div>
+<p class="sub" style="text-align: center; font-size: 14px; margin-top: 18px">Súbele el brillo a tu pantalla. Es personal: no la compartas.</p>
+@unless($membresia)<div style="margin-top: 14px">@include('atleta._creditos')</div>@endunless
 @endsection
 @push('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script>new QRCode(document.getElementById('qr'), { text: document.getElementById('qr').dataset.qr, width: 600, height: 600, correctLevel: QRCode.CorrectLevel.M });</script>
+<script>new QRCode(document.getElementById('qr'), { text: document.getElementById('qr').dataset.qr, width: 600, height: 600, colorDark: '#0D1124', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });</script>
 @endpush

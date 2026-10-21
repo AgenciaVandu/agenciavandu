@@ -4,16 +4,16 @@
 <h1>Tu perfil</h1>
 
 <div class="tarjeta" style="margin-top: 14px" id="avisos-push" data-clave="{{ $clavePush }}" data-url="{{ route('atleta.avisos') }}">
-    <b><i class="bi bi-bell"></i> Avisos en este celular</b>
+    <b><i class="bi bi-bell-fill" style="color: var(--senal-2)"></i> Avisos en este celular</b>
     <p class="sub" style="font-size: 14px; margin: 4px 0 10px">Te avisamos antes de tu clase y cuando tu paquete esté por terminarse.</p>
     <button type="button" class="btn full" id="btn-avisos">Activar avisos</button>
     <p class="sub" id="msg-avisos" style="font-size: 13.5px; margin: 8px 0 0"></p>
 </div>
 
-<form method="post" action="{{ route('atleta.perfil.guardar') }}" enctype="multipart/form-data" class="tarjeta">
+<form method="post" action="{{ route('atleta.perfil.guardar') }}" enctype="multipart/form-data" class="tarjeta" style="margin-top: 12px">
     @csrf
     <div style="display: flex; align-items: center; gap: 14px">
-        <div style="width: 64px; height: 64px; border-radius: 50%; overflow: hidden; background: var(--mist); display: grid; place-items: center; font-weight: 650">
+        <div style="width: 64px; height: 64px; border-radius: 50%; overflow: hidden; background: var(--placa-2); border: 1px solid var(--riel); display: grid; place-items: center; font-weight: 650">
             @if($a->foto)<img src="{{ route('atleta.foto', ['v' => substr(md5((string) $a->foto), 0, 8)]) }}" alt="" style="width: 100%; height: 100%; object-fit: cover">@else{{ $a->iniciales }}@endif</div>
         <label class="btn sec chico" style="margin: 0">Cambiar foto<input type="file" name="foto" accept="image/*" hidden onchange="this.form.submit()"></label>
     </div>
@@ -23,7 +23,7 @@
     <input class="campo" name="telefono" id="telefono" value="{{ old('telefono', $a->telefono) }}" maxlength="30" inputmode="tel">
     <label class="campo">Correo (tu usuario)</label>
     <input class="campo" value="{{ $a->email }}" disabled>
-    <details style="margin-top: 14px"><summary style="cursor: pointer; font-weight: 500">Cambiar contraseña</summary>
+    <details style="margin-top: 16px"><summary style="cursor: pointer; font-weight: 500; color: var(--senal-2)">Cambiar contraseña</summary>
         <label class="campo" for="actual">Contraseña actual</label><input class="campo" type="password" name="actual" id="actual" autocomplete="current-password">
         <label class="campo" for="password">Nueva</label><input class="campo" type="password" name="password" id="password" minlength="8" autocomplete="new-password">
         <label class="campo" for="password_confirmation">Repítela</label><input class="campo" type="password" name="password_confirmation" id="password_confirmation" minlength="8" autocomplete="new-password">

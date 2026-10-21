@@ -90,7 +90,12 @@ class PortalController extends Controller
         $devuelto = Reservas::cancelar($reservacion);
         $a = $this->atleta();
         Notificar::evento('fitness_reserva', "{$a->nombre} canceló {$reservacion->clase->nombre}", $reservacion->clase->fecha_texto . ', ' . $reservacion->clase->horario . ' · se liberó un lugar', route('admin.clases.show', $reservacion->clase), 'clase-' . $reservacion->clase_id);
-        return back()->with('ok', $devuelto ? 'Cancelada. Te regresamos tu clase.' : 'Cancelada. Como fue con menos de ' . Ajustes::get('horas_cancelar') . ' horas, la clase se descuenta de tu paquete.');
+        $msg = match (true) {
+            $devuelto => 'Cancelada. Te regresamos tu clase.',
+            ! $reservacion->fresh()->credito_usado => 'Cancelada. Tu lugar quedó libre; con tu membresía ilimitada no se descuenta nada.',
+            default => 'Cancelada. Como fue con menos de ' . Ajustes::get('horas_cancelar') . ' horas, la clase se descuenta de tu paquete.',
+        };
+        return back()->with('ok', $msg);
     }
 
     public function credencial()

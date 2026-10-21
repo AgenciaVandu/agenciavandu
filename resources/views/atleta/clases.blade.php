@@ -1,20 +1,20 @@
 @extends('atleta.layout')
 @section('titulo', 'Clases')
 @section('contenido')
-<h1>Clases</h1>
+<h1>Reserva tu clase</h1>
 <p class="sub">{{ ucfirst($fecha->locale('es')->isoFormat('dddd D [de] MMMM')) }}</p>
 
-<nav class="dias" aria-label="Días" style="margin-top: 12px">
+<nav class="dias" aria-label="Días" style="margin-top: 14px">
     @foreach($semana as $d)
-        <a href="{{ route('atleta.clases', array_filter(['dia' => $d->toDateString(), 'tipo' => $tipo])) }}" class="{{ $d->isSameDay($fecha) ? 'on' : '' }}">
-            <span>{{ $loop->first ? 'Hoy' : rtrim($d->locale('es')->isoFormat('ddd'), '.') }}</span><b class="num">{{ $d->day }}</b></a>
+        <a href="{{ route('atleta.clases', array_filter(['dia' => $d->toDateString(), 'tipo' => $tipo])) }}" class="{{ $d->isSameDay($fecha) ? 'on' : '' }}" @if($d->isSameDay($fecha)) aria-current="date" @endif>
+            <span>{{ $loop->first ? 'Hoy' : rtrim($d->locale('es')->isoFormat('ddd'), '.') }}</span><b>{{ $d->day }}</b></a>
     @endforeach
 </nav>
 
 @if($tipos->count() > 1)
     <div class="chips">
         <a href="{{ route('atleta.clases', ['dia' => $fecha->toDateString()]) }}" class="{{ ! $tipo ? 'on' : '' }}">Todas</a>
-        @foreach($tipos as $t)<a href="{{ route('atleta.clases', ['dia' => $fecha->toDateString(), 'tipo' => $t->id]) }}" class="{{ $tipo === $t->id ? 'on' : '' }}">{{ $t->nombre }}</a>@endforeach
+        @foreach($tipos as $t)<a href="{{ route('atleta.clases', ['dia' => $fecha->toDateString(), 'tipo' => $t->id]) }}" class="{{ $tipo === $t->id ? 'on' : '' }}" style="--c: {{ $t->color }}"><i></i>{{ $t->nombre }}</a>@endforeach
     </div>
 @endif
 
@@ -25,7 +25,7 @@
     @forelse($clases as $c)
         @include('atleta._clase', ['c' => $c, 'mia' => $mias[$c->id] ?? null])
     @empty
-        <div class="vacio">No hay clases este día.</div>
+        <div class="vacio">No hay clases {{ $tipo ? 'de ese tipo ' : '' }}este día. Prueba con otro día.</div>
     @endforelse
 </div>
 @endsection

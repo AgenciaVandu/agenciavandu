@@ -1,7 +1,9 @@
 @extends('atleta.layout')
 @section('titulo', 'Crea tu contraseña')
 @section('contenido')
-<div style="max-width: 420px; margin: 18px auto 0">
+<div class="entrada">
+    <div class="marca-g">@if($cuenta?->logo(true))<img src="{{ $cuenta->logo(true) }}" alt="{{ $cuenta->nombre }}">@else<b>{{ $cuenta?->nombre }}</b>@endif</div>
+
     @if(! $a)
         <h1>Este enlace ya no sirve</h1>
         <p class="sub">Venció o ya se usó. Pide uno nuevo en recepción.</p>
