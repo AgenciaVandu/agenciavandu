@@ -76,6 +76,7 @@ class SeguimientoController extends FitnessController
     /** Recordatorio para escribirle o llamarle (queda en Tareas de quien lo atiende) */
     public function tarea(Request $request, Cliente $atleta)
     {
+        abort_unless(Cuentas::actual()?->tiene('tareas'), 404);
         $d = $request->validate([
             'titulo'       => 'required|string|max:160',
             'fecha_limite' => 'required|date',

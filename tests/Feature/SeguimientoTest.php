@@ -105,8 +105,11 @@ class SeguimientoTest extends TestCase
         $this->get(route('admin.seguimiento'))->assertOk()->assertSee('Paola Chan')->assertSee('Agendar prueba')
             ->assertSee('paquete=' . $this->prueba->id, false);
 
-        $this->post(route('admin.seguimiento.tarea', $paola), ['titulo' => 'Escribirle', 'fecha_limite' => '2026-10-21'])->assertSessionHas('ok');
-        $this->assertSame(1, Tarea::where('cliente_id', $paola->id)->abiertas()->count());
+        // El gimnasio no usa Tareas: ni menú, ni recordatorios desde aquí
+        $this->post(route('admin.seguimiento.tarea', $paola), ['titulo' => 'Escribirle', 'fecha_limite' => '2026-10-21'])->assertNotFound();
+        $this->get(route('admin.tareas.index'))->assertForbidden();
+        $this->get(route('admin.seguimiento'))->assertDontSee('Recordarme escribirle')->assertDontSee(route('admin.tareas.index'));
+        Tarea::create(['titulo' => 'Llamar a Paola', 'cliente_id' => $paola->id, 'asignada_a' => $this->dueno->id, 'creada_por' => $this->dueno->id, 'estado' => 'pendiente']);
 
         $this->post(route('admin.seguimiento.descartar', $paola), ['motivo' => 'Horarios'])->assertSessionHas('ok');
         $this->assertSame('descartado', $this->etapa($paola));

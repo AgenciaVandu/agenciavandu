@@ -34,7 +34,7 @@ class Permisos
 
     /** Secciones que solo existen en ciertos giros: sección => módulo del giro */
     public const MODULOS = ['redes' => 'redes', 'productos' => 'stock', 'proyectos' => 'proyectos', 'unidades' => 'autos', 'cobranza' => 'autos',
-                               'clases' => 'fitness', 'asistencia' => 'fitness', 'membresias' => 'fitness', 'cotizaciones' => 'cotizaciones', 'proveedores' => 'proveedores', 'archivos' => 'archivos'];
+                               'clases' => 'fitness', 'asistencia' => 'fitness', 'membresias' => 'fitness', 'cotizaciones' => 'cotizaciones', 'proveedores' => 'proveedores', 'archivos' => 'archivos', 'tareas' => 'tareas'];
 
     /** Secciones disponibles para la cuenta activa (para armar roles) */
     public static function disponibles(): array
@@ -120,6 +120,8 @@ class Permisos
     {
         $s = self::deRuta($nombre);
         if ($s === ['@plataforma']) return (bool) $u->plataforma;
+        // Tareas (también "mis tareas") no existen en los negocios que las apagan
+        if ($nombre && Str::is('admin.tareas*', $nombre) && ! Cuentas::actual()?->tiene('tareas')) return false;
         if ($s !== null && $s !== ['*'] && ! array_filter($s, fn ($x) => ! isset(self::MODULOS[$x]) || Cuentas::actual()?->tiene(self::MODULOS[$x]))) return false;
         if ($u->esSuperAdmin()) return true;
         if ($s === null) return false;
@@ -134,6 +136,6 @@ class Permisos
         foreach (['resumen' => 'admin.resumen', 'clases' => 'admin.clases.index', 'asistencia' => 'admin.clases.index', 'proyectos' => 'admin.proyectos.index', 'unidades' => 'admin.unidades.index', 'cobranza' => 'admin.creditos.index', 'cotizaciones' => 'admin.presupuestos.index', 'redes' => 'admin.redes'] as $s => $r) {
             if ($u->puede($s)) return route($r);
         }
-        return route('admin.tareas.index');
+        return Cuentas::actual()?->tiene('tareas') === false ? route('admin.cuenta') : route('admin.tareas.index');
     }
 }

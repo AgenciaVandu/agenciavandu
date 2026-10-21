@@ -15,14 +15,14 @@
     $viendoOtra = $usuario?->plataforma && $cuentaNav && $cuentaNav->id !== $usuario->cuenta_id;
     // Cada quien ve solo las secciones de su rol
     $puede = fn ($s) => $usuario?->puede($s) ?? false;
-    try { $tareasNav = \App\Models\Tarea::where('asignada_a', $usuario?->id)->abiertas()->count(); } catch (\Throwable $e) { $tareasNav = 0; }
+    try { $tareasNav = $cuentaNav?->tiene('tareas') === false ? 0 : \App\Models\Tarea::where('asignada_a', $usuario?->id)->abiertas()->count(); } catch (\Throwable $e) { $tareasNav = 0; }
     $gymNav = (bool) $cuentaNav?->tiene('fitness');
     // Gimnasio: atletas sin paquete vigente o por renovar (para el número del menú)
     try { $renovarNav = $gymNav && $usuario?->puede('membresias') ? \App\Models\Membresia::vigentes()->where(fn ($q) => $q->whereDate('vence_el', '<=', now(config('vandu.zona_horaria'))->addDays(3)->toDateString())->orWhereRaw('creditos IS NOT NULL AND usados + 1 >= creditos'))->distinct('cliente_id')->count('cliente_id') : 0; } catch (\Throwable $e) { $renovarNav = 0; }
     try { $hoyNav = $gymNav ? \App\Models\Clase::programadas()->delDia(now())->when(! $usuario?->puede('clases'), fn ($q) => $q->where('coach_id', $usuario?->id))->count() : 0; } catch (\Throwable $e) { $hoyNav = 0; }
     $nav = array_values(array_filter([
         ['ruta' => 'admin.resumen',             'activo' => 'admin.resumen',          'icono' => 'bi-grid-1x2',        'texto' => 'Resumen', 'seccion' => 'resumen'],
-        ['ruta' => 'admin.tareas.index',        'activo' => 'admin.tareas.*',         'icono' => 'bi-check2-square',   'texto' => $puede('tareas') ? 'Tareas' : 'Mis tareas', 'cuenta' => $tareasNav, 'seccion' => null],
+        ['ruta' => 'admin.tareas.index',        'activo' => 'admin.tareas.*',         'icono' => 'bi-check2-square',   'texto' => $puede('tareas') ? 'Tareas' : 'Mis tareas', 'cuenta' => $tareasNav, 'seccion' => null, 'modulo' => 'tareas'],
         $gymNav ? ['ruta' => 'admin.seguimiento', 'activo' => 'admin.seguimiento*', 'icono' => 'bi-person-plus', 'texto' => 'Seguimiento', 'seccion' => 'ventas']
                 : ['ruta' => 'admin.ventas.index',        'activo' => 'admin.ventas.*',         'icono' => 'bi-funnel',          'texto' => 'Ventas', 'cuenta' => $prospectosNav, 'nuevos' => true, 'seccion' => 'ventas'],
         ['ruta' => 'admin.clases.index',        'activo' => ['admin.clases.*', 'admin.clase-tipos*', 'admin.ejercicios*'], 'icono' => 'bi-calendar-week', 'texto' => 'Agenda', 'cuenta' => $hoyNav, 'seccion' => ['clases', 'asistencia'], 'modulo' => 'fitness'],
@@ -50,7 +50,7 @@
         $puede('unidades') ? ['url' => route('admin.unidades.index'), 'activo' => 'admin.unidades.*', 'icono' => 'bi-car-front', 'lleno' => 'bi-car-front-fill', 'texto' => 'Unidades'] : null,
         $puede('cobranza') ? ['url' => route('admin.creditos.index'), 'activo' => 'admin.creditos.*', 'icono' => 'bi-cash-coin', 'lleno' => 'bi-cash-coin', 'texto' => 'Cobranza', 'cuenta' => $atrasoNav] : null,
         $puede('proyectos') ? ['url' => route('admin.proyectos.index'), 'activo' => 'admin.proyectos.*', 'icono' => 'bi-kanban', 'lleno' => 'bi-kanban-fill', 'texto' => 'Proyectos'] : null,
-        ['url' => route('admin.tareas.index'), 'activo' => 'admin.tareas.*', 'icono' => 'bi-check2-square', 'lleno' => 'bi-check2-square', 'texto' => 'Tareas', 'cuenta' => $tareasNav],
+        $cuentaNav?->tiene('tareas') !== false ? ['url' => route('admin.tareas.index'), 'activo' => 'admin.tareas.*', 'icono' => 'bi-check2-square', 'lleno' => 'bi-check2-square', 'texto' => 'Tareas', 'cuenta' => $tareasNav] : null,
         $puede('finanzas') ? ['url' => route('admin.finanzas'), 'activo' => 'admin.finanzas*', 'icono' => 'bi-graph-up-arrow', 'lleno' => 'bi-graph-up-arrow', 'texto' => 'Finanzas'] : null,
         $puede('redes') ? ['url' => route('admin.redes'), 'activo' => 'admin.redes*', 'icono' => 'bi-grid-3x3-gap', 'lleno' => 'bi-grid-3x3-gap-fill', 'texto' => 'Redes'] : null,
         ['url' => route('admin.notificaciones'), 'activo' => 'admin.notificaciones*', 'icono' => 'bi-bell', 'lleno' => 'bi-bell-fill', 'texto' => 'Avisos'],
@@ -449,6 +449,10 @@
     @elseif($puede('tareas'))
         <div class="side-cta">
             <a href="{{ route('admin.tareas.create') }}"><i class="bi bi-plus-lg"></i> Nueva tarea</a>
+        </div>
+    @elseif($gymNav && $puede('clientes'))
+        <div class="side-cta">
+            <a href="{{ route('admin.clientes.create') }}"><i class="bi bi-person-plus"></i> Nuevo atleta</a>
         </div>
     @endif
     <button type="button" class="side-buscar" data-buscar><i class="bi bi-search"></i> Buscar… <kbd>⌘K</kbd></button>

@@ -5,6 +5,8 @@
     $ficha = route('admin.clientes.show', array_filter([$c, 'ver' => 'atleta', 'paquete' => $paq]));
     $t = $c->siguiente;
     $tz = config('vandu.zona_horaria');
+    $conTareas = (bool) \App\Support\Cuentas::actual()?->tiene('tareas');
+    $descartable = in_array($c->etapa_seguimiento, ['interesado', 'prueba', 'vencido'], true);
 @endphp
 <article class="seg-t" x-data="{ mas: false }">
     <a href="{{ route('admin.clientes.show', [$c, 'ver' => 'atleta']) }}" class="quien">
@@ -14,7 +16,7 @@
     </a>
     <div class="linea {{ $det['tono'] }}">{{ $det['linea'] }}</div>
     @if($det['nota'])<div class="nota">{{ $det['nota'] }}</div>@endif
-    @if($t)
+    @if($t && $conTareas)
         <div class="tarea {{ $t->vencida ? 'vencida' : '' }}"><i class="bi bi-alarm"></i> {{ $t->titulo }}@if($t->cuando) · {{ $t->cuando }}@endif</div>
     @endif
 
@@ -28,8 +30,10 @@
                 <a href="{{ $ficha }}{{ $det['paquete'] ? '#asignar' : '' }}" class="btn btn-borde" @if($det['paquete']) data-recargar @endif>{{ $det['accion'] }}</a>
             @endif
     </div>
-    <button type="button" class="mas" @click="mas = !mas" :aria-expanded="mas" title="Recordatorio o descartar"><i class="bi bi-three-dots"></i></button>
+    @if($conTareas || $descartable)
+    <button type="button" class="mas" @click="mas = !mas" :aria-expanded="mas" title="Más opciones"><i class="bi bi-three-dots"></i></button>
     <div class="panel-mas" x-show="mas" x-cloak>
+            @if($conTareas)
             <form method="post" action="{{ route('admin.seguimiento.tarea', $c) }}" class="d-grid gap-2">
                 @csrf
                 <div class="t">Recordarme escribirle</div>
@@ -44,7 +48,8 @@
                 @endif
                 <button class="btn btn-borde btn-sm"><i class="bi bi-alarm me-1"></i> Agendar</button>
             </form>
-            @if(in_array($c->etapa_seguimiento, ['interesado', 'prueba', 'vencido'], true))
+            @endif
+            @if($descartable)
                 <form method="post" action="{{ route('admin.seguimiento.descartar', $c) }}" class="d-flex gap-2">
                     @csrf
                     <select name="motivo" class="form-select" required aria-label="Motivo">
@@ -54,4 +59,5 @@
                 </form>
             @endif
     </div>
+    @endif
 </article>

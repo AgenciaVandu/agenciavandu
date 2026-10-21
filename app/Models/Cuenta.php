@@ -48,8 +48,8 @@ class Cuenta extends Model
     /** Módulos del giro, más los que se le activen a un negocio en particular (ajustes.modulos) */
     public function tiene(string $modulo): bool
     {
-        // Proyectos, Cotizaciones, Proveedores y Archivos (Dropbox) vienen prendidos; un tipo de empresa los apaga con "sin_…"
-        if (in_array($modulo, ['proyectos', 'cotizaciones', 'proveedores', 'archivos'], true)) return ! $this->tiene('sin_' . $modulo);
+        // Proyectos, Cotizaciones, Proveedores, Archivos (Dropbox) y Tareas vienen prendidos; un tipo de empresa los apaga con "sin_…"
+        if (in_array($modulo, ['proyectos', 'cotizaciones', 'proveedores', 'archivos', 'tareas'], true)) return ! $this->tiene('sin_' . $modulo);
         return in_array($modulo, $this->giro_info['modulos'] ?? [], true)
             || in_array($modulo, (array) $this->ajuste('modulos', []), true);
     }

@@ -21,6 +21,7 @@ class Giros
         'sin_cotizaciones' => ['texto' => 'Sin Cotizaciones', 'icono' => 'bi-eye-slash', 'ayuda' => 'Oculta Cotizaciones para negocios que no cotizan.'],
         'sin_proveedores' => ['texto' => 'Sin Proveedores', 'icono' => 'bi-eye-slash', 'ayuda' => 'Oculta Proveedores y órdenes de compra.'],
         'sin_archivos' => ['texto' => 'Sin Archivos ni Dropbox', 'icono' => 'bi-eye-slash', 'ayuda' => 'Oculta Archivos y la conexión con Dropbox para negocios que no manejan entregas.'],
+        'sin_tareas' => ['texto' => 'Sin Tareas', 'icono' => 'bi-eye-slash', 'ayuda' => 'Oculta Tareas para negocios que no trabajan con pendientes asignados (por ejemplo, un gimnasio).'],
         'sin_proyectos' => ['texto' => 'Sin Proyectos', 'icono' => 'bi-eye-slash', 'ayuda' => 'Oculta la sección de Proyectos (etapas y entregas) para negocios que no la usan.'],
         'redes' => ['texto' => 'Redes sociales', 'icono' => 'bi-grid-3x3-gap', 'ayuda' => 'Calendario de contenido y aprobaciones de sus clientes.'],
     ];
