@@ -121,12 +121,29 @@
                         <input id="suc-{{ $c->id }}" type="number" name="sucursales_max" min="1" max="50" class="form-control form-control-sm num" style="width: 80px" value="{{ $c->ajuste('sucursales_max', 1) }}">
                     </div>
                     <textarea name="notas" class="form-control form-control-sm" rows="2" maxlength="2000" placeholder="Notas internas (plan, contacto, pagos…)">{{ $c->notas }}</textarea>
-                    @if($c->id !== $principal)
-                        <label class="form-check form-switch m-0"><input type="checkbox" class="form-check-input" role="switch" name="activa" value="1" @checked($c->activa)> <span class="form-check-label" style="font-size:13.5px">Activa (si la suspendes, su equipo no puede entrar ni se abren sus enlaces)</span></label>
-                    @endif
                     <div><button class="btn btn-primario btn-sm">Guardar</button></div>
                 </form>
                 </details>
+                @if($c->id !== $principal && $c->id !== auth()->user()->cuenta_id)
+                    @php $borra = \App\Support\Plataforma\BorrarNegocio::resumen($c); @endphp
+                    <details class="mt-2" @if($errors->has('confirmar') && (int) old('_cuenta') === $c->id) open @endif>
+                        <summary class="text-danger"><i class="bi bi-exclamation-octagon"></i> Suspender o eliminar</summary>
+                        <div class="d-grid gap-2 mt-2 pt-3" style="border-top:1px solid var(--line)">
+                            <form method="post" action="{{ route('admin.plataforma.estado', $c) }}" onsubmit="return confirm({{ Js::from($c->activa ? '¿Suspender ' . $c->nombre . '? Su equipo no podrá entrar y sus enlaces dejarán de abrir. Sus datos se conservan.' : '¿Activar ' . $c->nombre . ' otra vez?') }})">@csrf @method('patch')
+                                <button class="btn btn-sm {{ $c->activa ? 'btn-borde' : 'btn-primario' }} w-100"><i class="bi {{ $c->activa ? 'bi-pause-circle' : 'bi-play-circle' }} me-1"></i> {{ $c->activa ? 'Suspender' : 'Activar' }}</button>
+                                <div class="secundario mt-1" style="font-size:12px">{{ $c->activa ? 'Para cuando no paga o pausa su plan: no se borra nada.' : 'Su equipo vuelve a entrar con sus mismos datos.' }}</div>
+                            </form>
+                            <form method="post" action="{{ route('admin.plataforma.destroy', $c) }}" class="p-2 rounded-3" style="background:#FDECEC">@csrf @method('delete')
+                                <input type="hidden" name="_cuenta" value="{{ $c->id }}">
+                                <div style="font-size:12.5px" class="mb-2"><b>Eliminar para siempre</b>: {{ $borra['equipo'] }} del equipo, {{ $borra['clientes'] }} clientes, {{ $borra['cotizaciones'] }} cotizaciones, {{ $borra['proyectos'] }} proyectos y {{ $borra['productos'] }} productos o paquetes, con sus archivos. No se puede deshacer.
+                                    @if($borra['correos'])Los correos {{ implode(', ', $borra['correos']) }} quedan libres para darlos de alta otra vez.@endif</div>
+                                <input name="confirmar" class="form-control form-control-sm @if((int) old('_cuenta') === $c->id) @error('confirmar') is-invalid @enderror @endif" placeholder="Escribe: {{ $c->nombre }}" autocomplete="off" aria-label="Escribe el nombre del negocio para confirmar" required>
+                                @if((int) old('_cuenta') === $c->id) @error('confirmar')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror @endif
+                                <button class="btn btn-sm w-100 mt-2" style="background:#B42318;color:#fff"><i class="bi bi-trash me-1"></i> Eliminar negocio</button>
+                            </form>
+                        </div>
+                    </details>
+                @endif
             </div>
         </section>
     @endforeach

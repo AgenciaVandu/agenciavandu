@@ -34,7 +34,7 @@ class Permisos
 
     /** Secciones que solo existen en ciertos giros: sección => módulo del giro */
     public const MODULOS = ['redes' => 'redes', 'productos' => 'stock', 'proyectos' => 'proyectos', 'unidades' => 'autos', 'cobranza' => 'autos',
-                               'clases' => 'fitness', 'asistencia' => 'fitness', 'membresias' => 'fitness', 'cotizaciones' => 'cotizaciones', 'proveedores' => 'proveedores'];
+                               'clases' => 'fitness', 'asistencia' => 'fitness', 'membresias' => 'fitness', 'cotizaciones' => 'cotizaciones', 'proveedores' => 'proveedores', 'archivos' => 'archivos'];
 
     /** Secciones disponibles para la cuenta activa (para armar roles) */
     public static function disponibles(): array

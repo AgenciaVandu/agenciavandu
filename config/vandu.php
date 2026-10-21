@@ -64,7 +64,7 @@ return [
             'nombre'  => 'Fitness (gimnasio y HYROX)',
             'icono'   => 'bi-lightning-charge',
             // Agenda de clases, atletas con paquetes de clases, reservaciones con QR. Sin proyectos, cotizaciones ni proveedores.
-            'modulos' => ['fitness', 'sin_proyectos', 'sin_cotizaciones', 'sin_proveedores'],
+            'modulos' => ['fitness', 'sin_proyectos', 'sin_cotizaciones', 'sin_proveedores', 'sin_archivos'],
             'roles'   => [
                 ['nombre' => 'Gerente', 'descripcion' => 'Todo el gimnasio: agenda y cupos, paquetes y precios, atletas, asistencia, finanzas y reportes.', 'permisos' => ['resumen', 'ventas', 'clientes', 'clases', 'asistencia', 'membresias', 'finanzas', 'tareas']],
                 ['nombre' => 'Recepción', 'descripcion' => 'Registra atletas, les asigna paquetes, reserva lugares y escanea el QR en la entrada.', 'permisos' => ['resumen', 'clientes', 'asistencia', 'membresias', 'ventas']],

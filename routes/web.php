@@ -281,6 +281,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::get('plataforma', [Admin\PlataformaController::class, 'index'])->name('plataforma');
     Route::post('plataforma', [Admin\PlataformaController::class, 'store'])->name('plataforma.store');
     Route::put('plataforma/{cuenta}', [Admin\PlataformaController::class, 'update'])->name('plataforma.update');
+    Route::patch('plataforma/{cuenta}/estado', [Admin\PlataformaController::class, 'estado'])->name('plataforma.estado');
+    Route::delete('plataforma/{cuenta}', [Admin\PlataformaController::class, 'destroy'])->name('plataforma.destroy');
     Route::post('plataforma/{cuenta}/entrar', [Admin\PlataformaController::class, 'entrar'])->name('plataforma.entrar');
     Route::post('plataforma/salir', [Admin\PlataformaController::class, 'salir'])->name('plataforma.salir');
     Route::get('plataforma/giros/nuevo', [Admin\GirosController::class, 'create'])->name('plataforma.giros.create');

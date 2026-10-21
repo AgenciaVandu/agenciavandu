@@ -138,12 +138,18 @@ class CuentasTest extends TestCase
         $this->post('/admin/plataforma/salir')->assertRedirect('/admin/plataforma');
         $this->get('/admin/clientes')->assertSee('Hotel Casa Lecanda');
 
-        // Suspender: su equipo ya no entra
+        // Guardar sus ajustes no la suspende; se suspende con su botón
         $this->put("/admin/plataforma/{$c->id}", ['nombre' => $c->nombre, 'giro' => 'arquitectura'])->assertRedirect();
+        $this->assertTrue($c->fresh()->activa);
+        $this->patch("/admin/plataforma/{$c->id}/estado")->assertSessionHas('ok');
         $this->assertFalse($c->fresh()->activa);
         $this->actingAs($mario->fresh())->get('/admin/tareas')->assertRedirect(route('login'));
+        // Se vuelve a activar con sus mismos datos
+        $this->actingAs($this->alvar->fresh())->patch("/admin/plataforma/{$c->id}/estado");
+        $this->assertTrue($c->fresh()->activa);
         // La cuenta principal no se puede suspender
-        $this->actingAs($this->alvar->fresh())->put('/admin/plataforma/1', ['nombre' => 'Agencia Vandu', 'giro' => 'agencia']);
+        $this->patch('/admin/plataforma/1/estado')->assertStatus(422);
+        $this->put('/admin/plataforma/1', ['nombre' => 'Agencia Vandu', 'giro' => 'agencia']);
         $this->assertTrue(Cuenta::find(1)->activa);
     }
 

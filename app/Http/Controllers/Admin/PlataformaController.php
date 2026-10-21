@@ -128,11 +128,36 @@ class PlataformaController extends Controller
         $a['sucursales_max'] = (int) ($d['sucursales_max'] ?? 1);
         $d['ajustes'] = $a;
         unset($d['sucursales_max']);
-        $d['activa'] = $cuenta->id === Cuentas::principalId() ? true : $request->boolean('activa');
+        // Suspender o activar se hace con su propio botón (estado)
+        if ($request->has('activa')) $d['activa'] = $cuenta->id === Cuentas::principalId() ? true : $request->boolean('activa');
         $cuenta->update($d);
         \App\Http\Middleware\CuentaPorDominio::olvidar();
         Cuentas::olvidarDominios();
         return back()->with('ok', "Cuenta “{$cuenta->nombre}” guardada.");
+    }
+
+    /** Suspender (su equipo no entra y sus enlaces no abren) o volver a activar */
+    public function estado(Request $request, Cuenta $cuenta)
+    {
+        abort_if($cuenta->id === Cuentas::principalId(), 422, 'La cuenta principal no se puede suspender.');
+        $cuenta->update(['activa' => ! $cuenta->activa]);
+        \App\Http\Middleware\CuentaPorDominio::olvidar();
+        if (! $cuenta->activa && (int) $request->session()->get('cuenta_vista') === $cuenta->id) $request->session()->forget('cuenta_vista');
+        return back()->with('ok', $cuenta->activa ? "“{$cuenta->nombre}” está activa otra vez." : "“{$cuenta->nombre}” quedó suspendida: su equipo no puede entrar y sus enlaces no abren. Sus datos se conservan.");
+    }
+
+    /** Eliminar un negocio con todo lo suyo. Se confirma escribiendo su nombre */
+    public function destroy(Request $request, Cuenta $cuenta)
+    {
+        abort_if($cuenta->id === Cuentas::principalId() || $cuenta->id === $request->user()->cuenta_id, 422, 'Esa cuenta no se puede eliminar.');
+        $request->validate(['confirmar' => ['required', 'string', function ($attr, $v, $fail) use ($cuenta) {
+            if (mb_strtolower(trim($v)) !== mb_strtolower(trim($cuenta->nombre))) $fail('Escribe el nombre exacto del negocio para confirmar.');
+        }]], ['confirmar.required' => 'Escribe el nombre del negocio para confirmar.']);
+        $resumen = \App\Support\Plataforma\BorrarNegocio::resumen($cuenta);
+        if ((int) $request->session()->get('cuenta_vista') === $cuenta->id) $request->session()->forget('cuenta_vista');
+        \App\Support\Plataforma\BorrarNegocio::borrar($cuenta);
+        Cuentas::activar($request->user()->cuenta_id);
+        return redirect()->route('admin.plataforma')->with('ok', "Se eliminó “{$cuenta->nombre}” con todo lo suyo." . ($resumen['correos'] ? ' Ya puedes volver a dar de alta: ' . implode(', ', $resumen['correos']) . '.' : ''));
     }
 
     /** "https://App.Losos.mx/admin" → "app.losos.mx" */
