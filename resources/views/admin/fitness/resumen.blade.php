@@ -48,10 +48,10 @@
     </section>
 @endif
 
-@if(\App\Support\Fitness\Ejemplo::hay() && $u->puede('clases'))
+@if((\App\Support\Fitness\Ejemplo::hay() || \App\Support\Fitness\Ejemplo::hayHistorial()) && $u->puede('clases'))
     <div class="aviso" style="background: var(--blue-soft); color: var(--blue); border: 1px solid #cddcff; flex-wrap: wrap">
         <i class="bi bi-lightbulb"></i>
-        <span class="flex-grow-1">Estás viendo un gimnasio de ejemplo: clases HYROX, paquetes y 6 atletas con reservaciones. Cuando captures lo tuyo, quítalo.</span>
+        <span class="flex-grow-1">Estás viendo un gimnasio de ejemplo: clases HYROX, paquetes, atletas y 8 semanas de historial. Cuando captures lo tuyo, quítalo.</span>
         <form method="post" action="{{ route('admin.clases.ejemplos.quitar') }}" onsubmit="return confirm('¿Quitar las clases, paquetes y atletas de ejemplo?')">@csrf @method('delete')<button class="btn btn-borde btn-sm">Quitar ejemplos</button></form>
     </div>
 @endif

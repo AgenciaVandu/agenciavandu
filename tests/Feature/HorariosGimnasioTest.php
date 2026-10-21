@@ -108,4 +108,41 @@ class HorariosGimnasioTest extends TestCase
             'rol_id' => \App\Models\Rol::where('nombre', 'Entrenador')->value('id')]);
         $this->actingAs($coach)->get(route('admin.fitness-reportes.horarios'))->assertForbidden();
     }
+
+    public function test_historial_de_ejemplo_para_el_demo(): void
+    {
+        $this->actingAs($this->dueno)->post(route('admin.clases.ejemplos'))->assertRedirect();
+        $this->assertTrue(\App\Support\Fitness\Ejemplo::hayHistorial());
+        $pasadas = Clase::where('ejemplo', true)->where('termina_at', '<', now())->count();
+        $this->assertGreaterThan(80, $pasadas);
+
+        $h = collect(Horarios::analizar(8)['hallazgos']);
+        $this->assertTrue($h->contains(fn ($x) => str_starts_with($x->clave, 'llena-')), 'Engine de las 19:00 se llena');
+        $this->assertTrue($h->contains(fn ($x) => str_starts_with($x->clave, 'vacia-')), 'Mobility casi vacía');
+        $this->assertTrue($h->contains(fn ($x) => $x->clave === 'faltas-2'), 'Los martes faltan más');
+        $this->get(route('admin.fitness-reportes.horarios'))->assertOk()->assertSee('Ocupación por día y hora')->assertSee('Programar otra');
+
+        // Los atletas constantes quedan al corriente: no ensucian el Seguimiento
+        $constante = Cliente::where('nombre', \App\Support\Fitness\Ejemplo::CONSTANTES[0])->with('membresias')->first();
+        $this->assertNull(\App\Support\Fitness\Embudo::etapa($constante, $constante->membresias));
+
+        // Volver a pedirlo no duplica; quitar ejemplos borra todo
+        $this->post(route('admin.clases.ejemplos.historial'))->assertSessionHas('ok', fn ($m) => str_contains($m, 'ya estaba'));
+        $this->assertSame($pasadas, Clase::where('ejemplo', true)->where('termina_at', '<', now())->count());
+        $this->delete(route('admin.clases.ejemplos.quitar'))->assertRedirect();
+        $this->assertSame(0, Clase::where('ejemplo', true)->count());
+        $this->assertSame(0, Reservacion::count());
+    }
+
+    public function test_la_app_se_llama_como_el_negocio_y_se_actualiza(): void
+    {
+        $this->actingAs($this->dueno);
+        $this->get(route('app.manifiesto'))->assertJsonFragment(['name' => 'Axion Fit', 'short_name' => 'Axion Fit']);
+        $antes = \App\Support\IconoApp::huella($this->gym);
+        $this->get(route('admin.resumen'))->assertSee(route('app.manifiesto', ['v' => $antes]), false);
+
+        $this->gym->update(['nombre' => 'Axion Training Club']);
+        $this->assertNotSame($antes, \App\Support\IconoApp::huella($this->gym->fresh()));
+        $this->get(route('app.manifiesto'))->assertJsonFragment(['name' => 'Axion Training Club']);
+    }
 }

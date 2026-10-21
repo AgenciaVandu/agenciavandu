@@ -395,7 +395,7 @@ class FitnessTest extends TestCase
     {
         $this->actingAs($this->dueno)->post('/admin/clases/ejemplos')->assertRedirect(route('admin.resumen'));
         $this->assertTrue(\App\Support\Fitness\Ejemplo::hay());
-        $this->assertSame(10, Cliente::where('ejemplo', true)->count());
+        $this->assertSame(10 + count(\App\Support\Fitness\Ejemplo::CONSTANTES), Cliente::where('ejemplo', true)->count());
         $this->assertGreaterThan(0, Reservacion::count());
 
         $clase = Clase::orderBy('inicia_at')->first();

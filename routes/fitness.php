@@ -14,6 +14,7 @@ Route::get('clases/nueva', [Fitness\ClasesController::class, 'create'])->name('c
 Route::post('clases', [Fitness\ClasesController::class, 'store'])->name('clases.store');
 Route::post('clases/ejemplos', [Fitness\AjustesController::class, 'cargarEjemplos'])->name('clases.ejemplos');
 Route::delete('clases/ejemplos', [Fitness\AjustesController::class, 'quitarEjemplos'])->name('clases.ejemplos.quitar');
+Route::post('clases/ejemplos/historial', [Fitness\AjustesController::class, 'historialEjemplo'])->name('clases.ejemplos.historial');
 Route::get('clases/horario-fijo', [Fitness\SeriesController::class, 'index'])->name('clases.series');
 Route::put('clases/horario-fijo/{serie}', [Fitness\SeriesController::class, 'update'])->name('clases.series.update');
 Route::delete('clases/horario-fijo/{serie}', [Fitness\SeriesController::class, 'destroy'])->name('clases.series.destroy');

@@ -43,6 +43,21 @@ class IconoApp
         return $v ??= substr(md5((string) @md5_file(resource_path('img/app/icono-512.png'))), 0, 8);
     }
 
+    /** Nombre de la app instalada: el del negocio (la cuenta principal es Vandu) */
+    public static function nombre(?Cuenta $c): string
+    {
+        return ! $c || $c->id === Cuentas::principalId() ? 'Vandu' : $c->nombre;
+    }
+
+    /**
+     * Versión de lo que identifica a la app instalada (nombre + ícono). Va en la URL del manifiesto:
+     * si el negocio cambia su nombre o su ícono, el navegador ve un manifiesto nuevo y actualiza la app.
+     */
+    public static function huella(?Cuenta $c): string
+    {
+        return substr(md5(self::nombre($c) . '|' . ($c?->ajuste('app.icono') ?? self::versionBase())), 0, 10);
+    }
+
     public static function ruta(Cuenta $c, string $archivo): ?string
     {
         if (! self::tiene($c) || ! isset(self::TAMANOS[$archivo])) return null;

@@ -20,9 +20,9 @@ class AppController extends Controller
     public function manifiesto()
     {
         $c = $this->cuenta();
-        $nombre = ! $c || $c->id === \App\Support\Cuentas::principalId() ? 'Vandu' : $c->nombre;
+        $nombre = \App\Support\IconoApp::nombre($c);
         return response()->json([
-            'name'             => $nombre . ' · Panel',
+            'name'             => $nombre,
             'short_name'       => \Illuminate\Support\Str::limit($nombre, 12, ''),
             'description'      => 'El panel de tu negocio en ' . config('vandu.plataforma.nombre'),
             'id'               => '/admin',

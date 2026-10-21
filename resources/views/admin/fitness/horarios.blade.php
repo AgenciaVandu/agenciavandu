@@ -89,7 +89,14 @@
     <div class="panel"><div class="vacio"><div class="ico"><i class="bi bi-grid-3x3"></i></div>
         <h3>Aún hay pocas clases para analizar</h3>
         <p>Cuando tengas al menos dos semanas de clases con reservaciones, aquí verás tus horarios más llenos, los que casi nadie usa y qué conviene abrir o mover.</p>
-        <a href="{{ route('admin.clases.index') }}" class="btn btn-primario">Ir a la agenda</a>
+        <div class="d-flex flex-wrap gap-2 justify-content-center">
+            <a href="{{ route('admin.clases.index') }}" class="btn btn-primario">Ir a la agenda</a>
+            @if(auth()->user()->puede('clases'))
+                <form method="post" action="{{ route('admin.clases.ejemplos.historial') }}" class="m-0">@csrf
+                    <button class="btn btn-borde"><i class="bi bi-magic me-1"></i> Ver con datos de ejemplo</button></form>
+            @endif
+        </div>
+        @if(auth()->user()->puede('clases'))<p class="secundario small mt-3 mb-0">Carga 8 semanas de clases inventadas para probar o enseñar esta pantalla. Se borran con «Quitar ejemplos» del Resumen.</p>@endif
     </div></div>
 @else
 <div x-data="horariosFx({{ Js::from(['clave' => 'hz-' . $semanas . '-' . $sucursal . '-' . now()->toDateString()]) }})" x-init="iniciar()">

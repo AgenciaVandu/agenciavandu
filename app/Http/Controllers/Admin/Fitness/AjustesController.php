@@ -16,7 +16,16 @@ class AjustesController extends FitnessController
     public function cargarEjemplos()
     {
         \App\Support\Fitness\Ejemplo::cargar();
-        return redirect()->route('admin.resumen')->with('ok', 'Cargamos un gimnasio de ejemplo: tipos de clase HYROX, paquetes, horario de la semana y 6 atletas. Quítalo cuando captures lo tuyo.');
+        return redirect()->route('admin.resumen')->with('ok', 'Cargamos un gimnasio de ejemplo: tipos de clase HYROX, paquetes, horario de la semana, atletas y 8 semanas de historial. Quítalo cuando captures lo tuyo.');
+    }
+
+    /** Semanas pasadas de clases de ejemplo para ver Horarios y Reportes (demos y pruebas) */
+    public function historialEjemplo()
+    {
+        $n = \App\Support\Fitness\Ejemplo::historial();
+        return redirect()->route('admin.fitness-reportes.horarios')->with('ok', $n
+            ? "Cargamos 8 semanas de clases de ejemplo ($n clases con sus reservaciones). Se quitan con «Quitar ejemplos»."
+            : 'El historial de ejemplo ya estaba cargado.');
     }
 
     public function quitarEjemplos()

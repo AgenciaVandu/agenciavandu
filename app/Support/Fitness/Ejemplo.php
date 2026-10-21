@@ -9,6 +9,8 @@ use App\Models\Cliente;
 use App\Models\Ejercicio;
 use App\Models\Membresia;
 use App\Models\Paquete;
+use App\Models\Reservacion;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -68,6 +70,78 @@ class Ejemplo
         ['Karla Pech Moo', '999 158 9926', 'referido', 'La invitó Sofía; busca bajar de peso', 6],
     ];
 
+    // Historial para Horarios y Reportes: tipo (índice), días, hora, cupo, ocupación típica.
+    // Engine de 19:00 se llena lunes y miércoles, el viernes no; Mobility casi vacía; Simulation y S&C llenas.
+    public const HISTORIAL = [
+        [0, [1, 3, 5], '06:00', 16, .55], [0, [1, 3], '19:00', 16, 1.0], [0, [5], '19:00', 16, .35], [2, [2, 4], '07:00', 12, .5],
+        [3, [2, 4], '19:00', 14, .95], [4, [6], '09:00', 20, .25], [1, [6], '10:00', 12, .9],
+    ];
+
+    // Atletas constantes del historial (membresía ilimitada que renuevan cada mes)
+    public const CONSTANTES = [
+        'Jimena Cetina Sosa', 'Emilio Baeza Novelo', 'Regina Patrón Cámara', 'Iván Chi Tun', 'Daniela Uc Herrera', 'Héctor Peniche Gómez',
+        'Lucía Aké Pech', 'Óscar May Canché', 'Fernanda Tzuc Rivero', 'Pablo Quintal Ruiz', 'Ximena Cervera Loría', 'Mauricio Dzul Pool',
+        'Andrea Novelo Tec', 'Santiago Couoh Ek', 'Camila Pacheco Medina', 'Tomás Bacab Chan', 'Valentina Lara Canto', 'Gerardo Moo Yam',
+    ];
+
+    public static function hayHistorial(): bool
+    {
+        return Clase::where('ejemplo', true)->where('termina_at', '<', now())->exists();
+    }
+
+    /**
+     * Semanas pasadas de clases con reservaciones y asistencias, para que Horarios y Reportes tengan qué mostrar.
+     * Todo queda marcado como ejemplo. @return int clases creadas
+     */
+    public static function historial(int $semanas = 8): int
+    {
+        if (self::hayHistorial()) return 0;
+        $tipos = ClaseTipo::where('ejemplo', true)->orderBy('orden')->get();
+        if ($tipos->count() < 5) $tipos = ClaseTipo::activos()->ordenados()->get();
+        if ($tipos->isEmpty()) return 0;
+
+        return DB::transaction(function () use ($tipos, $semanas) {
+            $tz = config('vandu.zona_horaria');
+            mt_srand(20261021);   // siempre el mismo historial
+            $ilimitada = Paquete::where('ejemplo', true)->whereNull('creditos')->first() ?? Paquete::whereNull('creditos')->where('es_prueba', false)->first();
+            $gente = collect(self::CONSTANTES)->map(function ($nombre, $i) use ($ilimitada, $tz, $semanas) {
+                $c = Cliente::firstOrCreate(['nombre' => $nombre], ['telefono' => '999 ' . (400 + $i) . ' ' . (1000 + $i * 37), 'origen' => 'ejemplo', 'ejemplo' => true]);
+                if ($ilimitada && ! $c->membresias()->exists()) {
+                    // Renueva cada mes desde antes del historial: queda al corriente
+                    for ($k = (int) ceil($semanas * 7 / 30); $k >= 0; $k--) {
+                        Membresias::asignar($c, $ilimitada, ['inicia_el' => now($tz)->subDays($k * 30 + $i % 5)->toDateString(), 'pagado' => true])
+                            ->forceFill(['ejemplo' => true])->save();
+                    }
+                }
+                return $c->load('membresias');
+            });
+
+            $n = 0;
+            $lunesActual = now($tz)->startOfWeek();
+            for ($w = $semanas; $w >= 1; $w--) {
+                foreach (self::HISTORIAL as [$t, $dias, $hora, $cupo, $base]) {
+                    $tipo = $tipos[$t] ?? $tipos->first();
+                    foreach ($dias as $d) {
+                        $ini = Carbon::parse($lunesActual->copy()->subWeeks($w)->addDays($d - 1)->toDateString() . ' ' . $hora, $tz);
+                        $clase = Clase::create(['clase_tipo_id' => $tipo->id, 'inicia_at' => $ini->copy()->utc(), 'termina_at' => $ini->copy()->addMinutes($tipo->duracion ?: 60)->utc(),
+                            'cupo' => $cupo, 'ejemplo' => true]);
+                        $lugares = min($cupo, $gente->count(), (int) round($cupo * $base * (0.85 + mt_rand(0, 30) / 100)));
+                        $faltan = $d === 2 ? 25 : 7;   // los martes faltan más
+                        foreach ($gente->shuffle()->take($lugares) as $a) {
+                            $falta = mt_rand(0, 99) < $faltan;
+                            $m = $a->membresias->first(fn ($x) => $x->inicia_el->toDateString() <= $ini->toDateString() && $x->vence_el->toDateString() >= $ini->toDateString());
+                            Reservacion::create(['clase_id' => $clase->id, 'cliente_id' => $a->id, 'membresia_id' => $m?->id, 'estado' => $falta ? 'falta' : 'asistio',
+                                'origen' => mt_rand(0, 2) ? 'atleta' : 'panel', 'credito_usado' => false,
+                                'checkin_at' => $falta ? null : $ini->copy()->subMinutes(mt_rand(2, 15))->utc()]);
+                        }
+                        $n++;
+                    }
+                }
+            }
+            return $n;
+        });
+    }
+
     public static function hay(): bool
     {
         return ClaseTipo::where('ejemplo', true)->exists();
@@ -111,6 +185,7 @@ class Ejemplo
                     'contacto_at' => now()->subDays($hace), 'ejemplo' => true]);
             }
         });
+        self::historial();
     }
 
     public static function quitar(): void
@@ -118,6 +193,7 @@ class Ejemplo
         DB::transaction(function () {
             $tipos = ClaseTipo::where('ejemplo', true)->pluck('id');
             Clase::whereIn('clase_tipo_id', $tipos)->delete();
+            Clase::where('ejemplo', true)->delete();   // historial hecho con los tipos del gimnasio
             ClaseSerie::whereIn('clase_tipo_id', $tipos)->delete();
             ClaseTipo::whereIn('id', $tipos)->get()->each(fn ($t) => $t->clases()->exists() ? $t->update(['ejemplo' => false]) : $t->delete());
             Ejercicio::where('ejemplo', true)->delete();

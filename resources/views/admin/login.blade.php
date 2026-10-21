@@ -6,7 +6,7 @@
     <meta name="robots" content="noindex, nofollow">
     <title>Iniciar sesión · {{ request()->attributes->get('cuenta_dominio')?->nombre ?? config('vandu.plataforma.nombre') }}</title>
     <link rel="icon" href="/favi.svg" type="image/svg+xml">
-    <link rel="manifest" href="{{ route('app.manifiesto') }}">
+    <link rel="manifest" href="{{ route('app.manifiesto', ['v' => \App\Support\IconoApp::huella(request()->attributes->get('cuenta_dominio'))]) }}">
     <meta name="theme-color" content="#1A103D">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
