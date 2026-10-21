@@ -62,9 +62,9 @@ Route::get('/vandu-fuente.woff2', fn () => response()->file(resource_path('fonts
 ]))->name('vandu.fuente');
 // Identidad de la plataforma (logo y personaje), también servida desde resources/
 Route::get('/plataforma/{archivo}', fn (string $archivo) => response()->file(resource_path('img/nerby/' . basename($archivo)), [
-    'Content-Type'  => 'image/webp',
+    'Content-Type'  => str_ends_with($archivo, '.svg') ? 'image/svg+xml' : 'image/webp',
     'Cache-Control' => 'public, max-age=604800',
-]))->where('archivo', '(mascota|mascota-chica|n)\.webp')->name('plataforma.img');
+]))->where('archivo', '(mascota|mascota-chica|n)\.webp|logo-(blanco|palabra)\.svg')->name('plataforma.img');
 
 // Inicio de sesión del panel
 // El panel como app instalable (públicos: el navegador los pide antes de iniciar sesión)

@@ -134,7 +134,7 @@
         .side-foot button:hover { background: var(--ink-2); color: #fff; }
         .side-eco { position: absolute; right: -46px; bottom: 40px; width: 190px; opacity: .05; pointer-events: none; }
         .side-plataforma { display: flex; align-items: center; gap: 8px; margin: 18px 22px 10px; font-size: 12px; color: #8E86B0; text-decoration: none; }
-        .side-plataforma img { height: 18px; width: auto; }
+        .side-plataforma img { height: 15px; width: auto; opacity: .9; }
         .side-plataforma b { color: #E9E5F7; font-weight: 700; letter-spacing: -.01em; font-size: 13.5px; }
 
         .avatar { flex: none; width: 34px; height: 34px; border-radius: 50%; display: inline-grid; place-items: center;
@@ -541,7 +541,7 @@
     </nav>
 
     <x-logo-vandu archivo="icono-vandu.svg" alt="" class="side-eco" aria-hidden="true" />
-    <div class="side-plataforma" title="{{ config('vandu.plataforma.lema') }}"><img src="{{ route('plataforma.img', 'n.webp') }}" alt="">con <b>{{ config('vandu.plataforma.nombre') }}</b></div>
+    <div class="side-plataforma" title="{{ config('vandu.plataforma.lema') }}">con <img src="{{ route('plataforma.img', 'logo-palabra.svg') }}" alt="{{ config('vandu.plataforma.nombre') }}"></div>
 
     <div x-data="instalarApp()" x-show="visible" x-cloak class="solo-navegador">
         <button type="button" class="instalar" @click="instalar()"><i class="bi bi-phone"></i> <span><b class="d-block text-white" style="font-weight:600">Instalar la app</b><span x-text="ios ? 'En Safari: Compartir → Agregar a inicio' : 'Abre el panel como app, con su ícono'"></span></span></button>

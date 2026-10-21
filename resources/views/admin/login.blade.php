@@ -26,9 +26,7 @@
         .marca { background: radial-gradient(90% 70% at 85% 100%, rgba(107,59,255,.55) 0%, transparent 60%), var(--ink); color: #fff; padding: 48px; display: flex; flex-direction: column; justify-content: space-between;
                  position: relative; overflow: hidden; }
         .marca > img, .marca .logo img { width: 128px; height: auto; }
-        .marca .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; }
-        .marca .logo img.n { width: 46px; }
-        .marca .logo b { font-size: 30px; font-weight: 800; letter-spacing: -.035em; }
+        .marca img.logo-completo { width: 230px; height: auto; }
         .marca .personaje { position: absolute; right: -14px; bottom: -10px; width: min(52%, 300px); height: auto; pointer-events: none; filter: drop-shadow(0 24px 40px rgba(0,0,0,.35)); }
         .marca .texto { position: relative; z-index: 1; max-width: 60%; }
         .marca h1 { font-size: clamp(32px, 3.4vw, 50px); line-height: 1.02; font-weight: 800; letter-spacing: -.035em; margin: 0; max-width: 11ch; }
@@ -70,6 +68,7 @@
             body { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
             .marca { padding: 28px 24px; gap: 20px; }
             .marca > img, .marca .logo img { width: 104px; }
+            .marca img.logo-completo { width: 168px; }
             .marca .personaje { width: 128px; right: 6px; bottom: -6px; }
             .marca .texto { max-width: 66%; }
             .marca h1 { font-size: 28px; max-width: none; }
@@ -87,10 +86,10 @@
     @if($dom)
         <x-logo-vandu width="128" height="41" />
     @else
-        <span class="logo"><img class="n" src="{{ route('plataforma.img', 'n.webp') }}" alt=""><b>{{ config('vandu.plataforma.nombre') }}</b></span>
+        <img class="logo-completo" src="{{ route('plataforma.img', 'logo-blanco.svg') }}" alt="{{ config('vandu.plataforma.nombre') }}. {{ config('vandu.plataforma.lema') }}">
     @endif
     <div class="texto">
-        <h1>{{ config('vandu.plataforma.lema') }}</h1>
+        <h1>@if($dom){{ config('vandu.plataforma.lema') }}@else Menos herramientas. Más resultados.@endif</h1>
         <p>Clientes, ventas, agenda y finanzas de tu negocio en un solo lugar.</p>
     </div>
     <span class="pie">{{ $dom?->dominio ?? config('vandu.plataforma.nombre') . ' · hecho por ' . config('vandu.marca.sitio') }}</span>
