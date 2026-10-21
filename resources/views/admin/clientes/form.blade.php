@@ -1,6 +1,7 @@
 @extends('admin.layout')
 @php $nuevo = ! $cliente->exists; @endphp
-@section('titulo', $nuevo ? 'Nuevo cliente' : 'Editar cliente')
+@php $esGym = \App\Support\Cuentas::actual()?->tiene('fitness'); $quien = $esGym ? 'atleta' : 'cliente'; @endphp
+@section('titulo', $nuevo ? 'Nuevo ' . $quien : 'Editar ' . $quien)
 
 @push('head')
 <style>
@@ -20,14 +21,14 @@
     @unless($nuevo)<a href="{{ route('admin.clientes.show', $cliente) }}">{{ $cliente->empresa ?: $cliente->nombre }}</a> <i class="bi bi-chevron-right small"></i>@endunless
     <span>{{ $nuevo ? 'Nuevo' : 'Editar' }}</span>
 </div>
-<div class="page-head"><h1>{{ $nuevo ? 'Nuevo cliente' : 'Editar cliente' }}</h1></div>
+<div class="page-head"><h1>{{ $nuevo ? 'Nuevo ' . $quien : 'Editar ' . $quien }}</h1></div>
 
 <form method="post" enctype="multipart/form-data" action="{{ $nuevo ? route('admin.clientes.store') : route('admin.clientes.update', $cliente) }}">
     @csrf
     @unless($nuevo) @method('put') @endunless
 
     <div class="seccion">
-        <div><h2>Contacto</h2><p>Así aparece en el encabezado de cada cotización.</p></div>
+        <div><h2>Contacto</h2><p>{{ $esGym ? 'Su correo es su usuario para entrar a su portal; con su WhatsApp le mandas su acceso.' : 'Así aparece en el encabezado de cada cotización.' }}</p></div>
         <div class="panel panel-body row g-3 mx-0">
             <div class="col-md-6">
                 <label class="form-label" for="nombre">Nombre de contacto</label>

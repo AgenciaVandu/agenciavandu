@@ -25,6 +25,9 @@ class ClienteController extends Controller
 
     public function index(Request $request)
     {
+        // En un gimnasio los clientes son sus atletas: su propia lista (paquete, créditos, asistencia)
+        if (\App\Support\Cuentas::actual()?->tiene('fitness')) return app(Fitness\AtletasController::class)->index($request);
+
         $q = trim((string) $request->query('q'));
         $ver = $request->query('ver') ?? 'todos';
         $ver = array_key_exists($ver, self::VISTAS) ? $ver : 'todos';
@@ -106,6 +109,9 @@ class ClienteController extends Controller
             return redirect()->route('admin.presupuestos.create', ['cliente' => $cliente->id]);
         }
 
+        if (\App\Support\Cuentas::actual()?->tiene('fitness')) {
+            return redirect()->route('admin.clientes.show', [$cliente, 'ver' => 'atleta'])->with('ok', 'Atleta registrado. Asígnale un paquete y súbele una foto para reconocerlo en la entrada.');
+        }
         return redirect()->route('admin.clientes.show', $cliente)->with('ok', 'Cliente creado.');
     }
 
@@ -118,12 +124,26 @@ class ClienteController extends Controller
         'correos'      => ['Correos y mensajes', 'bi-envelope'],
     ];
 
+    /** Secciones de la ficha según el giro: un gimnasio ve "Clases y paquetes" y no ve cotizaciones ni proyectos */
+    public static function seccionesPara(?\App\Models\Cuenta $c): array
+    {
+        $s = self::SECCIONES;
+        if ($c && ! $c->tiene('cotizaciones')) unset($s['cotizaciones']);
+        if ($c && ! $c->tiene('proyectos')) unset($s['proyectos']);
+        if ($c?->tiene('fitness')) {
+            unset($s['resumen']);
+            $s = ['atleta' => ['Clases y paquetes', 'bi-lightning-charge']] + $s;
+        }
+        return $s;
+    }
+
     public function show(Request $request, Cliente $cliente)
     {
         $cliente->load(['razones', 'presupuestos.razon', 'presupuestos.conceptos', 'presupuestos.facturas', 'presupuestos.complementos.pago', 'presupuestos.proyecto.pagos', 'proyectos.etapas', 'proyectos.pagos', 'constancias']);
-        $ver = array_key_exists($request->query('ver'), self::SECCIONES) ? $request->query('ver') : 'resumen';
+        $secciones = self::seccionesPara(\App\Support\Cuentas::actual());
+        $ver = array_key_exists($request->query('ver'), $secciones) ? $request->query('ver') : array_key_first($secciones);
 
-        return view('admin.clientes.show', compact('cliente', 'ver'));
+        return view('admin.clientes.show', compact('cliente', 'ver', 'secciones'));
     }
 
     public function edit(Cliente $cliente)

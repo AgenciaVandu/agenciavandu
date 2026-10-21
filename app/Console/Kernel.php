@@ -18,6 +18,9 @@ class Kernel extends ConsoleKernel
             ->timezone(config('vandu.zona_horaria'))
             ->withoutOverlapping();
 
+        // Gimnasios: avisos a los atletas, faltas y horario fijo
+        $schedule->command('vandu:fitness')->everyFiveMinutes()->withoutOverlapping();
+
         // Latido: deja constancia de que el cron corre, para mostrarlo en Notificaciones
         $schedule->call(fn () => \Illuminate\Support\Facades\Cache::forever('vandu.cron.latido', now()->timestamp))
             ->everyMinute()->name('vandu-latido');

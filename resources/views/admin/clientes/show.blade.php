@@ -2,7 +2,8 @@
 @section('titulo', $cliente->empresa ?: $cliente->nombre)
 
 @php
-    $secciones = \App\Http\Controllers\Admin\ClienteController::SECCIONES;
+    $secciones ??= \App\Http\Controllers\Admin\ClienteController::SECCIONES;
+    $esGym = \App\Support\Cuentas::actual()?->tiene('fitness');
     $quien = $cliente->empresa ?: $cliente->nombre;
     $ps = $cliente->presupuestos;
     $aceptadas = $ps->where('estado', 'aceptada');
@@ -114,13 +115,13 @@
 @endpush
 
 @section('contenido')
-<div class="migas"><a href="{{ route('admin.clientes.index') }}">Clientes</a> <i class="bi bi-chevron-right small"></i> <span>{{ $quien }}</span></div>
+<div class="migas"><a href="{{ route('admin.clientes.index') }}">{{ $esGym ? 'Atletas' : 'Clientes' }}</a> <i class="bi bi-chevron-right small"></i> <span>{{ $quien }}</span></div>
 <div class="page-head">
     <div class="cabecera">
-        @include('admin._avatar', ['nombre' => $quien])
+        @if($esGym && $cliente->foto_url)<x-fitness.avatar :atleta="$cliente" grande />@else @include('admin._avatar', ['nombre' => $quien]) @endif
         <div style="min-width:0">
             <h1>{{ $quien }}</h1>
-            <p class="sub">{{ $cliente->empresa ? $cliente->nombre : 'Cliente' }} · desde {{ $cliente->created_at->locale('es')->isoFormat('MMMM YYYY') }}@if($cliente->origen === 'sitio') · llegó por el sitio @endif</p>
+            <p class="sub">{{ $cliente->empresa ? $cliente->nombre : ($esGym ? 'Atleta' : 'Cliente') }}@if($esGym && $cliente->activo === false) · <span class="text-danger">dado de baja</span>@endif · desde {{ $cliente->created_at->locale('es')->isoFormat('MMMM YYYY') }}@if($cliente->origen === 'sitio') · llegó por el sitio @endif</p>
         </div>
     </div>
     <a href="{{ route('admin.clientes.edit', $cliente) }}" class="btn btn-borde"><i class="bi bi-pencil me-1"></i> Editar</a>
@@ -128,7 +129,13 @@
 
 {{-- Acciones rápidas --}}
 <div class="rapidas">
+    @if($esGym && auth()->user()->puede('membresias'))
+        <a href="{{ route('admin.clientes.show', [$cliente, 'ver' => 'atleta']) }}#asignar" class="btn btn-primario"><i class="bi bi-ticket-perforated"></i> Asignar paquete</a>
+        <a href="{{ route('admin.atletas.credencial', $cliente) }}" class="btn btn-borde" data-recargar><i class="bi bi-qr-code"></i> Credencial</a>
+    @endif
+    @if(auth()->user()->puede('cotizaciones'))
     <a href="{{ route('admin.presupuestos.create', ['cliente' => $cliente->id]) }}" class="btn btn-primario"><i class="bi bi-plus-lg"></i> Nueva cotización</a>
+    @endif
     <button type="button" class="btn btn-borde" data-correo=""><i class="bi bi-envelope"></i> Enviar correo</button>
     @if($conFactura->isNotEmpty() || $sinFactura->isNotEmpty())
         <div class="dropdown">
@@ -151,7 +158,7 @@
     @if($cliente->whatsapp)
         <a class="btn btn-borde" target="_blank" rel="noopener" href="https://wa.me/{{ $cliente->whatsapp }}?text={{ rawurlencode('Hola ' . \App\Support\Correos::primerNombre((string) $cliente->nombre) . ', ') }}"><i class="bi bi-whatsapp"></i> WhatsApp</a>
     @endif
-    <button type="button" class="btn btn-borde" data-copiar="{{ $portal }}"><i class="bi bi-link-45deg"></i> Copiar su espacio</button>
+    @unless($esGym)<button type="button" class="btn btn-borde" data-copiar="{{ $portal }}"><i class="bi bi-link-45deg"></i> Copiar su espacio</button>@endunless
 </div>
 
 @if($cliente->nuevo)
@@ -177,6 +184,11 @@
         </a>
     @endforeach
 </nav>
+
+{{-- ============ GIMNASIO: CLASES Y PAQUETES ============ --}}
+@if($ver === 'atleta')
+    @include('admin.fitness.ficha-atleta', ['a' => $cliente])
+@endif
 
 {{-- ============ RESUMEN ============ --}}
 @if($ver === 'resumen')

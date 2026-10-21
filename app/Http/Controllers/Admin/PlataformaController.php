@@ -100,6 +100,8 @@ class PlataformaController extends Controller
             if (($d['ejemplos'] ?? false) && $cuenta->tiene('stock')) \App\Support\ProductosEjemplo::cargar();
             // Lote de autos: 10 unidades y 5 clientes con créditos (al corriente y morosos)
             if (($d['ejemplos'] ?? false) && $cuenta->tiene('autos')) \App\Support\AutosEjemplo::cargar();
+            // Gimnasio: tipos de clase HYROX, paquetes, horario de la semana y atletas con reservaciones
+            if (($d['ejemplos'] ?? false) && $cuenta->tiene('fitness')) \App\Support\Fitness\Ejemplo::cargar();
             return [$cuenta, $dueno, $dueno->nuevoEnlace()];
         });
     }

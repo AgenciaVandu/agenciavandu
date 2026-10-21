@@ -66,7 +66,7 @@
             <div><label class="form-label" for="pf-dueno">Quién lo administra</label><input id="pf-dueno" name="dueno_nombre" class="form-control" value="{{ old('dueno_nombre') }}" required maxlength="120"></div>
             <div><label class="form-label" for="pf-correo">Su correo</label><input id="pf-correo" type="email" name="dueno_email" class="form-control" value="{{ old('dueno_email') }}" required maxlength="190"></div>
             <div><label class="form-label" for="pf-tel">Su WhatsApp <span class="secundario fw-normal">(opcional)</span></label><input id="pf-tel" name="dueno_tel" class="form-control num" value="{{ old('dueno_tel') }}" maxlength="30"></div>
-            <label class="form-check m-0"><input type="hidden" name="ejemplos" value="0"><input type="checkbox" class="form-check-input" name="ejemplos" value="1" checked> <span class="form-check-label">Cargar datos de ejemplo <span class="secundario">(productos o autos con clientes y cobranza, según su tipo)</span></span></label>
+            <label class="form-check m-0"><input type="hidden" name="ejemplos" value="0"><input type="checkbox" class="form-check-input" name="ejemplos" value="1" checked> <span class="form-check-label">Cargar datos de ejemplo <span class="secundario">(productos, autos o gimnasio con atletas, según su tipo)</span></span></label>
             <label class="form-check m-0 align-self-end"><input type="hidden" name="enviar_correo" value="0"><input type="checkbox" class="form-check-input" name="enviar_correo" value="1" checked> <span class="form-check-label">Mandarle la invitación por correo</span></label>
         </div>
         <div class="d-flex gap-2 mt-3">

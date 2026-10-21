@@ -60,6 +60,17 @@ return [
                 ['nombre' => 'Cobranza', 'descripcion' => 'Registra ventas y pagos, y da seguimiento a los atrasos.', 'permisos' => ['clientes', 'cobranza']],
             ],
         ],
+        'fitness' => [
+            'nombre'  => 'Fitness (gimnasio y HYROX)',
+            'icono'   => 'bi-lightning-charge',
+            // Agenda de clases, atletas con paquetes de clases, reservaciones con QR. Sin proyectos, cotizaciones ni proveedores.
+            'modulos' => ['fitness', 'sin_proyectos', 'sin_cotizaciones', 'sin_proveedores'],
+            'roles'   => [
+                ['nombre' => 'Gerente', 'descripcion' => 'Todo el gimnasio: agenda y cupos, paquetes y precios, atletas, asistencia, finanzas y reportes.', 'permisos' => ['resumen', 'ventas', 'clientes', 'clases', 'asistencia', 'membresias', 'finanzas', 'tareas']],
+                ['nombre' => 'Recepción', 'descripcion' => 'Registra atletas, les asigna paquetes, reserva lugares y escanea el QR en la entrada.', 'permisos' => ['resumen', 'clientes', 'asistencia', 'membresias', 'ventas']],
+                ['nombre' => 'Entrenador', 'descripcion' => 'Ve sus clases y sus asistentes, y escanea el QR o pasa lista.', 'permisos' => ['asistencia']],
+            ],
+        ],
         'comercio' => [
             'nombre'  => 'Venta de productos y servicios',
             'icono'   => 'bi-shop',
@@ -394,6 +405,8 @@ return [
             'cotizacion_abierta'    => ['seccion' => 'cotizaciones', 'texto' => 'Un cliente abre una cotización', 'ayuda' => 'La primera vez y cuando vuelve a abrirla después de unas horas', 'icono' => 'bi-eye'],
             'cotizacion_aceptada'   => ['seccion' => 'cotizaciones', 'texto' => 'Un cliente acepta su cotización', 'ayuda' => 'La aceptó en línea desde su enlace', 'icono' => 'bi-check-circle'],
             'cambios_solicitados'   => ['seccion' => 'cotizaciones', 'texto' => 'Un cliente pide cambios', 'ayuda' => 'Escribió qué quiere ajustar en su cotización', 'icono' => 'bi-chat-left-text'],
+            'fitness_reserva'       => ['seccion' => 'clases', 'texto' => 'Un atleta reserva o cancela una clase', 'ayuda' => 'Desde su portal, con su usuario', 'icono' => 'bi-calendar-check'],
+            'fitness_vence'         => ['seccion' => 'membresias', 'texto' => 'Paquetes por terminarse', 'ayuda' => 'A un atleta le queda un crédito o su paquete vence pronto', 'icono' => 'bi-hourglass-split'],
             'redes_aprobado'        => ['seccion' => 'redes', 'texto' => 'Un cliente aprueba su contenido', 'ayuda' => 'Aprobó uno o varios posts de su calendario', 'icono' => 'bi-check2-square'],
             'redes_cambios'         => ['seccion' => 'redes', 'texto' => 'Un cliente comenta un post', 'ayuda' => 'Pidió un cambio o dejó una observación en su contenido', 'icono' => 'bi-chat-square-dots'],
             'cotizacion_descargada' => ['seccion' => 'cotizaciones', 'texto' => 'Un cliente descarga la cotización', 'ayuda' => 'Cuando baja el PDF desde su enlace', 'icono' => 'bi-file-earmark-arrow-down'],

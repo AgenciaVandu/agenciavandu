@@ -40,6 +40,11 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        // Atletas de un gimnasio (giro fitness): entran a su portal /atleta, nunca al panel
+        'atleta' => [
+            'driver' => 'session',
+            'provider' => 'atletas',
+        ],
     ],
 
     /*
@@ -63,6 +68,10 @@ return [
         'users' => [
             'driver' => 'vandu', // eloquent, buscando en todas las cuentas
             'model' => App\Models\User::class,
+        ],
+        'atletas' => [
+            'driver' => 'vandu',
+            'model' => App\Models\Cliente::class,
         ],
 
         // 'users' => [

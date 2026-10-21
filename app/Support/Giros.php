@@ -17,6 +17,9 @@ class Giros
     public const MODULOS = [
         'stock' => ['texto' => 'Productos e inventario', 'icono' => 'bi-box-seam', 'ayuda' => 'Catálogo con existencias, importar de Excel, cotizar desde el catálogo y página por producto.'],
         'autos' => ['texto' => 'Lote de autos', 'icono' => 'bi-car-front', 'ayuda' => 'Unidades con fotos y ficha técnica, venta de contado, a crédito o con financiera, cobranza y termómetro de clientes.'],
+        'fitness' => ['texto' => 'Gimnasio y clases', 'icono' => 'bi-lightning-charge', 'ayuda' => 'Agenda de clases con cupo, atletas con paquetes de clases, reservaciones, QR en la entrada y portal del atleta.'],
+        'sin_cotizaciones' => ['texto' => 'Sin Cotizaciones', 'icono' => 'bi-eye-slash', 'ayuda' => 'Oculta Cotizaciones para negocios que no cotizan.'],
+        'sin_proveedores' => ['texto' => 'Sin Proveedores', 'icono' => 'bi-eye-slash', 'ayuda' => 'Oculta Proveedores y órdenes de compra.'],
         'sin_proyectos' => ['texto' => 'Sin Proyectos', 'icono' => 'bi-eye-slash', 'ayuda' => 'Oculta la sección de Proyectos (etapas y entregas) para negocios que no la usan.'],
         'redes' => ['texto' => 'Redes sociales', 'icono' => 'bi-grid-3x3-gap', 'ayuda' => 'Calendario de contenido y aprobaciones de sus clientes.'],
     ];

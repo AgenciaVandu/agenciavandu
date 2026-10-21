@@ -40,6 +40,8 @@ class FinanzasController extends Controller
 
     public function index(Request $request, ?string $seccion = null)
     {
+        // Gimnasio: sus ventas son paquetes de clases
+        if (\App\Support\Cuentas::actual()?->tiene('fitness')) return app(Fitness\FinanzasController::class)->index($request);
         $seccion = array_key_exists((string) $seccion, self::SECCIONES) ? $seccion : 'resumen';
         $tz = config('vandu.zona_horaria');
         $periodo = array_key_exists($request->query('periodo'), self::PERIODOS) ? $request->query('periodo') : 'todo';
@@ -263,6 +265,7 @@ class FinanzasController extends Controller
     /** Exporta las cotizaciones del periodo en CSV (se abre en Excel o Sheets) */
     public function exportar(Request $request)
     {
+        if (\App\Support\Cuentas::actual()?->tiene('fitness')) return app(Fitness\FinanzasController::class)->exportar($request);
         $periodo = array_key_exists($request->query('periodo'), self::PERIODOS) ? $request->query('periodo') : 'todo';
         [$desde, $hasta] = $this->rango($periodo);
         $tz = config('vandu.zona_horaria');
@@ -301,6 +304,12 @@ class FinanzasController extends Controller
 
     /** @return array{0: ?string, 1: ?string} fechas Y-m-d (null = sin límite) */
     private function rango(string $periodo): array
+    {
+        return self::rangoDe($periodo);
+    }
+
+    /** [desde, hasta] del periodo (fechas en la zona del negocio; null = sin límite). También lo usan los reportes del gimnasio */
+    public static function rangoDe(string $periodo): array
     {
         $hoy = now(config('vandu.zona_horaria'));
         return match ($periodo) {

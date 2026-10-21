@@ -2,13 +2,23 @@
 
 namespace App\Models;
 
+use Illuminate\Auth\Authenticatable;
+use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
-class Cliente extends Model
+/**
+ * Cliente del negocio. En un gimnasio (giro fitness) es el atleta: entra a su portal /atleta con su correo
+ * y contraseña (guard "atleta"), tiene foto, membresías, reservaciones y un código QR para entrar a clase.
+ */
+class Cliente extends Model implements AuthenticatableContract
 {
     use \App\Models\Concerns\DeCuenta;
+    use Authenticatable;
+    use \App\Models\Concerns\EsAtleta;
+
+    protected $hidden = ['password', 'remember_token', 'acceso_hash'];
 
     protected $fillable = [
         'nombre', 'empresa', 'email', 'telefono',
@@ -16,7 +26,8 @@ class Cliente extends Model
         'origen', 'nuevo', 'interes', 'contacto_at', 'ejemplo',
     ];
 
-    protected $casts = ['nuevo' => 'boolean', 'contacto_at' => 'datetime', 'portal_visto_at' => 'datetime'];
+    protected $casts = ['nuevo' => 'boolean', 'contacto_at' => 'datetime', 'portal_visto_at' => 'datetime',
+                        'activo' => 'boolean', 'password' => 'hashed', 'acceso_expira' => 'datetime', 'ultimo_acceso_at' => 'datetime'];
 
     protected static function booted(): void
     {

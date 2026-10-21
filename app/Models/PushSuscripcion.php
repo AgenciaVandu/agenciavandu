@@ -12,13 +12,14 @@ class PushSuscripcion extends Model
 
     protected $table = 'push_suscripciones';
 
-    protected $fillable = ['user_id', 'endpoint_hash', 'endpoint', 'p256dh', 'auth', 'dispositivo', 'eventos', 'ultimo_envio_at'];
+    protected $fillable = ['user_id', 'cliente_id', 'endpoint_hash', 'endpoint', 'p256dh', 'auth', 'dispositivo', 'eventos', 'ultimo_envio_at'];
 
     protected $casts = ['eventos' => 'array', 'ultimo_envio_at' => 'datetime'];
 
     protected $hidden = ['endpoint', 'p256dh', 'auth'];
 
     public function user(): BelongsTo { return $this->belongsTo(User::class); }
+    public function cliente(): BelongsTo { return $this->belongsTo(Cliente::class); }
 
     public function quiere(string $evento): bool
     {

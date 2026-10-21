@@ -29,6 +29,12 @@ class Producto extends Model
 
     protected static function booted(): void
     {
+        // Los paquetes de clases (giro fitness) viven en la misma tabla pero son su propio modelo (Paquete):
+        // el catálogo, el inventario y las cotizaciones solo ven productos.
+        if (static::class === self::class) {
+            static::addGlobalScope('tipo', fn (Builder $q) => $q->where($q->getModel()->getTable() . '.tipo', 'producto'));
+        }
+
         static::creating(function (Producto $p) {
             $p->slug = static::slugLibre($p->nombre, $p->clave);
         });

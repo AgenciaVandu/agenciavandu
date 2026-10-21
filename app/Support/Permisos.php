@@ -21,6 +21,9 @@ class Permisos
         'clientes'      => ['texto' => 'Clientes',              'icono' => 'bi-people',            'ayuda' => 'Fichas, datos fiscales y contactos del sitio'],
         'unidades'      => ['texto' => 'Unidades',               'icono' => 'bi-car-front',         'ayuda' => 'Autos del lote: fichas, fotos, precios y su página para compartir'],
         'cobranza'      => ['texto' => 'Ventas a crédito y cobranza', 'icono' => 'bi-cash-coin',    'ayuda' => 'Vender unidades, registrar pagos, moratorios y el termómetro de clientes'],
+        'clases'        => ['texto' => 'Agenda de clases',      'icono' => 'bi-calendar-week',     'ayuda' => 'Programar clases y su cupo, tipos de clase, ejercicios y entrenamientos'],
+        'asistencia'    => ['texto' => 'Asistencia',            'icono' => 'bi-qr-code-scan',      'ayuda' => 'Escanear el QR en la entrada y pasar lista de las clases'],
+        'membresias'    => ['texto' => 'Paquetes y membresías', 'icono' => 'bi-ticket-perforated', 'ayuda' => 'Crear paquetes de clases con su precio y asignarlos a los atletas'],
         'productos'     => ['texto' => 'Productos e inventario', 'icono' => 'bi-box-seam',         'ayuda' => 'Catálogo, existencias, costos, entradas y salidas, e importar desde Excel'],
         'proveedores'   => ['texto' => 'Proveedores',           'icono' => 'bi-truck',             'ayuda' => 'Proveedores, órdenes de compra, sus facturas y archivos'],
         'finanzas'      => ['texto' => 'Finanzas',              'icono' => 'bi-graph-up-arrow',    'ayuda' => 'Cobros, ingresos y exportar a Excel'],
@@ -30,7 +33,8 @@ class Permisos
     ];
 
     /** Secciones que solo existen en ciertos giros: sección => módulo del giro */
-    public const MODULOS = ['redes' => 'redes', 'productos' => 'stock', 'proyectos' => 'proyectos', 'unidades' => 'autos', 'cobranza' => 'autos'];
+    public const MODULOS = ['redes' => 'redes', 'productos' => 'stock', 'proyectos' => 'proyectos', 'unidades' => 'autos', 'cobranza' => 'autos',
+                               'clases' => 'fitness', 'asistencia' => 'fitness', 'membresias' => 'fitness', 'cotizaciones' => 'cotizaciones', 'proveedores' => 'proveedores'];
 
     /** Secciones disponibles para la cuenta activa (para armar roles) */
     public static function disponibles(): array
@@ -62,6 +66,21 @@ class Permisos
         ['admin.creditos.*', 'cobranza'],
         ['admin.sucursales*', 'configuracion'],
         ['admin.credito-ajustes*', 'configuracion'],
+        // Gimnasio: el entrenador ve la agenda y sus clases; programarlas y cambiar cupos es de "clases"
+        ['admin.clases.index', ['clases', 'asistencia']],
+        ['admin.clases.show', ['clases', 'asistencia']],
+        ['admin.clases.*', 'clases'],
+        ['admin.clase-tipos*', 'clases'],
+        ['admin.ejercicios*', 'clases'],
+        ['admin.reservaciones.asistencia', ['asistencia', 'clases']],
+        ['admin.reservaciones.*', ['clases', 'asistencia', 'membresias']],
+        ['admin.escanear*', 'asistencia'],
+        ['admin.paquetes*', 'membresias'],
+        ['admin.membresias*', 'membresias'],
+        ['admin.atletas.foto', ['clientes', 'membresias', 'asistencia', 'clases']],   // para reconocerlo al escanear
+        ['admin.atletas.*', ['clientes', 'membresias']],
+        ['admin.fitness-reportes*', ['clases', 'finanzas']],
+        ['admin.fitness-ajustes*', 'configuracion'],
         ['admin.clientes.*', 'clientes'],
         ['admin.proveedores.*', 'proveedores'],
         ['admin.ordenes.*', 'proveedores'],
@@ -111,7 +130,7 @@ class Permisos
     /** Primera página a la que puede entrar (para el inicio) */
     public static function inicio(User $u): string
     {
-        foreach (['resumen' => 'admin.resumen', 'proyectos' => 'admin.proyectos.index', 'unidades' => 'admin.unidades.index', 'cobranza' => 'admin.creditos.index', 'cotizaciones' => 'admin.presupuestos.index', 'redes' => 'admin.redes'] as $s => $r) {
+        foreach (['resumen' => 'admin.resumen', 'clases' => 'admin.clases.index', 'asistencia' => 'admin.clases.index', 'proyectos' => 'admin.proyectos.index', 'unidades' => 'admin.unidades.index', 'cobranza' => 'admin.creditos.index', 'cotizaciones' => 'admin.presupuestos.index', 'redes' => 'admin.redes'] as $s => $r) {
             if ($u->puede($s)) return route($r);
         }
         return route('admin.tareas.index');

@@ -16,24 +16,35 @@
     // Cada quien ve solo las secciones de su rol
     $puede = fn ($s) => $usuario?->puede($s) ?? false;
     try { $tareasNav = \App\Models\Tarea::where('asignada_a', $usuario?->id)->abiertas()->count(); } catch (\Throwable $e) { $tareasNav = 0; }
+    $gymNav = (bool) $cuentaNav?->tiene('fitness');
+    // Gimnasio: atletas sin paquete vigente o por renovar (para el número del menú)
+    try { $renovarNav = $gymNav && $usuario?->puede('membresias') ? \App\Models\Membresia::vigentes()->where(fn ($q) => $q->whereDate('vence_el', '<=', now(config('vandu.zona_horaria'))->addDays(3)->toDateString())->orWhereRaw('creditos IS NOT NULL AND usados + 1 >= creditos'))->distinct('cliente_id')->count('cliente_id') : 0; } catch (\Throwable $e) { $renovarNav = 0; }
+    try { $hoyNav = $gymNav ? \App\Models\Clase::programadas()->delDia(now())->when(! $usuario?->puede('clases'), fn ($q) => $q->where('coach_id', $usuario?->id))->count() : 0; } catch (\Throwable $e) { $hoyNav = 0; }
     $nav = array_values(array_filter([
         ['ruta' => 'admin.resumen',             'activo' => 'admin.resumen',          'icono' => 'bi-grid-1x2',        'texto' => 'Resumen', 'seccion' => 'resumen'],
         ['ruta' => 'admin.tareas.index',        'activo' => 'admin.tareas.*',         'icono' => 'bi-check2-square',   'texto' => $puede('tareas') ? 'Tareas' : 'Mis tareas', 'cuenta' => $tareasNav, 'seccion' => null],
         ['ruta' => 'admin.ventas.index',        'activo' => 'admin.ventas.*',         'icono' => 'bi-funnel',          'texto' => 'Ventas', 'cuenta' => $prospectosNav, 'nuevos' => true, 'seccion' => 'ventas'],
-        ['ruta' => 'admin.presupuestos.index',  'activo' => 'admin.presupuestos.*',   'icono' => 'bi-file-earmark-text','texto' => 'Cotizaciones', 'cuenta' => $vigentesNav, 'seccion' => 'cotizaciones'],
+        ['ruta' => 'admin.clases.index',        'activo' => ['admin.clases.*', 'admin.clase-tipos*', 'admin.ejercicios*'], 'icono' => 'bi-calendar-week', 'texto' => 'Agenda', 'cuenta' => $hoyNav, 'seccion' => ['clases', 'asistencia'], 'modulo' => 'fitness'],
+        ['ruta' => 'admin.escanear',            'activo' => 'admin.escanear*',        'icono' => 'bi-qr-code-scan',    'texto' => 'Escanear', 'seccion' => 'asistencia', 'modulo' => 'fitness'],
+        ['ruta' => 'admin.presupuestos.index',  'activo' => 'admin.presupuestos.*',   'icono' => 'bi-file-earmark-text','texto' => 'Cotizaciones', 'cuenta' => $vigentesNav, 'seccion' => 'cotizaciones', 'modulo' => 'cotizaciones'],
         ['ruta' => 'admin.unidades.index',      'activo' => 'admin.unidades.*',       'icono' => 'bi-car-front',       'texto' => 'Unidades', 'seccion' => ['unidades', 'cobranza'], 'modulo' => 'autos'],
         ['ruta' => 'admin.creditos.index',      'activo' => 'admin.creditos.*',       'icono' => 'bi-cash-coin',       'texto' => 'Cobranza', 'cuenta' => $atrasoNav, 'seccion' => 'cobranza', 'modulo' => 'autos'],
         ['ruta' => 'admin.proyectos.index',     'activo' => 'admin.proyectos.*',      'icono' => 'bi-kanban',          'texto' => 'Proyectos', 'cuenta' => $activosNav, 'seccion' => 'proyectos'],
         ['ruta' => 'admin.redes',               'activo' => 'admin.redes*',           'icono' => 'bi-grid-3x3-gap',    'texto' => 'Redes sociales', 'cuenta' => $redesNav ?? 0, 'seccion' => 'redes'],
-        ['ruta' => 'admin.clientes.index',      'activo' => 'admin.clientes.*',       'icono' => 'bi-people',          'texto' => 'Clientes', 'cuenta' => $nuevosNav, 'nuevos' => true, 'seccion' => 'clientes'],
+        ['ruta' => 'admin.clientes.index',      'activo' => 'admin.clientes.*',       'icono' => 'bi-people',          'texto' => $gymNav ? 'Atletas' : 'Clientes', 'cuenta' => $gymNav ? 0 : $nuevosNav, 'nuevos' => true, 'seccion' => 'clientes'],
+        ['ruta' => 'admin.paquetes',            'activo' => 'admin.paquetes*',        'icono' => 'bi-ticket-perforated', 'texto' => 'Paquetes', 'cuenta' => $renovarNav, 'seccion' => 'membresias', 'modulo' => 'fitness'],
         ['ruta' => 'admin.productos.index',     'activo' => 'admin.productos.*',      'icono' => 'bi-box-seam',        'texto' => 'Productos', 'cuenta' => $bajosNav, 'seccion' => ['productos', 'cotizaciones'], 'modulo' => 'stock'],
-        ['ruta' => 'admin.proveedores.index',   'activo' => ['admin.proveedores.*', 'admin.ordenes.*'], 'icono' => 'bi-truck', 'texto' => 'Proveedores', 'seccion' => 'proveedores'],
+        ['ruta' => 'admin.proveedores.index',   'activo' => ['admin.proveedores.*', 'admin.ordenes.*'], 'icono' => 'bi-truck', 'texto' => 'Proveedores', 'seccion' => 'proveedores', 'modulo' => 'proveedores'],
         ['ruta' => 'admin.finanzas',            'activo' => 'admin.finanzas*',        'icono' => 'bi-graph-up-arrow',  'texto' => 'Finanzas', 'seccion' => 'finanzas'],
+        ['ruta' => 'admin.fitness-reportes',    'activo' => 'admin.fitness-reportes*', 'icono' => 'bi-bar-chart-line', 'texto' => 'Reportes', 'seccion' => ['clases', 'finanzas'], 'modulo' => 'fitness'],
     ], fn ($i) => (! isset($i['modulo']) || $cuentaNav?->tiene($i['modulo'])) && ($i['seccion'] === null || collect((array) $i['seccion'])->contains(fn ($s) => $puede($s)))));
     $inicioNav = $usuario ? \App\Support\Permisos::inicio($usuario) : route('admin.resumen');
     // Barra inferior del celular: hasta 4 accesos (+ el botón de nueva cotización si la puede hacer)
     $tabs = array_slice(array_values(array_filter([
         $puede('resumen') ? ['url' => route('admin.resumen'), 'activo' => 'admin.resumen', 'icono' => 'bi-grid-1x2', 'lleno' => 'bi-grid-1x2-fill', 'texto' => 'Inicio'] : null,
+        $gymNav && ($puede('clases') || $puede('asistencia')) ? ['url' => route('admin.clases.index'), 'activo' => 'admin.clases.*', 'icono' => 'bi-calendar-week', 'lleno' => 'bi-calendar-week-fill', 'texto' => 'Agenda', 'cuenta' => $hoyNav] : null,
+        $gymNav && $puede('asistencia') ? ['url' => route('admin.escanear'), 'activo' => 'admin.escanear*', 'icono' => 'bi-qr-code-scan', 'lleno' => 'bi-qr-code-scan', 'texto' => 'Escanear'] : null,
+        $gymNav && $puede('clientes') ? ['url' => route('admin.clientes.index'), 'activo' => 'admin.clientes.*', 'icono' => 'bi-people', 'lleno' => 'bi-people-fill', 'texto' => 'Atletas'] : null,
         $puede('cotizaciones') ? ['url' => route('admin.presupuestos.index'), 'activo' => 'admin.presupuestos.*', 'icono' => 'bi-file-earmark-text', 'lleno' => 'bi-file-earmark-text-fill', 'texto' => 'Cotizaciones', 'cuenta' => $vigentesNav] : null,
         $puede('unidades') ? ['url' => route('admin.unidades.index'), 'activo' => 'admin.unidades.*', 'icono' => 'bi-car-front', 'lleno' => 'bi-car-front-fill', 'texto' => 'Unidades'] : null,
         $puede('cobranza') ? ['url' => route('admin.creditos.index'), 'activo' => 'admin.creditos.*', 'icono' => 'bi-cash-coin', 'lleno' => 'bi-cash-coin', 'texto' => 'Cobranza', 'cuenta' => $atrasoNav] : null,
@@ -463,9 +474,11 @@
             <i class="bi bi-diagram-3"></i> Tipos de proyecto
         </a>
         @endif
+        @if($cuentaNav?->tiene('cotizaciones'))
         <a href="{{ route('admin.costeo') }}" class="{{ request()->routeIs('admin.costeo*') ? 'activo' : '' }}">
             <i class="bi bi-calculator"></i> Costeo
         </a>
+        @endif
         <a href="{{ route('admin.correos.plantillas') }}" class="{{ request()->routeIs('admin.correos.plantillas*') ? 'activo' : '' }}">
             <i class="bi {{ request()->routeIs('admin.correos.plantillas*') ? 'bi-envelope-paper-fill' : 'bi-envelope-paper' }}"></i> Plantillas de correo
         </a>
@@ -474,6 +487,14 @@
         <a href="{{ route('admin.negocio') }}" class="{{ request()->routeIs('admin.negocio') ? 'activo' : '' }}">
             <i class="bi bi-shop"></i> Mi negocio
         </a>
+        @if($gymNav)
+        <a href="{{ route('admin.sucursales') }}" class="{{ request()->routeIs('admin.sucursales*') ? 'activo' : '' }}">
+            <i class="bi bi-geo-alt"></i> Sucursales
+        </a>
+        <a href="{{ route('admin.fitness-ajustes') }}" class="{{ request()->routeIs('admin.fitness-ajustes*') ? 'activo' : '' }}">
+            <i class="bi bi-sliders2"></i> Reglas del gimnasio
+        </a>
+        @endif
         @if($cuentaNav?->tiene('autos'))
         <a href="{{ route('admin.sucursales') }}" class="{{ request()->routeIs('admin.sucursales*') ? 'activo' : '' }}">
             <i class="bi bi-geo-alt"></i> Sucursales
@@ -485,9 +506,11 @@
         <a href="{{ route('admin.negocio.correo') }}" class="{{ request()->routeIs('admin.negocio.correo*') ? 'activo' : '' }}">
             <i class="bi bi-envelope-at"></i> Correo de envío
         </a>
+        @if($cuentaNav?->tiene('cotizaciones'))
         <a href="{{ route('admin.negocio.documento') }}" class="{{ request()->routeIs('admin.negocio.documento*') ? 'activo' : '' }}">
             <i class="bi bi-file-earmark-richtext"></i> Diseño de cotización
         </a>
+        @endif
         @endif
         @if($puede('usuarios'))
         <a href="{{ route('admin.usuarios') }}" class="{{ request()->routeIs('admin.usuarios*') ? 'activo' : '' }}">

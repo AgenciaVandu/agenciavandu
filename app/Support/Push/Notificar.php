@@ -55,7 +55,7 @@ class Notificar
             if (! Schema::hasTable('push_suscripciones')) return 0;
 
             // Avisos del negocio: solo a quien puede ver esa sección (un fotógrafo no recibe cobros)
-            $destinos ??= PushSuscripcion::with('user.rol')->get()->filter(fn ($s) => $s->quiere($evento) && static::puedeRecibir($s->user, $evento));
+            $destinos ??= PushSuscripcion::with('user.rol')->whereNotNull('user_id')->get()->filter(fn ($s) => $s->quiere($evento) && static::puedeRecibir($s->user, $evento));
             $mensaje = array_filter([
                 'titulo'   => $titulo,
                 'cuerpo'   => $cuerpo,

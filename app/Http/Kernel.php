@@ -67,6 +67,7 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'admin.vandu' => \App\Http\Middleware\AdminAuth::class,
         'cuenta.enlace' => \App\Http\Middleware\CuentaPorEnlace::class,
+        'atleta' => \App\Http\Middleware\AtletaAuth::class,
     ];
 
     /**
@@ -84,6 +85,7 @@ class Kernel extends HttpKernel
         \Illuminate\Routing\Middleware\ThrottleRequestsWithRedis::class,
         \Illuminate\Contracts\Session\Middleware\AuthenticatesSessions::class,
         \App\Http\Middleware\AdminAuth::class,
+        \App\Http\Middleware\AtletaAuth::class,
         \App\Http\Middleware\CuentaPorEnlace::class,
         \Illuminate\Routing\Middleware\SubstituteBindings::class,
         \Illuminate\Auth\Middleware\Authorize::class,

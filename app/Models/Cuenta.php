@@ -8,7 +8,22 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /** Un negocio dentro de la plataforma (una agencia, un estudio de arquitectura…) */
 class Cuenta extends Model
 {
-    protected $fillable = ['nombre', 'giro', 'dominio', 'activa', 'ajustes', 'notas'];
+    protected $fillable = ['nombre', 'slug', 'giro', 'dominio', 'activa', 'ajustes', 'notas'];
+
+    protected static function booted(): void
+    {
+        // Nombre corto para los enlaces del negocio sin dominio propio (p. ej. /atleta/axion-fit)
+        static::creating(fn (Cuenta $c) => $c->slug ??= static::slugLibre($c->nombre));
+    }
+
+    public static function slugLibre(string $nombre, ?int $ignorar = null): string
+    {
+        $base = \Illuminate\Support\Str::slug($nombre) ?: 'negocio';
+        $slug = $base;
+        if (in_array($slug, \App\Support\Fitness\Portal::RESERVADAS, true)) $slug = $base = "$base-gym";
+        for ($i = 2; static::where('slug', $slug)->when($ignorar, fn ($q) => $q->whereKeyNot($ignorar))->exists(); $i++) $slug = "$base-$i";
+        return $slug;
+    }
 
     protected $casts = ['ajustes' => 'array', 'activa' => 'boolean'];
 
@@ -33,8 +48,8 @@ class Cuenta extends Model
     /** Módulos del giro, más los que se le activen a un negocio en particular (ajustes.modulos) */
     public function tiene(string $modulo): bool
     {
-        // Proyectos viene prendido; un tipo de empresa lo apaga con el módulo "sin_proyectos"
-        if ($modulo === 'proyectos') return ! $this->tiene('sin_proyectos');
+        // Proyectos, Cotizaciones y Proveedores vienen prendidos; un tipo de empresa los apaga con "sin_…"
+        if (in_array($modulo, ['proyectos', 'cotizaciones', 'proveedores'], true)) return ! $this->tiene('sin_' . $modulo);
         return in_array($modulo, $this->giro_info['modulos'] ?? [], true)
             || in_array($modulo, (array) $this->ajuste('modulos', []), true);
     }

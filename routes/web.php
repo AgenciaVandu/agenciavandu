@@ -138,6 +138,9 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::post('productos/{producto}/movimiento', [Admin\ProductoController::class, 'movimiento'])->name('productos.movimiento');
     Route::resource('productos', Admin\ProductoController::class);
 
+    // Gimnasio (giro Fitness): agenda, reservaciones, QR, paquetes y reportes
+    require __DIR__ . '/fitness.php';
+
     // Lote de autos: sucursales, unidades, ventas y cobranza
     Route::get('sucursales', [Admin\SucursalesController::class, 'index'])->name('sucursales');
     Route::post('sucursales', [Admin\SucursalesController::class, 'store'])->name('sucursales.store');
@@ -367,3 +370,6 @@ if (config('vandu.dropbox.simulado') && app()->environment('local', 'testing')) 
         ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
     Route::get('/_dropbox-simulado/{id}', [App\Http\Controllers\Admin\DropboxController::class, 'simulado'])->where('id', 'id:[A-Za-z0-9]+')->name('dropbox.simulado');
 }
+
+// Portal del atleta (gimnasios)
+require __DIR__ . '/atleta.php';
