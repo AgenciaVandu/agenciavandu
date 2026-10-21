@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    {{-- App en el celular: sin zoom por doble toque (pellizcar sigue funcionando) y sin el zoom de iPhone al escribir en un campo --}}
+    <style>html { touch-action: manipulation; -webkit-text-size-adjust: 100%; } @media (pointer: coarse) { input, select, textarea { font-size: max(16px, 1em) !important; } }</style>
     <meta name="robots" content="noindex, nofollow">
     <title>Iniciar sesión · {{ request()->attributes->get('cuenta_dominio')?->nombre ?? config('vandu.plataforma.nombre') }}</title>
     <link rel="icon" href="/favi.svg" type="image/svg+xml">
