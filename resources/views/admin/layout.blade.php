@@ -521,6 +521,9 @@
         <a href="{{ route('admin.fitness-ajustes') }}" class="{{ request()->routeIs('admin.fitness-ajustes*') ? 'activo' : '' }}">
             <i class="bi bi-sliders2"></i> Reglas del gimnasio
         </a>
+        <a href="{{ route('admin.torniquetes') }}" class="{{ request()->routeIs('admin.torniquetes*') ? 'activo' : '' }}">
+            <i class="bi bi-door-open"></i> Torniquetes
+        </a>
         @endif
         @if($cuentaNav?->tiene('autos'))
         <a href="{{ route('admin.sucursales') }}" class="{{ request()->routeIs('admin.sucursales*') ? 'activo' : '' }}">

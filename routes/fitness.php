@@ -44,6 +44,14 @@ Route::get('escanear', [Fitness\EscanearController::class, 'show'])->name('escan
 Route::post('escanear', [Fitness\EscanearController::class, 'checkin'])->middleware('throttle:120,1')->name('escanear.checkin');
 Route::post('escanear/inscribir', [Fitness\EscanearController::class, 'inscribir'])->name('escanear.inscribir');
 
+// Torniquetes (Control iD iDFace en modo online)
+Route::get('gimnasio/torniquetes', [Fitness\TorniquetesController::class, 'index'])->name('torniquetes');
+Route::post('gimnasio/torniquetes', [Fitness\TorniquetesController::class, 'store'])->name('torniquetes.store');
+Route::put('gimnasio/torniquetes/{dispositivo}', [Fitness\TorniquetesController::class, 'update'])->name('torniquetes.update');
+Route::post('gimnasio/torniquetes/{dispositivo}/direccion', [Fitness\TorniquetesController::class, 'token'])->name('torniquetes.token');
+Route::post('gimnasio/torniquetes/{dispositivo}/probar', [Fitness\TorniquetesController::class, 'probar'])->middleware('throttle:60,1')->name('torniquetes.probar');
+Route::delete('gimnasio/torniquetes/{dispositivo}', [Fitness\TorniquetesController::class, 'destroy'])->name('torniquetes.destroy');
+
 // Paquetes y membresías
 Route::get('paquetes', [Fitness\PaquetesController::class, 'index'])->name('paquetes');
 Route::post('paquetes', [Fitness\PaquetesController::class, 'store'])->name('paquetes.store');

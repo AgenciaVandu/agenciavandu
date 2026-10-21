@@ -25,6 +25,7 @@ Route::prefix('atleta')->name('atleta.')->group(function () {
         Route::post('clases/{clase}/reservar', [Atleta\PortalController::class, 'reservar'])->whereNumber('clase')->middleware('throttle:30,1')->name('reservar');
         Route::post('reservaciones/{reservacion}/cancelar', [Atleta\PortalController::class, 'cancelar'])->whereNumber('reservacion')->middleware('throttle:30,1')->name('cancelar');
         Route::get('credencial', [Atleta\PortalController::class, 'credencial'])->name('credencial');
+        Route::get('credencial/codigo', [Atleta\PortalController::class, 'codigo'])->middleware('throttle:120,1')->name('credencial.codigo');
         Route::get('historial', [Atleta\PortalController::class, 'historial'])->name('historial');
         Route::get('perfil', [Atleta\PortalController::class, 'perfil'])->name('perfil');
         Route::post('perfil', [Atleta\PortalController::class, 'guardarPerfil'])->name('perfil.guardar');

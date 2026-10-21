@@ -91,6 +91,7 @@ class Permisos
         ['admin.atletas.*', ['clientes', 'membresias']],
         ['admin.fitness-reportes*', ['clases', 'finanzas']],
         ['admin.fitness-ajustes*', 'configuracion'],
+        ['admin.torniquetes*', 'configuracion'],
         ['admin.clientes.*', 'clientes'],
         ['admin.proveedores.*', 'proveedores'],
         ['admin.ordenes.*', 'proveedores'],

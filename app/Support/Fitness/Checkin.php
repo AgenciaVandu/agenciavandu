@@ -9,7 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Collection;
 
 /**
- * Entrada con QR: se escanea la credencial del atleta (fija) y se busca su reservación de una clase de hoy,
+ * Entrada con QR: se escanea la credencial del atleta (la del celular cambia cada minuto; la impresa es fija) y se busca su reservación de una clase de hoy,
  * en la sucursal de quien escanea y dentro de la ventana de entrada. Si no reservó, se ofrecen las clases
  * a las que todavía se le puede inscribir.
  */
@@ -18,10 +18,9 @@ class Checkin
     /** @return array{ok: bool, tipo: string, mensaje: string, atleta: ?array, clase: ?array, opciones: array} */
     public static function escanear(string $codigo, User $por): array
     {
-        $codigo = trim($codigo);
-        if (str_starts_with($codigo, 'FIT:')) $codigo = substr($codigo, 4);
-        $c = preg_match('/^[A-Za-z0-9]{32}$/', $codigo) ? Cliente::where('qr_codigo', $codigo)->first() : null;
+        [$c, $tipo] = Credencial::leer($codigo);
         if (! $c) return self::respuesta(false, 'desconocido', 'Este código no es de un atleta de este gimnasio.');
+        if ($tipo === 'vencido') return self::respuesta(false, 'vencido', 'Ese QR ya cambió. Pídele que abra de nuevo su credencial.', $c);
         if ($c->activo === false) return self::respuesta(false, 'inactivo', "{$c->nombre} está dado de baja.", $c);
 
         $candidatas = self::clasesEnVentana($por);
@@ -53,15 +52,16 @@ class Checkin
         return $r->refresh();
     }
 
-    /** Clases de hoy cuya ventana de entrada está abierta, en la sucursal de quien escanea (si tiene una) */
-    public static function clasesEnVentana(User $por): Collection
+    /** Clases de hoy cuya ventana de entrada está abierta, en la sucursal de quien escanea o del torniquete (si tiene una) */
+    public static function clasesEnVentana(User|int|null $por): Collection
     {
+        $sucursal = $por instanceof User ? $por->sucursal_id : $por;
         $antes = (int) Ajustes::get('checkin_antes');
         $despues = (int) Ajustes::get('checkin_despues');
         return Clase::programadas()->with('tipo')->withCount('ocupadas')
             ->where('inicia_at', '<=', now()->addMinutes($antes))
             ->where('inicia_at', '>=', now()->subMinutes($despues))
-            ->when($por->sucursal_id, fn ($q) => $q->where(fn ($w) => $w->where('sucursal_id', $por->sucursal_id)->orWhereNull('sucursal_id')))
+            ->when($sucursal, fn ($q) => $q->where(fn ($w) => $w->where('sucursal_id', $sucursal)->orWhereNull('sucursal_id')))
             ->orderBy('inicia_at')->get();
     }
 

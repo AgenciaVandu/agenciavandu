@@ -29,6 +29,9 @@ class RouteServiceProvider extends ServiceProvider
         });
 
         $this->routes(function () {
+            Route::middleware([\Illuminate\Routing\Middleware\SubstituteBindings::class, 'throttle:600,1'])
+                ->group(base_path('routes/controlid.php'));
+
             Route::middleware('api')
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));

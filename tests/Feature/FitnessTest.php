@@ -324,7 +324,7 @@ class FitnessTest extends TestCase
         $this->post("/atleta/clases/{$clase->id}/reservar")->assertSessionHas('ok');
         $r = Reservacion::firstOrFail();
         $this->assertSame(['atleta', 1], [$r->origen, $a->fresh()->membresia_actual->usados]);
-        $this->get('/atleta/credencial')->assertOk()->assertSee($a->fresh()->qr);
+        $this->get('/atleta/credencial')->assertOk()->assertSee('FIT2:' . $a->id . ':', false);
         $this->post("/atleta/reservaciones/{$r->id}/cancelar")->assertSessionHas('ok', fn ($m) => str_contains($m, 'regresamos'));
         $this->assertSame(0, $a->fresh()->membresia_actual->usados);
 

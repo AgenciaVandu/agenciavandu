@@ -140,6 +140,10 @@
     .credencial .quien { display: flex; justify-content: space-between; align-items: end; gap: 10px; margin-top: 12px; }
     .credencial .quien b { font-size: 17px; line-height: 1.2; } .credencial .quien span { font-size: 12.5px; color: #5d6270; }
     .credencial .quien .cifra { font-size: 30px; color: var(--noche); }
+    .credencial .reloj { height: 4px; border-radius: 99px; background: #E7E9F0; overflow: hidden; margin-top: 12px; }
+    .credencial .reloj span { display: block; height: 100%; background: var(--senal); transform-origin: left; transition: transform 1s linear; }
+    .vive { display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 0 24px; font-size: 13px; color: var(--gris, #8b90a0); margin-top: 14px; }
+    .vive::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #10B981; box-shadow: 0 0 0 4px rgba(16,185,129,.18); }
 
     /* Entrar */
     .entrada { max-width: 400px; margin: 4vh auto 0; }

@@ -100,7 +100,15 @@ class PortalController extends Controller
 
     public function credencial()
     {
-        return view('atleta.credencial', ['a' => $this->atleta(), 'membresia' => $this->atleta()->membresia_actual]);
+        $a = $this->atleta();
+        return view('atleta.credencial', ['a' => $a, 'membresia' => $a->membresia_actual,
+            'qr' => \App\Support\Fitness\Credencial::qr($a), 'secreto' => \App\Support\Fitness\Credencial::secreto($a)]);
+    }
+
+    /** El código del minuto, para celulares sin cálculo en el navegador */
+    public function codigo()
+    {
+        return response()->json(['qr' => \App\Support\Fitness\Credencial::qr($this->atleta())])->header('Cache-Control', 'no-store');
     }
 
     public function historial()
