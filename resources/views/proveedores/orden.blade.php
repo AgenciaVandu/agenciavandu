@@ -75,7 +75,7 @@
     <div class="resumen">
         <span>Estado: <b>{{ $o->estado_texto }}</b></span>
         @if($o->fecha_entrega)<span>{{ $o->entrega_texto }}</span>@endif
-        <span>Total <b class="num">{{ $din($o->total) }}</b></span>
+        <span>{{ $o->comprobada ? 'Facturado' : 'Total' }} <b class="num">{{ $din($o->total_final) }}</b></span>
     </div>
 @endsection
 
@@ -133,13 +133,13 @@
         <h2 id="facturas">Tu factura</h2>
         <div class="caja {{ $facturas->isEmpty() && $puedeSubir && $o->estado !== 'pagada' ? 'destacada' : '' }}">
             @if($facturas->isEmpty())
-                <div class="cuerpo"><p class="ayuda" style="font-size: 14.5px">Sube aquí tu factura de esta orden, de preferencia el <b>PDF y el XML</b>. Puedes elegir los dos archivos a la vez.</p></div>
+                <div class="cuerpo"><p class="ayuda" style="font-size: 14.5px">Sube aquí tu factura de esta orden: el <b>PDF y el XML</b>. Puedes elegir los dos archivos a la vez. Con el XML se registra el monto que facturaste.</p></div>
             @endif
             @foreach($facturas as $a)
                 <div class="arch">
                     <span class="ic" aria-hidden="true">{{ $icono($a) }}</span>
                     <div style="min-width: 0"><a class="n" href="{{ route('proveedor.archivo', [$token, $o->id, $a->id]) }}" target="_blank" rel="noopener">{{ $a->nombre }}</a>
-                        <div class="s">{{ $a->extension }} · {{ $a->peso_texto }} · {{ $cuando($a->created_at) }}</div></div>
+                        <div class="s">{{ $a->extension }} · {{ $a->peso_texto }} · {{ $cuando($a->created_at) }}@if($a->cfdi) · factura por {{ $din($a->cfdi['total']) }}@endif</div></div>
                     @if($o->estado !== 'pagada')
                         <form method="post" action="{{ route('proveedor.quitar', [$token, $o->id, $a->id]) }}" onsubmit="return confirm('¿Quitar este archivo?')">@csrf @method('delete')<button class="quitar">Quitar</button></form>
                     @endif

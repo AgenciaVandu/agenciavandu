@@ -92,7 +92,7 @@ class Buscador
                 fn ($q) => $q->latest('id'),
                 fn (OrdenCompra $o) => [
                     'titulo'   => $o->folio . ' · ' . $o->titulo,
-                    'sub'      => $o->proveedor?->empresa . ' · ' . OrdenCompra::dinero($o->total),
+                    'sub'      => $o->proveedor?->empresa . ' · ' . OrdenCompra::dinero($o->total_final),
                     'url'      => route('admin.ordenes.show', $o),
                     'etiqueta' => $o->estado_texto,
                 ],

@@ -16,7 +16,7 @@
     </div>
     <div class="panel kpi">
         <div class="k"><i class="bi bi-truck"></i> Por pagar a proveedores</div>
-        @php $pp = \App\Models\OrdenCompra::whereIn('estado', ['entregada', 'facturada'])->with('conceptos')->get()->sum(fn ($o) => $conIva ? $o->total : $o->subtotal); @endphp
+        @php $pp = \App\Models\OrdenCompra::whereIn('estado', ['entregada', 'facturada'])->with('conceptos')->get()->sum(fn ($o) => $conIva ? $o->total_final : $o->subtotal_final); @endphp
         <div class="v num">{{ $d($pp) }}</div>
         <div class="s num"><a href="{{ $q(['seccion' => 'proveedores']) }}" class="text-reset">Ver órdenes</a></div>
     </div>

@@ -151,7 +151,15 @@ class OrdenCompraController extends Controller
     public function subir(Request $request, OrdenCompra $orden)
     {
         $request->validate(ArchivosOrden::reglas(array_keys(OrdenCompra::TIPOS_ARCHIVO)), ArchivosOrden::mensajes());
-        $n = count(ArchivosOrden::guardar($orden, $request, 'agencia', $request->user()?->id));
+        $antes = $orden->factura_total;
+        $subidos = ArchivosOrden::guardar($orden, $request, 'agencia', $request->user()?->id);
+        $n = count($subidos);
+        $orden->refresh();
+        if (collect($subidos)->contains('tipo', 'factura') && in_array($orden->estado, ['enviada', 'en_proceso', 'entregada'], true)) $orden->update(['estado' => 'facturada']);
+        if ($orden->comprobada && $orden->factura_total !== $antes) {
+            return redirect(route('admin.ordenes.show', $orden) . '#facturas')->with('ok', 'Factura leída: ' . OrdenCompra::dinero($orden->factura_total)
+                . ($orden->diferencia != 0 ? ' (la orden decía ' . OrdenCompra::dinero($orden->total) . '). Desde ahora cuenta el monto de la factura.' : ', igual a la orden.'));
+        }
         return back()->with('ok', $n === 1 ? 'Archivo agregado.' : "$n archivos agregados.");
     }
 

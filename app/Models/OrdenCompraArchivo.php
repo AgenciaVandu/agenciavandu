@@ -11,13 +11,16 @@ class OrdenCompraArchivo extends Model
 {
     use \App\Models\Concerns\DeCuenta;
 
-    protected $fillable = ['tipo', 'autor', 'user_id', 'nombre', 'ruta', 'origen', 'dropbox_id', 'mime', 'peso'];
+    protected $fillable = ['tipo', 'autor', 'user_id', 'nombre', 'ruta', 'origen', 'dropbox_id', 'mime', 'peso', 'uuid', 'cfdi'];
 
-    protected $casts = ['peso' => 'integer'];
+    protected $casts = ['peso' => 'integer', 'cfdi' => 'array'];
 
     protected static function booted(): void
     {
+        // Una factura XML que entra o sale cambia el costo comprobado de la orden
+        static::created(fn (OrdenCompraArchivo $a) => $a->uuid && $a->orden?->recalcularFactura());
         static::deleted(function (OrdenCompraArchivo $a) {
+            if ($a->uuid) $a->orden?->recalcularFactura();
             if ($a->origen === 'dropbox') {
                 try { \App\Support\Dropbox\Dropbox::cliente()->borrar($a->dropbox_id ?: $a->ruta); } catch (\Throwable $e) { report($e); }
             } else {

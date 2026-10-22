@@ -48,8 +48,8 @@ class ProveedorController extends Controller
     {
         $ordenes = $proveedor->ordenes()->with(['conceptos', 'proyecto.cliente', 'archivos'])->get();
         $proyectos = $proveedor->proyectos()->get();
-        $porPagar = $ordenes->whereIn('estado', ['entregada', 'facturada'])->sum(fn ($o) => $o->total);
-        $pagado = $ordenes->where('estado', 'pagada')->sum(fn ($o) => $o->total);
+        $porPagar = $ordenes->whereIn('estado', ['entregada', 'facturada'])->sum(fn ($o) => $o->total_final);
+        $pagado = $ordenes->where('estado', 'pagada')->sum(fn ($o) => $o->total_final);
 
         return view('admin.proveedores.show', compact('proveedor', 'ordenes', 'proyectos', 'porPagar', 'pagado'));
     }

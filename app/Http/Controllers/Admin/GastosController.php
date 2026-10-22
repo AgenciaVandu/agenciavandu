@@ -105,7 +105,10 @@ class GastosController extends Controller
         $d = Cfdi::leer((string) file_get_contents($request->file('xml')->getRealPath()));
         if (! $d) return response()->json(['ok' => false, 'mensaje' => 'Ese archivo no es el XML de una factura timbrada.'], 422);
         $ya = Gasto::where('uuid', $d['uuid'])->first();
-        return response()->json(['ok' => true, 'datos' => $d, 'repetido' => $ya ? ['fecha' => $ya->fecha->toDateString(), 'url' => route('admin.gastos.edit', $ya)] : null]);
+        $oc = \App\Models\OrdenCompraArchivo::where('uuid', $d['uuid'])->with('orden:id,folio')->first();
+        return response()->json(['ok' => true, 'datos' => $d,
+            'repetido' => $ya ? ['fecha' => $ya->fecha->toDateString(), 'url' => route('admin.gastos.edit', $ya)] : null,
+            'orden' => $oc ? ['folio' => $oc->orden?->folio, 'url' => route('admin.ordenes.show', $oc->orden_compra_id)] : null]);
     }
 
     public function store(Request $request)
@@ -208,6 +211,9 @@ class GastosController extends Controller
             if (! $cfdi) throw ValidationException::withMessages(['xml' => 'Ese archivo no es el XML de una factura timbrada.']);
             if (Gasto::where('uuid', $cfdi['uuid'])->when($g->exists, fn ($q) => $q->whereKeyNot($g->id))->exists()) {
                 throw ValidationException::withMessages(['xml' => 'Esa factura ya está registrada como gasto.']);
+            }
+            if ($oc = \App\Models\OrdenCompraArchivo::where('uuid', $cfdi['uuid'])->with('orden:id,folio')->first()) {
+                throw ValidationException::withMessages(['xml' => 'Esa factura es de la orden de compra ' . $oc->orden?->folio . ': ya cuenta en Finanzas.']);
             }
             if ($g->xml) Storage::delete($g->xml);
             $g->xml = $dir . '/' . Str::random(24) . '.xml';

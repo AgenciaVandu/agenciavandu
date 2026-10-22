@@ -18,6 +18,9 @@
     .datos dd { margin: 2px 0 14px; overflow-wrap: anywhere; }
     .datos dd:last-child { margin-bottom: 0; }
     .tabla td.desc { white-space: pre-line; }
+    .comprobada { padding: 14px 20px; border-bottom: 1px solid var(--line); background: #ECFDF5; }
+    .comprobada .bi-patch-check-fill { color: #047A4B; }
+    .comprobada.sube { background: #FFF7ED; } .comprobada.sube .bi-patch-check-fill { color: #C2410C; }
     .tot td { border-top: 1px solid var(--line); }
     .indicaciones { white-space: pre-line; font-size: 14.5px; }
     .archivo { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 20px; border-top: 1px solid var(--line); }
@@ -130,6 +133,7 @@
                     <tr class="tot"><td colspan="3" class="text-end secundario">Subtotal</td><td class="text-end num">{{ \App\Models\OrdenCompra::dinero($o->subtotal) }}</td></tr>
                     @if($o->con_iva)<tr><td colspan="3" class="text-end secundario">IVA {{ rtrim(rtrim(number_format($o->iva_porcentaje, 2), '0'), '.') }}%</td><td class="text-end num">{{ \App\Models\OrdenCompra::dinero($o->iva) }}</td></tr>@endif
                     <tr><td colspan="3" class="text-end fw-semibold">Total</td><td class="text-end num fw-semibold">{{ \App\Models\OrdenCompra::dinero($o->total) }}</td></tr>
+                    @if($o->comprobada && $o->diferencia != 0)<tr><td colspan="3" class="text-end fw-semibold" style="color: #C2410C">Facturado</td><td class="text-end num fw-semibold" style="color: #C2410C"><a href="#facturas" class="text-reset">{{ \App\Models\OrdenCompra::dinero($o->factura_total) }}</a></td></tr>@endif
                     </tbody>
                 </table>
             </div>
@@ -143,12 +147,42 @@
         @endif
 
         <section class="panel" id="facturas">
-            <div class="panel-head"><h2>Facturas</h2><span class="ayuda">{{ $facturas->isEmpty() ? 'El proveedor la sube desde su enlace' : $facturas->count() . ' ' . ($facturas->count() === 1 ? 'archivo' : 'archivos') }}</span></div>
+            <div class="panel-head"><h2>Facturas</h2><span class="ayuda">{{ $facturas->isEmpty() ? 'La sube el proveedor desde su enlace, o tú aquí' : $facturas->count() . ' ' . ($facturas->count() === 1 ? 'archivo' : 'archivos') }}</span></div>
+            @if($o->comprobada)
+                @php $dif = $o->diferencia; $xmls = $facturas->filter(fn ($a) => $a->cfdi); $rfcMal = $p->rfc && $xmls->contains(fn ($a) => ($a->cfdi['rfc'] ?? null) && $a->cfdi['rfc'] !== mb_strtoupper($p->rfc)); @endphp
+                <div class="comprobada {{ $dif > 0 ? 'sube' : ($dif < 0 ? 'baja' : '') }}">
+                    <div class="d-flex flex-wrap align-items-baseline gap-2">
+                        <i class="bi bi-patch-check-fill"></i>
+                        <b>Comprobado con {{ $xmls->count() === 1 ? 'la factura' : $xmls->count() . ' facturas' }}: {{ \App\Models\OrdenCompra::dinero($o->factura_total) }}</b>
+                        <span class="secundario small">subtotal {{ \App\Models\OrdenCompra::dinero($o->factura_subtotal) }} · IVA {{ \App\Models\OrdenCompra::dinero($o->factura_iva) }}</span>
+                    </div>
+                    @if($dif != 0)
+                        <div class="mt-1">La orden decía {{ \App\Models\OrdenCompra::dinero($o->total) }}: el proveedor facturó <b>{{ \App\Models\OrdenCompra::dinero(abs($dif)) }} {{ $dif > 0 ? 'más' : 'menos' }}</b>. En Finanzas, proyectos y lo que le debes ya cuenta el monto de la factura.</div>
+                    @else
+                        <div class="mt-1 secundario small">Coincide con lo que capturaste en la orden.</div>
+                    @endif
+                    @if($rfcMal)<div class="mt-1 small" style="color: var(--amber)"><i class="bi bi-exclamation-triangle-fill"></i> El RFC de la factura no es el de {{ $p->empresa }} ({{ $p->rfc }}). Revisa que sea la factura correcta.</div>@endif
+                    @foreach($xmls as $a)<div class="secundario small mt-1 num">Folio fiscal {{ $a->cfdi['uuid'] }} · {{ $a->cfdi['proveedor'] }} · {{ \Illuminate\Support\Carbon::parse($a->cfdi['fecha'])->locale('es')->isoFormat('D MMM YYYY') }}</div>@endforeach
+                </div>
+            @elseif($facturas->isNotEmpty())
+                <div class="panel-body secundario small" style="border-bottom: 1px solid var(--line)"><i class="bi bi-info-circle me-1"></i> Falta el <b>XML</b> de la factura: con él se comprueba el monto y se corrige si cambió.</div>
+            @endif
             @forelse($facturas as $a)
                 @include('admin.ordenes._archivo', ['a' => $a])
             @empty
-                <div class="panel-body secundario" style="font-size: 14px"><i class="bi bi-receipt me-1"></i> Todavía no hay factura. Cuando el proveedor la suba (PDF y XML) te llega un aviso y la orden pasa a <b>Facturada</b>.</div>
+                <div class="panel-body secundario" style="font-size: 14px"><i class="bi bi-receipt me-1"></i> Todavía no hay factura. Cuando el proveedor la suba (PDF y XML) te llega un aviso y la orden pasa a <b>Facturada</b>. Si te la mandó por otro lado, súbela tú aquí.</div>
             @endforelse
+            @if($o->estado !== 'cancelada')
+                <form method="post" action="{{ route('admin.ordenes.subir', $o) }}" enctype="multipart/form-data" class="panel-body border-top d-flex flex-wrap gap-2 align-items-end">
+                    @csrf
+                    <input type="hidden" name="tipo" value="factura">
+                    <div class="flex-grow-1" style="min-width: 220px">
+                        <label class="form-label" for="facturas-agencia">Subir factura <span class="text-secondary fw-normal">(PDF y XML)</span></label>
+                        <input type="file" name="archivos[]" id="facturas-agencia" class="form-control" accept=".pdf,.xml,application/pdf,text/xml,application/xml" multiple required>
+                    </div>
+                    <button class="btn btn-borde"><i class="bi bi-upload me-1"></i> Subir</button>
+                </form>
+            @endif
         </section>
 
         <section class="panel" id="archivos">

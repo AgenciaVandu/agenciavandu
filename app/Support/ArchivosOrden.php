@@ -101,6 +101,9 @@ class ArchivosOrden
     public static function guardarUno(OrdenCompra $o, UploadedFile $archivo, string $tipo, string $autor, ?int $userId = null): OrdenCompraArchivo
     {
         $nombre = $archivo->getClientOriginalName() ?: 'archivo';
+        // El XML de una factura comprueba el gasto: se lee, no se acepta dos veces y sus montos pasan a ser el costo real
+        $cfdi = strtolower($archivo->getClientOriginalExtension()) === 'xml' ? self::cfdi($o, $archivo) : null;
+        if ($cfdi) $tipo = 'factura';
         $origen = 'local';
         $dropboxId = null;
 
@@ -129,7 +132,28 @@ class ArchivosOrden
             'dropbox_id' => $dropboxId,
             'mime'       => $archivo->getMimeType() ?: ArchivosProyecto::mimeDe($nombre),
             'peso'       => (int) $archivo->getSize(),
+            'uuid'       => $cfdi['uuid'] ?? null,
+            'cfdi'       => $cfdi,
         ]);
+    }
+
+    /** Lee el XML; si ya se registró esa factura (en otra orden o como gasto), no la acepta */
+    private static function cfdi(OrdenCompra $o, UploadedFile $archivo): ?array
+    {
+        $d = \App\Support\Gastos\Cfdi::leer((string) file_get_contents($archivo->getRealPath()));
+        if (! $d) return null;
+        $otra = OrdenCompraArchivo::where('uuid', $d['uuid'])->with('orden:id,folio')->first();
+        if ($otra) {
+            throw ValidationException::withMessages(['archivos' => $otra->orden_compra_id === $o->id
+                ? 'Esa factura ya está en esta orden.' : 'Esa factura ya está registrada en la orden ' . ($otra->orden?->folio ?? '') . '.']);
+        }
+        if (\Illuminate\Support\Facades\Schema::hasTable('gastos') && \App\Models\Gasto::where('uuid', $d['uuid'])->exists()) {
+            throw ValidationException::withMessages(['archivos' => 'Esa factura ya está registrada como gasto.']);
+        }
+        // Si el proveedor no tenía RFC, se toma de su factura
+        $p = $o->proveedor;
+        if ($p && ! $p->rfc && $d['rfc']) $p->update(['rfc' => $d['rfc'], 'razon_social' => $p->razon_social ?: $d['proveedor']]);
+        return $d;
     }
 
     /** Abre o descarga el archivo */

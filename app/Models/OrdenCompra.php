@@ -46,6 +46,9 @@ class OrdenCompra extends Model
         'enviada_at'     => 'datetime',
         'vista_at'       => 'datetime',
         'cancelada_at'   => 'datetime',
+        'factura_subtotal' => 'float',
+        'factura_iva'      => 'float',
+        'factura_total'    => 'float',
     ];
 
     protected static function booted(): void
@@ -105,6 +108,39 @@ class OrdenCompra extends Model
     public function getTotalAttribute(): float
     {
         return round($this->subtotal + $this->iva, 2);
+    }
+
+    /* ---------------- Lo que dice la factura ----------------
+     * Si el proveedor subió el XML, sus montos son el costo real (corrigen un precio mal capturado o que cambió).
+     * Sin XML, vale lo capturado en la orden. */
+
+    public function recalcularFactura(): void
+    {
+        $fs = $this->archivos()->whereNotNull('uuid')->get(['cfdi'])->pluck('cfdi');
+        $this->forceFill($fs->isEmpty()
+            ? ['factura_subtotal' => null, 'factura_iva' => null, 'factura_total' => null]
+            : ['factura_subtotal' => round($fs->sum('subtotal'), 2), 'factura_iva' => round($fs->sum('iva'), 2), 'factura_total' => round($fs->sum('total'), 2)])->save();
+    }
+
+    public function getComprobadaAttribute(): bool
+    {
+        return $this->factura_total !== null;
+    }
+
+    public function getSubtotalFinalAttribute(): float
+    {
+        return $this->comprobada ? $this->factura_subtotal : $this->subtotal;
+    }
+
+    public function getTotalFinalAttribute(): float
+    {
+        return $this->comprobada ? $this->factura_total : $this->total;
+    }
+
+    /** Factura menos lo capturado (positivo = el proveedor cobró más) */
+    public function getDiferenciaAttribute(): float
+    {
+        return $this->comprobada ? round($this->factura_total - $this->total, 2) : 0.0;
     }
 
     public static function dinero(float $v): string

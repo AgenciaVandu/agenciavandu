@@ -83,8 +83,13 @@ class ProveedorPortalController extends Controller
             $o->update(['estado' => 'facturada']);
         }
 
+        $esFactura = $esFactura || collect($subidos)->contains('tipo', 'factura');
         $que = $esFactura ? ($n === 1 ? 'su factura' : 'sus facturas') : ($n === 1 ? 'un archivo' : "$n archivos");
-        Notificar::evento('proveedor_actividad', "{$p->empresa} subió $que", "{$o->folio} · " . collect($subidos)->pluck('nombre')->implode(', '), route('admin.ordenes.show', $o), 'oc-archivo-' . $o->id);
+        $o->refresh();
+        $monto = $o->comprobada
+            ? ' · factura por ' . OrdenCompra::dinero($o->factura_total) . ($o->diferencia != 0 ? ' (la orden decía ' . OrdenCompra::dinero($o->total) . ')' : '')
+            : '';
+        Notificar::evento('proveedor_actividad', "{$p->empresa} subió $que", "{$o->folio} · " . collect($subidos)->pluck('nombre')->implode(', ') . $monto, route('admin.ordenes.show', $o), 'oc-archivo-' . $o->id);
 
         return redirect(route('proveedor.orden', [$token, $o->id]) . ($esFactura ? '#facturas' : '#archivos'))
             ->with('ok', $esFactura ? '¡Gracias! Recibimos tu factura.' : ($n === 1 ? 'Archivo recibido.' : "Recibimos $n archivos."));

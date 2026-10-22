@@ -227,8 +227,9 @@ window.formGasto = function (cfg) {
                 const j = await this.enviar(cfg.urlXml, 'xml', a);
                 if (j.ok) {
                     this.llenar(j.datos);
-                    this.estado = j.repetido ? 'mal' : 'ok';
-                    this.mensaje = j.repetido ? 'Esta factura ya se registró el ' + j.repetido.fecha + '. Si la guardas otra vez, el sistema no la aceptará.'
+                    this.estado = j.repetido || j.orden ? 'mal' : 'ok';
+                    this.mensaje = j.orden ? 'Esta factura es de la orden de compra ' + j.orden.folio + ' y ya cuenta en Finanzas. No hace falta registrarla como gasto.'
+                        : j.repetido ? 'Esta factura ya se registró el ' + j.repetido.fecha + '. Si la guardas otra vez, el sistema no la aceptará.'
                         : 'Factura de ' + (j.datos.proveedor || j.datos.rfc) + (j.datos.receptor ? ' a nombre de ' + j.datos.receptor : '') + '. Revisa la categoría y guarda.';
                 } else { this.estado = 'mal'; this.mensaje = j.mensaje || 'Ese archivo no es el XML de una factura.'; e.target.value = ''; }
             } catch (err) { this.estado = 'mal'; this.mensaje = 'No pudimos leer el archivo.'; }

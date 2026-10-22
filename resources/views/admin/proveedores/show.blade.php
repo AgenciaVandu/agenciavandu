@@ -73,7 +73,7 @@
                                 <td class="secundario" style="min-width: 140px">
                                     @if($o->proyecto)<a href="{{ route('admin.proyectos.show', $o->proyecto) }}" class="text-reset">{{ $o->proyecto->nombre }}</a>@else — @endif
                                 </td>
-                                <td class="text-end num fw-medium text-nowrap">{{ \App\Models\OrdenCompra::dinero($o->total) }}</td>
+                                <td class="text-end num fw-medium text-nowrap">{{ \App\Models\OrdenCompra::dinero($o->total_final) }}@if($o->comprobada) <i class="bi bi-patch-check-fill text-success" title="Monto de la factura"></i>@endif</td>
                                 <td class="text-nowrap"><span class="estado estado-{{ $o->estado }}">{{ $o->estado_texto }}</span>
                                     @if($o->facturas->count())<i class="bi bi-receipt ico-fact ms-1" title="Con factura"></i>@endif</td>
                             </tr>

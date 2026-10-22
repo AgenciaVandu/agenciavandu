@@ -189,7 +189,7 @@ class FinanzasController extends Controller
         // Lo que de verdad se le pidió a proveedores en cada proyecto
         $proyectos = $ganadas->pluck('proyecto.id')->filter()->values();
         $real = $proyectos->isEmpty() ? collect() : \App\Models\OrdenCompra::with('conceptos')->whereIn('proyecto_id', $proyectos)
-            ->whereNotIn('estado', ['cancelada'])->get()->groupBy('proyecto_id')->map(fn ($g) => round($g->sum(fn ($o) => $o->subtotal), 2));
+            ->whereNotIn('estado', ['cancelada'])->get()->groupBy('proyecto_id')->map(fn ($g) => round($g->sum(fn ($o) => $o->subtotal_final), 2));
         // Gastos sueltos ligados al proyecto (tickets y facturas), antes de IVA
         $gastosProy = \App\Support\Gastos\Reporte::porProyecto($proyectos);
 
@@ -242,7 +242,7 @@ class FinanzasController extends Controller
             ->when($desde, fn ($q) => $q->whereDate('fecha', '>=', $desde))
             ->when($hasta, fn ($q) => $q->whereDate('fecha', '<=', $hasta))
             ->get();
-        $m = fn ($o) => $conIva ? $o->total : $o->subtotal;
+        $m = fn ($o) => $conIva ? $o->total_final : $o->subtotal_final;   // lo facturado, si ya hay XML
         $porPagar = $ordenes->whereIn('estado', ['entregada', 'facturada']);
         $enCurso = $ordenes->whereIn('estado', ['enviada', 'en_proceso']);
 
