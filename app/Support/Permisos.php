@@ -29,6 +29,7 @@ class Permisos
         'lealtad'       => ['texto' => 'Programa de lealtad',   'icono' => 'bi-gift',              'ayuda' => 'Crear campañas con su vigencia, meta de visitas y premios'],
         'canjes'        => ['texto' => 'Escanear visitas y premios', 'icono' => 'bi-qr-code-scan', 'ayuda' => 'Escanear el QR del comensal para sumar su visita, unirlo al programa y entregarle premios'],
         'comensales'    => ['texto' => 'Comensales',            'icono' => 'bi-person-hearts',     'ayuda' => 'Ver a los comensales del programa con su nombre, teléfono, correo y visitas'],
+        'gastos'        => ['texto' => 'Subir gastos',          'icono' => 'bi-receipt',           'ayuda' => 'Registrar gastos con foto del ticket, XML de factura o a mano. Ve solo los suyos; ver los de todos es de Finanzas'],
         'finanzas'      => ['texto' => 'Finanzas',              'icono' => 'bi-graph-up-arrow',    'ayuda' => 'Cobros, ingresos y exportar a Excel'],
         'archivos'      => ['texto' => 'Archivos',              'icono' => 'bi-folder2-open',      'ayuda' => 'Explorar todo el Dropbox de la agencia desde el panel'],
         'configuracion' => ['texto' => 'Configuración',         'icono' => 'bi-sliders',           'ayuda' => 'Conexión con Dropbox, tipos de proyecto y plantillas de correo'],
@@ -38,7 +39,7 @@ class Permisos
     /** Secciones que solo existen en ciertos giros: sección => módulo del giro */
     public const MODULOS = ['redes' => 'redes', 'productos' => 'stock', 'proyectos' => 'proyectos', 'unidades' => 'autos', 'cobranza' => 'autos',
                                'clases' => 'fitness', 'asistencia' => 'fitness', 'membresias' => 'fitness', 'cotizaciones' => 'cotizaciones', 'proveedores' => 'proveedores', 'archivos' => 'archivos', 'tareas' => 'tareas',
-                               'clientes' => 'clientes', 'ventas' => 'ventas', 'finanzas' => 'finanzas', 'lealtad' => 'lealtad', 'canjes' => 'lealtad', 'comensales' => 'lealtad'];
+                               'clientes' => 'clientes', 'ventas' => 'ventas', 'finanzas' => 'finanzas', 'lealtad' => 'lealtad', 'canjes' => 'lealtad', 'comensales' => 'lealtad', 'gastos' => 'gastos'];
 
     /** Secciones disponibles para la cuenta activa (para armar roles) */
     public static function disponibles(): array
@@ -98,6 +99,7 @@ class Permisos
         ['admin.correos.plantillas*', 'configuracion'],
         ['admin.correos.*', ['clientes', 'cotizaciones', 'proyectos']],
         ['admin.finanzas*', 'finanzas'],
+        ['admin.gastos*', ['gastos', 'finanzas']],   // quien no ve Finanzas solo ve sus propios gastos
         ['admin.redes*', 'redes'],
         ['admin.archivos*', 'archivos'],
         ['admin.tipos*', 'configuracion'],

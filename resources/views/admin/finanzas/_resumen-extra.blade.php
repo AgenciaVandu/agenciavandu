@@ -21,3 +21,23 @@
         <div class="s num">{{ ($prov['n'] ?? 0) }} {{ ($prov['n'] ?? 0) === 1 ? 'orden de compra' : 'órdenes de compra' }}</div>
     </a>
 </div>
+@if($gas)
+{{-- Lo que entra menos lo que sale en el periodo: cobrado − compras a proveedores − gastos sueltos --}}
+@php $queda = $kpi['cobrado'] - ($prov['comprado'] ?? 0) - $gas['total']; @endphp
+<section class="panel mb-4">
+    <div class="panel-head"><div><h2>Lo que te queda</h2><span class="ayuda">Lo cobrado menos lo comprado a proveedores y los gastos del periodo · {{ $base }}</span></div>
+        <a href="{{ route('admin.gastos', ['periodo' => $periodo === 'mes' ? null : $periodo]) }}" class="btn btn-borde btn-sm"><i class="bi bi-receipt me-1"></i> Ver gastos</a></div>
+    <div class="flujo">
+        <div><span class="k">Cobrado</span><b class="num">{{ $d($kpi['cobrado']) }}</b></div>
+        <span class="op">−</span>
+        <div><span class="k">Compras a proveedores</span><b class="num">{{ $d($prov['comprado'] ?? 0) }}</b></div>
+        <span class="op">−</span>
+        <div><span class="k">Gastos ({{ $gas['n'] }})</span><b class="num">{{ $d($gas['total']) }}</b></div>
+        <span class="op">=</span>
+        <div class="total {{ $queda < 0 ? 'neg' : '' }}"><span class="k">Te queda</span><b class="num">{{ $queda < 0 ? '−' : '' }}{{ $d(abs($queda)) }}</b></div>
+    </div>
+    @if($gas['porCategoria']->isNotEmpty())
+        <div class="secundario small px-3 pb-3">En qué se fue más: {{ $gas['porCategoria']->take(3)->map(fn ($c) => $c['texto'] . ' ' . $d($c['monto']))->join(' · ') }}</div>
+    @endif
+</section>
+@endif

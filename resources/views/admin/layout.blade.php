@@ -40,6 +40,7 @@
         ['ruta' => 'admin.productos.index',     'activo' => 'admin.productos.*',      'icono' => 'bi-box-seam',        'texto' => 'Productos', 'cuenta' => $bajosNav, 'seccion' => ['productos', 'cotizaciones'], 'modulo' => 'stock'],
         ['ruta' => 'admin.proveedores.index',   'activo' => ['admin.proveedores.*', 'admin.ordenes.*'], 'icono' => 'bi-truck', 'texto' => 'Proveedores', 'seccion' => 'proveedores', 'modulo' => 'proveedores'],
         ['ruta' => 'admin.finanzas',            'activo' => 'admin.finanzas*',        'icono' => 'bi-graph-up-arrow',  'texto' => 'Finanzas', 'seccion' => 'finanzas'],
+        ['ruta' => 'admin.gastos',              'activo' => 'admin.gastos*',          'icono' => 'bi-receipt',         'texto' => $puede('finanzas') ? 'Gastos' : 'Mis gastos', 'seccion' => ['gastos', 'finanzas'], 'modulo' => 'gastos'],
         ['ruta' => 'admin.fitness-reportes',    'activo' => 'admin.fitness-reportes*', 'icono' => 'bi-bar-chart-line', 'texto' => 'Reportes', 'seccion' => ['clases', 'finanzas'], 'modulo' => 'fitness'],
     ], fn ($i) => (! isset($i['modulo']) || $cuentaNav?->tiene($i['modulo'])) && ($i['seccion'] === null || collect((array) $i['seccion'])->contains(fn ($s) => $puede($s)))));
     $inicioNav = $usuario ? \App\Support\Permisos::inicio($usuario) : route('admin.resumen');
@@ -57,6 +58,7 @@
         $puede('cobranza') ? ['url' => route('admin.creditos.index'), 'activo' => 'admin.creditos.*', 'icono' => 'bi-cash-coin', 'lleno' => 'bi-cash-coin', 'texto' => 'Cobranza', 'cuenta' => $atrasoNav] : null,
         $puede('proyectos') ? ['url' => route('admin.proyectos.index'), 'activo' => 'admin.proyectos.*', 'icono' => 'bi-kanban', 'lleno' => 'bi-kanban-fill', 'texto' => 'Proyectos'] : null,
         $cuentaNav?->tiene('tareas') !== false ? ['url' => route('admin.tareas.index'), 'activo' => 'admin.tareas.*', 'icono' => 'bi-check2-square', 'lleno' => 'bi-check2-square', 'texto' => 'Tareas', 'cuenta' => $tareasNav] : null,
+        $cuentaNav?->tiene('gastos') && $puede('gastos') && ! $puede('finanzas') ? ['url' => route('admin.gastos'), 'activo' => 'admin.gastos*', 'icono' => 'bi-receipt', 'lleno' => 'bi-receipt', 'texto' => 'Gastos'] : null,
         $puede('finanzas') ? ['url' => route('admin.finanzas'), 'activo' => 'admin.finanzas*', 'icono' => 'bi-graph-up-arrow', 'lleno' => 'bi-graph-up-arrow', 'texto' => 'Finanzas'] : null,
         $puede('redes') ? ['url' => route('admin.redes'), 'activo' => 'admin.redes*', 'icono' => 'bi-grid-3x3-gap', 'lleno' => 'bi-grid-3x3-gap-fill', 'texto' => 'Redes'] : null,
         ['url' => route('admin.notificaciones'), 'activo' => 'admin.notificaciones*', 'icono' => 'bi-bell', 'lleno' => 'bi-bell-fill', 'texto' => 'Avisos'],

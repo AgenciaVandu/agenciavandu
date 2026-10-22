@@ -13,7 +13,8 @@ class FinanzasController extends FitnessController
     {
         $periodo = array_key_exists($request->query('periodo'), FinanzasBase::PERIODOS) ? $request->query('periodo') : 'mes';
         [$desde, $hasta] = FinanzasBase::rangoDe($periodo);
-        return view('admin.fitness.finanzas', Finanzas::datos($desde, $hasta) + ['periodo' => $periodo, 'desde' => $desde, 'hasta' => $hasta]);
+        $gas = \App\Support\Cuentas::actual()?->tiene('gastos') ? \App\Support\Gastos\Reporte::datos($desde, $hasta) : null;
+        return view('admin.fitness.finanzas', Finanzas::datos($desde, $hasta) + ['periodo' => $periodo, 'desde' => $desde, 'hasta' => $hasta, 'gas' => $gas]);
     }
 
     /** Paquetes vendidos del periodo en CSV (Excel o Sheets) */

@@ -160,6 +160,7 @@ class FinanzasController extends Controller
             'seccion'   => $seccion,
             'rent'      => $rent,
             'prov'      => $seccion === 'proveedores' || $seccion === 'resumen' ? $this->proveedores($desde, $hasta, $conIva) : null,
+            'gas'       => $seccion === 'resumen' && \App\Support\Cuentas::actual()?->tiene('gastos') ? \App\Support\Gastos\Reporte::datos($desde, $hasta, $conIva) : null,
             'periodo'   => $periodo,
             'conIva'    => $conIva,
             'desde'     => $desde,
@@ -189,6 +190,8 @@ class FinanzasController extends Controller
         $proyectos = $ganadas->pluck('proyecto.id')->filter()->values();
         $real = $proyectos->isEmpty() ? collect() : \App\Models\OrdenCompra::with('conceptos')->whereIn('proyecto_id', $proyectos)
             ->whereNotIn('estado', ['cancelada'])->get()->groupBy('proyecto_id')->map(fn ($g) => round($g->sum(fn ($o) => $o->subtotal), 2));
+        // Gastos sueltos ligados al proyecto (tickets y facturas), antes de IVA
+        $gastosProy = \App\Support\Gastos\Reporte::porProyecto($proyectos);
 
         // Cada costo capturado, sumado por nombre
         $porComponente = $conCosteo->flatMap(fn ($p) => $p->conceptos->flatMap(fn ($c) => collect($c->costos_lista)->map(fn ($k) => [
@@ -211,6 +214,8 @@ class FinanzasController extends Controller
             'utilidad'  => $p->utilidad,
             'margen'    => $p->margen,
             'real'      => $p->proyecto ? ($real[$p->proyecto->id] ?? null) : null,
+            'gastos'    => $p->proyecto ? ($gastosProy[$p->proyecto->id] ?? null) : null,
+            'neta'      => $p->proyecto && isset($gastosProy[$p->proyecto->id]) ? round($p->utilidad - $gastosProy[$p->proyecto->id], 2) : null,
         ])->sortByDesc('utilidad')->values();
 
         return [

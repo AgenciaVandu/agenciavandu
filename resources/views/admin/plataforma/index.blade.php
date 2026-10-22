@@ -120,6 +120,24 @@
                         <label class="small m-0" for="suc-{{ $c->id }}">Sucursales contratadas</label>
                         <input id="suc-{{ $c->id }}" type="number" name="sucursales_max" min="1" max="50" class="form-control form-control-sm num" style="width: 80px" value="{{ $c->ajuste('sucursales_max', 1) }}">
                     </div>
+                    <input type="hidden" name="_extras" value="1">
+                    <div class="rounded-3 p-2" style="background: var(--sunken)">
+                        <div class="small fw-semibold mb-1">Funciones extra</div>
+                        @foreach(\App\Http\Controllers\Admin\PlataformaController::EXTRAS as $ex)
+                            @php $mx = \App\Support\Giros::MODULOS[$ex]; $porGiro = in_array($ex, $c->giro_info['modulos'] ?? [], true); @endphp
+                            <label class="form-check small m-0">
+                                <input type="checkbox" name="extras[]" value="{{ $ex }}" class="form-check-input" @checked($porGiro || in_array($ex, (array) $c->ajuste('modulos', []), true)) @disabled($porGiro)>
+                                <span class="form-check-label"><i class="bi {{ $mx['icono'] }}"></i> {{ $mx['texto'] }}@if($porGiro) <span class="secundario">(viene con su tipo de empresa)</span>@endif
+                                    <span class="secundario d-block" style="font-size:12px">{{ $mx['ayuda'] }}</span></span>
+                            </label>
+                            @if($ex === 'gastos')
+                                <div class="d-flex align-items-center gap-2 mt-1 ms-4">
+                                    <label class="small m-0" for="tope-{{ $c->id }}">Tickets leídos con IA al mes</label>
+                                    <input id="tope-{{ $c->id }}" type="number" name="gastos_tope" min="0" max="5000" class="form-control form-control-sm num" style="width: 90px" value="{{ $c->ajuste('gastos_tope', \App\Support\Gastos\LectorTicket::TOPE) }}">
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
                     <textarea name="notas" class="form-control form-control-sm" rows="2" maxlength="2000" placeholder="Notas internas (plan, contacto, pagos…)">{{ $c->notas }}</textarea>
                     <div><button class="btn btn-primario btn-sm">Guardar</button></div>
                 </form>

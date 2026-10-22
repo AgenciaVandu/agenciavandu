@@ -35,6 +35,10 @@
     .controles { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 20px; }
     .controles .rango { color: var(--muted); font-size: 13.5px; margin-left: 4px; }
     .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+    .flujo { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 6px 20px 16px; }
+    .flujo > div { display: grid; gap: 2px; } .flujo .k { font-size: 12.5px; color: var(--muted); } .flujo b { font-size: 20px; font-weight: 600; }
+    .flujo .op { font-size: 20px; color: var(--muted); } .flujo .total { padding: 8px 14px; border-radius: 12px; background: #E3FBEF; } .flujo .total b { color: #047A4B; }
+    .flujo .total.neg { background: #FDECEC; } .flujo .total.neg b { color: var(--red); }
     .kpi { padding: 16px 18px; }
     .kpi .k { font-size: 13.5px; color: var(--muted); display: flex; align-items: center; gap: 7px; }
     .kpi .v { font-size: 28px; font-weight: 600; letter-spacing: -.02em; line-height: 1.1; margin-top: 8px; }

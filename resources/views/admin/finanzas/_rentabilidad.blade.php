@@ -93,7 +93,7 @@
 </div>
 
 <section class="panel mt-4">
-    <div class="panel-head"><div><h2>Utilidad por venta</h2><span class="ayuda">Ganadas en el periodo. «Compras reales» suma las órdenes de compra del proyecto.</span></div></div>
+    <div class="panel-head"><div><h2>Utilidad por venta</h2><span class="ayuda">Ganadas en el periodo. «Compras reales» suma las órdenes de compra del proyecto{{ \App\Support\Cuentas::actual()?->tiene('gastos') ? ' y los gastos ligados a él' : '' }}.</span></div></div>
     @if($rent['filas']->isEmpty())
         <div class="vacio"><div class="ico"><i class="bi bi-calculator"></i></div><h3>Sin ventas con costeo</h3>
             <p>Al cotizar, usa <b>Calcular precio con costos</b> en cada concepto: aquí verás cuánto te deja cada venta.</p>
@@ -113,9 +113,10 @@
                         <td class="text-end num fw-semibold {{ $f['utilidad'] < 0 ? 'margen-bajo' : '' }}">{{ $d($f['utilidad']) }}</td>
                         <td class="text-end num {{ $claseMargen($f['margen']) }}">{{ $pct($f['margen']) }}</td>
                         <td class="text-end num">
-                            @if($f['real'] === null)<span class="secundario">—</span>
-                            @else{{ $d($f['real']) }}
-                                @if($f['terceros'] > 0 && $f['real'] > $f['terceros'] * 1.05)<div class="margen-bajo" style="font-size: 12px">{{ $d($f['real'] - $f['terceros']) }} más de lo costeado</div>@endif
+                            @if($f['real'] === null && $f['gastos'] === null)<span class="secundario">—</span>
+                            @else{{ $f['real'] === null ? '' : $d($f['real']) }}
+                                @if($f['real'] !== null && $f['terceros'] > 0 && $f['real'] > $f['terceros'] * 1.05)<div class="margen-bajo" style="font-size: 12px">{{ $d($f['real'] - $f['terceros']) }} más de lo costeado</div>@endif
+                                @if($f['gastos'] !== null)<div class="secundario" style="font-size: 12px">+ {{ $d($f['gastos']) }} en gastos · utilidad {{ $d($f['neta']) }}</div>@endif
                             @endif
                         </td>
                     </tr>

@@ -27,6 +27,7 @@ class Giros
         'sin_finanzas' => ['texto' => 'Sin Finanzas', 'icono' => 'bi-eye-slash', 'ayuda' => 'Oculta Finanzas para negocios que no registran cobros en el panel.'],
         'sin_tareas' => ['texto' => 'Sin Tareas', 'icono' => 'bi-eye-slash', 'ayuda' => 'Oculta Tareas para negocios que no trabajan con pendientes asignados (por ejemplo, un gimnasio).'],
         'sin_proyectos' => ['texto' => 'Sin Proyectos', 'icono' => 'bi-eye-slash', 'ayuda' => 'Oculta la sección de Proyectos (etapas y entregas) para negocios que no la usan.'],
+        'gastos' => ['texto' => 'Gastos con lectura de tickets', 'icono' => 'bi-receipt', 'ayuda' => 'Registrar gastos sueltos con foto del ticket (la IA lo lee), XML de factura o a mano. Se suman en Finanzas.'],
         'redes' => ['texto' => 'Redes sociales', 'icono' => 'bi-grid-3x3-gap', 'ayuda' => 'Calendario de contenido y aprobaciones de sus clientes.'],
     ];
 

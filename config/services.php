@@ -37,4 +37,11 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+
+    // Lectura de tickets (Gastos). Sin llave, los gastos se capturan a mano o con el XML de la factura.
+    'anthropic' => [
+        'key'            => env('ANTHROPIC_API_KEY'),
+        'modelo_tickets' => env('ANTHROPIC_MODELO_TICKETS', 'claude-haiku-5-5'),
+    ],
+
 ];

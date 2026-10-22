@@ -21,6 +21,9 @@ use Throwable;
 /** La plataforma: los negocios que la usan, su giro y su estado. Solo para quien la administra. */
 class PlataformaController extends Controller
 {
+    /** Funciones que se prenden por negocio desde Plataforma, aparte de las de su tipo de empresa */
+    public const EXTRAS = ['gastos'];
+
     public function index()
     {
         $cuenta = fn (string $m) => $m::sinCuenta()->selectRaw('cuenta_id, count(*) as n')->groupBy('cuenta_id')->pluck('n', 'cuenta_id');
@@ -128,6 +131,18 @@ class PlataformaController extends Controller
         // Sucursales contratadas (se cobran aparte)
         $a = $cuenta->ajustes ?? [];
         $a['sucursales_max'] = (int) ($d['sucursales_max'] ?? 1);
+        // Funciones extra que la plataforma prende por negocio (no dependen de su giro)
+        if ($request->has('_extras')) {
+            $antes = (array) ($a['modulos'] ?? []);
+            $elegidos = array_values(array_intersect(self::EXTRAS, (array) $request->input('extras', [])));
+            $a['modulos'] = array_values(array_unique(array_merge(array_diff($antes, self::EXTRAS), $elegidos)));
+            $a['gastos_tope'] = max(0, min(5000, (int) $request->input('gastos_tope', \App\Support\Gastos\LectorTicket::TOPE)));
+            // Recién prendido Gastos: todo el equipo puede subir los suyos (se quita por rol en Usuarios y roles)
+            if (in_array('gastos', $elegidos, true) && ! in_array('gastos', $antes, true)) {
+                \App\Models\Rol::sinCuenta()->where('cuenta_id', $cuenta->id)->where('todo', false)->get()
+                    ->each(fn ($r) => $r->update(['permisos' => array_values(array_unique(array_merge($r->permisos ?? [], ['gastos'])))]));
+            }
+        }
         $d['ajustes'] = $a;
         unset($d['sucursales_max']);
         // Suspender o activar se hace con su propio botón (estado)

@@ -40,6 +40,16 @@
     <div><div class="k"><i class="bi bi-arrow-repeat"></i> Renovaciones</div><div class="v num">{{ $kpi['renovaciones'] }}</div><div class="s">{{ $kpi['nuevos'] }} {{ $kpi['nuevos'] === 1 ? 'atleta nuevo' : 'atletas nuevos' }}</div></div>
 </div>
 
+@if($gas)
+    @php $queda = $kpi['cobrado'] - $gas['total']; $mas = $gas['porCategoria']->first(); @endphp
+    <div class="panel fx-kpis">
+        <a href="{{ route('admin.gastos', ['periodo' => $periodo === 'mes' ? null : $periodo]) }}"><div class="k"><i class="bi bi-receipt"></i> Gastos</div><div class="v num">{{ $dinero($gas['total']) }}</div><div class="s">{{ $gas['n'] }} {{ $gas['n'] === 1 ? 'gasto' : 'gastos' }} en el periodo</div></a>
+        <div><div class="k"><i class="bi bi-piggy-bank"></i> Te queda</div><div class="v num" style="color: {{ $queda < 0 ? 'var(--red)' : 'var(--green-ink, #047A4B)' }}">{{ $queda < 0 ? '−' : '' }}{{ $dinero(abs($queda)) }}</div><div class="s">cobrado menos gastos</div></div>
+        <div><div class="k"><i class="bi bi-percent"></i> Margen</div><div class="v num">{{ $kpi['cobrado'] > 0 && $queda >= 0 ? round($queda / $kpi['cobrado'] * 100) . '%' : '—' }}</div><div class="s">{{ $queda < 0 ? 'gastaste más de lo que cobraste' : 'de cada $100 cobrados' }}</div></div>
+        <div><div class="k"><i class="bi {{ $mas['icono'] ?? 'bi-pie-chart' }}"></i> Donde más gastas</div><div class="v num" style="font-size: 20px">{{ $mas['texto'] ?? '—' }}</div><div class="s">{{ $mas ? $dinero($mas['monto']) . ' · ' . ($gas['total'] > 0 ? round($mas['monto'] / $gas['total'] * 100) : 0) . '% del gasto' : 'sin gastos en el periodo' }}</div></div>
+    </div>
+@endif
+
 <div class="fin-grid">
     <div class="d-grid gap-4">
         <section class="panel">

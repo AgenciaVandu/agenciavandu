@@ -183,6 +183,16 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::post('ordenes/{orden}/comentar', [Admin\OrdenCompraController::class, 'comentar'])->name('ordenes.comentar');
 
     // Finanzas
+    Route::get('gastos', [Admin\GastosController::class, 'index'])->name('gastos');
+    Route::get('gastos/nuevo', [Admin\GastosController::class, 'create'])->name('gastos.create');
+    Route::get('gastos/exportar', [Admin\GastosController::class, 'exportar'])->name('gastos.exportar');
+    Route::post('gastos/leer', [Admin\GastosController::class, 'leer'])->middleware('throttle:30,1')->name('gastos.leer');
+    Route::post('gastos/xml', [Admin\GastosController::class, 'xml'])->middleware('throttle:60,1')->name('gastos.xml');
+    Route::post('gastos', [Admin\GastosController::class, 'store'])->name('gastos.store');
+    Route::get('gastos/{gasto}', [Admin\GastosController::class, 'edit'])->whereNumber('gasto')->name('gastos.edit');
+    Route::put('gastos/{gasto}', [Admin\GastosController::class, 'update'])->whereNumber('gasto')->name('gastos.update');
+    Route::delete('gastos/{gasto}', [Admin\GastosController::class, 'destroy'])->whereNumber('gasto')->name('gastos.destroy');
+    Route::get('gastos/{gasto}/{tipo}', [Admin\GastosController::class, 'archivo'])->whereNumber('gasto')->whereIn('tipo', ['foto', 'xml'])->name('gastos.archivo');
     Route::get('finanzas/exportar', [Admin\FinanzasController::class, 'exportar'])->name('finanzas.exportar');
     Route::get('finanzas/{seccion?}', [Admin\FinanzasController::class, 'index'])->where('seccion', 'resumen|ventas|cobranza|rentabilidad|proveedores')->name('finanzas');
 
