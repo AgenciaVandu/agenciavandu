@@ -22,7 +22,7 @@ use Throwable;
 class PlataformaController extends Controller
 {
     /** Funciones que se prenden por negocio desde Plataforma, aparte de las de su tipo de empresa */
-    public const EXTRAS = ['gastos'];
+    public const EXTRAS = ['gastos', 'ia'];
 
     public function index()
     {

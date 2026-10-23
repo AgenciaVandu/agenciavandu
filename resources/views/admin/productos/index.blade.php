@@ -54,6 +54,7 @@
                     </form>
                 </div>
             </div>
+            @if(\App\Support\Cuentas::actual()?->tiene('ia'))<a href="{{ route('admin.productos.lista') }}" class="btn btn-borde"><i class="bi bi-stars me-1"></i> Lista de precios</a>@endif
             <a href="{{ route('admin.productos.importar') }}" class="btn btn-borde"><i class="bi bi-file-earmark-spreadsheet me-1"></i> Importar de Excel</a>
             <a href="{{ route('admin.productos.create') }}" class="btn btn-primario"><i class="bi bi-plus-lg me-1"></i> Nuevo producto</a>
         </div>

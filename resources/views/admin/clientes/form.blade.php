@@ -15,6 +15,7 @@
 </style>
 @endpush
 
+@include('admin._leer-constancia')
 @section('contenido')
 <div class="migas">
     <a href="{{ route('admin.clientes.index') }}">Clientes</a> <i class="bi bi-chevron-right small"></i>
@@ -50,8 +51,22 @@
     </div>
 
     <div class="seccion">
-        <div><h2>Datos de facturación</h2><p>Los capturas tú. Si tienes la Constancia de Situación Fiscal, súbela aquí y queda en el expediente del cliente.</p></div>
+        <div><h2>Datos de facturación</h2><p>Sube la Constancia de Situación Fiscal y llenamos RFC, razón social, régimen y código postal. Queda en el expediente del cliente.</p></div>
         <div class="panel panel-body row g-3 mx-0">
+            <div class="col-md-8">
+                <label class="form-label" for="constancia">Constancia de Situación Fiscal <span class="text-secondary fw-normal">(PDF o foto, opcional)</span></label>
+                <input type="file" name="constancia" id="constancia" class="form-control @error('constancia') is-invalid @enderror" accept="application/pdf,image/jpeg,image/png"
+                       data-leer-constancia='{"rfc":"rfc","razon_social":"razon_social","regimen_fiscal":"regimen_fiscal","cp_fiscal":"cp_fiscal","emitida_el":"constancia_emitida_el","empresa":"empresa"}'>
+                <div class="lc-estado" id="constancia-estado" role="status" aria-live="polite"></div>
+                @error('constancia')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                @if(! $nuevo && $cliente->constancias()->exists())
+                    <div class="secundario mt-1" style="font-size:12.5px"><i class="bi bi-file-earmark-pdf"></i> Ya hay {{ $cliente->constancias()->count() }} en el expediente; si subes otra se agrega y la anterior se conserva.</div>
+                @endif
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="constancia_emitida_el">Emitida el</label>
+                <input type="date" name="constancia_emitida_el" id="constancia_emitida_el" class="form-control num" value="{{ old('constancia_emitida_el') }}">
+            </div>
             <div class="col-md-5">
                 <label class="form-label" for="rfc">RFC</label>
                 <input name="rfc" id="rfc" class="form-control text-uppercase num @error('rfc') is-invalid @enderror" maxlength="14" value="{{ old('rfc', $cliente->rfc) }}" placeholder="XAXX010101000" autocomplete="off">
@@ -104,18 +119,6 @@
             <div class="col-md-6">
                 <label class="form-label" for="email_factura">Correo para la factura <span class="text-secondary fw-normal">(si es otro)</span></label>
                 <input type="email" name="email_factura" id="email_factura" class="form-control" value="{{ old('email_factura', $cliente->email_factura) }}" placeholder="facturas@empresa.com">
-            </div>
-            <div class="col-md-8">
-                <label class="form-label" for="constancia">Constancia de Situación Fiscal <span class="text-secondary fw-normal">(PDF, opcional)</span></label>
-                <input type="file" name="constancia" id="constancia" class="form-control @error('constancia') is-invalid @enderror" accept="application/pdf,image/jpeg,image/png">
-                @error('constancia')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                @if(! $nuevo && $cliente->constancias()->exists())
-                    <div class="secundario mt-1" style="font-size:12.5px"><i class="bi bi-file-earmark-pdf"></i> Ya hay {{ $cliente->constancias()->count() }} en el expediente; si subes otra se agrega y la anterior se conserva.</div>
-                @endif
-            </div>
-            <div class="col-md-4">
-                <label class="form-label" for="constancia_emitida_el">Emitida el</label>
-                <input type="date" name="constancia_emitida_el" id="constancia_emitida_el" class="form-control num" value="{{ old('constancia_emitida_el') }}">
             </div>
         </div>
     </div>

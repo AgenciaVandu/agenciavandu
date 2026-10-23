@@ -136,6 +136,11 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::post('productos/ejemplos', [Admin\ProductoController::class, 'cargarEjemplos'])->name('productos.ejemplos');
     Route::delete('productos/ejemplos', [Admin\ProductoController::class, 'quitarEjemplos'])->name('productos.ejemplos.quitar');
     Route::post('productos/ajustes', [Admin\ProductoController::class, 'ajustes'])->name('productos.ajustes');
+    Route::get('productos/lista-de-precios', [Admin\ListaPreciosController::class, 'create'])->name('productos.lista');
+    Route::post('productos/lista-de-precios', [Admin\ListaPreciosController::class, 'leer'])->middleware('throttle:10,1')->name('productos.lista.leer');
+    Route::get('productos/lista-de-precios/revisar', [Admin\ListaPreciosController::class, 'revisar'])->name('productos.lista.revisar');
+    Route::post('productos/lista-de-precios/aplicar', [Admin\ListaPreciosController::class, 'aplicar'])->name('productos.lista.aplicar');
+    Route::post('documentos/constancia', [Admin\DocumentosController::class, 'constancia'])->middleware('throttle:20,1')->name('documentos.constancia');
     Route::get('productos/importar', [Admin\ProductoImportController::class, 'create'])->name('productos.importar');
     Route::post('productos/importar', [Admin\ProductoImportController::class, 'revisar'])->name('productos.importar.revisar');
     Route::post('productos/importar/aplicar', [Admin\ProductoImportController::class, 'aplicar'])->name('productos.importar.aplicar');

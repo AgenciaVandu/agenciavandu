@@ -98,6 +98,7 @@ class Permisos
         ['admin.ordenes.*', 'proveedores'],
         ['admin.correos.plantillas*', 'configuracion'],
         ['admin.correos.*', ['clientes', 'cotizaciones', 'proyectos']],
+        ['admin.documentos.constancia', ['clientes', 'proveedores']],
         ['admin.finanzas*', 'finanzas'],
         ['admin.gastos*', ['gastos', 'finanzas']],   // quien no ve Finanzas solo ve sus propios gastos
         ['admin.redes*', 'redes'],

@@ -5,8 +5,7 @@ namespace App\Support\Gastos;
 use App\Models\Cuenta;
 use App\Models\Gasto;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
+use App\Support\IA\Anthropic;
 use Throwable;
 
 /**
@@ -16,23 +15,11 @@ use Throwable;
  */
 class LectorTicket
 {
-    public const TOPE = 150;   // lecturas al mes por negocio, si la plataforma no pone otro
+    public const TOPE = Anthropic::TOPE;
 
-    public static function activo(): bool
-    {
-        return filled(config('services.anthropic.key'));
-    }
-
-    public static function tope(Cuenta $c): int
-    {
-        return (int) $c->ajuste('gastos_tope', self::TOPE);
-    }
-
-    public static function usadasEsteMes(Cuenta $c): int
-    {
-        $inicio = now(config('vandu.zona_horaria'))->startOfMonth()->utc();
-        return DB::table('gasto_lecturas')->where('cuenta_id', $c->id)->where('created_at', '>=', $inicio)->count();
-    }
+    public static function activo(): bool { return Anthropic::activo(); }
+    public static function tope(Cuenta $c): int { return Anthropic::tope($c); }
+    public static function usadasEsteMes(Cuenta $c): int { return Anthropic::usadasEsteMes($c); }
 
     /** Achica la foto (lado mayor 1600 px, JPEG) para mandar menos datos y gastar menos. null si no es una imagen */
     public static function preparar(string $bytes): ?string
@@ -57,42 +44,15 @@ class LectorTicket
      */
     public static function leer(string $jpeg, Cuenta $c, ?User $u): array
     {
-        if (! self::activo()) return ['ok' => false, 'motivo' => 'sin_ia', 'mensaje' => 'La lectura automática todavía no está activa. Captura los datos del ticket.'];
-        if (self::usadasEsteMes($c) >= self::tope($c)) {
-            return ['ok' => false, 'motivo' => 'tope', 'mensaje' => 'Ya se usaron las ' . self::tope($c) . ' lecturas de tickets de este mes. Captura los datos a mano.'];
+        $r = Anthropic::herramienta($c, $u, 'ticket', [Anthropic::archivo($jpeg, 'image/jpeg'), ['type' => 'text', 'text' => self::instrucciones()]], self::herramienta(), 800, 45);
+        if (! $r['ok']) {
+            return ['ok' => false, 'motivo' => $r['motivo'], 'mensaje' => match ($r['motivo']) {
+                'sin_ia' => 'La lectura automática todavía no está activa. Captura los datos del ticket.',
+                'tope'   => 'Ya se usaron las ' . self::tope($c) . ' lecturas de tickets de este mes. Captura los datos a mano.',
+                default  => 'No pudimos leer el ticket ahora. Captura los datos a mano.',
+            }];
         }
-
-        $registro = ['cuenta_id' => $c->id, 'user_id' => $u?->id, 'ok' => false, 'created_at' => now()];
-        try {
-            $r = Http::timeout(45)->withHeaders([
-                'x-api-key' => config('services.anthropic.key'),
-                'anthropic-version' => '2023-06-01',
-            ])->post('https://api.anthropic.com/v1/messages', [
-                'model' => config('services.anthropic.modelo_tickets'),
-                'max_tokens' => 800,
-                'tools' => [self::herramienta()],
-                'tool_choice' => ['type' => 'tool', 'name' => 'registrar_gasto'],
-                'messages' => [['role' => 'user', 'content' => [
-                    ['type' => 'image', 'source' => ['type' => 'base64', 'media_type' => 'image/jpeg', 'data' => base64_encode($jpeg)]],
-                    ['type' => 'text', 'text' => self::instrucciones()],
-                ]]],
-            ]);
-            $registro['tokens_entrada'] = (int) $r->json('usage.input_tokens', 0);
-            $registro['tokens_salida'] = (int) $r->json('usage.output_tokens', 0);
-            $entrada = collect($r->json('content', []))->firstWhere('type', 'tool_use')['input'] ?? null;
-            if (! $r->successful() || ! is_array($entrada)) {
-                report(new \RuntimeException('Lectura de ticket: ' . $r->status() . ' ' . mb_substr($r->body(), 0, 300)));
-                DB::table('gasto_lecturas')->insert($registro);
-                return ['ok' => false, 'motivo' => 'error', 'mensaje' => 'No pudimos leer el ticket ahora. Captura los datos a mano.'];
-            }
-        } catch (Throwable $e) {
-            report($e);
-            DB::table('gasto_lecturas')->insert($registro);
-            return ['ok' => false, 'motivo' => 'error', 'mensaje' => 'No pudimos leer el ticket ahora. Captura los datos a mano.'];
-        }
-
-        $registro['ok'] = true;
-        DB::table('gasto_lecturas')->insert($registro);
+        $entrada = $r['entrada'];
         if (($entrada['es_comprobante'] ?? true) === false) {
             return ['ok' => false, 'motivo' => 'no_es_ticket', 'mensaje' => 'La foto no parece un ticket o factura. Intenta otra vez con el ticket completo y bien iluminado.'];
         }

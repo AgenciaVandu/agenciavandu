@@ -130,13 +130,12 @@
                                 <span class="form-check-label"><i class="bi {{ $mx['icono'] }}"></i> {{ $mx['texto'] }}@if($porGiro) <span class="secundario">(viene con su tipo de empresa)</span>@endif
                                     <span class="secundario d-block" style="font-size:12px">{{ $mx['ayuda'] }}</span></span>
                             </label>
-                            @if($ex === 'gastos')
-                                <div class="d-flex align-items-center gap-2 mt-1 ms-4">
-                                    <label class="small m-0" for="tope-{{ $c->id }}">Tickets leídos con IA al mes</label>
-                                    <input id="tope-{{ $c->id }}" type="number" name="gastos_tope" min="0" max="5000" class="form-control form-control-sm num" style="width: 90px" value="{{ $c->ajuste('gastos_tope', \App\Support\Gastos\LectorTicket::TOPE) }}">
-                                </div>
-                            @endif
                         @endforeach
+                        <div class="d-flex align-items-center gap-2 mt-2">
+                            <label class="small m-0" for="tope-{{ $c->id }}">Lecturas con IA al mes <span class="secundario">(tickets, constancias y listas de precios)</span></label>
+                            <input id="tope-{{ $c->id }}" type="number" name="gastos_tope" min="0" max="5000" class="form-control form-control-sm num" style="width: 90px" value="{{ $c->ajuste('gastos_tope', \App\Support\IA\Anthropic::TOPE) }}">
+                            <span class="secundario small">{{ \App\Support\IA\Anthropic::usadasEsteMes($c) }} usadas este mes</span>
+                        </div>
                     </div>
                     <textarea name="notas" class="form-control form-control-sm" rows="2" maxlength="2000" placeholder="Notas internas (plan, contacto, pagos…)">{{ $c->notas }}</textarea>
                     <div><button class="btn btn-primario btn-sm">Guardar</button></div>

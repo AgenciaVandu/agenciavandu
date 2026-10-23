@@ -17,6 +17,7 @@
 </style>
 @endpush
 
+@include('admin._leer-constancia')
 @section('contenido')
 <div class="migas">
     <a href="{{ route('admin.proveedores.index') }}">Proveedores</a> <i class="bi bi-chevron-right small"></i>
@@ -70,8 +71,14 @@
     </div>
 
     <div class="seccion">
-        <div><h2>Datos fiscales</h2><p>Para revisar que sus facturas vengan bien.</p></div>
+        <div><h2>Datos fiscales</h2><p>Para revisar que sus facturas vengan bien. Si tienes su Constancia de Situación Fiscal, súbela y llenamos los datos.</p></div>
         <div class="panel panel-body row g-3 mx-0">
+            <div class="col-12">
+                <label class="form-label" for="constancia-proveedor">Llenar con su Constancia <span class="text-secondary fw-normal">(PDF o foto; no se guarda)</span></label>
+                <input type="file" id="constancia-proveedor" class="form-control" accept="application/pdf,image/jpeg,image/png"
+                       data-leer-constancia='{"rfc":"rfc","razon_social":"razon_social","empresa":"empresa"}'>
+                <div class="lc-estado" id="constancia-proveedor-estado" role="status" aria-live="polite"></div>
+            </div>
             <div class="col-md-5">
                 <label class="form-label" for="rfc">RFC</label>
                 <input name="rfc" id="rfc" class="form-control text-uppercase num" maxlength="14" value="{{ old('rfc', $proveedor->rfc) }}" autocomplete="off">
