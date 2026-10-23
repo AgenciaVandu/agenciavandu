@@ -22,6 +22,7 @@ class CuentaPorEnlace
             'redes'       => Cliente::sinCuenta()->where('redes_token', $token)->value('cuenta_id'),
             'cliente'     => Cliente::sinCuenta()->where('portal_token', $token)->value('cuenta_id'),
             'proveedor'   => \App\Models\Proveedor::sinCuenta()->where('portal_token', $token)->value('cuenta_id'),
+            'pedido'      => \App\Models\Venta::sinCuenta()->where('token', $token)->value('cuenta_id'),
             default       => null,
         };
         if ($cuenta) {

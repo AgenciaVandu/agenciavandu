@@ -25,6 +25,7 @@ class Permisos
         'asistencia'    => ['texto' => 'Asistencia',            'icono' => 'bi-qr-code-scan',      'ayuda' => 'Escanear el QR en la entrada y pasar lista de las clases'],
         'membresias'    => ['texto' => 'Paquetes y membresías', 'icono' => 'bi-ticket-perforated', 'ayuda' => 'Crear paquetes de clases con su precio y asignarlos a los atletas'],
         'productos'     => ['texto' => 'Productos e inventario', 'icono' => 'bi-box-seam',         'ayuda' => 'Catálogo, existencias, costos, entradas y salidas, e importar desde Excel'],
+        'vender'        => ['texto' => 'Vender y pedidos',      'icono' => 'bi-bag',               'ayuda' => 'Registrar ventas de mostrador y pedidos con envío, cobrar abonos y cambiar el estado de la entrega'],
         'proveedores'   => ['texto' => 'Proveedores',           'icono' => 'bi-truck',             'ayuda' => 'Proveedores, órdenes de compra, sus facturas y archivos'],
         'lealtad'       => ['texto' => 'Programa de lealtad',   'icono' => 'bi-gift',              'ayuda' => 'Crear campañas con su vigencia, meta de visitas y premios'],
         'canjes'        => ['texto' => 'Escanear visitas y premios', 'icono' => 'bi-qr-code-scan', 'ayuda' => 'Escanear el QR del comensal para sumar su visita, unirlo al programa y entregarle premios'],
@@ -39,7 +40,7 @@ class Permisos
     /** Secciones que solo existen en ciertos giros: sección => módulo del giro */
     public const MODULOS = ['redes' => 'redes', 'productos' => 'stock', 'proyectos' => 'proyectos', 'unidades' => 'autos', 'cobranza' => 'autos',
                                'clases' => 'fitness', 'asistencia' => 'fitness', 'membresias' => 'fitness', 'cotizaciones' => 'cotizaciones', 'proveedores' => 'proveedores', 'archivos' => 'archivos', 'tareas' => 'tareas',
-                               'clientes' => 'clientes', 'ventas' => 'ventas', 'finanzas' => 'finanzas', 'lealtad' => 'lealtad', 'canjes' => 'lealtad', 'comensales' => 'lealtad', 'gastos' => 'gastos'];
+                               'clientes' => 'clientes', 'ventas' => 'ventas', 'finanzas' => 'finanzas', 'lealtad' => 'lealtad', 'canjes' => 'lealtad', 'comensales' => 'lealtad', 'gastos' => 'gastos', 'vender' => 'stock'];
 
     /** Secciones disponibles para la cuenta activa (para armar roles) */
     public static function disponibles(): array
@@ -99,6 +100,8 @@ class Permisos
         ['admin.correos.plantillas*', 'configuracion'],
         ['admin.correos.*', ['clientes', 'cotizaciones', 'proyectos']],
         ['admin.documentos.constancia', ['clientes', 'proveedores']],
+        ['admin.pedidos.ajustes*', 'configuracion'],
+        ['admin.pedidos*', 'vender'],
         ['admin.finanzas*', 'finanzas'],
         ['admin.gastos*', ['gastos', 'finanzas']],   // quien no ve Finanzas solo ve sus propios gastos
         ['admin.redes*', 'redes'],
@@ -146,7 +149,7 @@ class Permisos
     /** Primera página a la que puede entrar (para el inicio) */
     public static function inicio(User $u): string
     {
-        foreach (['resumen' => 'admin.resumen', 'canjes' => 'admin.lealtad.escanear', 'clases' => 'admin.clases.index', 'asistencia' => 'admin.clases.index', 'proyectos' => 'admin.proyectos.index', 'unidades' => 'admin.unidades.index', 'cobranza' => 'admin.creditos.index', 'cotizaciones' => 'admin.presupuestos.index', 'redes' => 'admin.redes'] as $s => $r) {
+        foreach (['resumen' => 'admin.resumen', 'vender' => 'admin.pedidos', 'canjes' => 'admin.lealtad.escanear', 'clases' => 'admin.clases.index', 'asistencia' => 'admin.clases.index', 'proyectos' => 'admin.proyectos.index', 'unidades' => 'admin.unidades.index', 'cobranza' => 'admin.creditos.index', 'cotizaciones' => 'admin.presupuestos.index', 'redes' => 'admin.redes'] as $s => $r) {
             if ($u->puede($s)) return route($r);
         }
         return Cuentas::actual()?->tiene('tareas') === false ? route('admin.cuenta') : route('admin.tareas.index');

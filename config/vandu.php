@@ -139,9 +139,9 @@ return [
                 ],
             ],
             'roles'   => [
-                ['nombre' => 'Vendedor', 'descripcion' => 'Atiende prospectos y clientes, y cotiza eligiendo productos del catálogo. No ve costos ni márgenes.', 'permisos' => ['ventas', 'cotizaciones', 'clientes']],
-                ['nombre' => 'Almacén', 'descripcion' => 'Da de alta productos, registra entradas y salidas, e importa el catálogo.', 'permisos' => ['productos', 'proveedores']],
-                ['nombre' => 'Administración', 'descripcion' => 'Cobros, finanzas, clientes, cotizaciones y costos del catálogo.', 'permisos' => ['finanzas', 'clientes', 'cotizaciones', 'productos']],
+                ['nombre' => 'Vendedor', 'descripcion' => 'Vende en mostrador y levanta pedidos, atiende prospectos y cotiza con el catálogo. No ve costos ni márgenes.', 'permisos' => ['vender', 'ventas', 'cotizaciones', 'clientes']],
+                ['nombre' => 'Almacén', 'descripcion' => 'Da de alta productos, registra entradas y salidas, importa el catálogo y surte los pedidos.', 'permisos' => ['productos', 'proveedores', 'vender']],
+                ['nombre' => 'Administración', 'descripcion' => 'Cobros, finanzas, clientes, cotizaciones y costos del catálogo.', 'permisos' => ['finanzas', 'clientes', 'cotizaciones', 'productos', 'vender']],
             ],
         ],
         'arquitectura' => [
@@ -428,6 +428,7 @@ return [
             'cotizacion_descargada' => ['seccion' => 'cotizaciones', 'texto' => 'Un cliente descarga la cotización', 'ayuda' => 'Cuando baja el PDF desde su enlace', 'icono' => 'bi-file-earmark-arrow-down'],
             'archivos_cliente'      => ['seccion' => 'proyectos', 'texto' => 'Un cliente te envía archivos', 'ayuda' => 'Subió archivos desde la página de su proyecto (van a Dropbox)', 'icono' => 'bi-cloud-arrow-up'],
             'proyecto_visto'        => ['seccion' => 'proyectos', 'texto' => 'Un cliente revisa su proyecto', 'ayuda' => 'Abre su página de avance o de entrega', 'icono' => 'bi-kanban'],
+            'pedido_datos'          => ['seccion' => 'vender', 'texto' => 'Un cliente manda sus datos de envío', 'ayuda' => 'Llena su dirección y su ubicación desde el enlace de su pedido', 'icono' => 'bi-geo-alt'],
             'proveedor_actividad'   => ['seccion' => 'proveedores', 'texto' => 'Un proveedor sube algo o comenta', 'ayuda' => 'Abre una orden de compra, sube su factura o archivos, o deja un comentario', 'icono' => 'bi-truck'],
             'mensaje_sitio'         => ['seccion' => 'ventas', 'texto' => 'Llega un mensaje desde el sitio', 'ayuda' => 'Alguien llenó el formulario de cotizar en agenciavandu.com', 'icono' => 'bi-chat-dots'],
             'resumen_diario'        => ['seccion' => 'resumen', 'texto' => 'Resumen de la mañana', 'ayuda' => 'Cobros vencidos o por vencer, etapas del día y cotizaciones a punto de vencer', 'icono' => 'bi-sunrise'],

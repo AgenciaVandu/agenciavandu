@@ -166,7 +166,7 @@
                     <span class="estado estado-{{ $p->estado }}">{{ \App\Models\Presupuesto::ESTADOS[$p->estado] ?? $p->estado }}</span>
                     @if(! in_array($p->estado, ['aceptada', 'rechazada', 'cancelada'], true))@include('admin.presupuestos._vigencia', ['p' => $p])@endif
                     @if($p->estado === 'aceptada')
-                        @if(! $p->proyecto)<a href="{{ route('admin.proyectos.create', $p) }}" class="cq-tag ambar"><i class="bi bi-kanban"></i> Crear proyecto</a>@endif
+                        @if(! $p->proyecto && ! $p->venta)@if($p->solo_productos && auth()->user()->puede('vender'))<form method="post" action="{{ route('admin.pedidos.desde-cotizacion', $p) }}" class="d-inline">@csrf<button class="cq-tag ambar border-0"><i class="bi bi-bag-check"></i> Registrar venta</button></form>@else<a href="{{ route('admin.proyectos.create', $p) }}" class="cq-tag ambar"><i class="bi bi-kanban"></i> Crear proyecto</a>@endif @endif
                         @if($p->facturas->isEmpty())<a href="{{ route('admin.presupuestos.edit', [$p, 'ver' => 'factura']) }}" class="cq-tag ambar"><i class="bi bi-receipt"></i> Sin {{ $p->es_nota ? 'nota' : 'factura' }}</a>
                         @elseif(! $facEnv)<a href="{{ route('admin.presupuestos.edit', [$p, 'correo' => $p->comprobante_corto]) }}" class="cq-tag ambar"><i class="bi bi-send"></i> Enviar {{ $p->es_nota ? 'nota' : 'factura' }}</a>
                         @else<span class="cq-tag verde"><i class="bi bi-receipt"></i> {{ $p->es_nota ? 'Nota enviada' : 'Facturada' }}</span>@endif

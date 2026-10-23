@@ -214,6 +214,19 @@ class Presupuesto extends Model
         return $this->facturas->sortBy(fn ($f) => [['pdf' => 0, 'xml' => 1][$f->ext] ?? 2, $f->id])->values();
     }
 
+    /** Si se registró como venta directa (solo productos, sin proyecto) */
+    public function venta(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Venta::class);
+    }
+
+    /** Solo lleva productos del catálogo: se registra como venta, no como proyecto */
+    public function getSoloProductosAttribute(): bool
+    {
+        $c = $this->relationLoaded('conceptos') ? $this->conceptos : $this->conceptos()->get(['producto_id']);
+        return $c->isNotEmpty() && $c->every(fn ($x) => $x->producto_id !== null) && (bool) \App\Support\Cuentas::actual()?->tiene('stock');
+    }
+
     public function proyecto(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(Proyecto::class);

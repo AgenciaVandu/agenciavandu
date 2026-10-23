@@ -50,6 +50,15 @@ class EsteMes
         $anterior = round($conIva ? $previos->sum('monto') : $previos->sum($sinIva), 2);
         $actual = $conIva ? $cobrado : $cobradoSinIva;
 
+        // Ventas directas (mostrador y pedidos)
+        $vPagos = \App\Support\Ventas\Numeros::pagos($antIni->toDateString(), $fin, true);
+        $vSin = \App\Support\Ventas\Numeros::pagos($antIni->toDateString(), $fin, false);
+        $cobrado = round($cobrado + $vPagos->filter(fn ($x) => $x->fecha >= $ini)->sum('monto'), 2);
+        $cobradoSinIva = round($cobradoSinIva + $vSin->filter(fn ($x) => $x->fecha >= $ini)->sum('monto'), 2);
+        $anterior = round($anterior + ($conIva ? $vPagos : $vSin)->filter(fn ($x) => $x->fecha <= $antFin)->sum('monto'), 2);
+        $actual = $conIva ? $cobrado : $cobradoSinIva;
+        $directas = \App\Support\Ventas\Numeros::vendidas($ini, $fin);
+
         // Igual que Finanzas: por la fecha en que se aceptó (o la última modificación si no la tiene)
         $ventas = Presupuesto::with('conceptos')->where('estado', 'aceptada')->get()
             ->filter(fn ($p) => ($f = static::fechaAceptada($p)) >= $ini && $f <= $fin);
@@ -58,11 +67,11 @@ class EsteMes
             'cobrado'       => $actual,
             'cobradoConIva' => $cobrado,
             'cobradoSinIva' => $cobradoSinIva,
-            'pagos'         => $delMes->count(),
+            'pagos'         => $delMes->count() + $vPagos->filter(fn ($x) => $x->fecha >= $ini)->count(),
             'anterior'      => $anterior,
             'variacion'     => $anterior > 0 ? (int) round(($actual - $anterior) / $anterior * 100) : null,
-            'vendido'       => round($ventas->sum(fn ($p) => $conIva ? $p->total : $p->subtotal), 2),
-            'ventas'        => $ventas->count(),
+            'vendido'       => round($ventas->sum(fn ($p) => $conIva ? $p->total : $p->subtotal) + $directas->sum(fn ($v) => \App\Support\Ventas\Numeros::monto($v, $conIva)), 2),
+            'ventas'        => $ventas->count() + $directas->count(),
             'mes'           => ucfirst($hoy->locale('es')->isoFormat('MMMM')),
             'alDia'         => $hoy->day . ' de ' . $antIni->locale('es')->isoFormat('MMMM'),
         ];

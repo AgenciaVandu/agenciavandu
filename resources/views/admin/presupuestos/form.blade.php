@@ -299,7 +299,9 @@
         @php
             $sigFacturas = $p->facturas_ordenadas; $sigEnviada = $sigFacturas->max('enviada_at');
             $sigTipo = \App\Models\Proyecto::tipoSugerido($p);
-            $sigListo = $p->proyecto && $sigEnviada;
+            $sigVenta = $p->venta;
+            $sigComoVenta = ! $p->proyecto && ! $sigVenta && $p->solo_productos && auth()->user()->puede('vender');
+            $sigListo = ($p->proyecto || $sigVenta) && $sigEnviada;
         @endphp
         @unless($sigListo)
             <section class="siguientes" aria-label="Siguientes pasos">
@@ -308,7 +310,23 @@
                     <div><b>¡Cotización aceptada!</b><span>Aceptada {{ $p->aceptada_el ? 'el ' . \App\Models\Presupuesto::fechaLarga($p->aceptada_el) : '' }} · sigue con esto:</span></div>
                 </div>
                 <div class="sig-pasos">
-                    {{-- 1. Proyecto --}}
+                    {{-- 1. Proyecto (o venta, si solo lleva productos) --}}
+                    @if($sigVenta || $sigComoVenta)
+                    <div class="sig-paso {{ $sigVenta ? 'hecho' : '' }}">
+                        <span class="sig-n">@if($sigVenta)<i class="bi bi-check-lg"></i>@else 1 @endif</span>
+                        <div class="sig-txt">
+                            @if($sigVenta)<b>Venta {{ $sigVenta->folio }}</b><span>{{ $sigVenta->estado_texto }} · {{ $sigVenta->pago_texto }}</span>
+                            @else<b>Registrar la venta</b><span>Solo lleva productos: cobro, entrega y envío sin crear un proyecto</span>@endif
+                        </div>
+                        <div class="sig-acc">
+                            @if($sigVenta)<a href="{{ route('admin.pedidos.show', $sigVenta) }}" class="btn btn-borde btn-sm">Abrir</a>
+                            @else
+                                <form method="post" action="{{ route('admin.pedidos.desde-cotizacion', $p) }}">@csrf<button class="btn btn-acento btn-sm"><i class="bi bi-bag-check me-1"></i> Registrar venta</button></form>
+                                <a href="{{ route('admin.proyectos.create', [$p, 'tipo' => $sigTipo]) }}" class="btn btn-fantasma btn-sm">Mejor un proyecto</a>
+                            @endif
+                        </div>
+                    </div>
+                    @else
                     <div class="sig-paso {{ $p->proyecto ? 'hecho' : '' }}">
                         <span class="sig-n">@if($p->proyecto)<i class="bi bi-check-lg"></i>@else 1 @endif</span>
                         <div class="sig-txt">
@@ -327,6 +345,7 @@
                         @endif
                         </div>
                     </div>
+                    @endif
                     {{-- 2. Factura --}}
                     <div class="sig-paso {{ $sigEnviada ? 'hecho' : '' }}">
                         <span class="sig-n">@if($sigEnviada)<i class="bi bi-check-lg"></i>@else 2 @endif</span>

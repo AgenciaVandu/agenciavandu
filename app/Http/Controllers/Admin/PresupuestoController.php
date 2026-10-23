@@ -44,7 +44,7 @@ class PresupuestoController extends Controller
         };
 
         $presupuestos = Presupuesto::query()
-            ->with(['cliente', 'prospecto', 'conceptos', 'proyecto', 'facturas'])
+            ->with(['cliente', 'prospecto', 'conceptos', 'proyecto', 'facturas', 'venta'])
             ->when($q, fn ($query) => $query->where(fn ($w) => $w
                 ->where('folio', 'like', "%$q%")
                 ->orWhere('cliente_nombre', 'like', "%$q%")

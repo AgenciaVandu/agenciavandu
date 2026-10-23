@@ -188,6 +188,18 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::post('ordenes/{orden}/comentar', [Admin\OrdenCompraController::class, 'comentar'])->name('ordenes.comentar');
 
     // Finanzas
+    Route::get('pedidos', [Admin\PedidosController::class, 'index'])->name('pedidos');
+    Route::get('pedidos/nueva', [Admin\PedidosController::class, 'create'])->name('pedidos.create');
+    Route::post('pedidos', [Admin\PedidosController::class, 'store'])->name('pedidos.store');
+    Route::get('pedidos/ajustes', [Admin\PedidosController::class, 'ajustes'])->name('pedidos.ajustes');
+    Route::post('pedidos/ajustes', [Admin\PedidosController::class, 'guardarAjustes'])->name('pedidos.ajustes.guardar');
+    Route::post('pedidos/desde-cotizacion/{presupuesto}', [Admin\PedidosController::class, 'desdeCotizacion'])->name('pedidos.desde-cotizacion');
+    Route::get('pedidos/{venta}', [Admin\PedidosController::class, 'show'])->whereNumber('venta')->name('pedidos.show');
+    Route::post('pedidos/{venta}/abono', [Admin\PedidosController::class, 'abonar'])->whereNumber('venta')->name('pedidos.abonar');
+    Route::patch('pedidos/{venta}/estado', [Admin\PedidosController::class, 'estado'])->whereNumber('venta')->name('pedidos.estado');
+    Route::put('pedidos/{venta}/envio', [Admin\PedidosController::class, 'envio'])->whereNumber('venta')->name('pedidos.envio');
+    Route::post('pedidos/{venta}/cancelar', [Admin\PedidosController::class, 'cancelar'])->whereNumber('venta')->name('pedidos.cancelar');
+    Route::get('pedidos/{venta}/nota', [Admin\PedidosController::class, 'nota'])->whereNumber('venta')->name('pedidos.nota');
     Route::get('gastos', [Admin\GastosController::class, 'index'])->name('gastos');
     Route::get('gastos/nuevo', [Admin\GastosController::class, 'create'])->name('gastos.create');
     Route::get('gastos/exportar', [Admin\GastosController::class, 'exportar'])->name('gastos.exportar');
@@ -361,6 +373,13 @@ Route::get('/autos/{slug}', [\App\Http\Controllers\AutosController::class, 'unid
 // Portal del cliente: un solo enlace con todas sus cotizaciones y proyectos
 Route::get('/cliente/{token}', [\App\Http\Controllers\ClientePortalController::class, 'show'])
     ->where('token', '[A-Za-z0-9]{32}')->middleware(['cuenta.enlace:cliente', 'throttle:60,1'])->name('cliente.portal');
+
+// Pedido para el cliente: llena sus datos de envío con su ubicación y ve su nota
+Route::prefix('/pedido/{token}')->where(['token' => '[A-Za-z0-9]{32}'])->middleware(['cuenta.enlace:pedido', 'throttle:60,1'])->group(function () {
+    Route::get('/', [\App\Http\Controllers\PedidoPublicoController::class, 'show'])->name('pedido.publico');
+    Route::post('/', [\App\Http\Controllers\PedidoPublicoController::class, 'guardar'])->middleware('throttle:10,1')->name('pedido.publico.guardar');
+    Route::get('/nota', [\App\Http\Controllers\PedidoPublicoController::class, 'nota'])->name('pedido.publico.nota');
+});
 
 // Espacio del proveedor: sus órdenes de compra, facturas, archivos y comentarios
 Route::prefix('/proveedor/{token}')->where(['token' => '[A-Za-z0-9]{32}', 'orden' => '[0-9]+'])->middleware(['cuenta.enlace:proveedor', 'throttle:60,1'])->group(function () {

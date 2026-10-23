@@ -23,9 +23,9 @@ class Inventario
      * Mueve existencias. $cantidad positiva entra, negativa sale.
      * Con $fijarEn, deja la existencia exactamente en ese número (ajuste por conteo físico).
      */
-    public static function mover(Producto $p, string $tipo, float $cantidad, ?string $nota = null, ?int $presupuestoId = null, ?float $fijarEn = null): ?ProductoMovimiento
+    public static function mover(Producto $p, string $tipo, float $cantidad, ?string $nota = null, ?int $presupuestoId = null, ?float $fijarEn = null, ?int $ventaId = null): ?ProductoMovimiento
     {
-        return DB::transaction(function () use ($p, $tipo, $cantidad, $nota, $presupuestoId, $fijarEn) {
+        return DB::transaction(function () use ($p, $tipo, $cantidad, $nota, $presupuestoId, $fijarEn, $ventaId) {
             $p = Producto::sinCuenta()->whereKey($p->id)->lockForUpdate()->first();
             if (! $p || ! $p->controla_existencia) return null;
             if ($fijarEn !== null) $cantidad = round($fijarEn - $p->existencia, 2);
@@ -36,7 +36,7 @@ class Inventario
 
             return $p->movimientos()->create([
                 'tipo' => $tipo, 'cantidad' => round($cantidad, 2), 'existencia' => $p->existencia,
-                'presupuesto_id' => $presupuestoId, 'user_id' => auth()->id(), 'nota' => $nota ? mb_substr($nota, 0, 255) : null,
+                'presupuesto_id' => $presupuestoId, 'venta_id' => $ventaId, 'user_id' => auth()->id(), 'nota' => $nota ? mb_substr($nota, 0, 255) : null,
             ]);
         });
     }

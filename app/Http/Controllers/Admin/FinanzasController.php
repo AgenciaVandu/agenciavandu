@@ -100,6 +100,21 @@ class FinanzasController extends Controller
             'diasCierre'     => $this->diasPromedioCierre($ganadas),
         ];
 
+        // Ventas directas (mostrador y pedidos): suman a lo vendido, lo cobrado y lo que falta cobrar
+        $kpi['directas'] = null;
+        if (\App\Support\Ventas\Numeros::activo()) {
+            $vPagos = \App\Support\Ventas\Numeros::pagos($desde, $hasta, $conIva);
+            $vVendidas = \App\Support\Ventas\Numeros::vendidas($desde, $hasta);
+            $vPor = \App\Support\Ventas\Numeros::porCobrar($conIva);
+            $kpi['directas'] = ['vendido' => round($vVendidas->sum(fn ($v) => \App\Support\Ventas\Numeros::monto($v, $conIva)), 2), 'n' => $vVendidas->count()];
+            $kpi['ganado'] = round($kpi['ganado'] + $kpi['directas']['vendido'], 2);
+            $kpi['ganadas'] += $kpi['directas']['n'];
+            $kpi['cobrado'] = round($kpi['cobrado'] + $vPagos->sum('monto'), 2);
+            $kpi['cobros'] += $vPagos->count();
+            $kpi['porCobrar'] = round($kpi['porCobrar'] + $vPor['monto'], 2);
+            $kpi['pendientes'] += $vPor['n'];
+        }
+
         // Comparación contra el periodo anterior de la misma duración
         $kpi['ganadoAnterior'] = null;
         if ($desde && $hasta) {
@@ -111,7 +126,11 @@ class FinanzasController extends Controller
         }
 
         // Tendencia: últimos 12 meses (siempre, sin importar el periodo elegido)
-        $meses = collect(range(11, 0))->map(function ($i) use ($tz, $cotizaciones, $pagos, $monto) {
+        $vMes = \App\Support\Ventas\Numeros::activo() ? [
+            'pagos' => \App\Support\Ventas\Numeros::pagos(now($tz)->startOfMonth()->subMonths(11)->toDateString(), null, $conIva),
+            'vendidas' => \App\Support\Ventas\Numeros::vendidas(now($tz)->startOfMonth()->subMonths(11)->toDateString(), null),
+        ] : null;
+        $meses = collect(range(11, 0))->map(function ($i) use ($tz, $cotizaciones, $pagos, $monto, $vMes, $conIva) {
             $m = now($tz)->startOfMonth()->subMonths($i);
             $ym = $m->format('Y-m');
             return [
@@ -119,8 +138,10 @@ class FinanzasController extends Controller
                 'completa' => ucfirst($m->locale('es')->isoFormat('MMMM YYYY')),
                 'actual'   => $i === 0,
                 'cotizado' => round($cotizaciones->filter(fn ($p) => $p->fecha->format('Y-m') === $ym)->sum($monto), 2),
-                'ganado'   => round($cotizaciones->filter(fn ($p) => $p->estado === 'aceptada' && substr(\App\Support\EsteMes::fechaAceptada($p), 0, 7) === $ym)->sum($monto), 2),
-                'cobrado'  => round($pagos->filter(fn ($x) => $x->pago->pagado_el?->format('Y-m') === $ym)->sum('monto'), 2),
+                'ganado'   => round($cotizaciones->filter(fn ($p) => $p->estado === 'aceptada' && substr(\App\Support\EsteMes::fechaAceptada($p), 0, 7) === $ym)->sum($monto)
+                    + ($vMes ? $vMes['vendidas']->filter(fn ($v) => $v->fecha->format('Y-m') === $ym)->sum(fn ($v) => \App\Support\Ventas\Numeros::monto($v, $conIva)) : 0), 2),
+                'cobrado'  => round($pagos->filter(fn ($x) => $x->pago->pagado_el?->format('Y-m') === $ym)->sum('monto')
+                    + ($vMes ? $vMes['pagos']->filter(fn ($x) => substr($x->fecha, 0, 7) === $ym)->sum('monto') : 0), 2),
             ];
         });
 

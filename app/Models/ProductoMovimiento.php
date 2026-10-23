@@ -17,13 +17,14 @@ class ProductoMovimiento extends Model
         'salida'      => ['texto' => 'Salida',                'icono' => 'bi-box-arrow-up'],
         'ajuste'      => ['texto' => 'Ajuste de inventario',  'icono' => 'bi-sliders'],
         'venta'       => ['texto' => 'Cotización aceptada',   'icono' => 'bi-check-circle'],
+        'vendido'     => ['texto' => 'Venta',                 'icono' => 'bi-bag-check'],
         'devolucion'  => ['texto' => 'Regresó al inventario', 'icono' => 'bi-arrow-counterclockwise'],
         'importacion' => ['texto' => 'Importación',           'icono' => 'bi-file-earmark-spreadsheet'],
     ];
 
     protected $table = 'producto_movimientos';
 
-    protected $fillable = ['producto_id', 'tipo', 'cantidad', 'existencia', 'presupuesto_id', 'user_id', 'nota'];
+    protected $fillable = ['producto_id', 'tipo', 'cantidad', 'existencia', 'presupuesto_id', 'venta_id', 'user_id', 'nota'];
 
     protected $casts = ['cantidad' => 'float', 'existencia' => 'float'];
 

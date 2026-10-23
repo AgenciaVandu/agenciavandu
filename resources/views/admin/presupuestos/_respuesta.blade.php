@@ -26,8 +26,12 @@
                     <b>Aceptada</b>{{ $p->aceptada_el ? ' el ' . $p->aceptada_el->locale('es')->isoFormat('D [de] MMMM') : '' }} <span class="secundario">· registrada por la agencia</span>
                 @endif
             </div>
-            @if($p->proyecto)
+            @if($p->venta)
+                <a href="{{ route('admin.pedidos.show', $p->venta) }}" class="btn btn-borde"><i class="bi bi-bag-check me-1"></i> Ver venta {{ $p->venta->folio }}</a>
+            @elseif($p->proyecto)
                 <a href="{{ route('admin.proyectos.show', $p->proyecto) }}" class="btn btn-borde"><i class="bi bi-kanban me-1"></i> Ver proyecto</a>
+            @elseif($p->solo_productos && auth()->user()->puede('vender'))
+                <form method="post" action="{{ route('admin.pedidos.desde-cotizacion', $p) }}">@csrf<button class="btn btn-primario w-100"><i class="bi bi-bag-check me-1"></i> Registrar venta</button></form>
             @else
                 <a href="{{ route('admin.proyectos.create', $p) }}" class="btn btn-primario"><i class="bi bi-kanban me-1"></i> Crear proyecto</a>
             @endif

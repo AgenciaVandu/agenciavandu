@@ -103,7 +103,7 @@ Para abrir, Nerby responde la acción “{{ $d->accion }}” con “{{ $d->param
 
                 <div class="tq-sec">
                     <button type="button" class="btn btn-fantasma btn-sm px-0" @click="mas = !mas"><i class="bi bi-gear me-1"></i> Opciones</button>
-                    <form method="post" action="{{ route('admin.torniquetes.update', $d) }}" x-show="mas" x-cloak class="mt-3 d-grid gap-3">
+                    <div x-show="mas" x-cloak><form method="post" action="{{ route('admin.torniquetes.update', $d) }}" class="mt-3 d-grid gap-3">
                         @csrf @method('put')
                         <div class="row g-2">
                             <div class="col-sm-6"><label class="form-label small" for="n-{{ $d->id }}">Nombre</label><input id="n-{{ $d->id }}" name="nombre" class="form-control" value="{{ $d->nombre }}" required maxlength="80"></div>
@@ -130,7 +130,7 @@ Para abrir, Nerby responde la acción “{{ $d->accion }}” con “{{ $d->param
                             <button class="btn btn-borde btn-sm" form="token-{{ $d->id }}">Crear dirección nueva</button>
                             <button class="btn btn-fantasma btn-sm text-danger ms-auto" form="borrar-{{ $d->id }}">Eliminar</button>
                         </div>
-                    </form>
+                    </form></div>
                     <form id="token-{{ $d->id }}" method="post" action="{{ route('admin.torniquetes.token', $d) }}" onsubmit="return confirm('La dirección actual dejará de funcionar y tendrás que escribir la nueva en el equipo. ¿Seguir?')">@csrf</form>
                     <form id="borrar-{{ $d->id }}" method="post" action="{{ route('admin.torniquetes.destroy', $d) }}" onsubmit="return confirm('¿Eliminar {{ addslashes($d->nombre) }}? El equipo dejará de abrir con Nerby.')">@csrf @method('delete')</form>
                 </div>

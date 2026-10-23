@@ -17,6 +17,9 @@
     $puede = fn ($s) => $usuario?->puede($s) ?? false;
     try { $tareasNav = $cuentaNav?->tiene('tareas') === false ? 0 : \App\Models\Tarea::where('asignada_a', $usuario?->id)->abiertas()->count(); } catch (\Throwable $e) { $tareasNav = 0; }
     $gymNav = (bool) $cuentaNav?->tiene('fitness');
+    // Venta directa (negocios con inventario): el botón principal es Nueva venta
+    $ventaNav = $cuentaNav?->tiene('stock') && $usuario?->puede('vender');
+    try { $pedidosNav = $ventaNav ? \App\Models\Venta::porEntregar()->count() : 0; } catch (\Throwable $e) { $pedidosNav = 0; }
     // Gimnasio: atletas sin paquete vigente o por renovar (para el número del menú)
     try { $renovarNav = $gymNav && $usuario?->puede('membresias') ? \App\Models\Membresia::vigentes()->where(fn ($q) => $q->whereDate('vence_el', '<=', now(config('vandu.zona_horaria'))->addDays(3)->toDateString())->orWhereRaw('creditos IS NOT NULL AND usados + 1 >= creditos'))->distinct('cliente_id')->count('cliente_id') : 0; } catch (\Throwable $e) { $renovarNav = 0; }
     try { $hoyNav = $gymNav ? \App\Models\Clase::programadas()->delDia(now())->when(! $usuario?->puede('clases'), fn ($q) => $q->where('coach_id', $usuario?->id))->count() : 0; } catch (\Throwable $e) { $hoyNav = 0; }
@@ -30,6 +33,7 @@
         ['ruta' => 'admin.lealtad.campanas',    'activo' => ['admin.lealtad.campanas*', 'admin.lealtad.qr'], 'icono' => 'bi-gift', 'texto' => 'Campañas', 'seccion' => 'lealtad', 'modulo' => 'lealtad'],
         ['ruta' => 'admin.comensales',          'activo' => 'admin.comensales*',      'icono' => 'bi-person-hearts',   'texto' => 'Comensales', 'seccion' => 'comensales', 'modulo' => 'lealtad'],
         ['ruta' => 'admin.escanear',            'activo' => 'admin.escanear*',        'icono' => 'bi-qr-code-scan',    'texto' => 'Escanear', 'seccion' => 'asistencia', 'modulo' => 'fitness'],
+        ['ruta' => 'admin.pedidos',             'activo' => 'admin.pedidos*',         'icono' => 'bi-bag',             'texto' => 'Pedidos', 'cuenta' => $pedidosNav, 'seccion' => 'vender', 'modulo' => 'stock'],
         ['ruta' => 'admin.presupuestos.index',  'activo' => 'admin.presupuestos.*',   'icono' => 'bi-file-earmark-text','texto' => 'Cotizaciones', 'cuenta' => $vigentesNav, 'seccion' => 'cotizaciones', 'modulo' => 'cotizaciones'],
         ['ruta' => 'admin.unidades.index',      'activo' => 'admin.unidades.*',       'icono' => 'bi-car-front',       'texto' => 'Unidades', 'seccion' => ['unidades', 'cobranza'], 'modulo' => 'autos'],
         ['ruta' => 'admin.creditos.index',      'activo' => 'admin.creditos.*',       'icono' => 'bi-cash-coin',       'texto' => 'Cobranza', 'cuenta' => $atrasoNav, 'seccion' => 'cobranza', 'modulo' => 'autos'],
@@ -46,6 +50,7 @@
     $inicioNav = $usuario ? \App\Support\Permisos::inicio($usuario) : route('admin.resumen');
     // Barra inferior del celular: hasta 4 accesos (+ el botón de nueva cotización si la puede hacer)
     $tabs = array_slice(array_values(array_filter([
+        $ventaNav ? ['url' => route('admin.pedidos'), 'activo' => 'admin.pedidos*', 'icono' => 'bi-bag', 'lleno' => 'bi-bag-fill', 'texto' => 'Pedidos', 'cuenta' => $pedidosNav] : null,
         $puede('resumen') ? ['url' => route('admin.resumen'), 'activo' => 'admin.resumen', 'icono' => 'bi-grid-1x2', 'lleno' => 'bi-grid-1x2-fill', 'texto' => 'Inicio'] : null,
         $gymNav && ($puede('clases') || $puede('asistencia')) ? ['url' => route('admin.clases.index'), 'activo' => 'admin.clases.*', 'icono' => 'bi-calendar-week', 'lleno' => 'bi-calendar-week-fill', 'texto' => 'Agenda', 'cuenta' => $hoyNav] : null,
         $gymNav && $puede('asistencia') ? ['url' => route('admin.escanear'), 'activo' => 'admin.escanear*', 'icono' => 'bi-qr-code-scan', 'lleno' => 'bi-qr-code-scan', 'texto' => 'Escanear'] : null,
@@ -63,7 +68,8 @@
         $puede('redes') ? ['url' => route('admin.redes'), 'activo' => 'admin.redes*', 'icono' => 'bi-grid-3x3-gap', 'lleno' => 'bi-grid-3x3-gap-fill', 'texto' => 'Redes'] : null,
         ['url' => route('admin.notificaciones'), 'activo' => 'admin.notificaciones*', 'icono' => 'bi-bell', 'lleno' => 'bi-bell-fill', 'texto' => 'Avisos'],
     ])), 0, 4);
-    $conMas = $puede('cotizaciones');
+    $conMas = $puede('cotizaciones') || $ventaNav;
+    $masUrl = $ventaNav ? route('admin.pedidos.create') : route('admin.presupuestos.create');
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -126,6 +132,8 @@
         .side-cta a { display: flex; align-items: center; justify-content: center; gap: 8px; height: 40px; border-radius: 10px;
                       background: var(--marca); color: #fff; font-weight: 600; font-size: 14px; text-decoration: none; box-shadow: 0 6px 18px rgba(107,59,255,.35); }
         .side-cta a:hover { background: var(--marca-2); color: #fff; }
+        .side-cta a.side-cta-2 { height: 32px; margin-top: 6px; background: transparent; border: 1px solid rgba(255,255,255,.18); color: rgba(255,255,255,.8); font-size: 13px; box-shadow: none; }
+        .side-cta a.side-cta-2:hover { background: rgba(255,255,255,.08); color: #fff; }
         .side-label { padding: 0 22px 8px; font-size: 12px; color: #8E86B0; }
         .side nav a { position: relative; display: flex; align-items: center; gap: 12px; margin: 2px 12px; padding: 9px 12px;
                       border-radius: 8px; color: #C9CDD6; text-decoration: none; font-size: 14.5px; }
@@ -452,7 +460,12 @@
         <a href="{{ $inicioNav }}"><x-logo-vandu alt="Vandu" /></a>
         <button type="button" class="btn btn-sm text-white d-lg-none" @click="menu = false" aria-label="Cerrar menú"><i class="bi bi-x-lg"></i></button>
     </div>
-    @if($conMas)
+    @if($ventaNav)
+        <div class="side-cta">
+            <a href="{{ route('admin.pedidos.create') }}"><i class="bi bi-bag-plus"></i> Nueva venta</a>
+            @if($puede('cotizaciones'))<a href="{{ route('admin.presupuestos.create') }}" class="side-cta-2"><i class="bi bi-plus-lg"></i> Nueva cotización</a>@endif
+        </div>
+    @elseif($conMas)
         <div class="side-cta">
             <a href="{{ route('admin.presupuestos.create') }}"><i class="bi bi-plus-lg"></i> Nueva cotización</a>
         </div>
@@ -607,7 +620,7 @@
 <nav class="tabbar" aria-label="Navegación rápida" style="grid-template-columns: repeat({{ count($tabs) + ($conMas ? 1 : 0) }}, 1fr)">
     @foreach($tabs as $k => $tab)
         @if($conMas && $k === intdiv(count($tabs), 2))
-            <a href="{{ route('admin.presupuestos.create') }}" class="mas" aria-label="Nueva cotización"><span><i class="bi bi-plus-lg"></i></span></a>
+            <a href="{{ $masUrl }}" class="mas" aria-label="{{ $ventaNav ? 'Nueva venta' : 'Nueva cotización' }}"><span><i class="bi {{ $ventaNav ? 'bi-bag-plus' : 'bi-plus-lg' }}"></i></span></a>
         @endif
         <a href="{{ $tab['url'] }}" class="{{ request()->routeIs($tab['activo']) ? 'activo' : '' }}"><i class="bi {{ request()->routeIs($tab['activo']) ? $tab['lleno'] : $tab['icono'] }}"></i> {{ $tab['texto'] }}
             @if(! empty($tab['cuenta']))<span class="burbuja num">{{ $tab['cuenta'] }}</span>@endif</a>
