@@ -13,7 +13,7 @@ class Permisos
 {
     public const SECCIONES = [
         'resumen'       => ['texto' => 'Resumen',               'icono' => 'bi-grid-1x2',          'ayuda' => 'Cifras del mes, cobros y pendientes del día'],
-        'ventas'        => ['texto' => 'Ventas',                'icono' => 'bi-funnel',            'ayuda' => 'Prospectos, embudo de ventas y contactos del sitio'],
+        'ventas'        => ['texto' => 'Prospectos',            'icono' => 'bi-funnel',            'ayuda' => 'Embudo de prospectos (quien pregunta pero aún no compra) y contactos del sitio'],
         'cotizaciones'  => ['texto' => 'Cotizaciones',          'icono' => 'bi-file-earmark-text', 'ayuda' => 'Crear, enviar y dar seguimiento a cotizaciones'],
         'proyectos'     => ['texto' => 'Proyectos',             'icono' => 'bi-kanban',            'ayuda' => 'Etapas, pagos y entregas de cada proyecto'],
         'tareas'        => ['texto' => 'Gestionar tareas',      'icono' => 'bi-check2-square',     'ayuda' => 'Crear y asignar tareas, elegir la carpeta de entrega y ver las de todo el equipo'],

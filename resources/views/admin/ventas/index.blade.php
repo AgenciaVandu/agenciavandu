@@ -1,5 +1,5 @@
 @extends('admin.layout')
-@section('titulo', 'Ventas')
+@section('titulo', 'Prospectos')
 
 @php
     use App\Http\Controllers\Admin\VentasController as V;
@@ -95,7 +95,7 @@
 @section('contenido')
 <div class="page-head">
     <div>
-        <h1>Ventas</h1>
+        <h1>Prospectos</h1>
         <p class="sub">Tus prospectos: cuánto vale cada uno, en qué paso van, cuáles se ganan y cuáles se pierden.</p>
     </div>
     <div class="d-flex flex-wrap gap-2">

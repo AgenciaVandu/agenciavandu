@@ -24,6 +24,10 @@ class PlataformaController extends Controller
     /** Funciones que se prenden por negocio desde Plataforma, aparte de las de su tipo de empresa */
     public const EXTRAS = ['gastos', 'ia'];
 
+    /** Secciones que se pueden esconder por negocio para que su menú solo tenga lo que usa */
+    public const OCULTABLES = ['ventas' => 'Prospectos', 'cotizaciones' => 'Cotizaciones', 'proyectos' => 'Proyectos', 'tareas' => 'Tareas',
+                               'clientes' => 'Clientes', 'proveedores' => 'Proveedores', 'archivos' => 'Archivos y Dropbox', 'finanzas' => 'Finanzas'];
+
     public function index()
     {
         $cuenta = fn (string $m) => $m::sinCuenta()->selectRaw('cuenta_id, count(*) as n')->groupBy('cuenta_id')->pluck('n', 'cuenta_id');
@@ -136,6 +140,15 @@ class PlataformaController extends Controller
             $antes = (array) ($a['modulos'] ?? []);
             $elegidos = array_values(array_intersect(self::EXTRAS, (array) $request->input('extras', [])));
             $a['modulos'] = array_values(array_unique(array_merge(array_diff($antes, self::EXTRAS), $elegidos)));
+            // Secciones visibles: lo que no se marcó se esconde (salvo lo que ya esconde su tipo de empresa)
+            if ($request->has('_secciones')) {
+                $visibles = (array) $request->input('secciones', []);
+                $delGiro = (array) ($cuenta->giro_info['modulos'] ?? []);
+                foreach (array_keys(self::OCULTABLES) as $k) {
+                    $a['modulos'] = array_values(array_diff($a['modulos'], ['sin_' . $k]));
+                    if (! in_array($k, $visibles, true) && ! in_array('sin_' . $k, $delGiro, true)) $a['modulos'][] = 'sin_' . $k;
+                }
+            }
             $a['gastos_tope'] = max(0, min(5000, (int) $request->input('gastos_tope', \App\Support\Gastos\LectorTicket::TOPE)));
             // Recién prendido Gastos: todo el equipo puede subir los suyos (se quita por rol en Usuarios y roles)
             if (in_array('gastos', $elegidos, true) && ! in_array('gastos', $antes, true)) {

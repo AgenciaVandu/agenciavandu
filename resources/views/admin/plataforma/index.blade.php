@@ -137,6 +137,18 @@
                             <span class="secundario small">{{ \App\Support\IA\Anthropic::usadasEsteMes($c) }} usadas este mes</span>
                         </div>
                     </div>
+                    <input type="hidden" name="_secciones" value="1">
+                    <div class="rounded-3 p-2" style="background: var(--sunken)">
+                        <div class="small fw-semibold mb-1">Secciones en su menú <span class="secundario fw-normal">(desmarca lo que no usa)</span></div>
+                        <div class="d-flex flex-wrap gap-3">
+                            @foreach(\App\Http\Controllers\Admin\PlataformaController::OCULTABLES as $k => $t)
+                                @php $porGiroSin = in_array('sin_' . $k, $c->giro_info['modulos'] ?? [], true); @endphp
+                                <label class="form-check small m-0" @if($porGiroSin) title="Su tipo de empresa no la usa" @endif>
+                                    <input type="checkbox" name="secciones[]" value="{{ $k }}" class="form-check-input" @checked(! $porGiroSin && ! in_array('sin_' . $k, (array) $c->ajuste('modulos', []), true)) @disabled($porGiroSin)>
+                                    <span class="form-check-label {{ $porGiroSin ? 'secundario' : '' }}">{{ $t }}</span></label>
+                            @endforeach
+                        </div>
+                    </div>
                     <textarea name="notas" class="form-control form-control-sm" rows="2" maxlength="2000" placeholder="Notas internas (plan, contacto, pagos…)">{{ $c->notas }}</textarea>
                     <div><button class="btn btn-primario btn-sm">Guardar</button></div>
                 </form>

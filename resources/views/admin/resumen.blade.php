@@ -76,11 +76,14 @@
         <h1>{{ $saludo }}{{ $nombre ? ', ' . $nombre : '' }}</h1>
         <p class="sub">{{ ucfirst(now(config('vandu.zona_horaria'))->locale('es')->isoFormat('dddd D [de] MMMM')) }}</p>
     </div>
+    @unless(\App\Support\Cuentas::actual()?->tiene('stock') && auth()->user()->puede('vender'))
     <div class="d-flex gap-2">
         <a href="{{ route('admin.clientes.create') }}" class="btn btn-borde"><i class="bi bi-person-plus me-1"></i> Nuevo cliente</a>
         <a href="{{ route('admin.presupuestos.create') }}" class="btn btn-primario"><i class="bi bi-plus-lg me-1"></i> Nueva cotización</a>
     </div>
+    @endunless
 </div>
+@include('admin._inicio-rapido')
 
 <div class="aviso-push" x-data="avisoPush()" x-show="visible" x-cloak>
     <i class="bi bi-bell"></i>

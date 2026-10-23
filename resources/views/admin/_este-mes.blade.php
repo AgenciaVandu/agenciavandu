@@ -30,7 +30,7 @@
         <div class="em-vendido">
             <span class="em-tenue">Vendido este mes</span>
             <b class="num">{{ $d($mes['vendido']) }}</b>
-            <span class="em-tenue num">{{ $mes['ventas'] }} {{ $mes['ventas'] === 1 ? 'cotización aceptada' : 'cotizaciones aceptadas' }} · {{ $conIva ? 'con IVA' : 'antes de IVA' }}</span>
+            <span class="em-tenue num">{{ $mes['ventas'] }} {{ \App\Support\Cuentas::actual()?->tiene('stock') ? ($mes['ventas'] === 1 ? 'venta' : 'ventas') : ($mes['ventas'] === 1 ? 'cotización aceptada' : 'cotizaciones aceptadas') }} · {{ $conIva ? 'con IVA' : 'antes de IVA' }}</span>
         </div>
         @if(! empty($enlace))
             <a href="{{ $enlace }}" class="em-link">{{ $textoEnlace ?? 'Ver el mes en Finanzas' }} <i class="bi bi-arrow-right"></i></a>
