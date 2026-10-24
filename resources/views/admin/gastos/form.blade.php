@@ -201,10 +201,40 @@ window.formGasto = function (cfg) {
             if (r.status === 422 && j.errors) j = { ok: false, mensaje: Object.values(j.errors)[0][0] };
             return j;
         },
+        /*
+         * Las fotos del celular pesan 3 a 12 MB y el servidor rechaza archivos grandes ("no se pudo subir").
+         * Se reduce aquí a 2000 px en JPEG (unos 300–600 KB), con el giro correcto, antes de mandarla a leer y al guardar.
+         * Si el navegador no puede (formato raro), se manda la original.
+         */
+        async reducir(a) {
+            if (!a || !/^image\//.test(a.type || 'image/')) return a;
+            try {
+                let img, url;
+                try { img = await createImageBitmap(a, { imageOrientation: 'from-image' }); }
+                catch (e) {
+                    url = URL.createObjectURL(a);
+                    img = await new Promise((ok, mal) => { const i = new Image(); i.onload = () => ok(i); i.onerror = mal; i.src = url; });
+                }
+                const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+                const k = Math.min(1, 2000 / Math.max(w, h));
+                const c = document.createElement('canvas');
+                c.width = Math.round(w * k); c.height = Math.round(h * k);
+                c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+                if (url) URL.revokeObjectURL(url);
+                if (img.close) img.close();
+                const b = await new Promise(ok => c.toBlob(ok, 'image/jpeg', 0.85));
+                if (!b || (b.size >= a.size && a.type === 'image/jpeg')) return a;
+                return new File([b], (a.name || 'ticket').replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg', lastModified: Date.now() });
+            } catch (e) { return a; }
+        },
         async foto(e) {
-            const a = e.target.files[0];
-            if (!a) return;
+            const original = e.target.files[0];
+            if (!original) return;
             this.modo = 'foto'; this.dudas = []; this.lectura = null;
+            this.estado = 'leyendo'; this.mensaje = 'Preparando la foto…';
+            const a = await this.reducir(original);
+            // La que se guarda con el formulario también es la reducida
+            if (a !== original) { try { const dt = new DataTransfer(); dt.items.add(a); e.target.files = dt.files; } catch (err) {} }
             if (this.vista) URL.revokeObjectURL(this.vista);
             this.vista = URL.createObjectURL(a);
             if (!cfg.ia) { this.estado = 'ok'; this.mensaje = 'Foto lista. Captura los datos del ticket.'; return; }

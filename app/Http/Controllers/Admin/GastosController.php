@@ -41,6 +41,13 @@ class GastosController extends Controller
         abort_unless($this->todos($r) || $g->user_id === $r->user()->id, 403);
     }
 
+    /** Lo que ve quien sube una foto que no pasa (sobre todo desde el celular) */
+    private const MENSAJES_FOTO = [
+        'foto.uploaded' => 'La foto pesa demasiado y no se pudo subir. Toma la foto otra vez o súbela desde la galería.',
+        'foto.image'    => 'No pudimos abrir esa foto. Si tu celular guarda las fotos en HEIC, cámbialo a JPG o manda una captura de pantalla del ticket.',
+        'foto.max'      => 'La foto pesa más de 15 MB. Tómala otra vez con menos resolución.',
+    ];
+
     public function index(Request $request)
     {
         $todos = $this->todos($request);
@@ -94,7 +101,7 @@ class GastosController extends Controller
     /** Lee la foto del ticket y regresa los datos para prellenar (no guarda nada) */
     public function leer(Request $request)
     {
-        $request->validate(['foto' => 'required|file|image|max:15360']);
+        $request->validate(['foto' => 'required|file|image|max:15360'], self::MENSAJES_FOTO);
         $jpeg = LectorTicket::preparar((string) file_get_contents($request->file('foto')->getRealPath()));
         if (! $jpeg) return response()->json(['ok' => false, 'motivo' => 'formato', 'mensaje' => 'No pudimos abrir esa imagen. Toma la foto otra vez.'], 422);
         return response()->json(LectorTicket::leer($jpeg, Cuentas::actual(), $request->user()));
@@ -190,7 +197,7 @@ class GastosController extends Controller
             'iva.lt' => 'El IVA tiene que ser menor que el total.',
             'rfc.regex' => 'Revisa el RFC (12 o 13 caracteres).',
             'fecha.before_or_equal' => 'La fecha no puede ser futura.',
-        ]);
+        ] + self::MENSAJES_FOTO);
         $d['iva'] = round((float) ($d['iva'] ?? 0), 2);
         $d['total'] = round((float) $d['total'], 2);
         $d['subtotal'] = round($d['total'] - $d['iva'], 2);
