@@ -211,7 +211,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::delete('gastos/{gasto}', [Admin\GastosController::class, 'destroy'])->whereNumber('gasto')->name('gastos.destroy');
     Route::get('gastos/{gasto}/{tipo}', [Admin\GastosController::class, 'archivo'])->whereNumber('gasto')->whereIn('tipo', ['foto', 'xml'])->name('gastos.archivo');
     Route::get('finanzas/exportar', [Admin\FinanzasController::class, 'exportar'])->name('finanzas.exportar');
-    Route::get('finanzas/{seccion?}', [Admin\FinanzasController::class, 'index'])->where('seccion', 'resumen|ventas|cobranza|rentabilidad|proveedores')->name('finanzas');
+    Route::get('finanzas/{seccion?}', [Admin\FinanzasController::class, 'index'])->where('seccion', 'resumen|ventas|cobranza|rentabilidad|proveedores|contabilidad')->name('finanzas');
 
     // Proyectos
     Route::get('proyectos', [Admin\ProyectoController::class, 'index'])->name('proyectos.index');

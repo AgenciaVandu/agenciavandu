@@ -4,7 +4,7 @@
 @php
     $d = fn ($n) => '$' . number_format((float) $n, 0);
     $d2 = fn ($n) => '$' . number_format((float) $n, 2);
-    $u = fn (array $extra = []) => route('admin.gastos', array_filter(array_merge(['periodo' => $periodo === 'mes' ? null : $periodo, 'categoria' => $categoria, 'q' => $q ?: null], $extra), fn ($v) => $v !== null));
+    $u = fn (array $extra = []) => route('admin.gastos', array_filter(array_merge(['periodo' => $periodo === 'mes' ? null : $periodo, 'categoria' => $categoria, 'q' => $q ?: null, 'sin_factura' => $sinFactura ? 1 : null], $extra), fn ($v) => $v !== null));
     $maxCat = max(1, $rep['porCategoria']->max('monto') ?? 0);
     $maxMes = max(1, $rep['meses']->max('monto'));
 @endphp
@@ -88,15 +88,16 @@
 
 <section class="panel">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 px-3 pt-3 pb-2">
-        <h2 class="fs-6 fw-semibold m-0">{{ $categoria ? \App\Models\Gasto::CATEGORIAS[$categoria]['texto'] : 'Todos los gastos' }} @if($categoria)<a href="{{ $u(['categoria' => null, 'page' => null]) }}" class="small fw-normal ms-1">Quitar filtro</a>@endif</h2>
+        <h2 class="fs-6 fw-semibold m-0">{{ $categoria ? \App\Models\Gasto::CATEGORIAS[$categoria]['texto'] : 'Todos los gastos' }}{{ $sinFactura ? ' sin factura' : '' }} @if($categoria || $sinFactura)<a href="{{ $u(['categoria' => null, 'sin_factura' => null, 'page' => null]) }}" class="small fw-normal ms-1">Quitar filtro</a>@endif</h2>
         <form class="buscador" method="get" role="search">
             @if($periodo !== 'mes')<input type="hidden" name="periodo" value="{{ $periodo }}">@endif
             @if($categoria)<input type="hidden" name="categoria" value="{{ $categoria }}">@endif
+            @if($sinFactura)<input type="hidden" name="sin_factura" value="1">@endif
             <i class="bi bi-search"></i><input type="search" name="q" value="{{ $q }}" class="form-control" placeholder="Concepto o proveedor" aria-label="Buscar gastos">
         </form>
     </div>
     @if($gastos->isEmpty())
-        <div class="vacio"><div class="ico"><i class="bi bi-receipt"></i></div><h3>{{ $q || $categoria ? 'Nada con ese filtro' : 'Sin gastos en este periodo' }}</h3>
+        <div class="vacio"><div class="ico"><i class="bi bi-receipt"></i></div><h3>{{ $q || $categoria || $sinFactura ? 'Nada con ese filtro' : 'Sin gastos en este periodo' }}</h3>
             <p>{{ $ia ? 'Toma foto del ticket y llenamos los datos por ti, o sube el XML de la factura.' : 'Registra tus tickets y facturas para ver en qué se va el dinero.' }}</p>
             <a href="{{ route('admin.gastos.create') }}" class="btn btn-primario mt-2"><i class="bi bi-plus-lg me-1"></i> Nuevo gasto</a></div>
     @else

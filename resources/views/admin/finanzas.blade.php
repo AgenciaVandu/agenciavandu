@@ -112,7 +112,7 @@
 <div class="page-head">
     <div>
         <h1>Finanzas</h1>
-        <p class="sub">{{ ['resumen' => 'Cómo va el negocio de un vistazo', 'ventas' => 'Cotizado, ganado, perdido y conversión', 'cobranza' => 'Lo que ya cobraste y lo que falta', 'rentabilidad' => 'Costos, utilidad y margen de lo que vendiste', 'proveedores' => 'Lo que le compras a tus proveedores y lo que les debes'][$seccion] }}. Montos {{ $seccion === 'rentabilidad' ? 'antes de IVA' : $base }}.</p>
+        <p class="sub">{{ ['resumen' => 'Cómo va el negocio de un vistazo', 'ventas' => 'Cotizado, ganado, perdido y conversión', 'cobranza' => 'Lo que ya cobraste y lo que falta', 'rentabilidad' => 'Costos, utilidad y margen de lo que vendiste', 'proveedores' => 'Lo que le compras a tus proveedores y lo que les debes', 'contabilidad' => 'Cuánto ganaste, cuánto IVA te toca y qué facturas te faltan'][$seccion] }}. Montos {{ in_array($seccion, ['rentabilidad', 'contabilidad'], true) ? 'antes de IVA' : $base }}.</p>
     </div>
     <a href="{{ route('admin.finanzas.exportar', ['periodo' => $periodo]) }}" class="btn btn-borde" data-recargar><i class="bi bi-download me-1"></i> Exportar CSV</a>
 </div>
@@ -126,7 +126,7 @@
                title="{{ $rd ? $f($rd) . ' – ' . $f($rh) : 'Todo lo registrado, sin límite de fechas' }}">{{ $label }}</a>
         @endforeach
     </nav>
-    @unless($seccion === 'rentabilidad')
+    @unless(in_array($seccion, ['rentabilidad', 'contabilidad'], true))
     <nav class="segmento" aria-label="IVA">
         <a href="{{ $q(['iva' => 'sin']) }}" class="{{ ! $conIva ? 'activo' : '' }}">Sin IVA</a>
         <a href="{{ $q(['iva' => 'con']) }}" class="{{ $conIva ? 'activo' : '' }}">Con IVA</a>
@@ -358,5 +358,9 @@
 
 @if($seccion === 'proveedores')
     @include('admin.finanzas._proveedores')
+@endif
+
+@if($seccion === 'contabilidad')
+    @include('admin.finanzas._contabilidad')
 @endif
 @endsection

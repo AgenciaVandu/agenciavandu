@@ -36,6 +36,7 @@ class FinanzasController extends Controller
         'cobranza'     => ['texto' => 'Cobranza',     'icono' => 'bi-bank'],
         'rentabilidad' => ['texto' => 'Rentabilidad', 'icono' => 'bi-pie-chart'],
         'proveedores'  => ['texto' => 'Proveedores',  'icono' => 'bi-truck'],
+        'contabilidad' => ['texto' => 'Contabilidad', 'icono' => 'bi-journal-check'],
     ];
 
     public function index(Request $request, ?string $seccion = null)
@@ -44,7 +45,8 @@ class FinanzasController extends Controller
         if (\App\Support\Cuentas::actual()?->tiene('fitness')) return app(Fitness\FinanzasController::class)->index($request);
         $seccion = array_key_exists((string) $seccion, self::SECCIONES) ? $seccion : 'resumen';
         $tz = config('vandu.zona_horaria');
-        $periodo = array_key_exists($request->query('periodo'), self::PERIODOS) ? $request->query('periodo') : 'todo';
+        // Contabilidad se revisa por mes (como se declara): sin elegir, el mes en curso
+        $periodo = array_key_exists($request->query('periodo'), self::PERIODOS) ? $request->query('periodo') : ($seccion === 'contabilidad' ? 'mes' : 'todo');
         $conIva = in_array($request->query('iva'), ['con', 'sin'], true) ? $request->query('iva') === 'con' : \App\Support\EsteMes::conIva();
         if ($request->has('iva')) {
             \Illuminate\Support\Facades\Cookie::queue('vandu_iva', $conIva ? 'con' : 'sin', 60 * 24 * 365 * 5);
@@ -181,6 +183,7 @@ class FinanzasController extends Controller
             'seccion'   => $seccion,
             'rent'      => $rent,
             'prov'      => $seccion === 'proveedores' || $seccion === 'resumen' ? $this->proveedores($desde, $hasta, $conIva) : null,
+            'cont'      => $seccion === 'contabilidad' ? \App\Support\Finanzas\Contabilidad::datos($desde, $hasta) : null,
             'gas'       => $seccion === 'resumen' && \App\Support\Cuentas::actual()?->tiene('gastos') ? \App\Support\Gastos\Reporte::datos($desde, $hasta, $conIva) : null,
             'periodo'   => $periodo,
             'conIva'    => $conIva,

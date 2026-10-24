@@ -50,15 +50,17 @@ class GastosController extends Controller
         $conIva = in_array($request->query('iva'), ['con', 'sin'], true) ? $request->query('iva') === 'con' : (Cuentas::actual()->tiene('fitness') || EsteMes::conIva());
         $categoria = array_key_exists((string) $request->query('categoria'), Gasto::CATEGORIAS) ? $request->query('categoria') : null;
         $q = trim((string) $request->query('q'));
+        $sinFactura = $request->boolean('sin_factura');
 
         $gastos = Gasto::with(['usuario:id,name', 'proyecto:id,nombre'])->entre($desde, $hasta)
             ->when(! $todos, fn ($w) => $w->where('user_id', $request->user()->id))
             ->when($categoria, fn ($w) => $w->where('categoria', $categoria))
+            ->when($sinFactura, fn ($w) => $w->whereNull('xml'))
             ->when($q !== '', fn ($w) => $w->where(fn ($x) => $x->where('concepto', 'like', "%$q%")->orWhere('proveedor', 'like', "%$q%")))
             ->orderByDesc('fecha')->orderByDesc('id')->paginate(40)->withQueryString();
 
         return view('admin.gastos.index', [
-            'gastos' => $gastos, 'todos' => $todos, 'periodo' => $periodo, 'conIva' => $conIva, 'categoria' => $categoria, 'q' => $q,
+            'gastos' => $gastos, 'todos' => $todos, 'periodo' => $periodo, 'conIva' => $conIva, 'categoria' => $categoria, 'q' => $q, 'sinFactura' => $sinFactura,
             'rep' => Reporte::datos($desde, $hasta, $conIva, $todos ? null : $request->user()->id),
             'ia' => LectorTicket::activo(),
         ]);
