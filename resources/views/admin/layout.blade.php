@@ -622,6 +622,7 @@
                 <form method="post" action="{{ route('admin.plataforma.salir') }}" class="ms-auto">@csrf<button class="btn btn-sm btn-borde">Volver a mi cuenta</button></form>
             </div>
         @endif
+        @include('admin._licencia-aviso')
         @if(session('ok'))
             <div class="aviso aviso-ok" role="status"><i class="bi bi-check-circle-fill"></i> {{ session('ok') }}</div>
         @endif

@@ -27,6 +27,7 @@ class Cuenta extends Model
 
     protected $casts = ['ajustes' => 'array', 'activa' => 'boolean'];
 
+    public function licencia(): \Illuminate\Database\Eloquent\Relations\HasOne { return $this->hasOne(Licencia::class); }
     public function usuarios(): HasMany { return $this->hasMany(User::class)->withoutGlobalScope('cuenta'); }
 
     /** "https://app.losos.mx" si tiene dominio propio */

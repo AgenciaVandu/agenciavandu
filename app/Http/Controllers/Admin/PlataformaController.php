@@ -31,8 +31,12 @@ class PlataformaController extends Controller
     public function index()
     {
         $cuenta = fn (string $m) => $m::sinCuenta()->selectRaw('cuenta_id, count(*) as n')->groupBy('cuenta_id')->pluck('n', 'cuenta_id');
+        $cuentas = Cuenta::orderByDesc('activa')->orderBy('id')->get();
+        $estados = $cuentas->mapWithKeys(fn ($c) => [$c->id => \App\Support\Licencias\Estado::de($c)]);
         return view('admin.plataforma.index', [
-            'cuentas'   => Cuenta::orderByDesc('activa')->orderBy('id')->get(),
+            'cuentas'   => $cuentas,
+            'estados'   => $estados,
+            'cuentasLic' => $estados->countBy('clave'),
             'usuarios'  => $cuenta(User::class),
             'clientes'  => $cuenta(Cliente::class),
             'cotiz'     => $cuenta(Presupuesto::class),

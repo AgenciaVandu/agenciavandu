@@ -21,6 +21,9 @@ class Kernel extends ConsoleKernel
         // Gimnasios: avisos a los atletas, faltas y horario fijo
         $schedule->command('vandu:fitness')->everyFiveMinutes()->withoutOverlapping();
 
+        // Licencias: avisos de vencimiento a cada negocio (el bloqueo se calcula al vuelo)
+        $schedule->command('vandu:licencias')->dailyAt('09:05')->timezone(config('vandu.zona_horaria'))->withoutOverlapping();
+
         // Latido: deja constancia de que el cron corre, para mostrarlo en Notificaciones
         $schedule->call(fn () => \Illuminate\Support\Facades\Cache::forever('vandu.cron.latido', now()->timestamp))
             ->everyMinute()->name('vandu-latido');

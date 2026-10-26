@@ -34,6 +34,8 @@ class UsuariosController extends Controller
     public function store(Request $request)
     {
         $d = $this->validar($request);
+        // Límite de usuarios del plan
+        if ($tope = \App\Support\Licencias\Licencias::topeUsuarios(\App\Support\Cuentas::actual())) throw ValidationException::withMessages(['email' => $tope]);
         $u = User::create($d + ['password' => Str::random(40), 'activo' => true]);
         return $this->conEnlace($request, $u, 'Invitamos a ' . $u->primer_nombre . '.');
     }
@@ -52,6 +54,9 @@ class UsuariosController extends Controller
     {
         $d = $this->validar($request, $usuario);
         $d['activo'] = $request->boolean('activo');
+        if ($d['activo'] && ! $usuario->activo && ($tope = \App\Support\Licencias\Licencias::topeUsuarios(\App\Support\Cuentas::actual()))) {
+            throw ValidationException::withMessages(['activo' => $tope]);
+        }
         $yo = $request->user()->id === $usuario->id;
         if ($yo && ! $d['activo']) throw ValidationException::withMessages(['activo' => 'No puedes desactivar tu propia cuenta.']);
         $nuevoRol = Rol::find($d['rol_id']);

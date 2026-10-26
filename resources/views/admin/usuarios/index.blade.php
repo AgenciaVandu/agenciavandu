@@ -32,6 +32,10 @@
     <div>
         <h1>Usuarios</h1>
         <p class="sub">Las personas de tu equipo, su puesto y qué secciones del panel pueden ver.</p>
+        @php $licU = \App\Support\Licencias\Estado::de(\App\Support\Cuentas::actual())->licencia; $maxU = $licU?->usuariosMax(); @endphp
+        @if($maxU !== null)@php $actU = \App\Support\Licencias\Licencias::usuariosActivos(\App\Support\Cuentas::actual()); @endphp
+            <p class="sub mt-1 {{ $actU >= $maxU ? 'text-danger' : '' }}"><i class="bi bi-people"></i> {{ $actU }} de {{ $maxU }} usuarios activos de tu plan {{ $licU->plan->nombre }}{{ $actU >= $maxU ? '. Para agregar a alguien más, desactiva a otra persona o pide usuarios adicionales.' : '.' }}</p>
+        @endif
     </div>
     @if($tab === 'personas')
         <button type="button" class="btn btn-primario" @click="nuevo = true; $nextTick(() => $refs.nombre.focus())" x-show="!nuevo"><i class="bi bi-person-plus me-1"></i> Agregar persona</button>

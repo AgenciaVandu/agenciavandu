@@ -14,6 +14,8 @@
     .pf-nums b { display: block; font-size: 17px; font-variant-numeric: tabular-nums; }
     .pf-nums span { font-size: 11.5px; color: var(--muted); }
     .pf-card.apagada { opacity: .65; }
+    .pf-lic { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; margin-bottom: 10px; font-size: 13px; }
+    .pf-lic:hover { background: var(--sunken); }
     .pf-card details summary { cursor: pointer; font-size: 13.5px; color: var(--text-2); list-style: none; }
     .pf-card details summary::-webkit-details-marker { display: none; }
     .pf-nuevo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
@@ -35,8 +37,21 @@
         <h1>Plataforma</h1>
         <p class="sub">Los negocios que usan el panel. Cada uno ve solo sus clientes, su equipo y su información.</p>
     </div>
-    <button type="button" class="btn btn-primario" @click="nuevo = true" x-show="!nuevo"><i class="bi bi-plus-lg me-1"></i> Nueva cuenta</button>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ route('admin.plataforma.planes') }}" class="btn btn-borde"><i class="bi bi-tags me-1"></i> Planes y precios</a>
+        <button type="button" class="btn btn-primario" @click="nuevo = true" x-show="!nuevo"><i class="bi bi-plus-lg me-1"></i> Nueva cuenta</button>
+    </div>
 </div>
+
+@php $atencion = ($cuentasLic['por_vencer'] ?? 0) + ($cuentasLic['gracia'] ?? 0) + ($cuentasLic['lectura'] ?? 0) + ($cuentasLic['suspendida'] ?? 0); @endphp
+@if($estados->contains(fn ($e) => $e->licencia))
+    <div class="d-flex flex-wrap gap-2 mb-3" style="font-size: 13px">
+        @foreach(\App\Support\Licencias\Estado::TEXTOS as $k => $t)
+            @if(($cuentasLic[$k] ?? 0) > 0 && $k !== 'sin')<span class="estado estado-{{ $t['clase'] }}">{{ $cuentasLic[$k] }} · {{ $t['texto'] }}</span>@endif
+        @endforeach
+        @if(($cuentasLic['sin'] ?? 0) > 1)<span class="estado estado-borrador">{{ $cuentasLic['sin'] - 1 }} sin licencia</span>@endif
+    </div>
+@endif
 
 @if($enlace)
     <div class="enlace-listo">
@@ -94,6 +109,14 @@
                     <div><b>{{ $cotiz[$c->id] ?? 0 }}</b><span>Cotizac.</span></div>
                     <div><b>{{ $proyectos[$c->id] ?? 0 }}</b><span>Proyectos</span></div>
                 </div>
+                @if($c->id !== $principal)
+                    @php $le = $estados[$c->id]; $ll = $le->licencia; @endphp
+                    <a href="{{ route('admin.plataforma.licencia', $c) }}" class="pf-lic text-reset text-decoration-none">
+                        <span class="estado estado-{{ $le->clase }}">{{ $le->texto }}</span>
+                        <span class="secundario">@if($ll){{ $ll->plan?->nombre ?? \App\Models\Licencia::TIPOS[$ll->tipo]['texto'] }}@if($ll->tipo === 'suscripcion') · ${{ number_format($ll->precio) }}/{{ $ll->periodo === 'anual' ? 'año' : 'mes' }}@endif @if($le->vence) · {{ $le->dias !== null && $le->dias < 0 ? 'venció' : 'vence' }} {{ $le->vence->locale('es')->isoFormat('D MMM') }}@endif @else Asignar plan @endif</span>
+                        <i class="bi bi-chevron-right ms-auto secundario"></i>
+                    </a>
+                @endif
                 @if($c->dominio)<p class="mb-2" style="font-size:13px"><i class="bi bi-globe2"></i> <a href="https://{{ $c->dominio }}/admin" target="_blank" rel="noopener" class="num">{{ $c->dominio }}</a></p>@endif
                 <p class="secundario mb-3" style="font-size:12.5px">Alta {{ $c->created_at->locale('es')->isoFormat('D MMM YYYY') }} · último acceso {{ $ultimo ? \Illuminate\Support\Carbon::parse($ultimo)->locale('es')->diffForHumans() : 'nunca' }}</p>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
@@ -120,6 +143,7 @@
                         <label class="small m-0" for="suc-{{ $c->id }}">Sucursales contratadas</label>
                         <input id="suc-{{ $c->id }}" type="number" name="sucursales_max" min="1" max="50" class="form-control form-control-sm num" style="width: 80px" value="{{ $c->ajuste('sucursales_max', 1) }}">
                     </div>
+                    @if($estados[$c->id]->licencia?->plan)<div class="secundario" style="font-size:12px"><i class="bi bi-info-circle"></i> Sucursales y funciones extra las pone su licencia ({{ $estados[$c->id]->licencia->plan->nombre }}) cada vez que se guarda.</div>@endif
                     <input type="hidden" name="_extras" value="1">
                     <div class="rounded-3 p-2" style="background: var(--sunken)">
                         <div class="small fw-semibold mb-1">Funciones extra</div>

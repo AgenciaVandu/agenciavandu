@@ -53,6 +53,21 @@ class AdminAuth
         }
 
         $ruta = $request->route()?->getName();
+
+        // Licencia: vencida y sin pagar pasa a solo lectura y luego a suspensión (la plataforma siempre entra)
+        $licencia = \App\Support\Licencias\Estado::de($cuenta);
+        \Illuminate\Support\Facades\View::share('licenciaEstado', $licencia);
+        if (! $u->plataforma && $ruta !== 'logout') {
+            if ($licencia->clave === 'suspendida') {
+                return response()->view('admin.licencia-suspendida', ['e' => $licencia, 'cuenta' => $cuenta, 'pago' => \App\Support\Licencias\Estado::datosPago()], 402);
+            }
+            if ($licencia->clave === 'lectura' && ! $request->isMethodSafe()) {
+                $msg = 'El panel está en solo lectura porque el plan venció. Puedes ver y descargar todo; para registrar o cambiar algo, renueva el plan.';
+                if ($request->expectsJson()) return response()->json(['message' => $msg, 'ok' => false, 'mensaje' => $msg], 423);
+                return back()->with('error', $msg);
+            }
+        }
+
         if ($ruta && str_starts_with($ruta, 'admin.') && ! Permisos::puedeRuta($u, $ruta)) {
             // El inicio lleva a lo primero que sí puede ver
             if ($ruta === 'admin.resumen') return redirect()->to(Permisos::inicio($u));
