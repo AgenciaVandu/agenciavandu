@@ -14,6 +14,11 @@ class VentaPago extends Model
 
     protected $casts = ['monto' => 'float', 'fecha' => 'date'];
 
+    protected static function booted(): void
+    {
+        static::saving(fn (VentaPago $p) => \App\Support\Dinero\Movimientos::asignar($p, $p->forma));
+    }
+
     public function venta(): BelongsTo { return $this->belongsTo(Venta::class); }
     public function usuario(): BelongsTo { return $this->belongsTo(User::class, 'user_id'); }
 }

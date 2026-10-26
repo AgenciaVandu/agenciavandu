@@ -49,6 +49,7 @@ class OrdenCompra extends Model
         'factura_subtotal' => 'float',
         'factura_iva'      => 'float',
         'factura_total'    => 'float',
+        'pagada_el'        => 'date',
     ];
 
     protected static function booted(): void
@@ -56,6 +57,16 @@ class OrdenCompra extends Model
         static::creating(function (OrdenCompra $o) {
             $o->folio ??= static::siguienteFolio();
             $o->fecha ??= now(config('vandu.zona_horaria'))->toDateString();
+        });
+        // Pagada: con fecha (para el flujo) y la cuenta de donde salió (transferencia, si nadie la eligió)
+        static::saving(function (OrdenCompra $o) {
+            if ($o->estado === 'pagada') {
+                $o->pagada_el ??= now(config('vandu.zona_horaria'))->toDateString();
+                \App\Support\Dinero\Movimientos::asignar($o, 'transferencia');
+            } elseif ($o->isDirty('estado')) {
+                $o->pagada_el = null;
+                $o->cuenta_dinero_id = null;
+            }
         });
         static::deleting(function (OrdenCompra $o) {
             $o->archivos()->get()->each->delete(); // cada archivo borra su copia (Dropbox o disco)

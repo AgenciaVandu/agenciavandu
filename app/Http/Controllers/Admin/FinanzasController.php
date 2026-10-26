@@ -34,6 +34,8 @@ class FinanzasController extends Controller
         'resumen'      => ['texto' => 'Resumen',      'icono' => 'bi-grid-1x2'],
         'ventas'       => ['texto' => 'Ventas',       'icono' => 'bi-graph-up-arrow'],
         'cobranza'     => ['texto' => 'Cobranza',     'icono' => 'bi-bank'],
+        'flujo'        => ['texto' => 'Flujo',        'icono' => 'bi-arrow-left-right'],
+        'cuentas'      => ['texto' => 'Cuentas',      'icono' => 'bi-wallet2'],
         'rentabilidad' => ['texto' => 'Rentabilidad', 'icono' => 'bi-pie-chart'],
         'proveedores'  => ['texto' => 'Proveedores',  'icono' => 'bi-truck'],
         'contabilidad' => ['texto' => 'Contabilidad', 'icono' => 'bi-journal-check'],
@@ -46,7 +48,7 @@ class FinanzasController extends Controller
         $seccion = array_key_exists((string) $seccion, self::SECCIONES) ? $seccion : 'resumen';
         $tz = config('vandu.zona_horaria');
         // Contabilidad se revisa por mes (como se declara): sin elegir, el mes en curso
-        $periodo = array_key_exists($request->query('periodo'), self::PERIODOS) ? $request->query('periodo') : ($seccion === 'contabilidad' ? 'mes' : 'todo');
+        $periodo = array_key_exists($request->query('periodo'), self::PERIODOS) ? $request->query('periodo') : (in_array($seccion, ['contabilidad', 'flujo', 'cuentas'], true) ? 'mes' : 'todo');
         $conIva = in_array($request->query('iva'), ['con', 'sin'], true) ? $request->query('iva') === 'con' : \App\Support\EsteMes::conIva();
         if ($request->has('iva')) {
             \Illuminate\Support\Facades\Cookie::queue('vandu_iva', $conIva ? 'con' : 'sin', 60 * 24 * 365 * 5);
@@ -183,6 +185,8 @@ class FinanzasController extends Controller
             'seccion'   => $seccion,
             'rent'      => $rent,
             'prov'      => $seccion === 'proveedores' || $seccion === 'resumen' ? $this->proveedores($desde, $hasta, $conIva) : null,
+            'flujo'     => $seccion === 'flujo' ? \App\Support\Dinero\Flujo::datos($desde, $hasta) : null,
+            'dinero'    => $seccion === 'cuentas' ? $this->dinero($request, $desde, $hasta) : null,
             'cont'      => $seccion === 'contabilidad' ? \App\Support\Finanzas\Contabilidad::datos($desde, $hasta) : null,
             'gas'       => $seccion === 'resumen' && \App\Support\Cuentas::actual()?->tiene('gastos') ? \App\Support\Gastos\Reporte::datos($desde, $hasta, $conIva) : null,
             'periodo'   => $periodo,
@@ -200,6 +204,25 @@ class FinanzasController extends Controller
             'hoy'       => $hoy,
             'rangos'    => collect(self::PERIODOS)->map(fn ($l, $k) => $this->rango($k))->all(),
         ]);
+    }
+
+    /** Finanzas > Cuentas: saldos, conciliaciones, lo que quedó sin cuenta y los movimientos del periodo */
+    private function dinero(Request $request, ?string $desde, ?string $hasta): array
+    {
+        $saldos = \App\Support\Dinero\Movimientos::saldos();
+        $todas = \App\Models\CuentaDinero::orderBy('orden')->orderBy('id')->get();
+        $sel = $saldos->has((int) $request->query('cuenta')) ? (int) $request->query('cuenta') : null;
+        $movs = \App\Support\Dinero\Movimientos::lista($desde, $hasta)->filter(fn ($f) => $f->cuenta || $f->clase !== 'mov')
+            ->when($sel, fn ($c) => $c->filter(fn ($f) => $f->cuenta === $sel))->values();
+        return [
+            'saldos'     => $saldos,
+            'todas'      => $todas,
+            'total'      => round($saldos->sum('saldo'), 2),
+            'sinCuenta'  => \App\Support\Dinero\Movimientos::sinCuenta(),
+            'movs'       => $movs->take(80),
+            'nMovs'      => $movs->count(),
+            'sel'        => $sel,
+        ];
     }
 
     /** Costo, utilidad y margen de las ventas ganadas, con el costo real en órdenes de compra */

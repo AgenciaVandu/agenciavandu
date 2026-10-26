@@ -18,6 +18,16 @@ class ProyectoPago extends Model
         'vence_el'   => 'date',
     ];
 
+    protected static function booted(): void
+    {
+        // Cobrado: cae en la cuenta de su forma de pago; si se deshace, sale de la cuenta
+        static::saving(function (ProyectoPago $p) {
+            if (! $p->pagado_el) { $p->cuenta_dinero_id = null; return; }
+            if ($p->isDirty('metodo') && ! $p->isDirty('cuenta_dinero_id')) $p->cuenta_dinero_id = null;
+            \App\Support\Dinero\Movimientos::asignar($p, $p->metodo);
+        });
+    }
+
     public function proyecto(): BelongsTo { return $this->belongsTo(Proyecto::class); }
 
     public function getPagadoAttribute(): bool

@@ -34,6 +34,15 @@ class Gasto extends Model
 
     public const FORMAS = ['efectivo' => 'Efectivo', 'tarjeta' => 'Tarjeta', 'transferencia' => 'Transferencia', 'otro' => 'Otro'];
 
+    protected static function booted(): void
+    {
+        // Sale de la cuenta de su forma de pago; si cambia la forma, se vuelve a elegir
+        static::saving(function (Gasto $g) {
+            if ($g->exists && $g->isDirty('forma_pago') && ! $g->isDirty('cuenta_dinero_id')) $g->cuenta_dinero_id = null;
+            \App\Support\Dinero\Movimientos::asignar($g, $g->forma_pago);
+        });
+    }
+
     public function usuario(): BelongsTo { return $this->belongsTo(User::class, 'user_id'); }
     public function proyecto(): BelongsTo { return $this->belongsTo(Proyecto::class); }
     public function sucursal(): BelongsTo { return $this->belongsTo(Sucursal::class); }

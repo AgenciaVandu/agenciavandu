@@ -211,7 +211,16 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::delete('gastos/{gasto}', [Admin\GastosController::class, 'destroy'])->whereNumber('gasto')->name('gastos.destroy');
     Route::get('gastos/{gasto}/{tipo}', [Admin\GastosController::class, 'archivo'])->whereNumber('gasto')->whereIn('tipo', ['foto', 'xml'])->name('gastos.archivo');
     Route::get('finanzas/exportar', [Admin\FinanzasController::class, 'exportar'])->name('finanzas.exportar');
-    Route::get('finanzas/{seccion?}', [Admin\FinanzasController::class, 'index'])->where('seccion', 'resumen|ventas|cobranza|rentabilidad|proveedores|contabilidad')->name('finanzas');
+    Route::get('finanzas/paquete', [Admin\PaqueteContadorController::class, 'descargar'])->name('finanzas.paquete');
+    Route::post('finanzas/paquete/enviar', [Admin\PaqueteContadorController::class, 'enviar'])->middleware('throttle:10,1')->name('finanzas.paquete.enviar');
+    Route::post('finanzas/cuentas/basicas', [Admin\DineroController::class, 'basicas'])->name('finanzas.cuentas.basicas');
+    Route::post('finanzas/cuentas', [Admin\DineroController::class, 'guardar'])->name('finanzas.cuentas.store');
+    Route::put('finanzas/cuentas/{cuentaDinero}', [Admin\DineroController::class, 'guardar'])->whereNumber('cuentaDinero')->name('finanzas.cuentas.update');
+    Route::post('finanzas/cuentas/{cuentaDinero}/conciliar', [Admin\DineroController::class, 'conciliar'])->whereNumber('cuentaDinero')->name('finanzas.cuentas.conciliar');
+    Route::post('finanzas/movimientos', [Admin\DineroController::class, 'movimiento'])->name('finanzas.movimientos.store');
+    Route::delete('finanzas/movimientos/{movimiento}', [Admin\DineroController::class, 'borrarMovimiento'])->whereNumber('movimiento')->name('finanzas.movimientos.destroy');
+    Route::post('finanzas/asignar', [Admin\DineroController::class, 'asignar'])->name('finanzas.asignar');
+    Route::get('finanzas/{seccion?}', [Admin\FinanzasController::class, 'index'])->where('seccion', 'resumen|ventas|cobranza|rentabilidad|proveedores|contabilidad|flujo|cuentas')->name('finanzas');
 
     // Proyectos
     Route::get('proyectos', [Admin\ProyectoController::class, 'index'])->name('proyectos.index');
@@ -373,6 +382,10 @@ Route::get('/autos/{slug}', [\App\Http\Controllers\AutosController::class, 'unid
 // Portal del cliente: un solo enlace con todas sus cotizaciones y proyectos
 Route::get('/cliente/{token}', [\App\Http\Controllers\ClientePortalController::class, 'show'])
     ->where('token', '[A-Za-z0-9]{32}')->middleware(['cuenta.enlace:cliente', 'throttle:60,1'])->name('cliente.portal');
+
+// Paquete del mes para el contador: enlace firmado que llega por correo (dura 15 días)
+Route::get('/contador/{cuenta}/{mes}', [Admin\PaqueteContadorController::class, 'publico'])->whereNumber('cuenta')->where('mes', '\d{4}-\d{2}')
+    ->middleware(['signed', 'throttle:20,1'])->name('contador.paquete');
 
 // Pedido para el cliente: llena sus datos de envío con su ubicación y ve su nota
 Route::prefix('/pedido/{token}')->where(['token' => '[A-Za-z0-9]{32}'])->middleware(['cuenta.enlace:pedido', 'throttle:60,1'])->group(function () {

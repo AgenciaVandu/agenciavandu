@@ -25,6 +25,12 @@
     .iva-cifra.pagar { color: var(--text); } .iva-cifra.favor { color: var(--green-ink); }
     .barra-comp { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: #F1F2F4; margin: 6px 0 10px; }
     .barra-comp span { display: block; height: 100%; }
+    .paq-cab { display: flex; gap: 16px; align-items: center; padding: 18px 20px; flex-wrap: wrap; }
+    .paq-ico { width: 44px; height: 44px; border-radius: 12px; background: var(--green-soft); color: var(--green-ink); display: grid; place-items: center; font-size: 21px; flex: none; }
+    .paq-txt { flex: 1 1 280px; min-width: 0; } .paq-txt h2 { font-size: 16px; font-weight: 600; margin: 0 0 2px; } .paq-txt p { margin: 0; font-size: 13.5px; color: var(--muted); }
+    .paq-acc { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; } .paq-acc .form-select { width: auto; min-width: 160px; }
+    .paq-form { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.6fr) auto; gap: 12px; align-items: end; padding: 0 20px 12px; border-top: 1px solid var(--line); padding-top: 16px; }
+    @media (max-width: 767.98px) { .paq-form { grid-template-columns: 1fr; } .paq-acc { width: 100%; } .paq-acc > * { flex: 1 1 auto; } }
     .nota-cont { font-size: 13px; color: var(--muted); margin-top: 18px; display: flex; gap: 8px; }
 </style>
 @endpush
@@ -65,6 +71,39 @@
         @endif
     </div>
 </div>
+
+@php
+    $paqMeses = \App\Support\Finanzas\PaqueteContador::meses();
+    $paqMes = $desde && ! $variosMeses && isset($paqMeses[substr($desde, 0, 7)]) ? substr($desde, 0, 7) : \App\Support\Finanzas\PaqueteContador::mesSugerido();
+    $contador = (array) (\App\Support\Cuentas::actual()?->ajuste('contador') ?? []);
+@endphp
+<section class="panel paq" style="margin-bottom: 20px" x-data="{ enviar: {{ $errors->has('email') ? 'true' : 'false' }}, mes: '{{ $paqMes }}' }">
+    <div class="paq-cab">
+        <div class="paq-ico"><i class="bi bi-file-earmark-zip"></i></div>
+        <div class="paq-txt"><h2>Paquete para el contador</h2>
+            <p>Un ZIP con el Excel del mes (ingresos, gastos, compras y facturas emitidas), los XML, las fotos de los tickets y lo que falta.</p></div>
+        <div class="paq-acc">
+            <select class="form-select" x-model="mes" aria-label="Mes del paquete">@foreach($paqMeses as $k => $t)<option value="{{ $k }}">{{ $t }}</option>@endforeach</select>
+            <a :href="'{{ route('admin.finanzas.paquete') }}?mes=' + mes" class="btn btn-primario" data-recargar><i class="bi bi-download me-1"></i> Descargar</a>
+            <button type="button" class="btn btn-borde" @click="enviar = ! enviar"><i class="bi bi-envelope me-1"></i> Enviar al contador</button>
+        </div>
+    </div>
+    <div x-show="enviar" x-cloak>
+        <form method="post" action="{{ route('admin.finanzas.paquete.enviar') }}" class="paq-form">
+            @csrf
+            <input type="hidden" name="mes" :value="mes">
+            <div><label class="form-label small" for="paq-email">Correo del contador</label>
+                <input type="email" id="paq-email" name="email" value="{{ old('email', $contador['email'] ?? '') }}" class="form-control @error('email') is-invalid @enderror" required maxlength="160">
+                @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+            <div><label class="form-label small" for="paq-nombre">Nombre (opcional)</label>
+                <input id="paq-nombre" name="nombre" value="{{ old('nombre', $contador['nombre'] ?? '') }}" class="form-control" maxlength="80"></div>
+            <div class="paq-nota"><label class="form-label small" for="paq-nota">Mensaje (opcional)</label>
+                <input id="paq-nota" name="nota" class="form-control" maxlength="600" placeholder="Te faltan las facturas de la gasolina, ya las pedí."></div>
+            <div class="paq-btn"><button class="btn btn-primario">Mandar enlace</button></div>
+        </form>
+        <p class="secundario small px-4 pb-3 m-0">Le llega un correo con un enlace para descargar el paquete; funciona 15 días. El correo se guarda para la próxima vez.</p>
+    </div>
+</section>
 
 <div class="rejilla" style="margin-top: 0">
     <section class="panel">
