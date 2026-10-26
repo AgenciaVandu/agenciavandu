@@ -47,6 +47,9 @@
         @if(! empty($pago['whatsapp']))
             <a class="btn prim" href="https://wa.me/{{ preg_replace('/\D/', '', $pago['whatsapp']) }}?text={{ rawurlencode('Hola, quiero reactivar el panel de ' . $cuenta->nombre . '. Te mando mi comprobante.') }}" target="_blank" rel="noopener">Mandar comprobante por WhatsApp</a>
         @endif
+        @if(\App\Support\Permisos::puedeRuta(auth()->user(), 'admin.mi-plan'))
+            <a class="btn" href="{{ route('admin.mi-plan') }}">Ya pagué: subir comprobante</a>
+        @endif
         <form method="post" action="{{ route('logout') }}">@csrf<button class="btn">Cerrar sesión</button></form>
     </div>
 </main>

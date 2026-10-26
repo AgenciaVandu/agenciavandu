@@ -79,6 +79,11 @@ class Movimientos
         foreach (Gasto::whereNull('cuenta_dinero_id')->whereDate('fecha', '>=', $desde)->get() as $x) {
             if ($toca($x->forma_pago)) { $x->forceFill(['cuenta_dinero_id' => $c->id])->saveQuietly(); $n++; }
         }
+        if (self::cobraLicencias()) {
+            foreach (\App\Models\LicenciaPago::whereNull('cuenta_dinero_id')->whereDate('fecha', '>=', $desde)->get() as $x) {
+                if ($toca($x->forma === 'deposito' ? 'transferencia' : $x->forma)) { $x->forceFill(['cuenta_dinero_id' => $c->id])->saveQuietly(); $n++; }
+            }
+        }
         foreach (OrdenCompra::whereNull('cuenta_dinero_id')->whereNotNull('pagada_el')->whereDate('pagada_el', '>=', $desde)->get() as $x) {
             if ($toca('transferencia')) { $x->forceFill(['cuenta_dinero_id' => $c->id])->saveQuietly(); $n++; }
         }
@@ -86,7 +91,13 @@ class Movimientos
     }
 
     /** Modelo de cada clase de movimiento que se puede cambiar de cuenta */
-    public const CLASES = ['cobro' => ProyectoPago::class, 'venta' => VentaPago::class, 'gasto' => Gasto::class, 'compra' => OrdenCompra::class];
+    public const CLASES = ['cobro' => ProyectoPago::class, 'venta' => VentaPago::class, 'gasto' => Gasto::class, 'compra' => OrdenCompra::class, 'licencia' => \App\Models\LicenciaPago::class];
+
+    /** La cuenta principal (la plataforma) cobra licencias a los negocios: también son entradas de su dinero */
+    public static function cobraLicencias(): bool
+    {
+        return Cuentas::actual() !== null && Cuentas::id() === Cuentas::principalId();
+    }
 
     /**
      * Todo lo que entró y salió entre dos fechas (null = sin límite).
@@ -121,6 +132,13 @@ class Movimientos
             $filas->push((object) ['fecha' => $o->pagada_el->toDateString(), 'clase' => 'compra', 'id' => $o->id, 'concepto' => 'Orden ' . $o->folio,
                 'detalle' => $o->proveedor?->empresa, 'monto' => -round($o->total_final, 2), 'cuenta' => $o->cuenta_dinero_id, 'forma' => 'transferencia',
                 'url' => route('admin.ordenes.show', $o)]);
+        }
+        if (self::cobraLicencias()) {
+            foreach ($rango(\App\Models\LicenciaPago::with('cuenta:id,nombre', 'licencia:id,periodo'), 'fecha')->get() as $p) {
+                $filas->push((object) ['fecha' => $p->fecha->toDateString(), 'clase' => 'licencia', 'id' => $p->id, 'concepto' => $p->concepto_texto . ' · ' . $p->cuenta?->nombre,
+                    'detalle' => 'Licencia ' . $p->folio, 'monto' => round((float) $p->monto, 2), 'cuenta' => $p->cuenta_dinero_id, 'forma' => self::forma($p->forma === 'deposito' ? 'transferencia' : $p->forma),
+                    'url' => route('admin.plataforma.licencia', $p->cuenta_id)]);
+            }
         }
         foreach ($rango(MovimientoDinero::with('de:id,nombre', 'a:id,nombre'), 'fecha')->get() as $m) {
             if ($m->tipo === 'traspaso' && $soloExternos) continue;

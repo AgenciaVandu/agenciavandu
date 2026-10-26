@@ -11,6 +11,9 @@
         <i class="bi {{ $le->clave === 'lectura' ? 'bi-lock' : 'bi-calendar-event' }} align-self-start mt-1"></i>
         <div>
             <b>{{ \App\Support\Licencias\Estado::frase($le) }}</b>
+            @if($le->licencia && \App\Support\Permisos::puedeRuta($yo, 'admin.mi-plan') && ! request()->routeIs('admin.mi-plan*'))
+                <a href="{{ route('admin.mi-plan') }}" class="ms-1">Ver mi plan y subir comprobante</a>
+            @endif
             @php
                 $cuentaTxt = '';
                 if (! empty($pago['clabe'])) {

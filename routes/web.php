@@ -303,6 +303,10 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::get('presupuestos/{presupuesto}/pdf', [Admin\PresupuestoController::class, 'pdf'])->name('presupuestos.pdf');
 
     // Equipo
+    Route::get('mi-plan', [Admin\MiPlanController::class, 'index'])->name('mi-plan');
+    Route::post('mi-plan/comprobante', [Admin\MiPlanController::class, 'comprobante'])->middleware('throttle:10,1')->name('mi-plan.comprobante');
+    Route::get('mi-plan/recibo/{pago}', [Admin\MiPlanController::class, 'recibo'])->whereNumber('pago')->name('mi-plan.recibo');
+    Route::get('mi-plan/comprobante/{comprobante}', [Admin\MiPlanController::class, 'verComprobante'])->whereNumber('comprobante')->name('mi-plan.ver-comprobante');
     Route::get('usuarios', [Admin\UsuariosController::class, 'index'])->name('usuarios');
     Route::post('usuarios', [Admin\UsuariosController::class, 'store'])->name('usuarios.store');
     Route::get('usuarios/{usuario}', [Admin\UsuariosController::class, 'edit'])->name('usuarios.edit');
@@ -334,6 +338,11 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::get('plataforma/{cuenta}/licencia', [Admin\LicenciasController::class, 'ficha'])->whereNumber('cuenta')->name('plataforma.licencia');
     Route::put('plataforma/{cuenta}/licencia', [Admin\LicenciasController::class, 'guardar'])->whereNumber('cuenta')->name('plataforma.licencia.update');
     Route::post('plataforma/{cuenta}/licencia/pagos', [Admin\LicenciasController::class, 'pagar'])->whereNumber('cuenta')->name('plataforma.licencia.pagar');
+    Route::get('plataforma/numeros', [Admin\NerbyNumerosController::class, 'index'])->name('plataforma.numeros');
+    Route::get('plataforma/{cuenta}/licencia/pagos/{pago}/recibo', [Admin\LicenciasController::class, 'recibo'])->whereNumber('cuenta')->whereNumber('pago')->name('plataforma.licencia.recibo');
+    Route::get('plataforma/{cuenta}/licencia/comprobantes/{comprobante}', [Admin\LicenciasController::class, 'comprobante'])->whereNumber('cuenta')->whereNumber('comprobante')->name('plataforma.licencia.comprobante');
+    Route::post('plataforma/{cuenta}/licencia/comprobantes/{comprobante}/confirmar', [Admin\LicenciasController::class, 'confirmar'])->whereNumber('cuenta')->whereNumber('comprobante')->name('plataforma.licencia.confirmar');
+    Route::post('plataforma/{cuenta}/licencia/comprobantes/{comprobante}/rechazar', [Admin\LicenciasController::class, 'rechazar'])->whereNumber('cuenta')->whereNumber('comprobante')->name('plataforma.licencia.rechazar');
     Route::delete('plataforma/{cuenta}/licencia/pagos/{pago}', [Admin\LicenciasController::class, 'borrarPago'])->whereNumber('cuenta')->whereNumber('pago')->name('plataforma.licencia.pagos.destroy');
     Route::get('plataforma/giros/nuevo', [Admin\GirosController::class, 'create'])->name('plataforma.giros.create');
     Route::post('plataforma/giros', [Admin\GirosController::class, 'store'])->name('plataforma.giros.store');

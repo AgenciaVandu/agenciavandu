@@ -80,6 +80,8 @@
             <div><label class="form-label small">A nombre de</label><input name="titular" value="{{ $pago['titular'] ?? '' }}" class="form-control" maxlength="120"></div>
             <div><label class="form-label small">CLABE</label><input name="clabe" value="{{ $pago['clabe'] ?? '' }}" class="form-control num" inputmode="numeric" maxlength="18" pattern="\d{18}"></div>
             <div><label class="form-label small">WhatsApp para comprobantes</label><input name="whatsapp" value="{{ $pago['whatsapp'] ?? '' }}" class="form-control num" maxlength="30" placeholder="999 123 4567"></div>
+            <div><label class="form-label small">Tus precios</label>
+                <select name="iva" class="form-select"><option value="sin" @selected(($pago['iva'] ?? 'sin') === 'sin')>No llevan IVA</option><option value="incluido" @selected(($pago['iva'] ?? '') === 'incluido')>Ya incluyen IVA (16%)</option></select></div>
             <div style="grid-column: 1 / -1"><label class="form-label small">Nota (opcional)</label><input name="nota" value="{{ $pago['nota'] ?? '' }}" class="form-control" maxlength="200" placeholder="Pon tu nombre de negocio en el concepto de la transferencia"></div>
         </div>
         <button class="btn btn-primario mt-3">Guardar datos de pago</button>

@@ -38,12 +38,18 @@
         <p class="sub">Los negocios que usan el panel. Cada uno ve solo sus clientes, su equipo y su información.</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ route('admin.plataforma.numeros') }}" class="btn btn-borde"><i class="bi bi-bar-chart-line me-1"></i> Números</a>
         <a href="{{ route('admin.plataforma.planes') }}" class="btn btn-borde"><i class="bi bi-tags me-1"></i> Planes y precios</a>
         <button type="button" class="btn btn-primario" @click="nuevo = true" x-show="!nuevo"><i class="bi bi-plus-lg me-1"></i> Nueva cuenta</button>
     </div>
 </div>
 
 @php $atencion = ($cuentasLic['por_vencer'] ?? 0) + ($cuentasLic['gracia'] ?? 0) + ($cuentasLic['lectura'] ?? 0) + ($cuentasLic['suspendida'] ?? 0); @endphp
+@php $porRevisar = \App\Models\LicenciaComprobante::where('estado', 'pendiente')->count(); @endphp
+@if($porRevisar)
+    <a href="{{ route('admin.plataforma.numeros') }}" class="aviso text-decoration-none" style="background: var(--amber-soft); color: var(--amber); border: 1px solid #F5DDB0; display: flex; gap: 8px; align-items: center">
+        <i class="bi bi-receipt"></i> <b>{{ $porRevisar }} {{ $porRevisar === 1 ? 'comprobante de pago por revisar' : 'comprobantes de pago por revisar' }}</b> <i class="bi bi-chevron-right ms-auto"></i></a>
+@endif
 @if($estados->contains(fn ($e) => $e->licencia))
     <div class="d-flex flex-wrap gap-2 mb-3" style="font-size: 13px">
         @foreach(\App\Support\Licencias\Estado::TEXTOS as $k => $t)

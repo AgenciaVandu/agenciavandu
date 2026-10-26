@@ -85,6 +85,36 @@
         </div>
     </section>
 
+    {{-- Comprobantes del negocio --}}
+    @php $porRevisar = $l?->comprobantes->where('estado', 'pendiente') ?? collect(); @endphp
+    @foreach($porRevisar as $cp)
+        <section class="panel" style="border-color: #F5DDB0" x-data="{ concepto: '{{ $l->tipo === 'perpetua' ? 'mantenimiento' : 'periodo' }}', rechazar: false }">
+            <div class="panel-head"><div><h2>Comprobante por revisar</h2><span class="ayuda">{{ $cp->usuario?->name }} · enviado {{ $cp->created_at->locale('es')->diffForHumans() }}</span></div>
+                <a href="{{ route('admin.plataforma.licencia.comprobante', [$cuenta, $cp]) }}" target="_blank" class="btn btn-borde btn-sm" data-recargar><i class="bi bi-eye me-1"></i> Ver comprobante</a></div>
+            <div class="panel-body pb-0">
+                <div><b class="num">{{ $d2($cp->monto) }}</b> pagados el {{ $f($cp->fecha) }}{{ $cp->referencia ? ' · ref. ' . $cp->referencia : '' }}</div>
+                @if($cp->nota)<div class="secundario small mt-1">“{{ $cp->nota }}”</div>@endif
+            </div>
+            <form method="post" action="{{ route('admin.plataforma.licencia.confirmar', [$cuenta, $cp]) }}" class="panel-body lic-form" x-show="! rechazar">
+                @csrf
+                <div><label class="form-label small">Registrar como</label>
+                    <select name="concepto" class="form-select" x-model="concepto">@foreach(LicenciaPago::CONCEPTOS as $k => $t)<option value="{{ $k }}">{{ $t }}</option>@endforeach</select></div>
+                <div x-show="['periodo', 'mantenimiento'].includes(concepto)"><label class="form-label small">Periodos que cubre</label>
+                    <input type="number" name="periodos" min="1" max="36" value="{{ $l->precio > 0 ? max(1, (int) round($cp->monto / $l->precio)) : 1 }}" class="form-control num"></div>
+                <div><label class="form-label small">Monto</label><input type="number" step="0.01" min="0" name="monto" value="{{ $cp->monto }}" class="form-control num" required></div>
+                <div><label class="form-label small">Forma</label><select name="forma" class="form-select">@foreach(LicenciaPago::FORMAS as $k => $t)<option value="{{ $k }}">{{ $t }}</option>@endforeach</select></div>
+                <div class="ancho d-flex gap-2 flex-wrap"><button class="btn btn-primario"><i class="bi bi-check2 me-1"></i> Confirmar pago</button>
+                    <button type="button" class="btn btn-fantasma" @click="rechazar = true">No es válido</button></div>
+            </form>
+            <form method="post" action="{{ route('admin.plataforma.licencia.rechazar', [$cuenta, $cp]) }}" class="panel-body" x-show="rechazar" x-cloak>
+                @csrf
+                <label class="form-label small">¿Por qué no se acepta? (se le manda al negocio)</label>
+                <input name="motivo" maxlength="300" class="form-control" required placeholder="No vemos el depósito en la cuenta; revisa la CLABE">
+                <div class="d-flex gap-2 mt-2"><button class="btn btn-borde" style="color: var(--red)">Rechazar comprobante</button><button type="button" class="btn btn-fantasma" @click="rechazar = false">Cancelar</button></div>
+            </form>
+        </section>
+    @endforeach
+
     {{-- Registrar pago --}}
     @if($l && $l->tipo !== 'cortesia')
         <section class="panel" x-data="{ concepto: '{{ $l->tipo === 'perpetua' ? 'mantenimiento' : ($pendienteImpl ? 'implementacion' : 'periodo') }}', periodos: 1,
@@ -123,7 +153,7 @@
                                 <td><span class="principal">{{ LicenciaPago::CONCEPTOS[$p->concepto] ?? $p->concepto }}</span>
                                     <div class="secundario">{{ LicenciaPago::FORMAS[$p->forma] ?? '' }}{{ $p->referencia ? ' · ' . $p->referencia : '' }}{{ $p->cubre_hasta ? ' · cubre hasta el ' . $f($p->cubre_hasta) : '' }}</div></td>
                                 <td class="text-end num">{{ $d2($p->monto) }}</td>
-                                <td class="text-end"><form method="post" action="{{ route('admin.plataforma.licencia.pagos.destroy', [$cuenta, $p]) }}" onsubmit="return confirm('¿Borrar este pago? Si recorrió el vencimiento, se regresa.')">@csrf @method('DELETE')
+                                <td class="text-end text-nowrap"><a href="{{ route('admin.plataforma.licencia.recibo', [$cuenta, $p]) }}" target="_blank" class="btn btn-fantasma btn-sm" data-recargar aria-label="Recibo"><i class="bi bi-file-earmark-pdf"></i></a><form class="d-inline" method="post" action="{{ route('admin.plataforma.licencia.pagos.destroy', [$cuenta, $p]) }}" onsubmit="return confirm('¿Borrar este pago? Si recorrió el vencimiento, se regresa.')">@csrf @method('DELETE')
                                     <button class="btn btn-fantasma btn-sm" aria-label="Borrar pago"><i class="bi bi-trash3"></i></button></form></td>
                             </tr>
                         @endforeach

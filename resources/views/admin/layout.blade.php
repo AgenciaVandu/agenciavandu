@@ -554,6 +554,12 @@
         <a href="{{ route('admin.negocio') }}" class="{{ request()->routeIs('admin.negocio') ? 'activo' : '' }}">
             <i class="bi bi-shop"></i> Mi negocio
         </a>
+        @if(($licenciaEstado ?? null)?->licencia)
+        <a href="{{ route('admin.mi-plan') }}" class="{{ request()->routeIs('admin.mi-plan*') ? 'activo' : '' }}">
+            <i class="bi bi-patch-check"></i> Mi plan
+            @if(in_array($licenciaEstado->clave, ['por_vencer', 'gracia', 'lectura', 'mantenimiento'], true))<span class="ms-auto" style="width:8px;height:8px;border-radius:50%;background:{{ in_array($licenciaEstado->clave, ['gracia', 'lectura'], true) ? '#E5484D' : '#F5A524' }}"></span>@endif
+        </a>
+        @endif
         @if($gymNav)
         <a href="{{ route('admin.sucursales') }}" class="{{ request()->routeIs('admin.sucursales*') ? 'activo' : '' }}">
             <i class="bi bi-geo-alt"></i> Sucursales

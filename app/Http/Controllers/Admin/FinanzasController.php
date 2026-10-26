@@ -119,6 +119,21 @@ class FinanzasController extends Controller
             $kpi['pendientes'] += $vPor['n'];
         }
 
+        // La plataforma: lo que cobra de licencias cuenta como vendido y cobrado (se cobra al venderse)
+        $kpi['licencias'] = null;
+        $licMes = collect();
+        if (\App\Support\Dinero\Movimientos::cobraLicencias()) {
+            $lic = \App\Models\LicenciaPago::query()->when($desde, fn ($q) => $q->whereDate('fecha', '>=', $desde))->when($hasta, fn ($q) => $q->whereDate('fecha', '<=', $hasta))->get();
+            $m = round($lic->sum(fn ($p) => $conIva ? $p->monto : $p->monto - $p->iva), 2);
+            $kpi['licencias'] = ['monto' => $m, 'n' => $lic->count()];
+            $kpi['ganado'] = round($kpi['ganado'] + $m, 2);
+            $kpi['ganadas'] += $lic->count();
+            $kpi['cobrado'] = round($kpi['cobrado'] + $m, 2);
+            $kpi['cobros'] += $lic->count();
+            $licMes = \App\Models\LicenciaPago::where('fecha', '>=', now($tz)->startOfMonth()->subMonths(11)->toDateString())->get()
+                ->groupBy(fn ($p) => $p->fecha->format('Y-m'))->map(fn ($g) => round($g->sum(fn ($p) => $conIva ? $p->monto : $p->monto - $p->iva), 2));
+        }
+
         // Comparación contra el periodo anterior de la misma duración
         $kpi['ganadoAnterior'] = null;
         if ($desde && $hasta) {
@@ -134,7 +149,7 @@ class FinanzasController extends Controller
             'pagos' => \App\Support\Ventas\Numeros::pagos(now($tz)->startOfMonth()->subMonths(11)->toDateString(), null, $conIva),
             'vendidas' => \App\Support\Ventas\Numeros::vendidas(now($tz)->startOfMonth()->subMonths(11)->toDateString(), null),
         ] : null;
-        $meses = collect(range(11, 0))->map(function ($i) use ($tz, $cotizaciones, $pagos, $monto, $vMes, $conIva) {
+        $meses = collect(range(11, 0))->map(function ($i) use ($tz, $cotizaciones, $pagos, $monto, $vMes, $conIva, $licMes) {
             $m = now($tz)->startOfMonth()->subMonths($i);
             $ym = $m->format('Y-m');
             return [
@@ -143,9 +158,9 @@ class FinanzasController extends Controller
                 'actual'   => $i === 0,
                 'cotizado' => round($cotizaciones->filter(fn ($p) => $p->fecha->format('Y-m') === $ym)->sum($monto), 2),
                 'ganado'   => round($cotizaciones->filter(fn ($p) => $p->estado === 'aceptada' && substr(\App\Support\EsteMes::fechaAceptada($p), 0, 7) === $ym)->sum($monto)
-                    + ($vMes ? $vMes['vendidas']->filter(fn ($v) => $v->fecha->format('Y-m') === $ym)->sum(fn ($v) => \App\Support\Ventas\Numeros::monto($v, $conIva)) : 0), 2),
+                    + ($vMes ? $vMes['vendidas']->filter(fn ($v) => $v->fecha->format('Y-m') === $ym)->sum(fn ($v) => \App\Support\Ventas\Numeros::monto($v, $conIva)) : 0) + ($licMes[$ym] ?? 0), 2),
                 'cobrado'  => round($pagos->filter(fn ($x) => $x->pago->pagado_el?->format('Y-m') === $ym)->sum('monto')
-                    + ($vMes ? $vMes['pagos']->filter(fn ($x) => substr($x->fecha, 0, 7) === $ym)->sum('monto') : 0), 2),
+                    + ($vMes ? $vMes['pagos']->filter(fn ($x) => substr($x->fecha, 0, 7) === $ym)->sum('monto') : 0) + ($licMes[$ym] ?? 0), 2),
             ];
         });
 

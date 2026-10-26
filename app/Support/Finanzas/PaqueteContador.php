@@ -84,6 +84,12 @@ class PaqueteContador
                     Gasto::FORMAS[$p->forma] ?? $p->forma, $cuentas[$p->cuenta_dinero_id] ?? '', round($p->monto - $iva, 2), $iva, round((float) $p->monto, 2)];
             }
         }
+        if ($c->id === \App\Support\Cuentas::principalId()) {
+            foreach (\App\Models\LicenciaPago::with('cuenta', 'licencia')->whereBetween('fecha', [$desde, $hasta])->orderBy('fecha')->get() as $p) {
+                $ingresos[] = [$p->fecha->toDateString(), 'Licencia', $p->folio, $p->cuenta?->nombre, null, $p->concepto_texto,
+                    \App\Models\LicenciaPago::FORMAS[$p->forma] ?? $p->forma, $cuentas[$p->cuenta_dinero_id] ?? '', round($p->monto - $p->iva, 2), round($p->iva, 2), round((float) $p->monto, 2)];
+            }
+        }
         usort($ingresos, fn ($a, $b) => strcmp($a[0], $b[0]));
 
         // Gastos con su comprobante

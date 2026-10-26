@@ -125,6 +125,7 @@ class DineroController extends Controller
             'id'    => 'required|integer',
             'cuenta_dinero_id' => ['nullable', Rule::in(CuentaDinero::pluck('id')->all())],
         ]);
+        abort_if($d['clase'] === 'licencia' && ! Movimientos::cobraLicencias(), 404);
         $m = (Movimientos::CLASES[$d['clase']])::findOrFail($d['id']);
         $m->forceFill(['cuenta_dinero_id' => $d['cuenta_dinero_id'] ?: null])->saveQuietly();
         return back()->with('ok', 'Movimiento asignado.');

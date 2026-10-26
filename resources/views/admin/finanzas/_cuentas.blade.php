@@ -5,7 +5,7 @@
     $hoyF = now(config('vandu.zona_horaria'))->toDateString();
     $inicioMes = now(config('vandu.zona_horaria'))->startOfMonth()->toDateString();
     $nombres = $dn['todas']->pluck('nombre', 'id');
-    $claseTxt = ['cobro' => 'Cobro', 'venta' => 'Venta', 'gasto' => 'Gasto', 'compra' => 'Proveedor', 'mov' => 'Movimiento'];
+    $claseTxt = ['cobro' => 'Cobro', 'venta' => 'Venta', 'gasto' => 'Gasto', 'compra' => 'Proveedor', 'licencia' => 'Licencia', 'mov' => 'Movimiento'];
 @endphp
 
 @push('head')

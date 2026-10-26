@@ -77,11 +77,13 @@ class LicenciasController extends Controller
     {
         $d = $request->validate([
             'banco' => 'nullable|string|max:60', 'titular' => 'nullable|string|max:120', 'clabe' => ['nullable', 'regex:/^\d{18}$/'],
-            'whatsapp' => 'nullable|string|max:30', 'nota' => 'nullable|string|max:200',
+            'whatsapp' => 'nullable|string|max:30', 'nota' => 'nullable|string|max:200', 'iva' => 'nullable|in:sin,incluido',
         ], ['clabe.regex' => 'La CLABE tiene 18 dígitos.']);
         $c = Cuenta::find(Cuentas::principalId());
         $a = $c->ajustes ?? [];
-        data_set($a, 'licencias.pago', array_map(fn ($v) => $v === null ? null : trim($v), $d));
+        data_set($a, 'licencias.iva', $d['iva'] ?? 'sin');
+        unset($d['iva']);
+        data_set($a, 'licencias.pago', array_map(fn ($v) => $v === null ? null : trim($v), $d) + ['iva' => $a['licencias']['iva']]);
         $c->forceFill(['ajustes' => $a])->save();
         return back()->with('ok', 'Datos de pago guardados. Salen en los avisos de vencimiento y en los correos.');
     }
@@ -91,7 +93,7 @@ class LicenciasController extends Controller
     public function ficha(Cuenta $cuenta)
     {
         abort_if($cuenta->id === Cuentas::principalId(), 404);
-        $l = Licencia::with(['plan', 'pagos.usuario'])->where('cuenta_id', $cuenta->id)->first();
+        $l = Licencia::with(['plan', 'pagos.usuario', 'comprobantes.usuario' => fn ($q) => $q->withoutGlobalScope('cuenta')])->where('cuenta_id', $cuenta->id)->first();
         return view('admin.plataforma.licencia', [
             'cuenta' => $cuenta,
             'l'      => $l,
@@ -164,6 +166,59 @@ class LicenciasController extends Controller
         $p = Licencias::pagar($l, $d, $request->user());
         $l->refresh();
         return back()->with('ok', 'Pago de $' . number_format($p->monto, 2) . ' registrado.' . ($p->cubre_hasta ? ' Queda pagado hasta el ' . $p->cubre_hasta->locale('es')->isoFormat('D [de] MMMM [de] YYYY') . '.' : ''));
+    }
+
+    /** Confirmar el "Ya pagué" del dueño: se registra como pago (recorre el vencimiento) y se le avisa */
+    public function confirmar(Request $request, Cuenta $cuenta, \App\Models\LicenciaComprobante $comprobante)
+    {
+        abort_unless($comprobante->cuenta_id === $cuenta->id && $comprobante->estado === 'pendiente', 404);
+        $l = $comprobante->licencia;
+        $d = $request->validate([
+            'concepto' => ['required', Rule::in(array_keys(LicenciaPago::CONCEPTOS))],
+            'periodos' => 'nullable|integer|min:0|max:36',
+            'monto'    => 'required|numeric|min:0|max:9999999',
+            'forma'    => ['nullable', Rule::in(array_keys(LicenciaPago::FORMAS))],
+        ]);
+        $d['periodos'] = in_array($d['concepto'], ['periodo', 'mantenimiento'], true) ? max(1, (int) ($d['periodos'] ?? 1)) : 0;
+        $p = Licencias::pagar($l, $d + ['fecha' => $comprobante->fecha->toDateString(), 'referencia' => $comprobante->referencia, 'forma' => $d['forma'] ?? 'transferencia'], $request->user());
+        $comprobante->update(['estado' => 'aprobado', 'licencia_pago_id' => $p->id]);
+        $this->avisar($cuenta, $comprobante, 'Tu pago quedó registrado', 'Confirmamos tu pago de $' . number_format($p->monto, 2) . '.'
+            . ($p->cubre_hasta ? ' Tu plan queda pagado hasta el ' . $p->cubre_hasta->locale('es')->isoFormat('D [de] MMMM [de] YYYY') . '.' : '') . ' Tu recibo está en Mi plan.');
+        return back()->with('ok', 'Comprobante confirmado y pago registrado.');
+    }
+
+    public function rechazar(Request $request, Cuenta $cuenta, \App\Models\LicenciaComprobante $comprobante)
+    {
+        abort_unless($comprobante->cuenta_id === $cuenta->id && $comprobante->estado === 'pendiente', 404);
+        $d = $request->validate(['motivo' => 'required|string|max:300'], ['motivo.required' => 'Escribe por qué no se aceptó, para que el negocio sepa qué hacer.']);
+        $comprobante->update(['estado' => 'rechazado', 'motivo' => $d['motivo']]);
+        $this->avisar($cuenta, $comprobante, 'Revisamos tu comprobante', 'No pudimos confirmar tu comprobante de $' . number_format($comprobante->monto, 2) . ': ' . $d['motivo']);
+        return back()->with('ok', 'Comprobante rechazado; se le avisó al negocio.');
+    }
+
+    private function avisar(Cuenta $cuenta, \App\Models\LicenciaComprobante $comp, string $asunto, string $texto): void
+    {
+        $u = $comp->user_id ? \App\Models\User::sinCuenta()->find($comp->user_id) : null;   // es de otro negocio
+        if (! $u?->email) return;
+        $url = ($cuenta->url_base ?: rtrim(config('app.url'), '/')) . '/admin/mi-plan';
+        try {
+            \Illuminate\Support\Facades\Mail::to($u->email, $u->name)->send(new \App\Mail\CorreoVandu(asunto: "$asunto · {$cuenta->nombre}", titulo: $asunto,
+                cuerpo: "Hola {$u->primer_nombre},\n\n$texto", boton: 'Ver mi plan', url: $url));
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
+    public function comprobante(Cuenta $cuenta, \App\Models\LicenciaComprobante $comprobante)
+    {
+        abort_unless($comprobante->cuenta_id === $cuenta->id && $comprobante->archivo && \Illuminate\Support\Facades\Storage::exists($comprobante->archivo), 404);
+        return response()->file(\Illuminate\Support\Facades\Storage::path($comprobante->archivo));
+    }
+
+    public function recibo(Cuenta $cuenta, LicenciaPago $pago)
+    {
+        abort_unless($pago->cuenta_id === $cuenta->id, 404);
+        return \App\Support\Licencias\Recibo::pdf($pago);
     }
 
     public function borrarPago(Cuenta $cuenta, LicenciaPago $pago)

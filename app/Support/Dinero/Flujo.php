@@ -19,6 +19,7 @@ class Flujo
     public const CLASES = [
         'cobro'      => ['texto' => 'Cobros de proyectos',   'icono' => 'bi-briefcase'],
         'venta'      => ['texto' => 'Ventas y abonos',       'icono' => 'bi-bag-check'],
+        'licencia'   => ['texto' => 'Licencias de la plataforma', 'icono' => 'bi-patch-check'],
         'aportacion' => ['texto' => 'Aportaciones del dueño', 'icono' => 'bi-box-arrow-in-down-right'],
         'gasto'      => ['texto' => 'Gastos',                'icono' => 'bi-receipt'],
         'compra'     => ['texto' => 'Pagos a proveedores',   'icono' => 'bi-truck'],

@@ -95,7 +95,15 @@ class Contabilidad
             $nDir = $ventas->count();
         }
 
-        $ventasTot = round($ventasCot + $ventasDir, 2);
+        // La plataforma: lo cobrado por licencias es venta del mes (sin costo de lo vendido)
+        $ventasLic = 0.0; $nLic = 0;
+        if (\App\Support\Dinero\Movimientos::cobraLicencias()) {
+            $lp = \App\Models\LicenciaPago::query()->when($desde, fn ($q) => $q->whereDate('fecha', '>=', $desde))->when($hasta, fn ($q) => $q->whereDate('fecha', '<=', $hasta))->get();
+            $ventasLic = round($lp->sum(fn ($p) => $p->monto - $p->iva), 2);
+            $nLic = $lp->count();
+        }
+
+        $ventasTot = round($ventasCot + $ventasDir + $ventasLic, 2);
         $costo = round($costoCot + $costoDir, 2);
         $bruta = round($ventasTot - $costo, 2);
 
@@ -109,6 +117,7 @@ class Contabilidad
         return [
             'ventasCot'    => round($ventasCot, 2), 'nCot' => $cot->count(),
             'ventasDir'    => round($ventasDir, 2), 'nDir' => $nDir,
+            'ventasLic'    => $ventasLic, 'nLic' => $nLic,
             'ventas'       => $ventasTot,
             'costo'        => $costo,
             'bruta'        => $bruta,
@@ -141,7 +150,13 @@ class Contabilidad
             $ivaVen = $vp->sum(fn ($x) => $x->venta->total > 0 ? $x->monto * $x->venta->iva / $x->venta->total : 0);
             $cobradoVen = $vp->sum('monto');
         }
-        $trasladado = round($ivaProy + $ivaVen, 2);
+        $ivaLic = 0.0; $cobradoLic = 0.0;
+        if (\App\Support\Dinero\Movimientos::cobraLicencias()) {
+            $lp = \App\Models\LicenciaPago::query()->when($desde, fn ($q) => $q->whereDate('fecha', '>=', $desde))->when($hasta, fn ($q) => $q->whereDate('fecha', '<=', $hasta))->get();
+            $ivaLic = $lp->sum('iva');
+            $cobradoLic = $lp->sum('monto');
+        }
+        $trasladado = round($ivaProy + $ivaVen + $ivaLic, 2);
 
         // IVA acreditable: solo lo que tiene factura (XML)
         $ivaGastos = $gastos ? round($gastos->whereNotNull('xml')->sum('iva'), 2) : 0.0;
@@ -153,7 +168,7 @@ class Contabilidad
         $saldo = round($trasladado - $acreditable, 2);
 
         return [
-            'cobrado'     => round($cobradoProy + $cobradoVen, 2),
+            'cobrado'     => round($cobradoProy + $cobradoVen + $cobradoLic, 2),
             'trasladado'  => $trasladado,
             'gastos'      => $ivaGastos,
             'ordenes'     => $ivaOrdenes,

@@ -48,7 +48,8 @@
     <div class="panel kpi">
         <div class="k"><i class="bi bi-graph-up-arrow"></i> Ventas</div>
         <div class="v num">{{ $d0($r['ventas']) }}</div>
-        <div class="s num">{{ $r['nCot'] + $r['nDir'] }} {{ $r['nCot'] + $r['nDir'] === 1 ? 'venta' : 'ventas' }} · antes de IVA</div>
+        @php $nV = $r['nCot'] + $r['nDir'] + ($r['nLic'] ?? 0); @endphp
+        <div class="s num">{{ $nV }} {{ $nV === 1 ? 'venta' : 'ventas' }} · antes de IVA</div>
     </div>
     <div class="panel kpi destacado">
         <div class="k"><i class="bi bi-cash-stack"></i> {{ $r['utilidad'] < 0 ? 'Pérdida' : 'Utilidad' }}</div>
@@ -114,6 +115,9 @@
             @endif
             @if($r['nDir'])
                 <div class="fila sub"><span>Ventas de mostrador y pedidos <span class="secundario">({{ $r['nDir'] }})</span></span><span>{{ $d2($r['ventasDir']) }}</span></div>
+            @endif
+            @if($r['nLic'] ?? 0)
+                <div class="fila sub"><span>Licencias de la plataforma <span class="secundario">({{ $r['nLic'] }})</span></span><span>{{ $d2($r['ventasLic']) }}</span></div>
             @endif
             <div class="fila total"><span>Ventas</span><span>{{ $d2($r['ventas']) }}</span></div>
             <div class="fila menos"><span>− Costo de lo vendido</span><span>{{ $d2($r['costo']) }}</span></div>

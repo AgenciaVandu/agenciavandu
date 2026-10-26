@@ -41,6 +41,9 @@ class Licencias
     {
         $tz = config('vandu.zona_horaria');
         $p = new LicenciaPago($d + ['cuenta_id' => $l->cuenta_id, 'licencia_id' => $l->id, 'user_id' => $quien?->id]);
+        // Para las Finanzas de la plataforma: IVA (si sus precios lo incluyen) y la cuenta de dinero donde entró
+        $p->iva = self::ivaDe((float) $d['monto']);
+        $p->cuenta_dinero_id ??= self::cuentaDineroPara($d['forma'] ?? null);
         $recorre = in_array($d['concepto'], ['periodo', 'mantenimiento'], true) && ($d['periodos'] ?? 0) > 0;
         if ($recorre) {
             $fecha = Carbon::parse($d['fecha'], $tz)->startOfDay();
@@ -74,6 +77,22 @@ class Licencias
         $l->save();
         $p->delete();
         Estado::olvidar();
+    }
+
+    /** IVA contenido en un pago, según cómo maneja sus precios la plataforma ('sin' o 'incluido') */
+    public static function ivaDe(float $monto): float
+    {
+        $modo = Cuenta::find(\App\Support\Cuentas::principalId())?->ajuste('licencias.iva', 'sin');
+        return $modo === 'incluido' ? round($monto - $monto / 1.16, 2) : 0.0;
+    }
+
+    /** La cuenta de dinero de la plataforma que recibe esa forma de pago */
+    public static function cuentaDineroPara(?string $forma): ?int
+    {
+        $f = \App\Support\Dinero\Movimientos::forma($forma === 'deposito' ? 'transferencia' : $forma);
+        if (! $f) return null;
+        return \App\Models\CuentaDinero::sinCuenta()->where('cuenta_id', \App\Support\Cuentas::principalId())->where('activa', true)
+            ->orderBy('orden')->orderBy('id')->get()->first(fn ($c) => in_array($f, (array) $c->formas, true))?->id;
     }
 
     /** Usuarios activos que cuentan contra el límite (quien administra la plataforma no cuenta) */

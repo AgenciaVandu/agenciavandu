@@ -77,6 +77,7 @@ class Permisos
         ['admin.unidades.*', 'unidades'],
         ['admin.creditos.*', 'cobranza'],
         ['admin.sucursales*', 'configuracion'],
+        ['admin.mi-plan*', 'configuracion'],
         ['admin.credito-ajustes*', 'configuracion'],
         // Gimnasio: el entrenador ve la agenda y sus clases; programarlas y cambiar cupos es de "clases"
         ['admin.clases.index', ['clases', 'asistencia']],

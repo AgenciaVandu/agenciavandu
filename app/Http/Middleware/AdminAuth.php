@@ -57,7 +57,8 @@ class AdminAuth
         // Licencia: vencida y sin pagar pasa a solo lectura y luego a suspensión (la plataforma siempre entra)
         $licencia = \App\Support\Licencias\Estado::de($cuenta);
         \Illuminate\Support\Facades\View::share('licenciaEstado', $licencia);
-        if (! $u->plataforma && $ruta !== 'logout') {
+        // Mi plan (ver, subir comprobante, recibos) siempre abre: es la salida para renovar
+        if (! $u->plataforma && $ruta !== 'logout' && ! str_starts_with((string) $ruta, 'admin.mi-plan')) {
             if ($licencia->clave === 'suspendida') {
                 return response()->view('admin.licencia-suspendida', ['e' => $licencia, 'cuenta' => $cuenta, 'pago' => \App\Support\Licencias\Estado::datosPago()], 402);
             }

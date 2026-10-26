@@ -25,6 +25,7 @@ class Licencia extends Model
     public function cuenta(): BelongsTo { return $this->belongsTo(Cuenta::class); }
     public function plan(): BelongsTo { return $this->belongsTo(Plan::class); }
     public function pagos(): HasMany { return $this->hasMany(LicenciaPago::class)->latest('fecha')->latest('id'); }
+    public function comprobantes(): HasMany { return $this->hasMany(LicenciaComprobante::class)->latest('id'); }
 
     /** Extras con su plan: [['plan' => Plan, 'cantidad' => 2, 'precio' => 150.0], …] */
     public function extrasDetalle(): array
