@@ -22,7 +22,16 @@ class ProyectoEntregaTest extends TestCase
         $cli = Cliente::create(['nombre' => 'Mariana Uc', 'telefono' => '9991234567']);
         $p = Proyecto::create(['cliente_id' => $cli->id, 'nombre' => 'Cocina integral', 'tipo' => 'venta', 'estado' => 'activo']);
 
-        // El cliente ve el aviso y el formulario en el enlace de su proyecto
+        // Sin pedirla, el cliente no ve nada ni puede mandarla
+        $this->get(route('proyecto.publico', $p->token))->assertOk()->assertDontSee('Entrega o instalación')->assertDontSee('Necesitamos la dirección de entrega')->assertDontSee('id="entrega"', false);
+        $this->post(route('proyecto.entrega.guardar', $p->token), ['nombre' => 'X', 'telefono' => '1', 'direccion' => 'Y'])->assertStatus(410);
+        $this->actingAs($dueno);
+        $this->get(route('admin.proyectos.show', $p))->assertOk()->assertSee('El cliente no ve nada de esto')->assertSee('Pedirle la dirección al cliente');
+        $this->post(route('admin.proyectos.entrega.pedir', $p))->assertRedirect(route('admin.proyectos.show', $p) . '#entrega')->assertSessionHas('ok');
+        $this->get(route('admin.proyectos.show', $p))->assertSee('Esperando al cliente')->assertSee('Avisarle por WhatsApp')->assertSee('Ya no pedírsela');
+        auth()->logout();
+
+        // Pedida: el cliente ve el aviso y el formulario en el enlace de su proyecto
         $this->get(route('proyecto.publico', $p->token))->assertOk()->assertSee('Necesitamos la dirección de entrega')->assertSee('Enviar mis datos')->assertSee('Mariana Uc');
         $this->post(route('proyecto.entrega.guardar', $p->token), ['nombre' => 'Mariana Uc', 'telefono' => '999 123 4567'])->assertSessionHasErrors('direccion');
         $this->post(route('proyecto.entrega.guardar', $p->token), ['nombre' => 'Mariana Uc', 'telefono' => '999 123 4567', 'direccion' => 'Calle 60 #500, Centro',
@@ -40,10 +49,25 @@ class ProyectoEntregaTest extends TestCase
         $this->put(route('admin.proyectos.entrega', $p), ['nombre' => 'Mariana Uc', 'telefono' => '9991234567', 'direccion' => 'Calle 62 #10, Centro'])->assertSessionHas('ok');
         $this->assertSame(['Calle 62 #10, Centro', 'equipo', null], [$p->fresh()->entrega_direccion, $p->fresh()->entrega_datos_por, $p->fresh()->entrega_lat]);
 
+        // Se puede quitar del enlace del cliente
+        $this->delete(route('admin.proyectos.entrega.no-pedir', $p))->assertSessionHas('ok');
+        $this->get(route('proyecto.publico', $p->token))->assertDontSee('Calle 62 #10, Centro')->assertDontSee('Entrega o instalación');
+        $this->post(route('admin.proyectos.entrega.pedir', $p));
+
         // Terminado: ya no recibe cambios del cliente, pero se sigue viendo
         $p->update(['estado' => 'terminado']);
         $this->post(route('proyecto.entrega.guardar', $p->token), ['nombre' => 'X', 'telefono' => '1', 'direccion' => 'Otra'])->assertStatus(410);
         $this->get(route('proyecto.publico', $p->token))->assertSee('Calle 62 #10, Centro')->assertDontSee('Corregir mis datos');
+    }
+
+    public function test_capturada_por_el_equipo_sin_pedirla_el_cliente_no_la_ve(): void
+    {
+        [$tienda, $dueno] = PlataformaController::crearCuenta(['nombre' => 'Muebles Losos', 'giro' => 'comercio', 'dueno_nombre' => 'Luis', 'dueno_email' => 'luis@losos.mx']);
+        Cuentas::activar($tienda);
+        $p = Proyecto::create(['cliente_id' => Cliente::create(['nombre' => 'Mariana'])->id, 'nombre' => 'Closet', 'tipo' => 'venta', 'estado' => 'activo']);
+        $this->actingAs($dueno)->put(route('admin.proyectos.entrega', $p), ['nombre' => 'Mariana', 'telefono' => '999', 'direccion' => 'Calle 1 #2'])->assertSessionHas('ok');
+        auth()->logout();
+        $this->get(route('proyecto.publico', $p->token))->assertOk()->assertDontSee('Calle 1 #2')->assertDontSee('Entrega o instalación');
     }
 
     public function test_solo_aplica_a_productos_y_servicios(): void
@@ -56,5 +80,6 @@ class ProyectoEntregaTest extends TestCase
         $this->post(route('proyecto.entrega.guardar', $p->token), ['nombre' => 'X', 'telefono' => '1', 'direccion' => 'Y'])->assertStatus(410);
         $this->actingAs($agencia)->get(route('admin.proyectos.show', $p))->assertOk()->assertDontSee('Entrega o instalación');
         $this->put(route('admin.proyectos.entrega', $p), ['nombre' => 'X', 'telefono' => '1', 'direccion' => 'Y'])->assertNotFound();
+        $this->post(route('admin.proyectos.entrega.pedir', $p))->assertNotFound();
     }
 }

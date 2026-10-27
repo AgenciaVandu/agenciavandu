@@ -32,6 +32,7 @@ class Proyecto extends Model
         'entrega_lat'     => 'float',
         'entrega_lng'     => 'float',
         'entrega_datos_at' => 'datetime',
+        'entrega_pedida_at' => 'datetime',
     ];
 
     /* ---------------- Entrega o instalación (productos y servicios) ---------------- */

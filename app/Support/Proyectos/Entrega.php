@@ -17,10 +17,16 @@ class Entrega
         return (bool) Cuentas::actual()?->tiene('stock');
     }
 
+    /** El equipo se la pidió al cliente: solo entonces el cliente ve este apartado en su enlace */
+    public static function pedida(Proyecto $p): bool
+    {
+        return self::aplica() && $p->entrega_pedida_at !== null;
+    }
+
     /** El cliente todavía la puede llenar o corregir */
     public static function abierta(Proyecto $p): bool
     {
-        return self::aplica() && ! in_array($p->estado, ['terminado', 'cancelado'], true);
+        return self::pedida($p) && ! in_array($p->estado, ['terminado', 'cancelado'], true);
     }
 
     public const REGLAS = [

@@ -232,6 +232,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::put('proyectos/{proyecto}/fechas', [Admin\ProyectoController::class, 'guardarFechas'])->name('proyectos.fechas.guardar');
     Route::get('proyectos/{proyecto}', [Admin\ProyectoController::class, 'show'])->name('proyectos.show');
     Route::put('proyectos/{proyecto}/entrega', [Admin\ProyectoController::class, 'entrega'])->name('proyectos.entrega');
+    Route::post('proyectos/{proyecto}/entrega/pedir', [Admin\ProyectoController::class, 'pedirEntrega'])->name('proyectos.entrega.pedir');
+    Route::delete('proyectos/{proyecto}/entrega/pedir', [Admin\ProyectoController::class, 'pedirEntrega'])->name('proyectos.entrega.no-pedir');
     Route::put('proyectos/{proyecto}', [Admin\ProyectoController::class, 'update'])->name('proyectos.update');
     Route::post('proyectos/{proyecto}/cancelar', [Admin\ProyectoController::class, 'cancelar'])->name('proyectos.cancelar');
     Route::post('proyectos/{proyecto}/reactivar', [Admin\ProyectoController::class, 'reactivar'])->name('proyectos.reactivar');

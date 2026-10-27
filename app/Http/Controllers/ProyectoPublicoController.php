@@ -78,6 +78,8 @@ class ProyectoPublicoController extends Controller
     {
         $p = $this->proyecto($token);
         if ($p->estado === 'cancelado') return response()->json(['message' => 'Este proyecto se canceló; ya no recibe archivos.'], 422);
+        // Solo se reciben archivos cuando el equipo los pidió
+        if (! $p->solicitudes()->where('estado', 'abierta')->exists()) return response()->json(['message' => 'Por ahora no te pedimos archivos para este proyecto.'], 422);
         $max = intdiv(SubidaCliente::PARTE, 1024) + 64;
         $d = $request->validate([
             'accion'    => 'required|in:iniciar,agregar,terminar',

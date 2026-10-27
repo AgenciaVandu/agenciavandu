@@ -5,6 +5,7 @@
     $abrir = $errors->hasAny(['direccion', 'nombre', 'telefono']);
     $urlEntrega = $p->url_publica . '#entrega';
     $telE = preg_replace('/\D/', '', (string) $p->entrega_telefono);
+    $pedida = \App\Support\Proyectos\Entrega::pedida($p);
 @endphp
 <section class="panel" id="entrega" x-data="{ editar: {{ $abrir ? 'true' : 'false' }} }">
     <div class="panel-head"><h2>Entrega o instalación</h2>
@@ -24,15 +25,27 @@
                 </div>
                 @unless($p->entrega_lat)<div class="secundario small mt-2"><i class="bi bi-info-circle"></i> Sin ubicación en el mapa; el enlace busca la dirección escrita.</div>@endunless
             </div>
-        @else
+        @elseif($pedida)
             <div x-show="! editar">
-                <p class="secundario mb-3">Aún no tienes la dirección. Pídesela al cliente: la llena desde el enlace de su proyecto y marca su ubicación en el mapa.</p>
+                <p class="mb-1"><span class="estado estado-en_proceso">Esperando al cliente</span></p>
+                <p class="secundario mb-3">Ya ve en el enlace de su proyecto el apartado para mandar su dirección y marcar su ubicación. Avísale:</p>
                 @if($wa)
-                    <a class="btn btn-primario w-100" target="_blank" rel="noopener" href="https://wa.me/{{ $wa }}?text={{ rawurlencode(\App\Support\Proyectos\Entrega::mensaje($p)) }}"><i class="bi bi-whatsapp me-1"></i> Pedírsela por WhatsApp</a>
+                    <a class="btn btn-primario w-100" target="_blank" rel="noopener" href="https://wa.me/{{ $wa }}?text={{ rawurlencode(\App\Support\Proyectos\Entrega::mensaje($p)) }}"><i class="bi bi-whatsapp me-1"></i> Avisarle por WhatsApp</a>
                 @endif
-                <button type="button" class="btn btn-borde w-100 mt-2" data-copiar="{{ $urlEntrega }}"><i class="bi bi-link-45deg me-1"></i> Copiar enlace para pedirla</button>
+                <button type="button" class="btn btn-borde w-100 mt-2" data-copiar="{{ $urlEntrega }}"><i class="bi bi-link-45deg me-1"></i> Copiar enlace</button>
                 <button type="button" class="btn btn-fantasma w-100 mt-2" @click="editar = true"><i class="bi bi-pencil me-1"></i> La capturo yo</button>
             </div>
+        @else
+            <div x-show="! editar">
+                <p class="secundario mb-3">El cliente no ve nada de esto. Si necesitas que te mande la dirección y su ubicación, pídesela y le aparece en el enlace de su proyecto.</p>
+                <form method="post" action="{{ route('admin.proyectos.entrega.pedir', $p) }}">@csrf
+                    <button class="btn btn-primario w-100"><i class="bi bi-geo-alt me-1"></i> Pedirle la dirección al cliente</button></form>
+                <button type="button" class="btn btn-fantasma w-100 mt-2" @click="editar = true"><i class="bi bi-pencil me-1"></i> La capturo yo</button>
+            </div>
+        @endif
+        @if($pedida)
+            <form method="post" action="{{ route('admin.proyectos.entrega.no-pedir', $p) }}" class="mt-3 text-center" x-show="! editar">@csrf @method('DELETE')
+                <button class="btn btn-link btn-sm secundario p-0">{{ $p->tiene_entrega ? 'Quitar este apartado del enlace del cliente' : 'Ya no pedírsela' }}</button></form>
         @endif
 
         <div x-show="editar" x-cloak>

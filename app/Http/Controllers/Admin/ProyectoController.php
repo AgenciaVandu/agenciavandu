@@ -360,6 +360,16 @@ class ProyectoController extends Controller
         return back()->with('ok', 'Datos de entrega guardados.');
     }
 
+    /** Pedirle (o dejar de pedirle) la dirección al cliente: solo entonces la ve en el enlace de su proyecto */
+    public function pedirEntrega(Request $request, Proyecto $proyecto)
+    {
+        abort_unless(\App\Support\Proyectos\Entrega::aplica(), 404);
+        $pedir = ! $request->isMethod('delete');
+        $proyecto->forceFill(['entrega_pedida_at' => $pedir ? now() : null])->save();
+        return redirect()->to(route('admin.proyectos.show', $proyecto) . '#entrega')
+            ->with('ok', $pedir ? 'Listo: el cliente ya ve el apartado para mandar su dirección.' : 'El cliente ya no ve el apartado de entrega.');
+    }
+
     public function update(Request $request, Proyecto $proyecto)
     {
         // Cancelar lleva motivo: se hace con su propio botón, no desde este selector

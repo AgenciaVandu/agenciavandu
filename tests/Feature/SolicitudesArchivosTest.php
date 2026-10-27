@@ -85,12 +85,14 @@ class SolicitudesArchivosTest extends TestCase
             ->assertSee('data-solicitud="' . $s->id . '"', false);
         $this->get($this->p->cliente->portal_url)->assertOk()->assertSee('Necesitamos unos archivos tuyos para avanzar');
 
-        // Cerrada ya no se le muestra; queda el apartado general para enviar archivos
+        // Cerrada ya no se le muestra nada para subir: solo cuando el equipo pide archivos
         $this->actingAs(User::factory()->create());
         $this->patch(route('admin.proyectos.solicitudes.estado', [$this->p, $s]))->assertSessionHas('ok');
         $this->assertSame('cerrada', $s->fresh()->estado);
         auth()->logout();
-        $this->get($this->p->url_publica)->assertOk()->assertDontSee('Logotipo en vector')->assertSee('Envíanos archivos');
+        $this->get($this->p->url_publica)->assertOk()->assertDontSee('Logotipo en vector')->assertDontSee('id="enviar-archivos"', false)
+            ->assertDontSee('Necesitamos unos archivos tuyos');
+        $this->get($this->p->cliente->portal_url)->assertOk()->assertDontSee('#enviar-archivos', false);
     }
 
     public function test_el_cliente_sube_por_partes_sin_dropbox(): void
@@ -119,22 +121,30 @@ class SolicitudesArchivosTest extends TestCase
 
     public function test_no_acepta_programas_ni_sesiones_ajenas(): void
     {
+        $this->solicitud();
+        auth()->logout();
         $this->subir(['accion' => 'iniciar', 'unico' => 1, 'nombre' => 'virus.exe'], 'MZ')->assertStatus(422);
         $this->subir(['accion' => 'iniciar', 'unico' => 1, 'nombre' => 'foto.php.jpg'], '<?php')->assertStatus(422);
         $this->subir(['accion' => 'iniciar', 'nombre' => 'gigante.zip', 'tamano' => SubidaCliente::maxBytes() + 1], 'x')->assertStatus(413);
 
         // Una sesión abierta en otro proyecto no se puede continuar desde este enlace
         $otro = Proyecto::create(['cliente_id' => $this->p->cliente_id, 'nombre' => 'Otro', 'tipo' => 'audiovisual', 'estado' => 'activo', 'monto_total' => 0]);
+        $otro->solicitudes()->create(['titulo' => 'Fotos', 'estado' => 'abierta']);
         $sesion = $this->postJson(route('proyecto.subir', $otro->token), ['accion' => 'iniciar', 'nombre' => 'a.zip', 'parte' => UploadedFile::fake()->createWithContent('parte', 'aaaa')])->assertOk()->json('sesion');
         $this->subir(['accion' => 'terminar', 'nombre' => 'a.zip', 'sesion' => $sesion, 'offset' => 4], 'bbbb')->assertNotFound();
         $this->assertSame(0, $this->p->archivos()->count());
 
         // Una solicitud cerrada o de otro proyecto no se usa
-        $s = $this->solicitud();
+        $s = $this->p->solicitudes()->first();
+        $this->solicitud(['titulo' => 'Fotos del equipo']);
         $s->update(['estado' => 'cerrada']);
         auth()->logout();
         $id = $this->subir(['accion' => 'iniciar', 'unico' => 1, 'nombre' => 'logo.svg', 'solicitud' => $s->id], '<svg/>')->assertOk()->json('archivo.id');
         $this->assertNull($this->p->archivos()->find($id)->solicitud_id);
+
+        // Sin solicitudes abiertas no recibe nada
+        $this->p->solicitudes()->update(['estado' => 'cerrada']);
+        $this->subir(['accion' => 'iniciar', 'unico' => 1, 'nombre' => 'otro.svg'], '<svg/>')->assertStatus(422)->assertJsonPath('message', 'Por ahora no te pedimos archivos para este proyecto.');
     }
 
     public function test_con_dropbox_van_a_la_carpeta_del_cliente(): void

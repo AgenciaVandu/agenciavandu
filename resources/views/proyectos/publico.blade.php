@@ -25,7 +25,7 @@
     $f = fn ($d) => ucfirst($d->locale('es')->isoFormat('D [de] MMMM'));
     // Productos y servicios: dirección de entrega o instalación
     $pideEntrega = \App\Support\Proyectos\Entrega::abierta($p);
-    $verEntrega = \App\Support\Proyectos\Entrega::aplica() && ($pideEntrega || $p->tiene_entrega);
+    $verEntrega = \App\Support\Proyectos\Entrega::pedida($p);   // si el equipo no la pidió, el cliente no ve nada
     $envE = $verEntrega ? \App\Support\Ventas\Envios::ajustes() : [];
     $centroE = $p->entrega_lat ? [$p->entrega_lat, $p->entrega_lng] : (! empty($envE['lat']) ? [(float) $envE['lat'], (float) $envE['lng']] : null);
 @endphp
@@ -423,7 +423,8 @@
         </div>
     @endif
 
-    @if($p->estado !== 'cancelado')
+    {{-- Solo cuando el equipo le pidió archivos --}}
+    @if($pideArchivos)
         @include('proyectos._enviar')
     @endif
 

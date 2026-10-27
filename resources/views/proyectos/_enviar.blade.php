@@ -8,10 +8,8 @@
     };
 @endphp
 <section id="enviar-archivos" class="enviar" data-subir="{{ route('proyecto.subir', $p->token) }}" data-token="{{ csrf_token() }}">
-    <h2>{{ $abiertas->isNotEmpty() ? 'Archivos que necesitamos' : 'Envíanos archivos' }}</h2>
-    @if($abiertas->isNotEmpty())
-        <p class="env-ayuda">Para avanzar necesitamos lo siguiente. Súbelo aquí mismo: aceptamos ZIP, video, audio, imágenes y editables (Illustrator, Photoshop, Figma…).</p>
-    @endif
+    <h2>Archivos que necesitamos</h2>
+    <p class="env-ayuda">Para avanzar necesitamos lo siguiente. Súbelo aquí mismo: aceptamos ZIP, video, audio, imágenes y editables (Illustrator, Photoshop, Figma…).</p>
 
     @foreach($abiertas as $s)
         <div class="env-caja pedida" data-solicitud="{{ $s->id }}">
@@ -33,7 +31,7 @@
 
     <div class="env-caja" data-solicitud="">
         <div class="env-top"><div>
-            <b class="env-t">{{ $abiertas->isNotEmpty() ? '¿Algo más que quieras compartirnos?' : 'Comparte con nosotros lo que necesitemos para tu proyecto' }}</b>
+            <b class="env-t">¿Algo más que quieras compartirnos?</b>
             <p class="env-inst">Logos, fotos, videos, audios, textos o editables. Llegan directo a nuestra carpeta del proyecto.</p>
         </div></div>
         {!! $recibidos($enviados) !!}
