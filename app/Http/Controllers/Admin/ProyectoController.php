@@ -351,6 +351,15 @@ class ProyectoController extends Controller
         ]);
     }
 
+    /** Dirección de entrega o instalación capturada por el equipo (productos y servicios) */
+    public function entrega(Request $request, Proyecto $proyecto)
+    {
+        abort_unless(\App\Support\Proyectos\Entrega::aplica(), 404);
+        $d = $request->validate(\App\Support\Proyectos\Entrega::REGLAS, \App\Support\Proyectos\Entrega::MENSAJES);
+        \App\Support\Proyectos\Entrega::guardar($proyecto, $d, 'equipo');
+        return back()->with('ok', 'Datos de entrega guardados.');
+    }
+
     public function update(Request $request, Proyecto $proyecto)
     {
         // Cancelar lleva motivo: se hace con su propio botón, no desde este selector

@@ -231,6 +231,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::get('proyectos/{proyecto}/fechas', [Admin\ProyectoController::class, 'fechas'])->name('proyectos.fechas');
     Route::put('proyectos/{proyecto}/fechas', [Admin\ProyectoController::class, 'guardarFechas'])->name('proyectos.fechas.guardar');
     Route::get('proyectos/{proyecto}', [Admin\ProyectoController::class, 'show'])->name('proyectos.show');
+    Route::put('proyectos/{proyecto}/entrega', [Admin\ProyectoController::class, 'entrega'])->name('proyectos.entrega');
     Route::put('proyectos/{proyecto}', [Admin\ProyectoController::class, 'update'])->name('proyectos.update');
     Route::post('proyectos/{proyecto}/cancelar', [Admin\ProyectoController::class, 'cancelar'])->name('proyectos.cancelar');
     Route::post('proyectos/{proyecto}/reactivar', [Admin\ProyectoController::class, 'reactivar'])->name('proyectos.reactivar');
@@ -429,6 +430,8 @@ Route::prefix('/proveedor/{token}')->where(['token' => '[A-Za-z0-9]{32}', 'orden
 // Vista pública del proyecto para el cliente
 Route::get('/proyecto/{token}', [\App\Http\Controllers\ProyectoPublicoController::class, 'show'])
     ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:proyecto')->name('proyecto.publico');
+Route::post('/proyecto/{token}/entrega-datos', [\App\Http\Controllers\ProyectoPublicoController::class, 'guardarEntrega'])
+    ->where('token', '[A-Za-z0-9]{32}')->middleware(['cuenta.enlace:proyecto', 'throttle:10,1'])->name('proyecto.entrega.guardar');
 Route::get('/proyecto/{token}/entrega', [\App\Http\Controllers\ProyectoPublicoController::class, 'entrega'])
     ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:proyecto')->name('proyecto.entrega');
 Route::get('/proyecto/{token}/archivos/{archivo}', [\App\Http\Controllers\ProyectoPublicoController::class, 'archivo'])

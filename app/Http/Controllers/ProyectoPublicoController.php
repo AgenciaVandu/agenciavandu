@@ -34,6 +34,17 @@ class ProyectoPublicoController extends Controller
         return response()->view('proyectos.publico', compact('p', 'galeria', 'grupos', 'enviados'))->header('X-Robots-Tag', 'noindex, nofollow');
     }
 
+    /** El cliente manda la dirección de entrega o instalación (productos y servicios) */
+    public function guardarEntrega(Request $request, string $token)
+    {
+        $p = $this->proyecto($token);
+        abort_unless(\App\Support\Proyectos\Entrega::abierta($p), 410, 'Este proyecto ya no recibe cambios.');
+        $d = $request->validate(\App\Support\Proyectos\Entrega::REGLAS, \App\Support\Proyectos\Entrega::MENSAJES);
+        \App\Support\Proyectos\Entrega::guardar($p, $d, 'cliente');
+        \App\Support\Push\Notificar::evento('proyecto_datos', "{$p->nombre}: {$d['nombre']} mandó la dirección de entrega", $d['direccion'], route('admin.proyectos.show', $p), 'proyecto-entrega-' . $p->id);
+        return redirect()->to(route('proyecto.publico', $token) . '#entrega')->with('ok_entrega', '¡Listo! Recibimos tus datos de entrega.');
+    }
+
     /** Página de entrega: solo los entregables, pensada para enviarse por correo */
     public function entrega(Request $request, string $token)
     {

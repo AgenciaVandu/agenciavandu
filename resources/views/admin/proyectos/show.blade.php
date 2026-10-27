@@ -523,6 +523,10 @@
             </div>
         </section>
 
+        @if(\App\Support\Proyectos\Entrega::aplica())
+            @include('admin.proyectos._entrega')
+        @endif
+
         @include('admin.correos._historial', ['correos' => \App\Models\Correo::where('proyecto_id', $p->id)->latest()->take(8)->get(), 'plantilla' => 'inicio_proyecto'])
 
         @if(auth()->user()?->puede('proveedores'))

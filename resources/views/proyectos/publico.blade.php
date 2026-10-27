@@ -23,6 +23,11 @@
     ])->values();
     $linea = $p->lineaDelTiempo();
     $f = fn ($d) => ucfirst($d->locale('es')->isoFormat('D [de] MMMM'));
+    // Productos y servicios: dirección de entrega o instalación
+    $pideEntrega = \App\Support\Proyectos\Entrega::abierta($p);
+    $verEntrega = \App\Support\Proyectos\Entrega::aplica() && ($pideEntrega || $p->tiene_entrega);
+    $envE = $verEntrega ? \App\Support\Ventas\Envios::ajustes() : [];
+    $centroE = $p->entrega_lat ? [$p->entrega_lat, $p->entrega_lng] : (! empty($envE['lat']) ? [(float) $envE['lat'], (float) $envE['lng']] : null);
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -189,7 +194,21 @@
             .ver-mas { display: block; margin: 14px auto 0; border: 1.5px solid var(--line); background: #fff; color: var(--ink); font: inherit; font-weight: 600; font-size: 15px; padding: 11px 26px; border-radius: 99px; cursor: pointer; }
         .ver-mas:hover { border-color: var(--ink); }
         [data-mas][hidden] { display: none !important; }
+        /* Dirección de entrega del proyecto */
+        .entrega { border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+        .entrega label { display: block; font-size: 14px; font-weight: 600; margin: 12px 0 6px; }
+        .entrega label small { font-weight: 400; color: var(--muted); }
+        .entrega input, .entrega textarea { width: 100%; font: inherit; font-size: 16px; padding: 11px 13px; border: 1.5px solid var(--line); border-radius: 10px; background: #fff; color: inherit; }
+        .entrega input:focus, .entrega textarea:focus { outline: none; border-color: var(--ink); }
+        .entrega .btn-e { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 18px; border-radius: 10px; border: 1.5px solid var(--line); background: #fff; font: inherit; font-weight: 600; color: var(--ink); cursor: pointer; text-decoration: none; }
+        .entrega .btn-e.prim { background: var(--ink); border-color: var(--ink); color: #fff; width: 100%; margin-top: 16px; }
+        .entrega .mapa-e { height: 260px; border-radius: 10px; border: 1.5px solid var(--line); margin-top: 8px; z-index: 0; }
+        .entrega .estado-e { font-size: 13px; color: var(--muted); margin-top: 6px; }
+        .entrega .ok-e { background: #E3FBEF; color: #065F46; border-radius: 10px; padding: 10px 14px; font-weight: 600; margin-bottom: 12px; }
+        .entrega .err-e { background: #FDECEC; color: #B42318; border-radius: 10px; padding: 10px 14px; font-size: 14px; margin-bottom: 12px; }
+        .entrega details summary { cursor: pointer; font-weight: 600; margin-top: 14px; }
     </style>
+    @if($pideEntrega)<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">@endif
 </head>
 <body>
 <main class="doc">
@@ -240,6 +259,9 @@
 
     @if($p->estado === 'cancelado')
         <div class="aviso-arch" role="status" style="grid-template-columns:1fr"><b>Este proyecto se canceló</b><span>Si quieres retomarlo o tienes dudas, escríbenos por WhatsApp.</span></div>
+    @endif
+    @if($pideEntrega && ! $p->tiene_entrega)
+        <a class="aviso-arch" href="#entrega"><b>Necesitamos la dirección de entrega</b><span>Dinos dónde entregamos o instalamos y marca tu ubicación en el mapa</span><i>Llenarla ↓</i></a>
     @endif
     @php $pideArchivos = $p->estado !== 'cancelado' && $p->solicitudes->where('estado', 'abierta')->isNotEmpty(); @endphp
     @if($pideArchivos)
@@ -298,6 +320,44 @@
             @endif
         @endforeach
     </ol>
+
+    @if($verEntrega)
+        <h2 id="entrega">Entrega o instalación</h2>
+        <div class="entrega">
+            @if(session('ok_entrega'))<div class="ok-e" role="status">✓ {{ session('ok_entrega') }}</div>@endif
+            @if($errors->any())<div class="err-e" role="alert">{{ $errors->first() }}</div>@endif
+            @if($p->tiene_entrega)
+                <div><b>{{ $p->entrega_nombre }}</b>{{ $p->entrega_telefono ? ' · ' . $p->entrega_telefono : '' }}</div>
+                <div>{{ $p->entrega_direccion }}</div>
+                @if($p->entrega_referencias)<div style="color: var(--muted); font-size: 14px">{{ $p->entrega_referencias }}</div>@endif
+                @if($p->entrega_notas)<div style="font-size: 14px; margin-top: 6px; white-space: pre-line">{{ $p->entrega_notas }}</div>@endif
+            @endif
+            @if($pideEntrega)
+                @if($p->tiene_entrega)<details id="entrega-corregir" @if($errors->any()) open @endif><summary>Corregir mis datos</summary>@else<p style="margin: 0; color: var(--muted)">Dinos dónde entregamos o instalamos. Marca tu ubicación para que lleguemos directo.</p>@endif
+                <form method="post" action="{{ route('proyecto.entrega.guardar', $p->token) }}">
+                    @csrf
+                    <label for="e-nombre">Quién recibe</label>
+                    <input id="e-nombre" name="nombre" value="{{ old('nombre', $p->entrega_nombre ?: ($p->cliente?->nombre ?: $p->cliente?->empresa)) }}" required maxlength="160" autocomplete="name">
+                    <label for="e-tel">Teléfono o WhatsApp</label>
+                    <input id="e-tel" name="telefono" value="{{ old('telefono', $p->entrega_telefono ?: $p->cliente?->telefono) }}" required maxlength="30" inputmode="tel" autocomplete="tel">
+                    <label for="e-dir">Dirección</label>
+                    <input id="e-dir" name="direccion" value="{{ old('direccion', $p->entrega_direccion) }}" required maxlength="300" placeholder="Calle, número, colonia" autocomplete="street-address">
+                    <label for="e-ref">Referencias <small>(opcional)</small></label>
+                    <input id="e-ref" name="referencias" value="{{ old('referencias', $p->entrega_referencias) }}" maxlength="300" placeholder="Portón negro, frente al parque…">
+                    <label for="e-notas">Indicaciones <small>(opcional)</small></label>
+                    <textarea id="e-notas" name="notas" rows="2" maxlength="1000" placeholder="Horario para recibir, piso, acceso, lo que debamos saber">{{ old('notas', $p->entrega_notas) }}</textarea>
+                    <label>Tu ubicación</label>
+                    <button type="button" class="btn-e" id="e-gps" style="width: 100%">📍 Usar mi ubicación</button>
+                    <div class="mapa-e" id="e-mapa"></div>
+                    <div class="estado-e" id="e-estado">También puedes tocar el mapa o arrastrar el pin hasta tu puerta.</div>
+                    <input type="hidden" name="lat" id="e-lat" value="{{ old('lat', $p->entrega_lat) }}">
+                    <input type="hidden" name="lng" id="e-lng" value="{{ old('lng', $p->entrega_lng) }}">
+                    <button class="btn-e prim">{{ $p->tiene_entrega ? 'Actualizar mis datos' : 'Enviar mis datos' }}</button>
+                </form>
+                @if($p->tiene_entrega)</details>@endif
+            @endif
+        </div>
+    @endif
 
     @if($pendientes->isNotEmpty() && ! in_array($p->estado, ['terminado', 'cancelado'], true))
         <h2>Datos para tu pago</h2>
@@ -506,5 +566,16 @@ document.addEventListener('click', function (e) {
     if (resta > 0) b.querySelector('span').textContent = '(' + resta + ')'; else b.remove();
 });
 </script>
+@if($pideEntrega)
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+@include('pedidos._mapa-js')
+<script>
+(function () {
+    const iniciar = () => window.nerbyMapa({ el: 'e-mapa', campoLat: 'e-lat', campoLng: 'e-lng', centro: @json($centroE), boton: 'e-gps', estado: 'e-estado' });
+    const det = document.getElementById('entrega-corregir');
+    if (det && ! det.open) { let listo = false; det.addEventListener('toggle', () => { if (det.open && ! listo) { listo = true; iniciar(); } }); } else iniciar();
+})();
+</script>
+@endif
 </body>
 </html>

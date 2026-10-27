@@ -428,6 +428,7 @@ return [
             'cotizacion_descargada' => ['seccion' => 'cotizaciones', 'texto' => 'Un cliente descarga la cotización', 'ayuda' => 'Cuando baja el PDF desde su enlace', 'icono' => 'bi-file-earmark-arrow-down'],
             'archivos_cliente'      => ['seccion' => 'proyectos', 'texto' => 'Un cliente te envía archivos', 'ayuda' => 'Subió archivos desde la página de su proyecto (van a Dropbox)', 'icono' => 'bi-cloud-arrow-up'],
             'proyecto_visto'        => ['seccion' => 'proyectos', 'texto' => 'Un cliente revisa su proyecto', 'ayuda' => 'Abre su página de avance o de entrega', 'icono' => 'bi-kanban'],
+            'proyecto_datos'        => ['seccion' => 'proyectos', 'texto' => 'Un cliente manda la dirección de su proyecto', 'ayuda' => 'Llena la dirección de entrega o instalación desde el enlace de su proyecto', 'icono' => 'bi-geo-alt'],
             'pedido_datos'          => ['seccion' => 'vender', 'texto' => 'Un cliente manda sus datos de envío', 'ayuda' => 'Llena su dirección y su ubicación desde el enlace de su pedido', 'icono' => 'bi-geo-alt'],
             'proveedor_actividad'   => ['seccion' => 'proveedores', 'texto' => 'Un proveedor sube algo o comenta', 'ayuda' => 'Abre una orden de compra, sube su factura o archivos, o deja un comentario', 'icono' => 'bi-truck'],
             'mensaje_sitio'         => ['seccion' => 'ventas', 'texto' => 'Llega un mensaje desde el sitio', 'ayuda' => 'Alguien llenó el formulario de cotizar en agenciavandu.com', 'icono' => 'bi-chat-dots'],

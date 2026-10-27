@@ -29,7 +29,28 @@ class Proyecto extends Model
         'monto_total'     => 'float',
         'ultima_vista_at' => 'datetime',
         'cancelado_at'    => 'datetime',
+        'entrega_lat'     => 'float',
+        'entrega_lng'     => 'float',
+        'entrega_datos_at' => 'datetime',
     ];
+
+    /* ---------------- Entrega o instalación (productos y servicios) ---------------- */
+
+    public function getTieneEntregaAttribute(): bool
+    {
+        return filled($this->entrega_direccion);
+    }
+
+    public function getEntregaMapaUrlAttribute(): ?string
+    {
+        if ($this->entrega_lat && $this->entrega_lng) return 'https://www.google.com/maps/search/?api=1&query=' . $this->entrega_lat . ',' . $this->entrega_lng;
+        return $this->entrega_direccion ? 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode($this->entrega_direccion) : null;
+    }
+
+    public function getEntregaWazeUrlAttribute(): ?string
+    {
+        return $this->entrega_lat && $this->entrega_lng ? 'https://waze.com/ul?ll=' . $this->entrega_lat . ',' . $this->entrega_lng . '&navigate=yes' : null;
+    }
 
     protected static function booted(): void
     {
