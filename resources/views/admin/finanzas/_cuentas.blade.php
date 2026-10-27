@@ -217,4 +217,23 @@
         @endif
     </section>
 @endif
+
+@if($dn['todas']->isNotEmpty() && (auth()->user()->plataforma || auth()->user()->esSuperAdmin()))
+    <details class="panel mt-4" id="reiniciar" @if($errors->has('confirmar')) open @endif>
+        <summary class="panel-body py-3" style="cursor: pointer; list-style: none; color: var(--red)"><i class="bi bi-arrow-counterclockwise me-1"></i> <b>Reiniciar cuentas y flujo</b>
+            <span class="secundario small d-block mt-1" style="color: var(--muted)">Para empezar de cero si los saldos quedaron revueltos.</span></summary>
+        <form method="post" action="{{ route('admin.finanzas.cuentas.reiniciar') }}" class="panel-body pt-0" onsubmit="return confirm('¿Reiniciar todas tus cuentas? No se puede deshacer.')">
+            @csrf @method('DELETE')
+            <div class="aviso-suave"><i class="bi bi-info-circle"></i><div>
+                <b>Se borra:</b> tu caja, banco y terminal ({{ $dn['todas']->count() }} {{ $dn['todas']->count() === 1 ? 'cuenta' : 'cuentas' }}), con sus saldos iniciales, traspasos, retiros, aportaciones, ajustes y conciliaciones.<br>
+                <b>No se toca:</b> tus ventas, cobros, gastos y órdenes de compra. Siguen en Finanzas; solo pierden la cuenta asignada y se vuelven a acomodar cuando crees tus cuentas otra vez.</div></div>
+            <label class="form-label small" for="reiniciar-confirmar">Escribe <b>REINICIAR</b> para confirmar</label>
+            <div class="d-flex gap-2 flex-wrap">
+                <input id="reiniciar-confirmar" name="confirmar" class="form-control @error('confirmar') is-invalid @enderror" style="max-width: 220px" autocomplete="off" required>
+                <button class="btn" style="background: #B42318; color: #fff"><i class="bi bi-arrow-counterclockwise me-1"></i> Reiniciar</button>
+            </div>
+            @error('confirmar')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+        </form>
+    </details>
+@endif
 </div>

@@ -215,6 +215,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::post('finanzas/paquete/enviar', [Admin\PaqueteContadorController::class, 'enviar'])->middleware('throttle:10,1')->name('finanzas.paquete.enviar');
     Route::post('finanzas/cuentas/basicas', [Admin\DineroController::class, 'basicas'])->name('finanzas.cuentas.basicas');
     Route::post('finanzas/cuentas', [Admin\DineroController::class, 'guardar'])->name('finanzas.cuentas.store');
+    Route::delete('finanzas/cuentas', [Admin\DineroController::class, 'reiniciar'])->name('finanzas.cuentas.reiniciar');
+    Route::delete('finanzas/cuentas/{cuentaDinero}', [Admin\DineroController::class, 'borrar'])->whereNumber('cuentaDinero')->name('finanzas.cuentas.destroy');
     Route::put('finanzas/cuentas/{cuentaDinero}', [Admin\DineroController::class, 'guardar'])->whereNumber('cuentaDinero')->name('finanzas.cuentas.update');
     Route::post('finanzas/cuentas/{cuentaDinero}/conciliar', [Admin\DineroController::class, 'conciliar'])->whereNumber('cuentaDinero')->name('finanzas.cuentas.conciliar');
     Route::post('finanzas/movimientos', [Admin\DineroController::class, 'movimiento'])->name('finanzas.movimientos.store');

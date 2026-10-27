@@ -117,6 +117,57 @@ class DineroController extends Controller
         return $this->volver(['cuenta' => $cuentaDinero->id])->with('ok', $msg);
     }
 
+    /** Quita la cuenta a todo lo que pasó por ella (cobros, ventas, gastos, órdenes y licencias); no borra esos registros */
+    private function soltar(array $ids): void
+    {
+        if (! $ids) return;
+        foreach ([\App\Models\ProyectoPago::class, \App\Models\VentaPago::class, \App\Models\Gasto::class, \App\Models\OrdenCompra::class] as $m) {
+            $m::whereIn('cuenta_dinero_id', $ids)->update(['cuenta_dinero_id' => null]);
+        }
+        \App\Models\LicenciaPago::whereIn('cuenta_dinero_id', $ids)->update(['cuenta_dinero_id' => null]);
+    }
+
+    private function puedeBorrar(Request $request): void
+    {
+        abort_unless($request->user()->plataforma || $request->user()->esSuperAdmin(), 403, 'Solo quien administra el negocio puede borrar cuentas.');
+    }
+
+    /** Eliminar una cuenta: sus traspasos, ajustes y conciliaciones se van; sus cobros y gastos se quedan sin cuenta */
+    public function borrar(Request $request, CuentaDinero $cuentaDinero)
+    {
+        $this->puedeBorrar($request);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($cuentaDinero) {
+            $this->soltar([$cuentaDinero->id]);
+            MovimientoDinero::where('de_id', $cuentaDinero->id)->orWhere('a_id', $cuentaDinero->id)->delete();
+            Conciliacion::where('cuenta_dinero_id', $cuentaDinero->id)->delete();
+            $cuentaDinero->delete();
+        });
+        Movimientos::olvidar();
+        return $this->volver()->with('ok', "Se eliminó “{$cuentaDinero->nombre}”. Sus cobros y gastos siguen registrados, sin cuenta.");
+    }
+
+    /**
+     * Reiniciar: borra todas las cuentas de dinero, traspasos, retiros, aportaciones, ajustes y conciliaciones.
+     * Ventas, cobros, gastos y órdenes de compra se quedan como están (solo pierden la cuenta asignada).
+     */
+    public function reiniciar(Request $request)
+    {
+        $this->puedeBorrar($request);
+        $request->validate(['confirmar' => ['required', function ($a, $v, $fail) {
+            if (mb_strtoupper(trim((string) $v)) !== 'REINICIAR') $fail('Escribe REINICIAR para confirmar.');
+        }]], ['confirmar.required' => 'Escribe REINICIAR para confirmar.']);
+        $n = CuentaDinero::count();
+        \Illuminate\Support\Facades\DB::transaction(function () {
+            $ids = CuentaDinero::pluck('id')->all();
+            $this->soltar($ids);
+            MovimientoDinero::query()->delete();
+            Conciliacion::query()->delete();
+            CuentaDinero::query()->delete();
+        });
+        Movimientos::olvidar();
+        return $this->volver()->with('ok', "Listo, se reiniciaron tus cuentas ($n). Tus ventas, cobros y gastos siguen igual; vuelve a crear tu caja y tu banco desde la fecha que quieras.");
+    }
+
     /** Cambia la cuenta de un cobro, venta, gasto u orden pagada */
     public function asignar(Request $request)
     {

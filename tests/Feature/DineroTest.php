@@ -124,6 +124,42 @@ class DineroTest extends TestCase
         $this->post(route('admin.finanzas.movimientos.store'), ['tipo' => 'traspaso', 'de_id' => $caja->id, 'a_id' => $caja->id, 'monto' => 5, 'fecha' => '2026-10-25'])->assertSessionHasErrors('a_id');
     }
 
+    public function test_reiniciar_cuentas_no_toca_ventas_ni_gastos(): void
+    {
+        $this->post(route('admin.finanzas.cuentas.basicas'), ['saldo_desde' => '2026-10-01']);
+        Movimientos::olvidar();
+        ['efectivo' => $caja, 'banco' => $banco] = $this->cuentas();
+        $v = $this->vender(10, 'efectivo');
+        $g = Gasto::create(['fecha' => '2026-10-20', 'concepto' => 'Hielo', 'categoria' => 'materiales', 'subtotal' => 80, 'iva' => 0, 'total' => 80, 'forma_pago' => 'efectivo', 'origen' => 'manual']);
+        $this->post(route('admin.finanzas.movimientos.store'), ['tipo' => 'traspaso', 'de_id' => $caja->id, 'a_id' => $banco->id, 'monto' => 100, 'fecha' => '2026-10-25']);
+        $this->post(route('admin.finanzas.cuentas.conciliar', $banco), ['fecha' => '2026-10-26', 'saldo_real' => 500, 'ajustar' => 1]);
+        $this->get(route('admin.finanzas', 'cuentas'))->assertSee('Reiniciar cuentas y flujo');
+
+        // Eliminar una sola cuenta
+        $this->delete(route('admin.finanzas.cuentas.destroy', $banco))->assertSessionHas('ok');
+        $this->assertSame(0, MovimientoDinero::count());
+        $this->assertSame(0, Conciliacion::count());
+
+        // Reiniciar todo: hay que escribir REINICIAR
+        $this->delete(route('admin.finanzas.cuentas.reiniciar'), ['confirmar' => 'si'])->assertSessionHasErrors('confirmar');
+        $this->delete(route('admin.finanzas.cuentas.reiniciar'), ['confirmar' => 'reiniciar'])->assertSessionHas('ok');
+        $this->assertSame(0, CuentaDinero::count());
+        $this->assertNull($g->fresh()->cuenta_dinero_id);
+        $this->assertNull(\App\Models\VentaPago::first()->cuenta_dinero_id);
+        $this->assertNotNull($v->fresh(), 'La venta sigue');
+        $this->assertSame(1, Gasto::count(), 'El gasto sigue');
+        $this->get(route('admin.finanzas', 'cuentas'))->assertOk()->assertSee('Crear Caja, Banco y Terminal');
+        $this->get(route('admin.finanzas', 'flujo'))->assertOk()->assertSee('Da de alta tu caja y tu banco');
+
+        // Empezar de nuevo: lo registrado se vuelve a acomodar
+        $this->post(route('admin.finanzas.cuentas.basicas'), ['saldo_desde' => '2026-10-01']);
+        $this->assertNotNull($g->fresh()->cuenta_dinero_id);
+
+        // Quien no administra el negocio no puede reiniciar
+        $otro = User::factory()->create(['rol_id' => \App\Models\Rol::create(['nombre' => 'Contador', 'permisos' => ['finanzas']])->id]);
+        $this->actingAs($otro)->delete(route('admin.finanzas.cuentas.reiniciar'), ['confirmar' => 'REINICIAR'])->assertForbidden();
+    }
+
     public function test_flujo_y_proyeccion(): void
     {
         $this->post(route('admin.finanzas.cuentas.basicas'), ['saldo_desde' => '2026-10-01']);

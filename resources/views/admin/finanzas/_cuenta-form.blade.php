@@ -28,5 +28,13 @@
         <input type="hidden" name="activa" value="0">
         <label class="form-check small mt-3"><input type="checkbox" name="activa" value="1" class="form-check-input" @checked($c->activa)> <span class="form-check-label">Cuenta activa (si la apagas, deja de sumar y de recibir movimientos)</span></label>
     @endunless
-    <div class="mt-3 d-flex gap-2"><button class="btn btn-primario">{{ $nueva ? 'Crear cuenta' : 'Guardar' }}</button><button type="button" class="btn btn-fantasma" @click="{{ $nueva ? 'forma = null' : 'edit = null' }}">Cancelar</button></div>
+    <div class="mt-3 d-flex gap-2 flex-wrap"><button class="btn btn-primario">{{ $nueva ? 'Crear cuenta' : 'Guardar' }}</button><button type="button" class="btn btn-fantasma" @click="{{ $nueva ? 'forma = null' : 'edit = null' }}">Cancelar</button>
+        @if(! $nueva && (auth()->user()->plataforma || auth()->user()->esSuperAdmin()))
+            <button type="submit" form="borrar-cd-{{ $c->id }}" class="btn btn-fantasma ms-auto" style="color: var(--red)"><i class="bi bi-trash3 me-1"></i> Eliminar cuenta</button>
+        @endif
+    </div>
 </form>
+@if(! $nueva)
+    <form id="borrar-cd-{{ $c->id }}" method="post" action="{{ route('admin.finanzas.cuentas.destroy', $c) }}" class="d-none"
+          onsubmit="return confirm({{ Js::from('¿Eliminar ' . $c->nombre . '? Se borran sus traspasos, ajustes y conciliaciones. Sus cobros y gastos se quedan registrados, sin cuenta.') }})">@csrf @method('DELETE')</form>
+@endif

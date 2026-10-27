@@ -56,6 +56,10 @@
     @endif
 </div>
 
+@if($fl['saldoHoy'] !== null && (auth()->user()->plataforma || auth()->user()->esSuperAdmin()))
+    <p class="secundario small mt-n2 mb-3">¿El dinero disponible no cuadra? <a href="{{ $q(['seccion' => 'cuentas']) }}#reiniciar">Reinicia tus cuentas</a> y vuelve a empezar desde la fecha que quieras.</p>
+@endif
+
 {{-- Lo que viene --}}
 <section class="panel" style="margin-bottom: 20px">
     <div class="panel-head"><div><h2>Próximas 8 semanas</h2><span class="ayuda">Lo que te deben pagar contra lo que debes pagar a proveedores, por su fecha</span></div></div>
