@@ -119,9 +119,30 @@ class Permisos
         ['admin.tareas*', '*'],          // el controlador distingue "mis tareas" de gestionar
         ['admin.notificaciones*', '*'],
         ['admin.cuenta*', '*'],
+        ['admin.configuracion', '*'],
         ['admin.negocio*', 'configuracion'],
         ['admin.plataforma*', '@plataforma'],   // solo quien administra la plataforma
     ];
+
+    /** Ajustes que solo tienen sentido con cierto módulo (un gimnasio no costea cotizaciones ni tiene tipos de proyecto) */
+    public const RUTAS_MODULO = [
+        ['admin.costeo*', 'cotizaciones'],
+        ['admin.negocio.documento*', 'cotizaciones'],
+        ['admin.tipos*', 'proyectos'],
+        ['admin.tareas*', 'tareas'],
+    ];
+
+    /** La ruta es de una sección que no viene con el tipo de negocio (no es cosa del rol) */
+    public static function faltaModulo(?string $nombre): bool
+    {
+        if (! $nombre) return false;
+        $c = Cuentas::actual();
+        foreach (self::RUTAS_MODULO as [$patron, $modulo]) {
+            if (Str::is($patron, $nombre) && ! $c?->tiene($modulo)) return true;
+        }
+        $s = self::deRuta($nombre);
+        return $s !== null && $s !== ['*'] && $s !== ['@plataforma'] && ! array_filter($s, fn ($x) => ! isset(self::MODULOS[$x]) || $c?->tiene(self::MODULOS[$x]));
+    }
 
     /** Secciones que pide una ruta; null = no está mapeada (solo super admin) */
     public static function deRuta(?string $nombre): ?array
@@ -137,9 +158,8 @@ class Permisos
     {
         $s = self::deRuta($nombre);
         if ($s === ['@plataforma']) return (bool) $u->plataforma;
-        // Tareas (también "mis tareas") no existen en los negocios que las apagan
-        if ($nombre && Str::is('admin.tareas*', $nombre) && ! Cuentas::actual()?->tiene('tareas')) return false;
-        if ($s !== null && $s !== ['*'] && ! array_filter($s, fn ($x) => ! isset(self::MODULOS[$x]) || Cuentas::actual()?->tiene(self::MODULOS[$x]))) return false;
+        // Lo que no viene con el tipo de negocio no se abre, ni para el super admin
+        if (self::faltaModulo($nombre)) return false;
         if ($u->esSuperAdmin()) return true;
         if ($s === null) return false;
         if ($s === ['*']) return true;

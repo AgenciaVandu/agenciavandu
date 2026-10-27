@@ -24,7 +24,7 @@
     try { $renovarNav = $gymNav && $usuario?->puede('membresias') ? \App\Models\Membresia::vigentes()->where(fn ($q) => $q->whereDate('vence_el', '<=', now(config('vandu.zona_horaria'))->addDays(3)->toDateString())->orWhereRaw('creditos IS NOT NULL AND usados + 1 >= creditos'))->distinct('cliente_id')->count('cliente_id') : 0; } catch (\Throwable $e) { $renovarNav = 0; }
     try { $hoyNav = $gymNav ? \App\Models\Clase::programadas()->delDia(now())->when(! $usuario?->puede('clases'), fn ($q) => $q->where('coach_id', $usuario?->id))->count() : 0; } catch (\Throwable $e) { $hoyNav = 0; }
     $nav = array_values(array_filter([
-        ['ruta' => 'admin.resumen',             'activo' => 'admin.resumen',          'icono' => 'bi-grid-1x2',        'texto' => 'Resumen', 'seccion' => 'resumen'],
+        ['ruta' => 'admin.resumen',             'activo' => 'admin.resumen',          'icono' => 'bi-grid-1x2',        'texto' => 'Inicio', 'seccion' => 'resumen'],
         ['ruta' => 'admin.tareas.index',        'activo' => 'admin.tareas.*',         'icono' => 'bi-check2-square',   'texto' => $puede('tareas') ? 'Tareas' : 'Mis tareas', 'cuenta' => $tareasNav, 'seccion' => null, 'modulo' => 'tareas', 'grupo' => 'Trabajo'],
         $gymNav ? ['ruta' => 'admin.seguimiento', 'activo' => 'admin.seguimiento*', 'icono' => 'bi-person-plus', 'texto' => 'Seguimiento', 'seccion' => 'ventas', 'grupo' => 'Clientes']
                 : ['ruta' => 'admin.ventas.index',        'activo' => 'admin.ventas.*',         'icono' => 'bi-funnel',          'texto' => 'Prospectos', 'cuenta' => $prospectosNav, 'nuevos' => true, 'seccion' => 'ventas', 'grupo' => 'Vender'],
@@ -44,7 +44,7 @@
         ['ruta' => 'admin.productos.index',     'activo' => 'admin.productos.*',      'icono' => 'bi-box-seam',        'texto' => 'Productos', 'cuenta' => $bajosNav, 'seccion' => ['productos', 'cotizaciones'], 'modulo' => 'stock', 'grupo' => 'Compras e inventario'],
         ['ruta' => 'admin.proveedores.index',   'activo' => ['admin.proveedores.*', 'admin.ordenes.*'], 'icono' => 'bi-truck', 'texto' => 'Proveedores', 'seccion' => 'proveedores', 'modulo' => 'proveedores', 'grupo' => 'Compras e inventario'],
         ['ruta' => 'admin.finanzas',            'activo' => 'admin.finanzas*',        'icono' => 'bi-graph-up-arrow',  'texto' => 'Finanzas', 'seccion' => 'finanzas', 'grupo' => 'Dinero'],
-        ['ruta' => 'admin.gastos',              'activo' => 'admin.gastos*',          'icono' => 'bi-receipt',         'texto' => $puede('finanzas') ? 'Gastos' : 'Mis gastos', 'seccion' => ['gastos', 'finanzas'], 'modulo' => 'gastos', 'grupo' => 'Compras e inventario'],
+        ['ruta' => 'admin.gastos',              'activo' => 'admin.gastos*',          'icono' => 'bi-receipt',         'texto' => $puede('finanzas') ? 'Gastos' : 'Mis gastos', 'seccion' => ['gastos', 'finanzas'], 'modulo' => 'gastos', 'grupo' => ($cuentaNav?->tiene('stock') || $cuentaNav?->tiene('proveedores')) ? 'Compras e inventario' : 'Dinero'],
         ['ruta' => 'admin.fitness-reportes',    'activo' => 'admin.fitness-reportes*', 'icono' => 'bi-bar-chart-line', 'texto' => 'Reportes', 'seccion' => ['clases', 'finanzas'], 'modulo' => 'fitness', 'grupo' => 'Dinero'],
     ], fn ($i) => (! isset($i['modulo']) || $cuentaNav?->tiene($i['modulo'])) && ($i['seccion'] === null || collect((array) $i['seccion'])->contains(fn ($s) => $puede($s)))));
     // Menú agrupado por intención: Vender, Clientes, Operación, Trabajo, Compras e inventario, Dinero
@@ -71,6 +71,18 @@
         $puede('redes') ? ['url' => route('admin.redes'), 'activo' => 'admin.redes*', 'icono' => 'bi-grid-3x3-gap', 'lleno' => 'bi-grid-3x3-gap-fill', 'texto' => 'Redes'] : null,
         ['url' => route('admin.notificaciones'), 'activo' => 'admin.notificaciones*', 'icono' => 'bi-bell', 'lleno' => 'bi-bell-fill', 'texto' => 'Avisos'],
     ])), 0, 4);
+    // Venta directa (productos y servicios): lo de todos los días es Pedidos, Productos y Clientes
+    if ($ventaNav) {
+        $tabs = array_slice(array_values(array_filter([
+            $puede('resumen') ? ['url' => route('admin.resumen'), 'activo' => 'admin.resumen', 'icono' => 'bi-grid-1x2', 'lleno' => 'bi-grid-1x2-fill', 'texto' => 'Inicio'] : null,
+            ['url' => route('admin.pedidos'), 'activo' => 'admin.pedidos*', 'icono' => 'bi-bag', 'lleno' => 'bi-bag-fill', 'texto' => 'Pedidos', 'cuenta' => $pedidosNav],
+            $puede('productos') && $cuentaNav?->tiene('stock') ? ['url' => route('admin.productos.index'), 'activo' => 'admin.productos.*', 'icono' => 'bi-box-seam', 'lleno' => 'bi-box-seam-fill', 'texto' => 'Productos'] : null,
+            $puede('clientes') ? ['url' => route('admin.clientes.index'), 'activo' => 'admin.clientes.*', 'icono' => 'bi-people', 'lleno' => 'bi-people-fill', 'texto' => 'Clientes'] : null,
+            $puede('cotizaciones') ? ['url' => route('admin.presupuestos.index'), 'activo' => 'admin.presupuestos.*', 'icono' => 'bi-file-earmark-text', 'lleno' => 'bi-file-earmark-text-fill', 'texto' => 'Cotizaciones'] : null,
+            $puede('finanzas') ? ['url' => route('admin.finanzas'), 'activo' => 'admin.finanzas*', 'icono' => 'bi-graph-up-arrow', 'lleno' => 'bi-graph-up-arrow', 'texto' => 'Finanzas'] : null,
+            ['url' => route('admin.notificaciones'), 'activo' => 'admin.notificaciones*', 'icono' => 'bi-bell', 'lleno' => 'bi-bell-fill', 'texto' => 'Avisos'],
+        ])), 0, 4);
+    }
     $conMas = $puede('cotizaciones') || $ventaNav;
     $masUrl = $ventaNav ? route('admin.pedidos.create') : route('admin.presupuestos.create');
 @endphp
@@ -445,6 +457,7 @@
 <div class="cargando-barra" id="cargando" aria-hidden="true"></div>
 
 {{-- iPhone: cómo instalar la app (Apple no deja mostrar un botón de "Instalar") --}}
+@if(request()->routeIs('admin.resumen') || url()->current() === $inicioNav)
 <div class="ios-instalar" x-data="avisoIos()" x-show="visible" x-cloak role="note">
     <div class="ios-in">
         <img src="{{ \App\Support\IconoApp::url($cuentaNav, 'icono-192.png') }}" alt="" width="40" height="40">
@@ -457,6 +470,7 @@
         <button type="button" @click="cerrar()" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
     </div>
 </div>
+@endif
 
 <header class="topbar-m">
     <button type="button" @click="menu = true" aria-label="Abrir menú"><i class="bi bi-list"></i></button>
@@ -523,70 +537,21 @@
         @elseif(config('vandu.marca.sitio'))
             <a href="https://{{ preg_replace('#^https?://#', '', config('vandu.marca.sitio')) }}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> {{ preg_replace('#^https?://#', '', config('vandu.marca.sitio')) }}</a>
         @endif
-        @php $dbxNav = \App\Support\Dropbox\Dropbox::conectado(); @endphp
         @if($puede('archivos'))
         <a href="{{ route('admin.archivos') }}" class="{{ request()->routeIs('admin.archivos*') ? 'activo' : '' }}">
             <i class="bi {{ request()->routeIs('admin.archivos*') ? 'bi-folder-fill' : 'bi-folder2-open' }}"></i> Archivos
         </a>
         @endif
-        @if($puede('configuracion'))
-        @if($cuentaNav?->tiene('archivos'))
-        <a href="{{ route('admin.dropbox') }}" class="{{ request()->routeIs('admin.dropbox*') ? 'activo' : '' }}">
-            <i class="bi bi-dropbox"></i> Dropbox
-            <span class="ms-auto" title="{{ $dbxNav ? 'Conectado' : 'Sin conectar' }}" style="width:8px;height:8px;border-radius:50%;background:{{ $dbxNav ? 'var(--green, #00C46A)' : '#E5484D' }}"></span>
+        @if(\App\Support\Configuracion::tieneAlgo($usuario))
+        <a href="{{ route('admin.configuracion') }}" class="{{ request()->routeIs(...\App\Support\Configuracion::patrones($usuario)) ? 'activo' : '' }}">
+            <i class="bi bi-sliders"></i> Configuración
         </a>
         @endif
-        @if($cuentaNav?->tiene('proyectos'))
-        <a href="{{ route('admin.tipos') }}" class="{{ request()->routeIs('admin.tipos*') ? 'activo' : '' }}">
-            <i class="bi bi-diagram-3"></i> Tipos de proyecto
-        </a>
-        @endif
-        @if($cuentaNav?->tiene('cotizaciones'))
-        <a href="{{ route('admin.costeo') }}" class="{{ request()->routeIs('admin.costeo*') ? 'activo' : '' }}">
-            <i class="bi bi-calculator"></i> Costeo
-        </a>
-        @endif
-        <a href="{{ route('admin.correos.plantillas') }}" class="{{ request()->routeIs('admin.correos.plantillas*') ? 'activo' : '' }}">
-            <i class="bi {{ request()->routeIs('admin.correos.plantillas*') ? 'bi-envelope-paper-fill' : 'bi-envelope-paper' }}"></i> Plantillas de correo
-        </a>
-        @endif
-        @if($puede('configuracion'))
-        <a href="{{ route('admin.negocio') }}" class="{{ request()->routeIs('admin.negocio') ? 'activo' : '' }}">
-            <i class="bi bi-shop"></i> Mi negocio
-        </a>
-        @if(($licenciaEstado ?? null)?->licencia)
+        @if(($licenciaEstado ?? null)?->licencia && $puede('configuracion'))
         <a href="{{ route('admin.mi-plan') }}" class="{{ request()->routeIs('admin.mi-plan*') ? 'activo' : '' }}">
             <i class="bi bi-patch-check"></i> Mi plan
             @if(in_array($licenciaEstado->clave, ['por_vencer', 'gracia', 'lectura', 'mantenimiento'], true))<span class="ms-auto" style="width:8px;height:8px;border-radius:50%;background:{{ in_array($licenciaEstado->clave, ['gracia', 'lectura'], true) ? '#E5484D' : '#F5A524' }}"></span>@endif
         </a>
-        @endif
-        @if($gymNav)
-        <a href="{{ route('admin.sucursales') }}" class="{{ request()->routeIs('admin.sucursales*') ? 'activo' : '' }}">
-            <i class="bi bi-geo-alt"></i> Sucursales
-        </a>
-        <a href="{{ route('admin.fitness-ajustes') }}" class="{{ request()->routeIs('admin.fitness-ajustes*') ? 'activo' : '' }}">
-            <i class="bi bi-sliders2"></i> Reglas del gimnasio
-        </a>
-        <a href="{{ route('admin.torniquetes') }}" class="{{ request()->routeIs('admin.torniquetes*') ? 'activo' : '' }}">
-            <i class="bi bi-door-open"></i> Torniquetes
-        </a>
-        @endif
-        @if($cuentaNav?->tiene('autos'))
-        <a href="{{ route('admin.sucursales') }}" class="{{ request()->routeIs('admin.sucursales*') ? 'activo' : '' }}">
-            <i class="bi bi-geo-alt"></i> Sucursales
-        </a>
-        <a href="{{ route('admin.credito-ajustes') }}" class="{{ request()->routeIs('admin.credito-ajustes*') ? 'activo' : '' }}">
-            <i class="bi bi-percent"></i> Crédito y cobranza
-        </a>
-        @endif
-        <a href="{{ route('admin.negocio.correo') }}" class="{{ request()->routeIs('admin.negocio.correo*') ? 'activo' : '' }}">
-            <i class="bi bi-envelope-at"></i> Correo de envío
-        </a>
-        @if($cuentaNav?->tiene('cotizaciones'))
-        <a href="{{ route('admin.negocio.documento') }}" class="{{ request()->routeIs('admin.negocio.documento*') ? 'activo' : '' }}">
-            <i class="bi bi-file-earmark-richtext"></i> Diseño de cotización
-        </a>
-        @endif
         @endif
         @if($puede('usuarios'))
         <a href="{{ route('admin.usuarios') }}" class="{{ request()->routeIs('admin.usuarios*') ? 'activo' : '' }}">

@@ -1,5 +1,5 @@
 @extends('admin.layout')
-@section('titulo', 'Resumen')
+@section('titulo', 'Inicio')
 
 @php
     $dinero = fn ($n) => '$' . number_format($n, 0);
@@ -9,7 +9,8 @@
         return '$' . number_format($n, 0);
     };
     // Escala de la gráfica: tope "redondo" por encima del máximo
-    $max = max(1, $meses->max('monto'));
+    // Mínimo $100 para que la escala no repita "$1, $1, $1" cuando casi no hay montos
+    $max = max(100, $meses->max('monto'));
     $paso = 10 ** floor(log10($max));
     $tope = ceil($max / $paso) * $paso;
     if ($tope / $paso <= 3) { $paso /= 2; $tope = ceil($max / $paso) * $paso; }
@@ -20,6 +21,8 @@
 @push('head')
 <style>
     .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 20px; }
+    .kpis.tres { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    @media (max-width: 767.98px) { .kpis.tres { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
     .kpi { padding: 18px 20px; }
     .kpi .k { font-size: 13.5px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
     .kpi .k i { font-size: 15px; }
@@ -103,7 +106,14 @@
 @php $ivaResumen = \App\Support\EsteMes::conIva(); @endphp
 @include('admin._este-mes', ['mes' => \App\Support\EsteMes::datos($ivaResumen), 'conIva' => $ivaResumen, 'enlace' => route('admin.finanzas', ['periodo' => 'mes', 'iva' => $ivaResumen ? 'con' : 'sin'])])
 
-<div class="kpis">
+@php
+    // Con venta directa, "Te deben" ya está arriba; lo de cotizaciones solo si el negocio cotiza
+    $conAccesos = \App\Support\Cuentas::actual()?->tiene('stock') && auth()->user()->puede('vender');
+    $usaCotizaciones = \App\Support\Cuentas::actual()?->tiene('cotizaciones') && auth()->user()->puede('cotizaciones') && (! $conAccesos || \App\Models\Presupuesto::exists());
+@endphp
+@if($usaCotizaciones)
+@if($conAccesos)<h2 class="fs-6 fw-semibold mt-2 mb-3 secundario text-uppercase" style="letter-spacing:.05em">Cotizaciones</h2>@endif
+<div class="kpis {{ $conAccesos ? 'tres' : '' }}">
     <a href="{{ route('admin.presupuestos.index', ['filtro' => 'vigentes']) }}" class="panel kpi text-decoration-none text-reset">
         <div class="k"><i class="bi bi-file-earmark-text"></i> Cotizaciones vigentes</div>
         <div class="v num">{{ $kpi['vigentes'] }}</div>
@@ -114,11 +124,13 @@
         <div class="v num">{{ $kpi['porVencer'] }}</div>
         <div class="d">{{ $kpi['porVencer'] ? 'Buen momento para dar seguimiento' : 'Nada por vencer' }}</div>
     </a>
-    <a href="{{ route('admin.finanzas') }}#por-cobrar" class="panel kpi text-decoration-none text-reset {{ $kpi['vencidos'] ? 'alerta' : '' }}">
+    @unless($conAccesos)
+    <a href="{{ route('admin.finanzas', 'ventas') }}#por-cobrar" class="panel kpi text-decoration-none text-reset {{ $kpi['vencidos'] ? 'alerta' : '' }}">
         <div class="k"><i class="bi bi-cash-coin"></i> Por cobrar</div>
         <div class="v num">{{ $dinero($kpi['porCobrar']) }}</div>
         <div class="d num">{{ $kpi['pendientes'] }} {{ $kpi['pendientes'] === 1 ? 'pago pendiente' : 'pagos pendientes' }}@if($kpi['vencidos']) · {{ $kpi['vencidos'] }} {{ $kpi['vencidos'] === 1 ? 'vencido' : 'vencidos' }}@endif, {{ $kpi['porCobrarIva'] ? 'con IVA' : 'antes de IVA' }}</div>
     </a>
+    @endunless
     <div class="panel kpi">
         <div class="k"><i class="bi bi-graph-up-arrow"></i> Tasa de aceptación</div>
         <div class="v num">{{ $kpi['tasa'] === null ? '—' : $kpi['tasa'] . '%' }}</div>
@@ -256,4 +268,5 @@
         </section>
     </div>
 </div>
+@endif
 @endsection

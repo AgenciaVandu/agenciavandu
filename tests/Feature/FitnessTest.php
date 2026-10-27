@@ -91,7 +91,10 @@ class FitnessTest extends TestCase
         $this->assertSame('axion-fit', $this->gym->slug);
 
         $html = $this->actingAs($this->dueno)->get('/admin/clases')->assertOk()->getContent();
-        foreach (['Agenda', 'Escanear', 'Atletas', 'Paquetes', 'Reportes', 'Reglas del gimnasio'] as $t) $this->assertStringContainsString($t, $html);
+        foreach (['Agenda', 'Escanear', 'Atletas', 'Paquetes', 'Reportes', 'Configuración'] as $t) $this->assertStringContainsString($t, $html);
+        // Sus ajustes están en Configuración; los de cotizaciones y proyectos no le aplican
+        $this->get('/admin/configuracion')->assertOk()->assertSee('Reglas del gimnasio')->assertSee('Torniquetes')->assertDontSee('Costeo')->assertDontSee('Tipos de proyecto');
+        $this->get('/admin/costeo')->assertForbidden()->assertSee('no viene con tu tipo de negocio');
         $this->assertStringNotContainsString(route('admin.presupuestos.index'), $html);
         $this->assertStringNotContainsString(route('admin.proyectos.index'), $html);
         $this->assertStringNotContainsString(route('admin.proveedores.index'), $html);

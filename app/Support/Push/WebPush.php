@@ -29,7 +29,14 @@ class WebPush
             return $i->datos;
         }
         $nuevas = static::generarClaves();
-        Integracion::sinCuenta()->updateOrCreate(['cuenta_id' => \App\Support\Cuentas::principalId(), 'proveedor' => 'push'], ['cuenta' => 'VAPID', 'datos' => $nuevas]);
+        try {
+            Integracion::sinCuenta()->updateOrCreate(['cuenta_id' => \App\Support\Cuentas::principalId(), 'proveedor' => 'push'], ['cuenta' => 'VAPID', 'datos' => $nuevas]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Dos personas abrieron Notificaciones al mismo tiempo y la otra ya las guardó: se usan esas
+            $otra = Integracion::sinCuenta()->where('cuenta_id', \App\Support\Cuentas::principalId())->where('proveedor', 'push')->first();
+            if ($otra && ! empty($otra->datos['publica'])) return $otra->datos;
+            throw $e;
+        }
         return $nuevas;
     }
 

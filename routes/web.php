@@ -319,6 +319,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::post('roles', [Admin\UsuariosController::class, 'rolStore'])->name('roles.store');
     Route::put('roles/{rol}', [Admin\UsuariosController::class, 'rolUpdate'])->name('roles.update');
     Route::delete('roles/{rol}', [Admin\UsuariosController::class, 'rolDestroy'])->name('roles.destroy');
+    Route::get('configuracion', fn () => view('admin.configuracion', ['grupos' => \App\Support\Configuracion::grupos(request()->user())]))->name('configuracion');
     Route::get('negocio', [Admin\NegocioController::class, 'show'])->name('negocio');
     Route::post('negocio', [Admin\NegocioController::class, 'update'])->name('negocio.update');
     Route::get('negocio/correo', [Admin\CorreoEnvioController::class, 'show'])->name('negocio.correo');
