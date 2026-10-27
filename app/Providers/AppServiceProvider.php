@@ -22,6 +22,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // Compatibilidad con MySQL/MariaDB del hosting (índices de máx. 1000 bytes)
         Schema::defaultStringLength(191);
+        // Validador con parches de seguridad (ver App\Support\Validacion\Validador)
+        \Illuminate\Support\Facades\Validator::resolver(fn ($traductor, $datos, $reglas, $mensajes, $atributos) =>
+            new \App\Support\Validacion\Validador($traductor, $datos, $reglas, $mensajes, $atributos));
         // Por defecto se trabaja con la cuenta principal (sitio web, comandos); el panel activa la de cada usuario
         // Tipos de empresa creados en Plataforma, junto a los de fábrica
         \App\Support\Giros::cargar();
