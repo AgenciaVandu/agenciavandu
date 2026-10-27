@@ -108,7 +108,7 @@
 
 <div class="rejilla" style="margin-top: 0">
     <section class="panel">
-        <div class="panel-head"><div><h2>Estado de resultados</h2><span class="ayuda">{{ \App\Http\Controllers\Admin\FinanzasController::PERIODOS[$periodo] }} · antes de IVA</span></div></div>
+        <div class="panel-head"><div><h2>Estado de resultados</h2><span class="ayuda">{{ $periodoTexto }} · antes de IVA</span></div></div>
         <div class="er num">
             @if($r['nCot'])
                 <div class="fila sub"><span>Cotizaciones aceptadas <span class="secundario">({{ $r['nCot'] }})</span></span><span>{{ $d2($r['ventasCot']) }}</span></div>

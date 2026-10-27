@@ -15,7 +15,7 @@ class DineroController extends Controller
 {
     private function volver(array $extra = [])
     {
-        return redirect()->route('admin.finanzas', array_merge(['seccion' => 'cuentas'], $extra));
+        return redirect()->route('admin.finanzas', array_merge(['seccion' => 'dinero'], $extra));
     }
 
     private function hoy(): string

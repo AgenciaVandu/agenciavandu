@@ -65,7 +65,7 @@ class ContabilidadTest extends TestCase
         $this->assertEquals([1160, 580, 1, 1], [$c['comprobantes']['con'], $c['comprobantes']['sin'], $c['comprobantes']['nCon'], $c['comprobantes']['nSin']]);
 
         // La pantalla, por defecto en el mes en curso
-        $this->get(route('admin.finanzas', 'contabilidad'))->assertOk()
+        $this->get(route('admin.finanzas', 'utilidad'))->assertOk()
             ->assertSee('Estado de resultados')->assertSee('$252.80')->assertSee('IVA a pagar')
             ->assertSee('Gasolina reparto')->assertSee('Subir factura')->assertSee('17 de noviembre')
             ->assertDontSee('Del mes pasado');
@@ -84,6 +84,6 @@ class ContabilidadTest extends TestCase
 
         $r = Contabilidad::datos('2026-10-01', '2026-10-24')['resultados'];
         $this->assertSame(1, $r['sinCosto']);
-        $this->get(route('admin.finanzas', ['seccion' => 'contabilidad', 'periodo' => 'mes']))->assertOk()->assertSee('no tiene costo capturado');
+        $this->get(route('admin.finanzas', ['seccion' => 'utilidad', 'periodo' => 'mes']))->assertOk()->assertSee('no tiene costo capturado');
     }
 }

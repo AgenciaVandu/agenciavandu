@@ -35,17 +35,18 @@ class CobradoMesTest extends TestCase
 
     public function test_resumen_y_finanzas_coinciden(): void
     {
-        $resumen = $this->cobrado($this->get('/admin')->getContent());
-        $finanzas = $this->cobrado($this->get('/admin/finanzas')->getContent());
-        $this->assertSame($resumen, $finanzas, "Resumen dice $resumen y Finanzas dice $finanzas");
+        // Finanzas muestra el dinero que entró (con IVA); el Inicio, con IVA elegido, dice lo mismo
+        $this->get('/admin/finanzas')->assertOk()->assertSee('Cobraste')->assertSee('$5,800');
+        $this->withCookie('vandu_iva', 'con');
+        $this->assertSame('$5,800', $this->cobrado($this->get('/admin')->getContent()));
     }
 
     public function test_la_eleccion_de_iva_en_finanzas_se_aplica_al_resumen(): void
     {
-        $this->assertSame('$5,000', $this->cobrado($this->get('/admin')->getContent())); // sin elegir: antes de IVA, igual que Finanzas
+        $this->assertSame('$5,000', $this->cobrado($this->get('/admin')->getContent())); // sin elegir: antes de IVA
 
-        $r = $this->get('/admin/finanzas?iva=con');
-        $this->assertSame('$5,800', $this->cobrado($r->getContent()));
+        $r = $this->get('/admin/finanzas/ventas?iva=con');
+        $r->assertSee('$5,800');
         $cookie = collect($r->headers->getCookies())->first(fn ($c) => $c->getName() === 'vandu_iva');
         $this->assertNotNull($cookie);
 
@@ -53,7 +54,6 @@ class CobradoMesTest extends TestCase
         $html = $this->get('/admin')->getContent();
         $this->assertSame('$5,800', $this->cobrado($html));
         $this->assertStringContainsString('($5,000 sin IVA)', $html);
-        $this->assertSame('$5,800', $this->cobrado($this->get('/admin/finanzas')->getContent()));
-        $this->assertSame('$5,000', $this->cobrado($this->get('/admin/finanzas?iva=sin')->getContent()));
+        $this->get('/admin/finanzas/ventas?iva=sin')->assertSee('Montos antes de IVA')->assertSee('$5,000');
     }
 }

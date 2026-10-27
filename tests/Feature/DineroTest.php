@@ -74,7 +74,7 @@ class DineroTest extends TestCase
     {
         // Lo registrado antes de tener cuentas se acomoda al crearlas
         $this->vender(10, 'efectivo');                                                   // $250 efectivo
-        $this->get(route('admin.finanzas', 'cuentas'))->assertOk()->assertSee('Crear Caja, Banco y Terminal');
+        $this->get(route('admin.finanzas', 'dinero'))->assertOk()->assertSee('Crear Caja, Banco y Terminal');
         $this->post(route('admin.finanzas.cuentas.basicas'), ['saldo_desde' => '2026-10-01'])->assertSessionHas('ok');
         Movimientos::olvidar();
         ['efectivo' => $caja, 'banco' => $banco, 'terminal' => $terminal] = $this->cuentas();
@@ -104,7 +104,7 @@ class DineroTest extends TestCase
         // Caja: 250 − 348 − 200 = −298 · Banco: 10000 + 500 − 1200 + 200 − 1000 = 8500 · Terminal: 100
         $this->assertEquals([-298, 8500, 100], [$s[$caja->id]['saldo'], $s[$banco->id]['saldo'], $s[$terminal->id]['saldo']]);
 
-        $this->get(route('admin.finanzas', 'cuentas'))->assertOk()->assertSee('Dinero disponible')->assertSee('$8,302.00')->assertSee('Gasolina')->assertSee('Retiro del dueño');
+        $this->get(route('admin.finanzas', 'dinero'))->assertOk()->assertSee('Dinero disponible')->assertSee('$8,302.00')->assertSee('Gasolina')->assertSee('Retiro del dueño');
 
         // Conciliar el banco: el estado de cuenta dice 8,450 (comisión que no se registró)
         $this->post(route('admin.finanzas.cuentas.conciliar', $banco), ['fecha' => '2026-10-26', 'saldo_real' => 8450])->assertSessionHas('ok', fn ($m) => str_contains($m, 'diferencia de −$50.00'));
@@ -116,7 +116,7 @@ class DineroTest extends TestCase
         // Un gasto sin forma de pago queda "sin cuenta" y se asigna a mano
         $sin = Gasto::create(['fecha' => '2026-10-22', 'concepto' => 'Hielo', 'categoria' => 'materiales', 'subtotal' => 80, 'iva' => 0, 'total' => 80, 'origen' => 'manual']);
         $this->assertNull($sin->cuenta_dinero_id);
-        $this->get(route('admin.finanzas', 'cuentas'))->assertSee('Sin cuenta')->assertSee('Hielo');
+        $this->get(route('admin.finanzas', 'dinero'))->assertSee('Sin cuenta')->assertSee('Hielo');
         $this->post(route('admin.finanzas.asignar'), ['clase' => 'gasto', 'id' => $sin->id, 'cuenta_dinero_id' => $caja->id])->assertSessionHas('ok');
         $this->assertSame($caja->id, $sin->fresh()->cuenta_dinero_id);
 
@@ -133,7 +133,7 @@ class DineroTest extends TestCase
         $g = Gasto::create(['fecha' => '2026-10-20', 'concepto' => 'Hielo', 'categoria' => 'materiales', 'subtotal' => 80, 'iva' => 0, 'total' => 80, 'forma_pago' => 'efectivo', 'origen' => 'manual']);
         $this->post(route('admin.finanzas.movimientos.store'), ['tipo' => 'traspaso', 'de_id' => $caja->id, 'a_id' => $banco->id, 'monto' => 100, 'fecha' => '2026-10-25']);
         $this->post(route('admin.finanzas.cuentas.conciliar', $banco), ['fecha' => '2026-10-26', 'saldo_real' => 500, 'ajustar' => 1]);
-        $this->get(route('admin.finanzas', 'cuentas'))->assertSee('Reiniciar cuentas y flujo');
+        $this->get(route('admin.finanzas', 'dinero'))->assertSee('Reiniciar cuentas y flujo');
 
         // Eliminar una sola cuenta
         $this->delete(route('admin.finanzas.cuentas.destroy', $banco))->assertSessionHas('ok');
@@ -148,8 +148,8 @@ class DineroTest extends TestCase
         $this->assertNull(\App\Models\VentaPago::first()->cuenta_dinero_id);
         $this->assertNotNull($v->fresh(), 'La venta sigue');
         $this->assertSame(1, Gasto::count(), 'El gasto sigue');
-        $this->get(route('admin.finanzas', 'cuentas'))->assertOk()->assertSee('Crear Caja, Banco y Terminal');
-        $this->get(route('admin.finanzas', 'flujo'))->assertOk()->assertSee('Da de alta tu caja y tu banco');
+        $this->get(route('admin.finanzas', 'dinero'))->assertOk()->assertSee('Crear Caja, Banco y Terminal');
+        $this->get(route('admin.finanzas'))->assertOk()->assertSee('Da de alta tu caja y tu banco');
 
         // Empezar de nuevo: lo registrado se vuelve a acomodar
         $this->post(route('admin.finanzas.cuentas.basicas'), ['saldo_desde' => '2026-10-01']);
@@ -176,7 +176,7 @@ class DineroTest extends TestCase
         $this->assertEquals([500, 900, -1400], [$semana2['entra'], $semana2['sale'], $semana2['saldo']]);
         $this->assertNotNull($f['proyeccion']['alerta']);
 
-        $this->get(route('admin.finanzas', 'flujo'))->assertOk()->assertSee('Próximas 8 semanas')->assertSee('Azúcar del Mayab')->assertSee('Ojo:');
+        $this->get(route('admin.finanzas', 'dinero'))->assertOk()->assertSee('Próximas 8 semanas')->assertSee('Azúcar del Mayab')->assertSee('Ojo:');
     }
 
     public function test_paquete_para_el_contador(): void
@@ -191,7 +191,7 @@ class DineroTest extends TestCase
         $this->vender(10, 'efectivo', ['con_iva' => 1]);
         Carbon::setTestNow(Carbon::parse('2026-10-26 10:00:00', 'America/Merida'));
 
-        $this->get(route('admin.finanzas', 'contabilidad'))->assertOk()->assertSee('Paquete para el contador');
+        $this->get(route('admin.finanzas', 'utilidad'))->assertOk()->assertSee('Paquete para el contador');
         $r = $this->get(route('admin.finanzas.paquete', ['mes' => '2026-09']))->assertOk();
         $this->assertStringContainsString('paletas-lupe-contabilidad-2026-09.zip', $r->headers->get('content-disposition'));
         $ruta = $r->baseResponse->getFile()->getPathname();

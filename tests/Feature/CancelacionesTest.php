@@ -66,7 +66,7 @@ class CancelacionesTest extends TestCase
         $this->assertSame('cancelado', $p->salud[0]);
         $this->get(route('admin.clientes.index'))->assertOk()->assertDontSee('$5,800');
         $this->get(route('admin.finanzas', ['iva' => 'con']))->assertOk();
-        $this->get(route('admin.finanzas', ['seccion' => 'ventas']))->assertOk()->assertSee('Cancelada')->assertSee('El cliente pospuso la campaña');
+        $this->get(route('admin.finanzas', ['seccion' => 'ventas', 'periodo' => 'todo']))->assertOk()->assertSee('Cancelada')->assertSee('El cliente pospuso la campaña');
         $this->get(route('admin.proyectos.show', $p))->assertOk()->assertSee('Proyecto cancelado')->assertSee('Motivo: El cliente pospuso la campaña')->assertSee('Reactivar');
         $this->get(route('admin.proyectos.index', ['filtro' => 'cancelado']))->assertOk()->assertSee('Video corporativo');
         $this->get(route('admin.presupuestos.edit', $this->cot))->assertOk()->assertSee('Cancelada');
@@ -111,7 +111,7 @@ class CancelacionesTest extends TestCase
         $this->assertSame(['cancelada', 'Se consiguió prestado'], [$o->estado, $o->motivo_cancelacion]);
         $this->get(route('admin.ordenes.show', $o))->assertOk()->assertSee('Motivo: Se consiguió prestado');
         $this->get(route('admin.ordenes.index', ['ver' => 'cancelada']))->assertOk()->assertSee($o->folio);
-        $this->get(route('admin.finanzas', ['seccion' => 'proveedores']))->assertOk()->assertDontSee($o->folio);
+        $this->get(route('admin.finanzas', ['seccion' => 'gastos']))->assertOk()->assertDontSee($o->folio);
 
         auth()->logout();
         $this->get($o->url_proveedor)->assertOk()->assertSee('Esta orden se canceló');

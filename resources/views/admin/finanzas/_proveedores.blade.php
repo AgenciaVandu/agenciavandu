@@ -1,4 +1,5 @@
 @php $m = $prov['monto']; @endphp
+@unless($sinKpis ?? false)
 <div class="kpis">
     <div class="panel kpi destacado">
         <div class="k"><i class="bi bi-bag"></i> Comprado</div>
@@ -21,6 +22,7 @@
         <div class="s num">{{ $prov['sinFactura'] ? $prov['sinFactura'] . ' ' . ($prov['sinFactura'] === 1 ? 'orden sigue' : 'órdenes siguen') . ' sin factura' : 'Facturas al día' }}</div>
     </div>
 </div>
+@endunless
 
 <div class="rejilla" style="margin-top: 0">
     <section class="panel">

@@ -150,6 +150,9 @@
     @include('admin.finanzas._cuenta-form', ['c' => null])
 </div>
 
+@include('admin.finanzas._flujo')
+
+@if($dn['todas']->isNotEmpty())<h2 class="fs-6 fw-semibold mt-5 mb-3 secundario text-uppercase" style="letter-spacing:.05em">Movimientos de tus cuentas</h2>@endif
 @if($dn['sinCuenta']->isNotEmpty())
     <section class="panel" style="margin-bottom: 14px">
         <div class="panel-head"><div><h2>Sin cuenta</h2><span class="ayuda">{{ $dn['sinCuenta']->count() }} {{ $dn['sinCuenta']->count() === 1 ? 'movimiento no tiene' : 'movimientos no tienen' }} forma de pago, o su forma no está en ninguna cuenta. Elige dónde pasó.</span></div></div>
@@ -181,7 +184,7 @@
 @if($dn['todas']->isNotEmpty())
     <section class="panel">
         <div class="panel-head"><div><h2>Movimientos{{ $dn['sel'] ? ' de ' . $nombres[$dn['sel']] : '' }}</h2>
-            <span class="ayuda">{{ \App\Http\Controllers\Admin\FinanzasController::PERIODOS[$periodo] }} · {{ $dn['nMovs'] }} {{ $dn['nMovs'] === 1 ? 'movimiento' : 'movimientos' }}{{ $dn['nMovs'] > 80 ? ' (se muestran los 80 más recientes)' : '' }}</span></div></div>
+            <span class="ayuda">{{ $periodoTexto }} · {{ $dn['nMovs'] }} {{ $dn['nMovs'] === 1 ? 'movimiento' : 'movimientos' }}{{ $dn['nMovs'] > 80 ? ' (se muestran los 80 más recientes)' : '' }}</span></div></div>
         @if($dn['movs']->isEmpty())
             <div class="panel-body secundario">Sin movimientos en este periodo.</div>
         @else

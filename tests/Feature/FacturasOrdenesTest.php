@@ -75,7 +75,7 @@ XML;
 
         // En el panel se ve la diferencia y los reportes usan lo facturado
         $this->actingAs($this->admin)->get(route('admin.ordenes.show', $o))->assertOk()->assertSee('Comprobado con la factura: $7,540.00')->assertSee('$487.20 más');
-        $this->get(route('admin.finanzas', ['seccion' => 'proveedores', 'iva' => 'con']))->assertOk()->assertSee('$7,540');
+        $this->get(route('admin.finanzas', ['seccion' => 'gastos', 'iva' => 'con']))->assertOk()->assertSee('$7,540');
 
         // La misma factura no entra dos veces: ni en otra orden ni como gasto
         $otra = $this->orden();

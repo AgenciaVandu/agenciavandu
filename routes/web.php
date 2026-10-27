@@ -222,7 +222,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::post('finanzas/movimientos', [Admin\DineroController::class, 'movimiento'])->name('finanzas.movimientos.store');
     Route::delete('finanzas/movimientos/{movimiento}', [Admin\DineroController::class, 'borrarMovimiento'])->whereNumber('movimiento')->name('finanzas.movimientos.destroy');
     Route::post('finanzas/asignar', [Admin\DineroController::class, 'asignar'])->name('finanzas.asignar');
-    Route::get('finanzas/{seccion?}', [Admin\FinanzasController::class, 'index'])->where('seccion', 'resumen|ventas|cobranza|rentabilidad|proveedores|contabilidad|flujo|cuentas')->name('finanzas');
+    Route::get('finanzas/{seccion?}', [Admin\FinanzasController::class, 'index'])->where('seccion', 'resumen|dinero|ventas|gastos|utilidad|cobranza|rentabilidad|proveedores|contabilidad|flujo|cuentas')->name('finanzas');
 
     // Proyectos
     Route::get('proyectos', [Admin\ProyectoController::class, 'index'])->name('proyectos.index');

@@ -138,7 +138,7 @@ class MiPlanTest extends TestCase
 
         Movimientos::olvidar();
         $this->assertEquals(3480, Movimientos::saldos()[$banco->id]['saldo']);
-        $this->get(route('admin.finanzas', ['seccion' => 'flujo', 'periodo' => 'mes']))->assertOk()->assertSee('Licencias de la plataforma');
+        $this->get(route('admin.finanzas', ['seccion' => 'dinero', 'periodo' => 'mes']))->assertOk()->assertSee('Licencias de la plataforma');
         $c = \App\Support\Finanzas\Contabilidad::datos('2026-11-01', '2026-11-30');
         $this->assertEquals([3000, 1, 480], [$c['resultados']['ventasLic'], $c['resultados']['nLic'], $c['iva']['trasladado']]);
     }

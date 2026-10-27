@@ -29,31 +29,47 @@ class FinanzasController extends Controller
         'mes'       => 'Este mes',
     ];
 
-    /** Secciones de Finanzas (submenú) */
+    /** Lo que se elige arriba en Finanzas (además de "Elegir fechas"); los demás periodos siguen sirviendo por enlace */
+    public const PERIODOS_FINANZAS = ['mes' => 'Este mes', 'mes_ant' => 'Mes pasado', 'anio' => 'Este año'];
+
+    /** Secciones de Finanzas: cada una responde una pregunta del dueño */
     public const SECCIONES = [
-        'resumen'      => ['texto' => 'Resumen',      'icono' => 'bi-grid-1x2'],
-        'ventas'       => ['texto' => 'Ventas',       'icono' => 'bi-graph-up-arrow'],
-        'cobranza'     => ['texto' => 'Cobranza',     'icono' => 'bi-bank'],
-        'flujo'        => ['texto' => 'Flujo',        'icono' => 'bi-arrow-left-right'],
-        'cuentas'      => ['texto' => 'Cuentas',      'icono' => 'bi-wallet2'],
-        'rentabilidad' => ['texto' => 'Rentabilidad', 'icono' => 'bi-pie-chart'],
-        'proveedores'  => ['texto' => 'Proveedores',  'icono' => 'bi-truck'],
-        'contabilidad' => ['texto' => 'Contabilidad', 'icono' => 'bi-journal-check'],
+        'resumen'  => ['texto' => 'Resumen',              'icono' => 'bi-grid-1x2',       'pregunta' => '¿Cómo voy?'],
+        'dinero'   => ['texto' => 'Dinero',               'icono' => 'bi-wallet2',        'pregunta' => 'Cuánto tienes en caja y banco, y lo que viene'],
+        'ventas'   => ['texto' => 'Ventas y cobranza',    'icono' => 'bi-graph-up-arrow', 'pregunta' => 'Cuánto vendiste y quién te debe'],
+        'gastos'   => ['texto' => 'Gastos y compras',     'icono' => 'bi-receipt',        'pregunta' => 'En qué se va tu dinero'],
+        'utilidad' => ['texto' => 'Utilidad e impuestos', 'icono' => 'bi-journal-check',  'pregunta' => 'Cuánto ganaste y cuánto IVA te toca'],
     ];
+
+    /** Secciones anteriores: sus enlaces llevan a donde quedaron */
+    public const ANTES = ['cobranza' => ['ventas', 'por-cobrar'], 'flujo' => ['dinero', 'lo-que-viene'], 'cuentas' => ['dinero', null],
+                          'rentabilidad' => ['utilidad', 'rentabilidad'], 'contabilidad' => ['utilidad', null], 'proveedores' => ['gastos', 'proveedores']];
 
     public function index(Request $request, ?string $seccion = null)
     {
         // Gimnasio: sus ventas son paquetes de clases
         if (\App\Support\Cuentas::actual()?->tiene('fitness')) return app(Fitness\FinanzasController::class)->index($request);
+        if (isset(self::ANTES[(string) $seccion])) {
+            [$nueva, $ancla] = self::ANTES[$seccion];
+            return redirect()->to(route('admin.finanzas', array_merge($request->query(), ['seccion' => $nueva])) . ($ancla ? '#' . $ancla : ''));
+        }
         $seccion = array_key_exists((string) $seccion, self::SECCIONES) ? $seccion : 'resumen';
         $tz = config('vandu.zona_horaria');
-        // Contabilidad se revisa por mes (como se declara): sin elegir, el mes en curso
-        $periodo = array_key_exists($request->query('periodo'), self::PERIODOS) ? $request->query('periodo') : (in_array($seccion, ['contabilidad', 'flujo', 'cuentas'], true) ? 'mes' : 'todo');
+        // Sin elegir: el mes en curso (así se revisa y se declara)
+        $periodo = array_key_exists($request->query('periodo'), self::PERIODOS) || $request->query('periodo') === 'rango' ? $request->query('periodo') : 'mes';
         $conIva = in_array($request->query('iva'), ['con', 'sin'], true) ? $request->query('iva') === 'con' : \App\Support\EsteMes::conIva();
         if ($request->has('iva')) {
             \Illuminate\Support\Facades\Cookie::queue('vandu_iva', $conIva ? 'con' : 'sin', 60 * 24 * 365 * 5);
         }
         [$desde, $hasta] = $this->rango($periodo);
+        // Elegir fechas: desde y hasta a mano (si vienen mal, el mes en curso)
+        if ($periodo === 'rango') {
+            $ok = fn ($f) => is_string($f) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $f) && strtotime($f);
+            [$d1, $d2] = [$request->query('desde'), $request->query('hasta')];
+            if ($ok($d1) && $ok($d2) && $d1 <= $d2) { $desde = $d1; $hasta = $d2; } else { $periodo = 'mes'; [$desde, $hasta] = $this->rango('mes'); }
+        }
+        $f = fn ($s) => \Illuminate\Support\Carbon::parse($s)->locale('es')->isoFormat('D MMM YYYY');
+        $periodoTexto = $periodo === 'rango' ? $f($desde) . ' – ' . $f($hasta) : self::PERIODOS[$periodo];
         $hoy = now($tz)->toDateString();
 
         $cotizaciones = Presupuesto::with(['conceptos', 'cliente', 'proyecto'])->get();
@@ -199,12 +215,14 @@ class FinanzasController extends Controller
         return view('admin.finanzas', [
             'seccion'   => $seccion,
             'rent'      => $rent,
-            'prov'      => $seccion === 'proveedores' || $seccion === 'resumen' ? $this->proveedores($desde, $hasta, $conIva) : null,
-            'flujo'     => $seccion === 'flujo' ? \App\Support\Dinero\Flujo::datos($desde, $hasta) : null,
-            'dinero'    => $seccion === 'cuentas' ? $this->dinero($request, $desde, $hasta) : null,
-            'cont'      => $seccion === 'contabilidad' ? \App\Support\Finanzas\Contabilidad::datos($desde, $hasta) : null,
-            'gas'       => $seccion === 'resumen' && \App\Support\Cuentas::actual()?->tiene('gastos') ? \App\Support\Gastos\Reporte::datos($desde, $hasta, $conIva) : null,
+            'prov'      => in_array($seccion, ['gastos', 'resumen'], true) ? $this->proveedores($desde, $hasta, true) : null,
+            'flujo'     => in_array($seccion, ['dinero', 'resumen'], true) ? \App\Support\Dinero\Flujo::datos($desde, $hasta) : null,
+            'dinero'    => $seccion === 'dinero' ? $this->dinero($request, $desde, $hasta) : null,
+            'cont'      => in_array($seccion, ['utilidad', 'resumen'], true) ? \App\Support\Finanzas\Contabilidad::datos($desde, $hasta) : null,
+            'gas'       => $seccion === 'gastos' && \App\Support\Cuentas::actual()?->tiene('gastos') ? \App\Support\Gastos\Reporte::datos($desde, $hasta, true) : null,
+            'porCobrarVentas' => $seccion === 'ventas' && \App\Support\Ventas\Numeros::activo() ? \App\Models\Venta::porCobrar()->with('cliente')->orderBy('vence_el')->take(12)->get() : collect(),
             'periodo'   => $periodo,
+            'periodoTexto' => $periodoTexto,
             'conIva'    => $conIva,
             'desde'     => $desde,
             'hasta'     => $hasta,

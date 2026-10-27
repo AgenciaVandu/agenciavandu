@@ -190,7 +190,8 @@ XML;
     {
         $this->prender($this->tienda);
         $this->actingAs($this->dueno)->post(route('admin.gastos.store'), ['fecha' => '2026-10-10', 'concepto' => 'Renta de bodega', 'categoria' => 'renta', 'total' => '8000'])->assertRedirect();
-        $this->get(route('admin.finanzas'))->assertOk()->assertSee('Lo que te queda')->assertSee('Renta $8,000');
+        $this->get(route('admin.finanzas', 'gastos'))->assertOk()->assertSee('En qué se fue')->assertSee('Renta')->assertSee('$8,000');
+        $this->get(route('admin.finanzas'))->assertOk()->assertSee('Gastaste');
 
         [$gym, $laura] = PlataformaController::crearCuenta(['nombre' => 'Axion Fit', 'giro' => 'fitness', 'dueno_nombre' => 'Laura', 'dueno_email' => 'laura@axion.mx']);
         $this->prender($gym);

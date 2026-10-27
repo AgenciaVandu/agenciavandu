@@ -25,43 +25,8 @@
 </style>
 @endpush
 
-<div class="kpis">
-    <div class="panel kpi">
-        <div class="k"><i class="bi bi-box-arrow-in-down"></i> Entró</div>
-        <div class="v num">{{ $d0($fl['entradas']) }}</div>
-        <div class="s">Cobros, ventas y aportaciones</div>
-    </div>
-    <div class="panel kpi">
-        <div class="k"><i class="bi bi-box-arrow-up"></i> Salió</div>
-        <div class="v num">{{ $d0($fl['salidas']) }}</div>
-        <div class="s">Gastos, proveedores y retiros</div>
-    </div>
-    <div class="panel kpi {{ $fl['neto'] < 0 ? 'malo' : 'bueno' }}">
-        <div class="k"><i class="bi bi-arrow-left-right"></i> {{ $fl['neto'] < 0 ? 'Salió más de lo que entró' : 'Te quedó' }}</div>
-        <div class="v num">{{ $d0($fl['neto']) }}</div>
-        <div class="s">{{ \App\Http\Controllers\Admin\FinanzasController::PERIODOS[$periodo] }}</div>
-    </div>
-    @if($fl['saldoHoy'] !== null)
-        <a href="{{ $q(['seccion' => 'cuentas']) }}" class="panel kpi destacado text-decoration-none">
-            <div class="k"><i class="bi bi-safe2"></i> Dinero disponible hoy</div>
-            <div class="v num">{{ $d0($fl['saldoHoy']) }}</div>
-            <div class="s">{{ $fl['sinCuenta'] ? $fl['sinCuenta'] . ' ' . ($fl['sinCuenta'] === 1 ? 'movimiento sin cuenta no se ha restado' : 'movimientos sin cuenta no se han restado') : 'En tus cuentas · ver detalle' }}</div>
-        </a>
-    @else
-        <a href="{{ $q(['seccion' => 'cuentas']) }}" class="panel kpi text-decoration-none text-reset">
-            <div class="k"><i class="bi bi-safe2"></i> Dinero disponible</div>
-            <div class="v num">—</div>
-            <div class="s">Da de alta tu caja y tu banco para verlo <i class="bi bi-arrow-right"></i></div>
-        </a>
-    @endif
-</div>
-
-@if($fl['saldoHoy'] !== null && (auth()->user()->plataforma || auth()->user()->esSuperAdmin()))
-    <p class="secundario small mt-n2 mb-3">¿El dinero disponible no cuadra? <a href="{{ $q(['seccion' => 'cuentas']) }}#reiniciar">Reinicia tus cuentas</a> y vuelve a empezar desde la fecha que quieras.</p>
-@endif
-
 {{-- Lo que viene --}}
-<section class="panel" style="margin-bottom: 20px">
+<section class="panel" style="margin-bottom: 20px" id="lo-que-viene">
     <div class="panel-head"><div><h2>Próximas 8 semanas</h2><span class="ayuda">Lo que te deben pagar contra lo que debes pagar a proveedores, por su fecha</span></div></div>
     @if($pr['alerta'])
         <div class="panel-body pb-0">
@@ -115,9 +80,28 @@
     </section>
 </div>
 
+<h2 class="fs-6 fw-semibold mt-5 mb-3 secundario text-uppercase" style="letter-spacing:.05em">Entradas y salidas · {{ $periodoTexto }}</h2>
+<div class="kpis" style="grid-template-columns: repeat(3, minmax(0, 1fr))">
+    <div class="panel kpi">
+        <div class="k"><i class="bi bi-box-arrow-in-down"></i> Entró</div>
+        <div class="v num">{{ $d0($fl['entradas']) }}</div>
+        <div class="s">Cobros, ventas y aportaciones</div>
+    </div>
+    <div class="panel kpi">
+        <div class="k"><i class="bi bi-box-arrow-up"></i> Salió</div>
+        <div class="v num">{{ $d0($fl['salidas']) }}</div>
+        <div class="s">Gastos, proveedores y retiros</div>
+    </div>
+    <div class="panel kpi {{ $fl['neto'] < 0 ? 'malo' : 'bueno' }}">
+        <div class="k"><i class="bi bi-arrow-left-right"></i> {{ $fl['neto'] < 0 ? 'Salió más de lo que entró' : 'Te quedó' }}</div>
+        <div class="v num">{{ $d0($fl['neto']) }}</div>
+        <div class="s">{{ $fl['sinCuenta'] ? $fl['sinCuenta'] . ' ' . ($fl['sinCuenta'] === 1 ? 'movimiento' : 'movimientos') . ' sin cuenta' : 'Dinero real, con IVA' }}</div>
+    </div>
+</div>
+
 <div class="rejilla" style="margin-top: 0">
     <section class="panel">
-        <div class="panel-head"><div><h2>De dónde entró</h2><span class="ayuda">{{ \App\Http\Controllers\Admin\FinanzasController::PERIODOS[$periodo] }}</span></div></div>
+        <div class="panel-head"><div><h2>De dónde entró</h2><span class="ayuda">{{ $periodoTexto }}</span></div></div>
         @if($fl['porClaseE']->isEmpty())
             <div class="panel-body secundario">No entró dinero en este periodo.</div>
         @else
@@ -131,7 +115,7 @@
         @endif
     </section>
     <section class="panel">
-        <div class="panel-head"><div><h2>En qué salió</h2><span class="ayuda">{{ \App\Http\Controllers\Admin\FinanzasController::PERIODOS[$periodo] }}</span></div></div>
+        <div class="panel-head"><div><h2>En qué salió</h2><span class="ayuda">{{ $periodoTexto }}</span></div></div>
         @if($fl['porClaseS']->isEmpty())
             <div class="panel-body secundario">No salió dinero en este periodo.</div>
         @else
