@@ -19,7 +19,8 @@
     .pf a.q { color: inherit; text-decoration: none; } .pf .t { font-weight: 600; } .pf .s { font-size: 13px; color: var(--muted); }
     .pf .m { text-align: right; font-weight: 700; white-space: nowrap; }
     .pb { font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 99px; background: var(--sunken); color: var(--muted); white-space: nowrap; }
-    .pb.ok { background: #E3FBEF; color: #047A4B; } .pb.pend { background: #FFF3DD; color: #9A5300; } .pb.azul { background: var(--marca-soft); color: var(--marca); } .pb.mal { background: #FDECEC; color: #B42318; }
+    .pb.ok { background: var(--green-soft); color: var(--green-ink); } .pb.pend { background: var(--amber-soft); color: var(--amber); } .pb.azul { background: var(--marca-soft); color: var(--marca-2); } .pb.mal { background: var(--red-soft); color: var(--red); }
+    .pl > .pf + .pf { border-top: 1px solid #F0F1F4; } .pl > .pf:hover { background: #F8F9FB; }
     @media (max-width: 575.98px) { .pf { grid-template-columns: minmax(0, 1fr) auto; } .pf .acc { grid-column: 1 / -1; } }
 </style>
 @endpush

@@ -79,16 +79,29 @@
         <h1>{{ $saludo }}{{ $nombre ? ', ' . $nombre : '' }}</h1>
         <p class="sub">{{ ucfirst(now(config('vandu.zona_horaria'))->locale('es')->isoFormat('dddd D [de] MMMM')) }}</p>
     </div>
-    @unless(\App\Support\Cuentas::actual()?->tiene('stock') && auth()->user()->puede('vender'))
-    <div class="d-flex gap-2">
-        <a href="{{ route('admin.clientes.create') }}" class="btn btn-borde"><i class="bi bi-person-plus me-1"></i> Nuevo cliente</a>
-        <a href="{{ route('admin.presupuestos.create') }}" class="btn btn-primario"><i class="bi bi-plus-lg me-1"></i> Nueva cotización</a>
+    {{-- Una sola acción principal; la secundaria es cobrar --}}
+    <div class="d-flex gap-2 flex-wrap">
+        @if(\App\Support\Cobros\PorCobrar::puede(auth()->user()))<a href="{{ route('admin.cobrar') }}" class="btn btn-borde"><i class="bi bi-cash-coin me-1"></i> Registrar pago</a>@endif
+        @if(\App\Support\Cuentas::actual()?->tiene('stock') && auth()->user()->puede('vender'))
+            <a href="{{ route('admin.pedidos.create') }}" class="btn btn-primario"><i class="bi bi-plus-lg me-1"></i> Nueva venta</a>
+        @elseif(auth()->user()->puede('cotizaciones'))
+            <a href="{{ route('admin.presupuestos.create') }}" class="btn btn-primario"><i class="bi bi-plus-lg me-1"></i> Nueva cotización</a>
+        @endif
     </div>
-    @endunless
 </div>
 @include('admin._arranque')
-@include('admin._inicio-rapido')
-@include('admin._hoy')
+@php $ivaResumen = \App\Support\EsteMes::conIva(); @endphp
+{{-- Arriba: cómo va el mes (tarjeta grande) y lo que hay que hacer hoy --}}
+<div class="inicio-top">
+    @include('admin._este-mes', ['mes' => \App\Support\EsteMes::datos($ivaResumen), 'conIva' => $ivaResumen, 'enlace' => route('admin.finanzas', ['periodo' => 'mes', 'iva' => $ivaResumen ? 'con' : 'sin']),
+        'teDeben' => \App\Support\Cobros\PorCobrar::puede(auth()->user()) ? \App\Support\Cobros\PorCobrar::lista(auth()->user())->sum('monto') : null])
+    @include('admin._hoy')
+</div>
+<style>
+    .inicio-top { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 18px; margin-bottom: 20px; align-items: start; }
+    .inicio-top .hoy-panel { margin-bottom: 0; }
+    @media (max-width: 1099.98px) { .inicio-top { grid-template-columns: minmax(0, 1fr); } }
+</style>
 
 <div class="aviso-push" x-data="avisoPush()" x-show="visible" x-cloak>
     <i class="bi bi-bell"></i>
@@ -105,8 +118,6 @@
         <i class="bi bi-chevron-right" style="font-size:15px; color: var(--muted)"></i>
     </a>
 @endif
-@php $ivaResumen = \App\Support\EsteMes::conIva(); @endphp
-@include('admin._este-mes', ['mes' => \App\Support\EsteMes::datos($ivaResumen), 'conIva' => $ivaResumen, 'enlace' => route('admin.finanzas', ['periodo' => 'mes', 'iva' => $ivaResumen ? 'con' : 'sin'])])
 
 @php
     // Con venta directa, "Te deben" ya está arriba; lo de cotizaciones solo si el negocio cotiza

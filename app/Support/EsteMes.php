@@ -63,7 +63,15 @@ class EsteMes
         $ventas = Presupuesto::with('conceptos')->where('estado', 'aceptada')->get()
             ->filter(fn ($p) => ($f = static::fechaAceptada($p)) >= $ini && $f <= $fin);
 
+        // Lo cobrado día por día (acumulado) para la gráfica de Inicio
+        $porDia = [];
+        foreach ($delMes as $pg) { $k = (int) $pg->pagado_el->format('j'); $porDia[$k] = ($porDia[$k] ?? 0) + ($conIva ? $pg->monto : $sinIva($pg)); }
+        foreach (($conIva ? $vPagos : $vSin)->filter(fn ($x) => $x->fecha >= $ini) as $x) { $k = (int) substr($x->fecha, 8, 2); $porDia[$k] = ($porDia[$k] ?? 0) + $x->monto; }
+        $serie = []; $acum = 0;
+        for ($dia = 1; $dia <= $hoy->day; $dia++) { $acum += $porDia[$dia] ?? 0; $serie[] = round($acum, 2); }
+
         return [
+            'serie'         => $serie,
             'cobrado'       => $actual,
             'cobradoConIva' => $cobrado,
             'cobradoSinIva' => $cobradoSinIva,

@@ -1,8 +1,6 @@
 {{-- Para hoy: lo que hay que hacer, arriba de las cifras. Cada renglón lleva a donde se resuelve. --}}
 @php
     $hoyLista = \App\Support\Inicio\Hoy::pendientes(auth()->user());
-    // En tiendas, "Por entregar" e "Inventario bajo" ya están en los accesos de arriba
-    if (\App\Support\Cuentas::actual()?->tiene('stock') && auth()->user()->puede('vender')) $hoyLista = array_values(array_filter($hoyLista, fn ($h) => ! in_array($h['icono'], ['bi-truck', 'bi-box-seam'], true)));
 @endphp
 <section class="panel hoy-panel">
     <div class="panel-head"><div><h2>Para hoy</h2><span class="ayuda">{{ $hoyLista ? 'Toca cada uno para resolverlo' : 'Nada urgente' }}</span></div></div>
