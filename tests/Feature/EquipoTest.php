@@ -86,7 +86,7 @@ class EquipoTest extends TestCase
         $foto = $this->persona('Fotógrafo');
         $c = Cliente::create(['nombre' => 'Ana', 'empresa' => 'Tatich Maya']);
         $this->actingAs($pm);
-        $this->get('/admin')->assertRedirect(route('admin.proyectos.index'));
+        $this->get('/admin')->assertOk()->assertSee('Tus herramientas')->assertSee(route('admin.proyectos.index'), false); // Inicio según su rol
         $this->get('/admin/tareas/create')->assertOk();
         $this->post('/admin/tareas', [
             'titulo' => 'Cargar contenido Tatich Maya', 'cliente_id' => $c->id, 'asignada_a' => $foto->id,

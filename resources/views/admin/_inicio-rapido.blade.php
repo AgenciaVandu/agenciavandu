@@ -16,20 +16,7 @@
             $bajos !== null ? ['url' => route('admin.productos.index', ['estado' => 'bajos']), 'icono' => 'bi-box-seam', 'titulo' => 'Inventario bajo', 'dato' => $bajos ? $bajos . ($bajos === 1 ? ' producto' : ' productos') : 'Todo en orden'] : null,
         ]));
     }
-    // Primeros pasos: solo los primeros 30 días del negocio y para quien lo configura
-    $pasos = [];
-    if ($cu && $us->puede('configuracion') && $cu->created_at && $cu->created_at->gt(now()->subDays(30))) {
-        $pasos[] = ['hecho' => (bool) $cu->ajuste('marca.logo'), 'texto' => 'Sube tu logo', 'url' => route('admin.negocio')];
-        if ($cu->tiene('stock')) {
-            $pasos[] = ['hecho' => \App\Models\Producto::where('ejemplo', false)->exists(), 'texto' => 'Carga tus productos', 'url' => route('admin.productos.importar')];
-            $pasos[] = ['hecho' => (bool) $cu->ajuste('envios.modo'), 'texto' => 'Pon tu tarifa de envío', 'url' => route('admin.pedidos.ajustes')];
-            $pasos[] = ['hecho' => \App\Models\Venta::exists(), 'texto' => 'Registra tu primera venta', 'url' => route('admin.pedidos.create')];
-        }
-        if ($us->puede('usuarios')) $pasos[] = ['hecho' => \App\Models\User::count() > 1, 'texto' => 'Invita a tu equipo', 'url' => route('admin.usuarios')];
-        if (collect($pasos)->every('hecho')) $pasos = [];
-    }
-    $hechos = collect($pasos)->where('hecho', true)->count();
-    $pendientesPasos = collect($pasos)->where('hecho', false)->values();
+    $pasos = []; // los primeros pasos viven en admin._arranque
 @endphp
 @if($accesos || $pasos)
 <style>

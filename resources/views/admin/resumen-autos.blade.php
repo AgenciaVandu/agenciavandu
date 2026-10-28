@@ -43,6 +43,7 @@
         @if(auth()->user()->puede('cobranza'))<a href="{{ route('admin.creditos.index') }}" class="btn btn-primario"><i class="bi bi-cash-coin me-1"></i> Cobranza</a>@endif
     </div>
 </div>
+@include('admin._arranque')
 
 <div class="ra-kpis">
     <a class="panel text-decoration-none" style="color: inherit" href="{{ route('admin.unidades.index') }}">

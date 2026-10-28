@@ -32,6 +32,7 @@
         @if($u->puede('clientes'))<a href="{{ route('admin.clientes.create') }}" class="btn btn-primario"><i class="bi bi-person-plus me-1"></i> Nuevo atleta</a>@endif
     </div>
 </div>
+@include('admin._arranque')
 
 @if(($sinTipos || $sinPaquetes) && $u->puede('clases'))
     <section class="panel panel-body mb-4">

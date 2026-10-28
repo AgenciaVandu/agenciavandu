@@ -18,6 +18,7 @@
         @if($u->puede('canjes'))<a href="{{ route('admin.lealtad.escanear') }}" class="btn btn-primario"><i class="bi bi-qr-code-scan me-1"></i> Escanear</a>@endif
     </div>
 </div>
+@include('admin._arranque')
 
 @if($ejemplo && $u->puede('lealtad'))
     <div class="aviso" style="background: var(--marca-soft); color: var(--ink); border: 1px solid #DCD0FF; flex-wrap: wrap">

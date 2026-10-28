@@ -86,6 +86,7 @@
     </div>
     @endunless
 </div>
+@include('admin._arranque')
 @include('admin._inicio-rapido')
 @include('admin._hoy')
 

@@ -37,7 +37,7 @@ class PanelClaroTest extends TestCase
         $this->assertStringNotContainsString('Carga tus productos', $html, 'Los pasos hechos ya no salen');
         // Barra del celular: Inicio, Pedidos, Productos, Clientes
         preg_match('/<nav class="tabbar".*?<\/nav>/s', $html, $m);
-        foreach (['Inicio', 'Pedidos', 'Productos', 'Clientes'] as $t) $this->assertStringContainsString($t, $m[0]);
+        foreach (['Inicio', 'Ventas', 'Productos', 'Clientes'] as $t) $this->assertStringContainsString($t, $m[0]);
         $this->assertStringNotContainsString('Proyectos', $m[0]);
         // Menú: Inicio (no Resumen) y Configuración en un solo lugar
         $this->assertStringContainsString(route('admin.configuracion'), $html);

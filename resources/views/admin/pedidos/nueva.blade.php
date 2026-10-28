@@ -42,8 +42,30 @@
 @endpush
 
 @section('contenido')
-<div class="migas"><a href="{{ route('admin.pedidos') }}">Pedidos</a> <i class="bi bi-chevron-right small"></i> <span>Nueva venta</span></div>
+<div class="migas"><a href="{{ route('admin.pedidos') }}">Ventas</a> <i class="bi bi-chevron-right small"></i> <span>Nueva venta</span></div>
 <div class="page-head"><div><h1>Nueva venta</h1><p class="sub">Toca los productos, cobra y listo. El inventario se descuenta solo.</p></div></div>
+@php
+    $cuV = \App\Support\Cuentas::actual();
+    $otrasV = array_filter([
+        // Un trabajo con etapas (fabricación, instalación) empieza con su cotización: al aceptarla se vuelve proyecto
+        $cuV?->tiene('cotizaciones') && auth()->user()->puede('cotizaciones') ? ['url' => route('admin.presupuestos.create', array_filter(['cliente' => $cliente?->id])), 'icono' => 'bi-file-earmark-text',
+            'texto' => $cuV->tiene('proyectos') ? 'Pedido especial o con etapas' : 'Primero quiere una cotización',
+            'ayuda' => $cuV->tiene('proyectos') ? 'Cotízalo; al aceptarlo se vuelve proyecto' : 'Le mandas el precio y la acepta en línea'] : null,
+    ]);
+@endphp
+@if($otrasV)
+    <div class="nv-tipo">
+        <span class="nv-act"><i class="bi bi-bag-check"></i><span><b>Venta o pedido</b><small>Mostrador o con envío</small></span></span>
+        @foreach($otrasV as $o)<a href="{{ $o['url'] }}"><i class="bi {{ $o['icono'] }}"></i><span><b>{{ $o['texto'] }}</b><small>{{ $o['ayuda'] }}</small></span></a>@endforeach
+    </div>
+    <style>
+        .nv-tipo { display: flex; gap: 10px; flex-wrap: wrap; margin: -8px 0 18px; }
+        .nv-tipo > * { display: flex; gap: 10px; align-items: center; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line); background: #fff; color: inherit; text-decoration: none; flex: 1 1 220px; }
+        .nv-tipo i { font-size: 18px; color: var(--muted); } .nv-tipo b { display: block; font-size: 14px; font-weight: 600; } .nv-tipo small { color: var(--muted); font-size: 12.5px; }
+        .nv-tipo .nv-act { border-color: var(--marca); box-shadow: 0 0 0 1px var(--marca) inset; } .nv-tipo .nv-act i { color: var(--marca); }
+        .nv-tipo a:hover { border-color: var(--line-strong); }
+    </style>
+@endif
 
 @if($errors->any())<div class="aviso aviso-error mb-3" role="alert"><i class="bi bi-exclamation-circle-fill"></i> {{ $errors->first() }}</div>@endif
 

@@ -26,7 +26,7 @@
 
 @section('contenido')
 <div class="page-head">
-    <div><h1>Pedidos</h1><p class="sub">Ventas de mostrador y pedidos con envío: quién pagó, qué falta entregar y qué falta cobrar.</p></div>
+    <div><h1>Ventas</h1><p class="sub">Todo lo que vendes en un solo lugar: mostrador y pedidos con envío{{ isset($vistas['proyectos']) ? ', proyectos' : '' }}{{ isset($vistas['cotizaciones']) ? ' y cotizaciones abiertas' : '' }}.</p></div>
     <div class="d-flex flex-wrap gap-2">
         @if(auth()->user()->puede('configuracion'))<a href="{{ route('admin.pedidos.ajustes') }}" class="btn btn-borde"><i class="bi bi-sliders me-1"></i> Envíos e IVA</a>@endif
         <a href="{{ route('admin.pedidos.create') }}" class="btn btn-primario"><i class="bi bi-bag-plus me-1"></i> Nueva venta</a>
@@ -43,14 +43,46 @@
 <section class="panel">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 px-3 pt-3 pb-2">
         <nav class="segmento" aria-label="Vista">
-            @foreach(\App\Http\Controllers\Admin\PedidosController::VISTAS as $k => $t)<a href="{{ $u(['ver' => $k === 'hoy' ? null : $k, 'page' => null]) }}" class="{{ $ver === $k ? 'activo' : '' }}">{{ $t }}</a>@endforeach
+            @foreach($vistas as $k => $t)<a href="{{ $u(['ver' => $k === 'hoy' ? null : $k, 'page' => null]) }}" class="{{ $ver === $k ? 'activo' : '' }}">{{ $t }}</a>@endforeach
         </nav>
         <form class="buscador" method="get" role="search">
             @if($ver !== 'hoy')<input type="hidden" name="ver" value="{{ $ver }}">@endif
             <i class="bi bi-search"></i><input type="search" name="q" value="{{ $q }}" class="form-control" placeholder="Folio o cliente" aria-label="Buscar pedidos">
         </form>
     </div>
-    @if($ventas->isEmpty())
+    @if($otros !== null)
+        @if($otros->isEmpty())
+            <div class="vacio"><div class="ico"><i class="bi {{ $ver === 'proyectos' ? 'bi-kanban' : 'bi-file-earmark-text' }}"></i></div>
+                <h3>{{ $ver === 'proyectos' ? 'Sin proyectos' : 'Sin cotizaciones abiertas' }}</h3>
+                @if($ver === 'proyectos')<p>Un proyecto nace de una cotización aceptada.</p>@endif
+                @if(auth()->user()->puede('cotizaciones'))<a href="{{ route('admin.presupuestos.create') }}" class="btn btn-primario mt-2"><i class="bi bi-plus-lg me-1"></i> Nueva cotización</a>@endif</div>
+        @else
+            <div class="pl">
+                @foreach($otros as $o)
+                    @if($ver === 'proyectos')
+                        @php $pend = $o->pagos->whereNull('pagado_el')->sum('monto'); @endphp
+                        <div class="pf">
+                            <a href="{{ route('admin.proyectos.show', $o) }}" class="q min-w-0">
+                                <span class="t d-block text-truncate">{{ $o->cliente?->empresa ?: $o->cliente?->nombre }} · {{ $o->nombre }}</span>
+                                <span class="s d-block text-truncate">{{ $o->estado === 'activo' ? ($o->siguiente_paso ?? 'En curso') : ucfirst($o->estado) }} · {{ $o->progreso }}%</span>
+                            </a>
+                            <div class="d-flex flex-wrap gap-1 justify-content-end acc"><span class="pb {{ $o->estado === 'activo' ? 'azul' : '' }}">Proyecto</span>@if($pend > 0)<span class="pb pend">Debe {{ \App\Models\Venta::dinero($pend) }}</span>@endif</div>
+                            <div class="m num">{{ $o->monto_total > 0 ? \App\Models\Venta::dinero($o->monto_total) : '' }}</div>
+                        </div>
+                    @else
+                        <div class="pf">
+                            <a href="{{ route('admin.presupuestos.edit', $o) }}" class="q min-w-0">
+                                <span class="t d-block text-truncate">{{ $o->cliente_empresa ?: $o->cliente_nombre }}</span>
+                                <span class="s d-block text-truncate num">{{ $o->folio }} · {{ \Illuminate\Support\Str::limit($o->conceptos->first()?->resumen ?: $o->titulo, 60) }}</span>
+                            </a>
+                            <div class="d-flex flex-wrap gap-1 justify-content-end acc"><span class="estado estado-{{ $o->estado }}">{{ \App\Models\Presupuesto::ESTADOS[$o->estado] }}</span></div>
+                            <div class="m num">{{ $o->monto($o->modo_iva === 'desglosado' ? $o->total : $o->subtotal) }}</div>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+        @endif
+    @elseif($ventas->isEmpty())
         <div class="vacio"><div class="ico"><i class="bi bi-bag"></i></div><h3>{{ ['hoy' => 'Aún no hay ventas hoy', 'entregar' => 'Nada pendiente de entregar', 'cobrar' => 'Nadie te debe', 'todas' => 'Todavía no hay ventas'][$ver] }}</h3>
             <p>Registra una venta en segundos: toca los productos y cobra.</p><a href="{{ route('admin.pedidos.create') }}" class="btn btn-primario mt-2"><i class="bi bi-bag-plus me-1"></i> Nueva venta</a></div>
     @else

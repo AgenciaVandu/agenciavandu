@@ -11,6 +11,14 @@ class ResumenController extends Controller
 {
     public function index()
     {
+        // Inicio según el rol: quien no ve las cifras del negocio ve su día y sus herramientas
+        $u = auth()->user();
+        if (! $u->puede('resumen')) {
+            $accesos = \App\Support\Inicio\MiDia::accesos($u);
+            // Con una sola herramienta (p. ej. la caja que solo escanea) se va directo a ella
+            if (count($accesos) <= 1) return redirect()->to(\App\Support\Permisos::inicio($u));
+            return view('admin.mi-dia', ['accesos' => $accesos]);
+        }
         // Lote de autos: su propio resumen (por vender, por cobrar, adeudos y termómetro)
         if (\App\Support\Cuentas::actual()?->tiene('autos')) return $this->autos();
         // Gimnasio: clases de hoy, reservaciones, asistencia y paquetes por renovar

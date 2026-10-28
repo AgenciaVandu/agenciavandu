@@ -28,12 +28,34 @@ class PedidosController extends Controller
 
     public const VISTAS = ['hoy' => 'Hoy', 'entregar' => 'Por entregar', 'cobrar' => 'Por cobrar', 'todas' => 'Todas'];
 
+    /** Pestañas de Ventas: las de siempre, más Proyectos y Cotizaciones si el negocio los tiene prendidos */
+    public static function vistas(): array
+    {
+        $c = Cuentas::actual();
+        $u = auth()->user();
+        $v = self::VISTAS;
+        if ($c?->tiene('proyectos') && $u?->puede('proyectos')) $v['proyectos'] = 'Proyectos';
+        if ($c?->tiene('cotizaciones') && $u?->puede('cotizaciones')) $v['cotizaciones'] = 'Cotizaciones abiertas';
+        return $v;
+    }
+
     public function index(Request $request)
     {
         $tz = config('vandu.zona_horaria');
         $hoy = now($tz)->toDateString();
-        $ver = array_key_exists($request->query('ver'), self::VISTAS) ? $request->query('ver') : 'hoy';
+        $vistas = self::vistas();
+        $ver = array_key_exists($request->query('ver'), $vistas) ? $request->query('ver') : 'hoy';
         $q = trim((string) $request->query('q'));
+        // Una sola lista de ventas: también los proyectos y las cotizaciones abiertas, si el negocio los usa
+        $otros = match ($ver) {
+            'proyectos' => \App\Models\Proyecto::with(['cliente:id,nombre,empresa', 'pagos', 'etapas'])->whereNotIn('estado', ['cancelado'])
+                ->when($q !== '', fn ($w) => $w->where(fn ($x) => $x->where('nombre', 'like', "%$q%")->orWhereHas('cliente', fn ($c) => $c->where('nombre', 'like', "%$q%")->orWhere('empresa', 'like', "%$q%"))))
+                ->orderByRaw("CASE WHEN estado = 'activo' THEN 0 ELSE 1 END")->orderByDesc('id')->take(60)->get(),
+            'cotizaciones' => \App\Models\Presupuesto::with('conceptos')->whereNotIn('estado', ['aceptada', 'rechazada', 'cancelada'])
+                ->when($q !== '', fn ($w) => $w->where(fn ($x) => $x->where('folio', 'like', "%$q%")->orWhere('cliente_nombre', 'like', "%$q%")->orWhere('cliente_empresa', 'like', "%$q%")))
+                ->orderByDesc('id')->take(60)->get(),
+            default => null,
+        };
         $ventas = Venta::with(['cliente:id,nombre,empresa', 'vendedor:id,name', 'repartidor:id,name'])
             ->when($ver === 'hoy', fn ($w) => $w->whereDate('fecha', $hoy))
             ->when($ver === 'entregar', fn ($w) => $w->porEntregar())
@@ -45,7 +67,7 @@ class PedidosController extends Controller
         $delDia = Venta::vigentes()->whereDate('fecha', $hoy)->get();
         $mes = Venta::vigentes()->whereNull('presupuesto_id')->whereDate('fecha', '>=', now($tz)->startOfMonth()->toDateString())->get();
         return view('admin.pedidos.index', [
-            'ventas' => $ventas, 'ver' => $ver, 'q' => $q,
+            'ventas' => $ventas, 'ver' => $ver, 'q' => $q, 'vistas' => $vistas, 'otros' => $otros,
             'kpi' => [
                 'hoy' => round($delDia->sum('total'), 2), 'nHoy' => $delDia->count(),
                 'mes' => round($mes->sum('total'), 2), 'nMes' => $mes->count(),

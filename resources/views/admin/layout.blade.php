@@ -24,7 +24,7 @@
     try { $renovarNav = $gymNav && $usuario?->puede('membresias') ? \App\Models\Membresia::vigentes()->where(fn ($q) => $q->whereDate('vence_el', '<=', now(config('vandu.zona_horaria'))->addDays(3)->toDateString())->orWhereRaw('creditos IS NOT NULL AND usados + 1 >= creditos'))->distinct('cliente_id')->count('cliente_id') : 0; } catch (\Throwable $e) { $renovarNav = 0; }
     try { $hoyNav = $gymNav ? \App\Models\Clase::programadas()->delDia(now())->when(! $usuario?->puede('clases'), fn ($q) => $q->where('coach_id', $usuario?->id))->count() : 0; } catch (\Throwable $e) { $hoyNav = 0; }
     $nav = array_values(array_filter([
-        ['ruta' => 'admin.resumen',             'activo' => 'admin.resumen',          'icono' => 'bi-grid-1x2',        'texto' => 'Inicio', 'seccion' => 'resumen'],
+        ['ruta' => 'admin.resumen',             'activo' => 'admin.resumen',          'icono' => 'bi-grid-1x2',        'texto' => 'Inicio', 'seccion' => null],
         ['ruta' => 'admin.tareas.index',        'activo' => 'admin.tareas.*',         'icono' => 'bi-check2-square',   'texto' => $puede('tareas') ? 'Tareas' : 'Mis tareas', 'cuenta' => $tareasNav, 'seccion' => null, 'modulo' => 'tareas', 'grupo' => 'Operación'],
         $gymNav ? ['ruta' => 'admin.seguimiento', 'activo' => 'admin.seguimiento*', 'icono' => 'bi-person-plus', 'texto' => 'Seguimiento', 'seccion' => 'ventas', 'grupo' => 'Vender']
                 : ['ruta' => 'admin.ventas.index',        'activo' => 'admin.ventas.*',         'icono' => 'bi-funnel',          'texto' => 'Prospectos', 'cuenta' => $prospectosNav, 'nuevos' => true, 'seccion' => 'ventas', 'grupo' => 'Vender'],
@@ -33,7 +33,7 @@
         ['ruta' => 'admin.lealtad.campanas',    'activo' => ['admin.lealtad.campanas*', 'admin.lealtad.qr'], 'icono' => 'bi-gift', 'texto' => 'Campañas', 'seccion' => 'lealtad', 'modulo' => 'lealtad', 'grupo' => 'Operación'],
         ['ruta' => 'admin.comensales',          'activo' => 'admin.comensales*',      'icono' => 'bi-person-hearts',   'texto' => 'Comensales', 'seccion' => 'comensales', 'modulo' => 'lealtad', 'grupo' => 'Clientes'],
         ['ruta' => 'admin.escanear',            'activo' => 'admin.escanear*',        'icono' => 'bi-qr-code-scan',    'texto' => 'Escanear', 'seccion' => 'asistencia', 'modulo' => 'fitness', 'grupo' => 'Operación'],
-        ['ruta' => 'admin.pedidos',             'activo' => 'admin.pedidos*',         'icono' => 'bi-bag',             'texto' => 'Pedidos', 'cuenta' => $pedidosNav, 'seccion' => 'vender', 'modulo' => 'stock', 'grupo' => 'Vender'],
+        ['ruta' => 'admin.pedidos',             'activo' => 'admin.pedidos*',         'icono' => 'bi-bag',             'texto' => 'Ventas', 'cuenta' => $pedidosNav, 'seccion' => 'vender', 'modulo' => 'stock', 'grupo' => 'Vender'],
         ['ruta' => 'admin.presupuestos.index',  'activo' => 'admin.presupuestos.*',   'icono' => 'bi-file-earmark-text','texto' => 'Cotizaciones', 'cuenta' => $vigentesNav, 'seccion' => 'cotizaciones', 'modulo' => 'cotizaciones', 'grupo' => 'Vender'],
         ['ruta' => 'admin.unidades.index',      'activo' => 'admin.unidades.*',       'icono' => 'bi-car-front',       'texto' => 'Unidades', 'seccion' => ['unidades', 'cobranza'], 'modulo' => 'autos', 'grupo' => 'Vender'],
         ['ruta' => 'admin.creditos.index',      'activo' => 'admin.creditos.*',       'icono' => 'bi-cash-coin',       'texto' => 'Cobranza', 'cuenta' => $atrasoNav, 'seccion' => 'cobranza', 'modulo' => 'autos', 'grupo' => 'Dinero'],
@@ -56,8 +56,8 @@
     $inicioNav = $usuario ? \App\Support\Permisos::inicio($usuario) : route('admin.resumen');
     // Barra inferior del celular: hasta 4 accesos (+ el botón de nueva cotización si la puede hacer)
     $tabs = array_slice(array_values(array_filter([
-        $ventaNav ? ['url' => route('admin.pedidos'), 'activo' => 'admin.pedidos*', 'icono' => 'bi-bag', 'lleno' => 'bi-bag-fill', 'texto' => 'Pedidos', 'cuenta' => $pedidosNav] : null,
-        $puede('resumen') ? ['url' => route('admin.resumen'), 'activo' => 'admin.resumen', 'icono' => 'bi-grid-1x2', 'lleno' => 'bi-grid-1x2-fill', 'texto' => 'Inicio'] : null,
+        $ventaNav ? ['url' => route('admin.pedidos'), 'activo' => 'admin.pedidos*', 'icono' => 'bi-bag', 'lleno' => 'bi-bag-fill', 'texto' => 'Ventas', 'cuenta' => $pedidosNav] : null,
+        true ? ['url' => route('admin.resumen'), 'activo' => 'admin.resumen', 'icono' => 'bi-grid-1x2', 'lleno' => 'bi-grid-1x2-fill', 'texto' => 'Inicio'] : null,
         $gymNav && ($puede('clases') || $puede('asistencia')) ? ['url' => route('admin.clases.index'), 'activo' => 'admin.clases.*', 'icono' => 'bi-calendar-week', 'lleno' => 'bi-calendar-week-fill', 'texto' => 'Agenda', 'cuenta' => $hoyNav] : null,
         $gymNav && $puede('asistencia') ? ['url' => route('admin.escanear'), 'activo' => 'admin.escanear*', 'icono' => 'bi-qr-code-scan', 'lleno' => 'bi-qr-code-scan', 'texto' => 'Escanear'] : null,
         $puede('canjes') ? ['url' => route('admin.lealtad.escanear'), 'activo' => 'admin.lealtad.escanear*', 'icono' => 'bi-qr-code-scan', 'lleno' => 'bi-qr-code-scan', 'texto' => 'Escanear'] : null,
@@ -77,8 +77,8 @@
     // Venta directa (productos y servicios): lo de todos los días es Pedidos, Productos y Clientes
     if ($ventaNav) {
         $tabs = array_slice(array_values(array_filter([
-            $puede('resumen') ? ['url' => route('admin.resumen'), 'activo' => 'admin.resumen', 'icono' => 'bi-grid-1x2', 'lleno' => 'bi-grid-1x2-fill', 'texto' => 'Inicio'] : null,
-            ['url' => route('admin.pedidos'), 'activo' => 'admin.pedidos*', 'icono' => 'bi-bag', 'lleno' => 'bi-bag-fill', 'texto' => 'Pedidos', 'cuenta' => $pedidosNav],
+            true ? ['url' => route('admin.resumen'), 'activo' => 'admin.resumen', 'icono' => 'bi-grid-1x2', 'lleno' => 'bi-grid-1x2-fill', 'texto' => 'Inicio'] : null,
+            ['url' => route('admin.pedidos'), 'activo' => 'admin.pedidos*', 'icono' => 'bi-bag', 'lleno' => 'bi-bag-fill', 'texto' => 'Ventas', 'cuenta' => $pedidosNav],
             $puede('productos') && $cuentaNav?->tiene('stock') ? ['url' => route('admin.productos.index'), 'activo' => 'admin.productos.*', 'icono' => 'bi-box-seam', 'lleno' => 'bi-box-seam-fill', 'texto' => 'Productos'] : null,
             $puede('clientes') ? ['url' => route('admin.clientes.index'), 'activo' => 'admin.clientes.*', 'icono' => 'bi-people', 'lleno' => 'bi-people-fill', 'texto' => 'Clientes'] : null,
             $puede('cotizaciones') ? ['url' => route('admin.presupuestos.index'), 'activo' => 'admin.presupuestos.*', 'icono' => 'bi-file-earmark-text', 'lleno' => 'bi-file-earmark-text-fill', 'texto' => 'Cotizaciones'] : null,

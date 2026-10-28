@@ -322,6 +322,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::put('roles/{rol}', [Admin\UsuariosController::class, 'rolUpdate'])->name('roles.update');
     Route::delete('roles/{rol}', [Admin\UsuariosController::class, 'rolDestroy'])->name('roles.destroy');
     Route::get('cobrar', [Admin\CobrarController::class, 'index'])->name('cobrar');
+    Route::post('ejemplos', [Admin\EjemplosController::class, 'cargar'])->name('ejemplos');
+    Route::delete('ejemplos', [Admin\EjemplosController::class, 'quitar'])->name('ejemplos.quitar');
     Route::get('configuracion/funciones', [Admin\FuncionesController::class, 'index'])->name('funciones');
     Route::put('configuracion/funciones', [Admin\FuncionesController::class, 'update'])->name('funciones.guardar');
     Route::get('configuracion', fn () => view('admin.configuracion', ['grupos' => \App\Support\Configuracion::grupos(request()->user())]))->name('configuracion');

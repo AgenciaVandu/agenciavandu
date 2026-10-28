@@ -96,4 +96,33 @@ class PanelSencilloTest extends TestCase
         // Y el + Nuevo trae "Registrar pago"
         $this->get(route('admin.resumen'))->assertSee(route('admin.cobrar'), false);
     }
+
+    public function test_venta_unificada_arranque_e_inicio_por_rol(): void
+    {
+        [$tienda] = $this->tienda();
+        $cli = Cliente::create(['nombre' => 'Hotel']);
+        Proyecto::create(['cliente_id' => $cli->id, 'nombre' => 'Congelador grande', 'tipo' => 'venta', 'estado' => 'activo']);
+        // Ventas: mostrador, pedidos y proyectos en un solo lugar
+        $this->get(route('admin.pedidos', ['ver' => 'proyectos']))->assertOk()->assertSee('Ventas')->assertSee('Congelador grande')->assertSee('Cotizaciones abiertas');
+        $this->get(route('admin.pedidos.create'))->assertSee('Pedido especial o con etapas');
+
+        // Arranque: pasos y ejemplos que se cargan y se borran
+        $this->get(route('admin.resumen'))->assertSee('Primeros pasos')->assertSee('Cargar ejemplos');
+        $this->post(route('admin.ejemplos'))->assertRedirect(route('admin.resumen'));
+        $this->assertTrue(\App\Models\Producto::where('ejemplo', true)->exists());
+        $this->get(route('admin.resumen'))->assertSee('Borrar ejemplos');
+        $this->delete(route('admin.ejemplos.quitar'))->assertSessionHas('ok');
+        $this->assertFalse(\App\Models\Producto::where('ejemplo', true)->exists());
+
+        // Inicio por rol: un vendedor sin cifras ve su día y sus herramientas
+        $rol = \App\Models\Rol::create(['nombre' => 'Vendedor', 'permisos' => ['vender', 'clientes', 'cotizaciones'], 'orden' => 5]);
+        $vend = \App\Models\User::create(['name' => 'Pepe Vendedor', 'email' => 'pepe@paletas.mx', 'password' => 'x', 'rol_id' => $rol->id, 'activo' => true]);
+        $this->actingAs($vend);
+        Cuentas::activar($tienda);
+        $this->get(route('admin.resumen'))->assertOk()->assertSee('Tus herramientas')->assertSee('Nueva venta')->assertSee('Para hoy')->assertDontSee('Cobrado en');
+        // Con una sola herramienta va directo a ella
+        $rol->update(['permisos' => ['clientes']]);
+        $vend->load('rol');
+        $this->get(route('admin.resumen'))->assertRedirect();
+    }
 }

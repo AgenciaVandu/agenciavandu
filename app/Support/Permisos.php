@@ -54,7 +54,7 @@ class Permisos
      * "*" = cualquiera del equipo con sesión.
      */
     public const RUTAS = [
-        ['admin.resumen', 'resumen'],
+        ['admin.resumen', '*'], // cada quien tiene su Inicio: el del negocio o "Mi día"
         ['admin.proyectos.create', 'proyectos'],
         ['admin.proyectos.store', 'proyectos'],
         ['admin.proyectos.*', 'proyectos'],
@@ -79,6 +79,7 @@ class Permisos
         ['admin.sucursales*', 'configuracion'],
         ['admin.mi-plan*', 'configuracion'],
         ['admin.funciones*', 'configuracion'],
+        ['admin.ejemplos*', 'configuracion'],
         ['admin.cobrar', ['finanzas', 'vender', 'proyectos', 'cobranza']],
         ['admin.credito-ajustes*', 'configuracion'],
         // Gimnasio: el entrenador ve la agenda y sus clases; programarlas y cambiar cupos es de "clases"
