@@ -100,6 +100,9 @@
     {{-- App en el celular: sin zoom por doble toque (pellizcar sigue funcionando) y sin el zoom de iPhone al escribir en un campo --}}
     <style>html { touch-action: manipulation; -webkit-text-size-adjust: 100%; } @media (pointer: coarse) { input, select, textarea { font-size: max(16px, 1em) !important; } }</style>
     <meta name="robots" content="noindex, nofollow">
+    {{-- En la app instalada la ventana ya antepone el nombre de la app ("Nerby - …"): se quita el nombre repetido del título --}}
+    <script>window.tituloApp = function (t) { return (matchMedia('(display-mode: standalone)').matches || navigator.standalone) ? t.replace(/ · [^·]+$/, '') : t; };
+        document.addEventListener('DOMContentLoaded', function () { document.title = tituloApp(document.title); });</script>
     <title>@yield('titulo', 'Panel') · {{ \App\Support\Cuentas::esPrincipal() ? config('vandu.plataforma.nombre') : \App\Support\Cuentas::actual()?->nombre }}</title>
     <link rel="icon" href="/favi.svg" type="image/svg+xml">
     <link rel="manifest" href="{{ route('app.manifiesto', ['v' => \App\Support\IconoApp::huella(\App\Support\Cuentas::actual())]) }}">
@@ -954,7 +957,7 @@
             navs.forEach((n, i) => { if (nuevos[i]) n.innerHTML = nuevos[i].innerHTML; });
             const tab = document.querySelector('.tabbar'), tabNuevo = doc.querySelector('.tabbar');
             if (tab && tabNuevo) tab.innerHTML = tabNuevo.innerHTML;
-            document.title = doc.title || document.title;
+            document.title = tituloApp(doc.title || document.title);
             const u = new URL(url, location.href);
             if (nueva) history.pushState(null, '', u.href); else if (u.href !== location.href) history.replaceState(null, '', u.href);
             // 4. Cerrar el menú del celular, subir al inicio y acomodar
@@ -997,7 +1000,7 @@
                 const navs = document.querySelectorAll('.side nav'), nuevos = nuevoNav.querySelectorAll('nav');
                 navs.forEach((n, i) => { if (nuevos[i]) n.innerHTML = nuevos[i].innerHTML; });
             }
-            if (doc.title) document.title = doc.title;
+            if (doc.title) document.title = tituloApp(doc.title);
             const u = new URL(url, location.href);
             if (u.href !== location.href) history.replaceState(null, '', u.href);
             prepararPagina();
