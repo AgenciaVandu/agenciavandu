@@ -38,7 +38,7 @@ class Hoy
             if (! $n) return null;
             $monto = $pagos->sum('monto') + $ventas->sum(fn ($v) => $v->total - $v->pagado);
             return ['icono' => 'bi-cash-coin', 'color' => 'rojo', 'titulo' => 'Cobrar ' . $d($monto), 'detalle' => $pl($n, 'pago vencido o que vence hoy', 'pagos vencidos o que vencen hoy'),
-                'url' => $u->puede('finanzas') ? route('admin.finanzas', ['seccion' => 'ventas']) . '#por-cobrar' : route('admin.proyectos.index')];
+                'url' => \App\Support\Cobros\PorCobrar::puede($u) ? route('admin.cobrar') : route('admin.finanzas', ['seccion' => 'ventas']) . '#por-cobrar'];
         });
 
         // Entregas de proyecto (etapas) para hoy o atrasadas

@@ -22,10 +22,17 @@
     $conteo = ['cotizaciones' => $ps->count(), 'proyectos' => $cliente->proyectos->count(), 'facturacion' => $facturaPorEnviar->count() ?: null, 'correos' => $correos->count() ?: null];
     $url = fn ($s) => route('admin.clientes.show', $s === 'resumen' ? $cliente : [$cliente, 'ver' => $s]);
     $dinero = fn ($n) => '$' . number_format($n, 0);
+    // Lo que debe, venga de proyectos, ventas o créditos (lo mismo que ve "Registrar pago")
+    $cuF = \App\Support\Cuentas::actual();
+    $puedeCobrar = \App\Support\Cobros\PorCobrar::puede(auth()->user());
+    $deudas = $puedeCobrar ? \App\Support\Cobros\PorCobrar::lista(auth()->user(), $cliente->id) : collect();
+    if ($puedeCobrar) { $porCobrar = $deudas->sum('monto'); $vencido = $deudas->where('vencido', true)->sum('monto'); }
+    $compro = $cuF?->tiene('stock') ? \App\Models\Venta::vigentes()->where('cliente_id', $cliente->id)->sum('total') : null;
+    $historial = \App\Support\Clientes\Historial::de($cliente);
 
     // Lo que hay que atender con este cliente, en orden de urgencia
     $pendientes = collect();
-    if ($vencido > 0) $pendientes->push(['bi-exclamation-octagon', 'rojo', 'Tiene ' . $dinero($vencido) . ' de pagos vencidos', 'Mándale un recordatorio desde su proyecto.', route('admin.clientes.show', [$cliente, 'ver' => 'proyectos']), 'Ver pagos']);
+    if ($vencido > 0) $pendientes->push(['bi-exclamation-octagon', 'rojo', 'Tiene ' . $dinero($vencido) . ' de pagos vencidos', 'Registra su pago o mándale un recordatorio.', $puedeCobrar ? route('admin.cobrar', ['cliente' => $cliente->id]) : route('admin.clientes.show', [$cliente, 'ver' => 'proyectos']), $puedeCobrar ? 'Cobrar' : 'Ver pagos']);
     foreach ($facturaPorEnviar as $p) $pendientes->push(['bi-send', 'verde', "La " . ($p->es_nota ? 'nota de venta' : 'factura') . " de {$p->folio} está lista para enviar", $p->facturas_ordenadas->pluck('nombre')->join(' · '), route('admin.presupuestos.edit', [$p, 'correo' => $p->comprobante_corto]), 'Enviar factura']);
     // Facturas PPD: cada pago recibido lleva su complemento
     foreach ($ps as $p) {
@@ -43,6 +50,16 @@
 
 @push('head')
 <style>
+    .hist { list-style: none; margin: 0; padding: 8px 20px 14px; }
+    .hist li { display: grid; grid-template-columns: 32px 1fr auto; gap: 12px; align-items: start; padding: 9px 0; position: relative; }
+    .hist li:not(:last-child):not(.mas)::before { content: ''; position: absolute; left: 15px; top: 40px; bottom: -6px; width: 2px; background: #EEF0F3; }
+    .hist .punto { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--sunken); color: var(--text-2); font-size: 14px; }
+    .hist .verde .punto { background: var(--green-soft); color: var(--green-ink); } .hist .azul .punto { background: var(--blue-soft); color: var(--blue); }
+    .hist .ambar .punto { background: var(--amber-soft); color: var(--amber); } .hist .rojo .punto { background: var(--red-soft); color: var(--red); }
+    .hist .t { min-width: 0; padding-top: 5px; } .hist .t a, .hist .t b { font-weight: 600; color: inherit; text-decoration: none; } .hist .t a:hover { text-decoration: underline; }
+    .hist .t .d { display: block; font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+    .hist time { font-size: 12.5px; padding-top: 7px; white-space: nowrap; }
+    .hist .mas { display: block; padding-left: 44px; }
     .cabecera { display: flex; align-items: center; gap: 16px; min-width: 0; }
     .cabecera .avatar { width: 56px; height: 56px; font-size: 19px; border-radius: 14px; flex: none; }
     .cabecera h1 { overflow-wrap: anywhere; }
@@ -68,7 +85,7 @@
     .datos dt { font-size: 13px; color: var(--muted); font-weight: 400; }
     .datos dd { margin: 2px 0 16px; overflow-wrap: anywhere; }
     .datos dd:last-child { margin-bottom: 0; }
-    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); }
+    .kpis { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
     .kpis > div { padding: 16px 20px; }
     .kpis > div + div { border-left: 1px solid var(--line); }
     .kpis .v { font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
@@ -102,7 +119,7 @@
     .razon-nueva summary { list-style: none; } .razon-nueva summary::-webkit-details-marker { display: none; }
     .cl-tag.gris { display: inline-flex; padding: 1px 8px; border-radius: 99px; background: var(--sunken); color: var(--text-2); font-weight: 500; }
 
-    @media (max-width: 991.98px) { .ficha { grid-template-columns: minmax(0, 1fr); } .kpis { grid-template-columns: repeat(2, 1fr); } .kpis > div:nth-child(3) { border-left: 0; } .kpis > div:nth-child(n+3) { border-top: 1px solid var(--line); } }
+    @media (max-width: 991.98px) { .ficha { grid-template-columns: minmax(0, 1fr); } .kpis { grid-auto-flow: row; grid-template-columns: repeat(2, 1fr); } .kpis > div:nth-child(3) { border-left: 0; } .kpis > div:nth-child(n+3) { border-top: 1px solid var(--line); } }
     @media (max-width: 767.98px) {
         .subnav { flex-wrap: wrap; border-bottom: 0; gap: 6px; }
         .subnav a { border: 1px solid var(--line); border-radius: 99px; padding: 6px 12px; font-size: 13.5px; margin: 0; }
@@ -129,6 +146,9 @@
 
 {{-- Acciones rápidas --}}
 <div class="rapidas">
+    @if($puedeCobrar && $porCobrar > 0)
+        <a href="{{ route('admin.cobrar', ['cliente' => $cliente->id]) }}" class="btn btn-primario"><i class="bi bi-cash-coin"></i> Registrar pago · {{ $dinero($porCobrar) }}</a>
+    @endif
     @if($esGym && auth()->user()->puede('membresias'))
         <a href="{{ route('admin.clientes.show', [$cliente, 'ver' => 'atleta']) }}#asignar" class="btn btn-primario"><i class="bi bi-ticket-perforated"></i> Asignar paquete</a>
         <a href="{{ route('admin.atletas.credencial', $cliente) }}" class="btn btn-borde" data-recargar><i class="bi bi-qr-code"></i> Credencial</a>
@@ -195,10 +215,11 @@
 <div class="ficha">
     <div class="d-grid gap-4">
         <div class="panel kpis">
-            <div><div class="k">Aceptado, antes de IVA</div><div class="v num">{{ $dinero($aceptado) }}</div></div>
-            <div><div class="k">Por cobrar</div><div class="v num {{ $vencido > 0 ? 'rojo' : '' }}">{{ $dinero($porCobrar) }}</div></div>
-            <div><div class="k">Proyectos activos</div><div class="v num">{{ $activos->count() }}</div></div>
-            <div><div class="k">Cotizaciones</div><div class="v num">{{ $ps->count() }}</div></div>
+            @if($compro !== null)<div><div class="k">Te ha comprado</div><div class="v num">{{ $dinero($compro) }}</div></div>@endif
+            @if($cuF?->tiene('cotizaciones'))<div><div class="k">Aceptado, antes de IVA</div><div class="v num">{{ $dinero($aceptado) }}</div></div>@endif
+            <div><div class="k">Te debe</div><div class="v num {{ $vencido > 0 ? 'rojo' : '' }}">{{ $dinero($porCobrar) }}</div></div>
+            @if($cuF?->tiene('proyectos'))<div><div class="k">Proyectos activos</div><div class="v num">{{ $activos->count() }}</div></div>@endif
+            @if($cuF?->tiene('cotizaciones') && $compro === null)<div><div class="k">Cotizaciones</div><div class="v num">{{ $ps->count() }}</div></div>@endif
         </div>
 
         <section class="panel">
@@ -219,35 +240,26 @@
         </section>
 
         <section class="panel">
-            <div class="panel-head"><h2>Lo más reciente</h2><a href="{{ $url('cotizaciones') }}" class="btn btn-fantasma btn-sm">Ver todas</a></div>
-            @if($ps->isEmpty() && $activos->isEmpty())
+            <div class="panel-head"><h2>Historial</h2><span class="ayuda">Todo lo que ha pasado con {{ $quien }}</span></div>
+            @if($historial->count() <= 1 && $ps->isEmpty())
                 <div class="vacio">
-                    <div class="ico"><i class="bi bi-file-earmark-plus"></i></div>
-                    <h3>Sin cotizaciones todavía</h3>
-                    <p>Crea la primera para {{ $cliente->nombre }}.</p>
-                    <a href="{{ route('admin.presupuestos.create', ['cliente' => $cliente->id]) }}" class="btn btn-primario">Crear cotización</a>
+                    <div class="ico"><i class="bi bi-clock-history"></i></div>
+                    <h3>Aún no hay movimientos</h3>
+                    <p>Aquí verás sus cotizaciones, compras, pagos y correos, en orden.</p>
+                    @if(auth()->user()->puede('cotizaciones') && $cuF?->tiene('cotizaciones'))<a href="{{ route('admin.presupuestos.create', ['cliente' => $cliente->id]) }}" class="btn btn-primario">Crear cotización</a>@endif
                 </div>
             @else
-                <ul class="list-unstyled m-0">
-                    @foreach($activos as $pr)
-                        <li class="border-top" style="border-top-color: transparent !important">
-                            <a href="{{ route('admin.proyectos.show', $pr) }}" class="d-flex align-items-center gap-3 px-3 py-2 text-reset text-decoration-none">
-                                <i class="bi {{ $pr->metodologia['icono'] ?? 'bi-kanban' }} fs-5 text-secondary"></i>
-                                <span class="flex-grow-1" style="min-width:0"><span class="principal d-block text-truncate">{{ $pr->nombre }}</span><span class="secundario" style="font-size:13px">Proyecto · {{ $pr->siguiente_paso ?? 'Terminado' }}</span></span>
-                                <span class="secundario num">{{ $pr->progreso }}%</span>
-                            </a>
+                <ol class="hist" x-data="{ todo: false }">
+                    @foreach($historial as $h)
+                        <li class="{{ $h['color'] }}" @if($loop->index >= 10) x-show="todo" x-cloak @endif>
+                            <span class="punto"><i class="bi {{ $h['icono'] }}"></i></span>
+                            <div class="t">@if($h['url'])<a href="{{ $h['url'] }}">{{ $h['texto'] }}</a>@else<b>{{ $h['texto'] }}</b>@endif
+                                @if($h['detalle'])<span class="d">{{ $h['detalle'] }}</span>@endif</div>
+                            <time class="secundario num" title="{{ $h['fecha']->copy()->setTimezone(config('vandu.zona_horaria'))->locale('es')->isoFormat('D [de] MMMM YYYY, h:mm a') }}">{{ $h['fecha']->copy()->setTimezone(config('vandu.zona_horaria'))->locale('es')->isoFormat($h['fecha']->year === now()->year ? 'D MMM' : 'D MMM YY') }}</time>
                         </li>
                     @endforeach
-                    @foreach($ps->take(4) as $p)
-                        <li class="border-top">
-                            <a href="{{ route('admin.presupuestos.edit', $p) }}" class="d-flex align-items-center gap-3 px-3 py-2 text-reset text-decoration-none">
-                                <i class="bi bi-file-earmark-text fs-5 text-secondary"></i>
-                                <span class="flex-grow-1" style="min-width:0"><span class="principal d-block text-truncate">{{ \Illuminate\Support\Str::limit($p->conceptos->first()?->resumen ?: $p->titulo, 60) }}</span><span class="secundario num" style="font-size:13px">{{ $p->folio }} · {{ $p->monto($p->modo_iva === 'desglosado' ? $p->total : $p->subtotal) }}</span></span>
-                                <span class="estado estado-{{ $p->estado }}">{{ \App\Models\Presupuesto::ESTADOS[$p->estado] }}</span>
-                            </a>
-                        </li>
-                    @endforeach
-                </ul>
+                    @if($historial->count() > 10)<li class="mas" x-show="! todo"><button type="button" class="btn btn-fantasma btn-sm" @click="todo = true">Ver todo ({{ $historial->count() }})</button></li>@endif
+                </ol>
             @endif
         </section>
     </div>

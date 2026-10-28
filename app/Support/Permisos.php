@@ -79,6 +79,7 @@ class Permisos
         ['admin.sucursales*', 'configuracion'],
         ['admin.mi-plan*', 'configuracion'],
         ['admin.funciones*', 'configuracion'],
+        ['admin.cobrar', ['finanzas', 'vender', 'proyectos', 'cobranza']],
         ['admin.credito-ajustes*', 'configuracion'],
         // Gimnasio: el entrenador ve la agenda y sus clases; programarlas y cambiar cupos es de "clases"
         ['admin.clases.index', ['clases', 'asistencia']],

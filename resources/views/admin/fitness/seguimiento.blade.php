@@ -9,6 +9,10 @@
     $u = fn (array $x) => route('admin.seguimiento', array_filter(array_merge(['ver' => $ver === 'tablero' ? null : $ver, 'periodo' => $periodo === 'mes' ? null : $periodo, 'q' => $q ?: null], $x)));
     $gestiona = auth()->user()->puede('membresias');
     $descartados = $grupos['descartado'];
+    // Primero lo urgente: recordatorios vencidos y quienes están por perderse (paquete vencido, prueba sin respuesta)
+    $urgentes = collect(array_keys(Embudo::ETAPAS))->flatMap(fn ($k) => $grupos[$k])
+        ->filter(fn ($c) => ($c->siguiente?->vencida ?? false) || in_array($c->detalle['tono'] ?? '', ['malo', 'alerta'], true))->take(6);
+    $porColumna = 6;
 @endphp
 
 @push('head')
@@ -40,6 +44,11 @@
     .seg-t .cuando { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
     .seg-t .cuando .form-control { min-width: 0; }
     .seg-pie { font-size: 12.5px; color: var(--muted); }
+    .seg-hoy { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; padding: 12px 16px 16px; }
+    .seg-hoy-p { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; color: inherit; text-decoration: none; min-width: 0; }
+    .seg-hoy-p:hover { border-color: var(--line-strong); } .seg-hoy-p .fx-avatar { width: 32px; height: 32px; font-size: 12px; flex: none; }
+    .seg-hoy-p b { font-weight: 600; font-size: 14px; } .seg-hoy-p .linea { font-size: 12.5px; color: var(--text-2); }
+    .seg-hoy-p .linea.alerta { color: #B45309; } .seg-hoy-p .linea.malo { color: var(--red); }
 </style>
 @endpush
 
@@ -105,15 +114,34 @@
         </form>
     </details>
 
+    @if($urgentes->isNotEmpty())
+        <section class="panel mb-3">
+            <div class="panel-head"><div><h2>Escríbeles hoy</h2><span class="ayuda">Lo más urgente del tablero, primero</span></div></div>
+            <div class="seg-hoy">
+                @foreach($urgentes as $c)
+                    <a href="{{ route('admin.clientes.show', [$c, 'ver' => 'atleta']) }}" class="seg-hoy-p"><x-fitness.avatar :atleta="$c" />
+                        <span class="min-w-0"><b class="d-block text-truncate">{{ $c->nombre }}</b><span class="d-block text-truncate linea {{ $c->detalle['tono'] }}">{{ $c->siguiente?->vencida ? $c->siguiente->titulo : $c->detalle['linea'] }}</span></span></a>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     <div class="seg-tablero">
         @foreach(Embudo::ETAPAS as $clave => $e)
-            <section class="seg-col" aria-label="{{ $e['texto'] }}">
+            <section class="seg-col" aria-label="{{ $e['texto'] }}" x-data="{ todos: false }">
                 <div class="cab">
                     <div class="n"><span><i class="bi {{ $e['icono'] }} me-1"></i>{{ $e['texto'] }}</span><span class="c num">{{ count($grupos[$clave]) }}</span></div>
                     <div class="a">{{ $e['ayuda'] }}</div>
                 </div>
                 @forelse($grupos[$clave] as $c)
-                    @include('admin.fitness._seguimiento_tarjeta', ['c' => $c])
+                    @if($loop->index < $porColumna)
+                        @include('admin.fitness._seguimiento_tarjeta', ['c' => $c])
+                    @else
+                        <template x-if="todos">@include('admin.fitness._seguimiento_tarjeta', ['c' => $c])</template>
+                    @endif
+                    @if($loop->last && $loop->count > $porColumna)
+                        <button type="button" class="btn btn-fantasma btn-sm" x-show="! todos" @click="todos = true">Ver {{ $loop->count - $porColumna }} más</button>
+                    @endif
                 @empty
                     <div class="vacia">Nadie por ahora</div>
                 @endforelse

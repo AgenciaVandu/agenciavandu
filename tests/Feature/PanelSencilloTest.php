@@ -71,4 +71,29 @@ class PanelSencilloTest extends TestCase
         \App\Models\Prospecto::create(['nombre' => 'Ana', 'nuevo' => true]);
         $this->get(route('admin.resumen'))->assertSee('Cobrar $1,500')->assertSee('1 prospecto nuevo')->assertDontSee('Todo al día');
     }
+
+    public function test_registrar_pago_en_un_solo_lugar_y_historial(): void
+    {
+        $this->tienda();
+        $cli = Cliente::create(['nombre' => 'Hotel Casa Azul']);
+        $p = Proyecto::create(['cliente_id' => $cli->id, 'nombre' => 'Congelador', 'tipo' => 'venta', 'estado' => 'activo']);
+        $pago = $p->pagos()->create(['clave' => 'anticipo', 'concepto' => 'Anticipo', 'porcentaje' => 50, 'monto' => 800, 'orden' => 0, 'vence_el' => now()->subDays(2)->toDateString()]);
+        $v = \App\Models\Venta::create(['folio' => 'V-1', 'cliente_id' => $cli->id, 'cliente_nombre' => 'Hotel Casa Azul', 'fecha' => now()->toDateString(), 'subtotal' => 300, 'total' => 300, 'pagado' => 0, 'credito' => true, 'estado' => 'entregada']);
+
+        // Lista de quién debe, y lo que debe este cliente (proyecto + venta)
+        $this->get(route('admin.cobrar'))->assertOk()->assertSee('Hotel Casa Azul')->assertSee('$1,100.00')->assertSee('algo ya venció');
+        $this->get(route('admin.cobrar', ['cliente' => $cli->id]))->assertOk()->assertSee('Cobrar a Hotel Casa Azul')->assertSee('Anticipo')->assertSee('Venta V-1');
+
+        // Se registra con la misma acción de siempre y regresa a cobrar
+        $this->from(route('admin.cobrar', ['cliente' => $cli->id]))
+            ->patch(route('admin.proyectos.pago', [$p, $pago]), ['accion' => 'pagar', 'monto' => 800, 'metodo' => 'transferencia'])
+            ->assertRedirect(route('admin.cobrar', ['cliente' => $cli->id]));
+        $this->from(route('admin.cobrar', ['cliente' => $cli->id]))->post(route('admin.pedidos.abonar', $v), ['monto' => 300, 'forma' => 'efectivo'])->assertSessionHasNoErrors();
+        $this->get(route('admin.cobrar', ['cliente' => $cli->id]))->assertSee('No te debe nada');
+
+        // La ficha cuenta su historia
+        $this->get(route('admin.clientes.show', $cli))->assertOk()->assertSee('Historial')->assertSee('Pagó $800.00')->assertSee('Arrancó el proyecto Congelador')->assertSee('Venta V-1 · Efectivo');
+        // Y el + Nuevo trae "Registrar pago"
+        $this->get(route('admin.resumen'))->assertSee(route('admin.cobrar'), false);
+    }
 }

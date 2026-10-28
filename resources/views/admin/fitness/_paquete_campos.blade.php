@@ -13,6 +13,10 @@
         <div class="d-flex align-items-end"><label class="form-check m-0 pb-2"><input type="checkbox" name="ilimitado" value="1" class="form-check-input" x-model="ilimitado"> <span class="form-check-label small">Ilimitado</span></label></div>
     </div>
     @if($mio) @error('creditos')<div class="text-danger small mt-1">{{ $message }}</div>@enderror @endif
+    {{-- Lo que casi nunca se cambia va plegado; se abre solo si el paquete ya lo usa --}}
+    @php $conMas = $mio || ($p && ($p->max_por_dia || $p->es_prueba || ! empty($p->tipos_clase) || $p->descripcion)); @endphp
+    <details class="fx-mas mt-2" @if($conMas) open @endif>
+    <summary class="secundario small"><i class="bi bi-sliders me-1"></i> Más opciones <span class="d-none d-sm-inline">· límite diario, clase de prueba, tipos de clase y descripción</span></summary>
     <div class="fx-grid-form mt-2">
         <div><label class="form-label small" for="{{ $pre }}-m">Máximo al día</label>
             <input id="{{ $pre }}-m" name="max_por_dia" type="number" min="1" max="10" class="form-control num" value="{{ $v('max_por_dia') }}" placeholder="Sin límite"></div>
@@ -28,5 +32,7 @@
     @endif
     <div class="mt-2"><label class="form-label small" for="{{ $pre }}-d">Descripción</label>
         <textarea id="{{ $pre }}-d" name="descripcion" rows="2" class="form-control" maxlength="1000">{{ $v('descripcion') }}</textarea></div>
+    </details>
     <label class="form-check mt-2"><input type="checkbox" name="activo" value="1" class="form-check-input" @checked($v('activo', true))> <span class="form-check-label small">Se puede vender</span></label>
 </div>
+<style>.fx-mas summary { cursor: pointer; padding: 4px 0; list-style: none; } .fx-mas summary::-webkit-details-marker { display: none; } .fx-mas[open] summary { margin-bottom: 4px; }</style>

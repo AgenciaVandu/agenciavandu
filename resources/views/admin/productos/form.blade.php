@@ -168,7 +168,9 @@
 
     <div class="seccion">
         <div><h2>Página pública</h2><p>Cada producto tiene su enlace para mandarlo por WhatsApp o redes. Al abrirlo, el cliente te escribe directo.</p></div>
-        <div class="panel panel-body">
+        {{-- Al crear, lo normal es dejarlo como viene: se pliega para que el formulario sea corto --}}
+        <details class="panel panel-body prod-pub" @unless($nuevo && ! $errors->hasAny(['publico', 'mostrar_precio'])) open @endunless>
+            <summary class="secundario"><i class="bi bi-globe2 me-1"></i> Con página pública y el precio que diga tu catálogo <span class="text-decoration-underline ms-1">Cambiar</span></summary>
             <label class="interruptor">
                 <input type="hidden" name="publico" value="0">
                 <input class="form-check-input" type="checkbox" role="switch" name="publico" value="1" @checked(old('publico', $producto->publico))>
@@ -191,8 +193,9 @@
                     <span>Activo<small>Desactívalo si ya no lo vendes: deja de aparecer al cotizar y su página se apaga, pero conserva su historial.</small></span>
                 </label>
             @endunless
-        </div>
+        </details>
     </div>
+    <style>.prod-pub summary { cursor: pointer; list-style: none; } .prod-pub summary::-webkit-details-marker { display: none; } .prod-pub[open] summary { display: none; }</style>
 
     <div class="barra-acciones">
         @unless($nuevo)

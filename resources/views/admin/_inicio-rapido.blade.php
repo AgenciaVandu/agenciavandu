@@ -12,7 +12,7 @@
         $accesos = array_values(array_filter([
             ['url' => route('admin.pedidos.create'), 'icono' => 'bi-bag-plus', 'titulo' => 'Nueva venta', 'dato' => 'Mostrador o pedido', 'principal' => true],
             ['url' => route('admin.pedidos', ['ver' => 'entregar']), 'icono' => 'bi-truck', 'titulo' => 'Por entregar', 'dato' => $porEntregar ? $porEntregar . ($porEntregar === 1 ? ' pedido' : ' pedidos') : 'Todo entregado'],
-            ['url' => $us->puede('finanzas') ? route('admin.finanzas', 'ventas') . '#por-cobrar' : route('admin.pedidos', ['ver' => 'cobrar']), 'icono' => 'bi-cash-coin', 'titulo' => 'Te deben', 'dato' => $porCobrar > 0 ? '$' . number_format($porCobrar, 0) : 'Nadie te debe'],
+            ['url' => route('admin.cobrar'), 'icono' => 'bi-cash-coin', 'titulo' => 'Te deben', 'dato' => $porCobrar > 0 ? '$' . number_format($porCobrar, 0) : 'Nadie te debe'],
             $bajos !== null ? ['url' => route('admin.productos.index', ['estado' => 'bajos']), 'icono' => 'bi-box-seam', 'titulo' => 'Inventario bajo', 'dato' => $bajos ? $bajos . ($bajos === 1 ? ' producto' : ' productos') : 'Todo en orden'] : null,
         ]));
     }

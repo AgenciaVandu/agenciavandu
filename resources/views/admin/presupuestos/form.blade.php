@@ -393,8 +393,8 @@
         <div class="min-w-0">
         <div class="sec-cot" data-seccion="contenido" x-show="seccion === 'contenido'" @if($seccionInicial !== 'contenido') x-cloak @endif>
             {{-- Cliente --}}
-            <section class="panel">
-                <div class="panel-head"><h2>Cliente y fecha</h2><span class="ayuda">Así aparece en el encabezado</span></div>
+            <section class="panel" x-data="{ masDatos: {{ $nuevo && ! $errors->hasAny(['fecha', 'titulo']) ? 'false' : 'true' }} }">
+                <div class="panel-head"><h2>{{ $nuevo ? 'Cliente' : 'Cliente y fecha' }}</h2><span class="ayuda">Así aparece en el encabezado</span></div>
                 <div class="panel-body row g-3">
                     <div class="col-12">
                         <label class="form-label" for="cliente_id">Cliente o prospecto</label>
@@ -436,11 +436,13 @@
                         <label class="form-label" for="cliente_empresa">Empresa</label>
                         <input name="cliente_empresa" id="cliente_empresa" class="form-control" x-model="clienteEmpresa">
                     </div>
-                    <div class="col-md-6">
+                    {{-- En una cotización nueva la fecha y el título ya vienen puestos: se ocultan para ir directo a los conceptos --}}
+                    @if($nuevo)<div class="col-12" x-show="! masDatos"><button type="button" class="btn btn-link btn-sm p-0 secundario text-decoration-none" @click="masDatos = true"><i class="bi bi-calendar3 me-1"></i> Fecha de hoy · {{ $p->titulo }} <span class="text-decoration-underline ms-1">Cambiar</span></button></div>@endif
+                    <div class="col-md-6" x-show="masDatos" @if($nuevo) x-cloak @endif>
                         <label class="form-label" for="fecha">Fecha</label>
                         <input type="date" name="fecha" id="fecha" class="form-control num" value="{{ old('fecha', $p->fecha->format('Y-m-d')) }}" required>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-6" x-show="masDatos" @if($nuevo) x-cloak @endif>
                         <label class="form-label" for="titulo">Título del documento</label>
                         <input name="titulo" id="titulo" class="form-control" value="{{ old('titulo', $p->titulo) }}" required>
                     </div>
@@ -1057,7 +1059,8 @@
                 </div>
             </section>
 
-            <section class="panel">
+            {{-- Una cotización nueva siempre empieza en borrador: el estado se elige después --}}
+            <section class="panel" @if($nuevo) style="display: none" @endif>
                 <div class="panel-head"><h2>Estado</h2></div>
                 <div class="panel-body">
                     <div class="estados" role="radiogroup" aria-label="Estado">

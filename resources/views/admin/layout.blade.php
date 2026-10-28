@@ -189,6 +189,7 @@
         .page { max-width: 1240px; margin: 0 auto; padding: 32px 36px 64px; }
         .regresar { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--muted); text-decoration: none; margin: -6px 0 10px; padding: 4px 0; }
         .regresar:hover { color: var(--ink); }
+        main.page:has(.migas) > .regresar { display: none; } /* la pantalla ya trae su ruta completa */
         /* Confirmaciones propias (reemplazan la ventanita del navegador) */
         .cfm-fondo { position: fixed; inset: 0; background: rgba(16, 12, 32, .45); display: grid; place-items: center; z-index: 2000; padding: 16px; }
         .cfm { background: #fff; border-radius: 16px; max-width: 420px; width: 100%; padding: 22px 22px 18px; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
@@ -506,6 +507,7 @@
             $gymNav && $puede('clientes') ? ['url' => route('admin.clientes.create'), 'icono' => 'bi-person-plus', 'texto' => 'Nuevo atleta'] : null,
             $puede('canjes') ? ['url' => route('admin.lealtad.escanear'), 'icono' => 'bi-qr-code-scan', 'texto' => 'Escanear QR'] : null,
             $puede('cotizaciones') && $tieneNav('cotizaciones') ? ['url' => route('admin.presupuestos.create'), 'icono' => 'bi-file-earmark-plus', 'texto' => 'Nueva cotización'] : null,
+            $usuario && \App\Support\Cobros\PorCobrar::puede($usuario) ? ['url' => route('admin.cobrar'), 'icono' => 'bi-cash-coin', 'texto' => 'Registrar pago'] : null,
             ! $gymNav && $puede('clientes') && $tieneNav('clientes') ? ['url' => route('admin.clientes.create'), 'icono' => 'bi-person-plus', 'texto' => 'Nuevo cliente'] : null,
             $tieneNav('gastos') && ($puede('gastos') || $puede('finanzas')) ? ['url' => route('admin.gastos.create'), 'icono' => 'bi-receipt', 'texto' => 'Nuevo gasto'] : null,
             $tieneNav('stock') && $puede('productos') ? ['url' => route('admin.productos.create'), 'icono' => 'bi-box-seam', 'texto' => 'Nuevo producto'] : null,
