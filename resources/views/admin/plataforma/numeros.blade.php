@@ -33,7 +33,7 @@
 @section('contenido')
 <div class="page-head">
     <div>
-        <a href="{{ route('admin.plataforma') }}" class="secundario small text-decoration-none"><i class="bi bi-arrow-left"></i> Plataforma</a>
+
         <h1>Números de la plataforma</h1>
         <p class="sub">Lo que te dejan las licencias: cuánto entra cada mes, quién debe y qué viene.</p>
     </div>

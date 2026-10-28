@@ -19,7 +19,7 @@
 @section('contenido')
 <div class="page-head">
     <div>
-        <a href="{{ route('admin.plataforma') }}" class="secundario small text-decoration-none"><i class="bi bi-arrow-left"></i> Plataforma</a>
+
         <h1>Planes y precios</h1>
         <p class="sub">Lo que ofreces a los negocios. Al asignar una licencia, su precio se toma de aquí y después se puede negociar; cambiar un precio aquí no cambia lo ya acordado.</p>
     </div>

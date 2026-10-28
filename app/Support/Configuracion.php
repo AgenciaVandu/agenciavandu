@@ -23,6 +23,8 @@ class Configuracion
         $grupos = [
             'Tu negocio' => [
                 $t($conf, 'Mi negocio', 'Nombre, logo, ícono de la app y datos de contacto y de pago', 'bi-shop', 'admin.negocio', 'admin.negocio'),
+                $t($conf && \App\Http\Controllers\Admin\FuncionesController::lista($c), 'Funciones del panel', 'Prende o apaga las partes del panel que no usas', 'bi-toggles', 'admin.funciones', 'admin.funciones*',
+                    ($n = count(array_filter(\App\Http\Controllers\Admin\FuncionesController::lista($c), fn ($f) => ! $f['prendida']))) ? $n . ' ' . ($n === 1 ? 'apagada' : 'apagadas') : null),
                 $t($conf, 'Correo de envío', 'Desde qué correo salen tus cotizaciones y avisos', 'bi-envelope-at', 'admin.negocio.correo', 'admin.negocio.correo*'),
                 $t($conf && ($gym || $c->tiene('autos')), 'Sucursales', 'Tus locales y su dirección', 'bi-geo-alt', 'admin.sucursales', 'admin.sucursales*'),
             ],
@@ -57,14 +59,14 @@ class Configuracion
     {
         $g = self::grupos($u);
         unset($g['Tu cuenta']);
-        return array_merge(['admin.configuracion'], collect($g)->flatten(1)->pluck('activo')->all());
+        return array_merge(['admin.configuracion', 'admin.usuarios*'], collect($g)->flatten(1)->pluck('activo')->all());
     }
 
-    /** Hay al menos una página del negocio que esta persona puede configurar */
+    /** Hay al menos una página del negocio que esta persona puede configurar (Usuarios cuenta: ya no va suelto en el menú) */
     public static function tieneAlgo(?User $u): bool
     {
         $g = self::grupos($u);
         unset($g['Tu cuenta']);
-        return ! empty($g);
+        return ! empty($g) || (bool) $u?->puede('usuarios');
     }
 }

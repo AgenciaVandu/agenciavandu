@@ -25,8 +25,8 @@
     try { $hoyNav = $gymNav ? \App\Models\Clase::programadas()->delDia(now())->when(! $usuario?->puede('clases'), fn ($q) => $q->where('coach_id', $usuario?->id))->count() : 0; } catch (\Throwable $e) { $hoyNav = 0; }
     $nav = array_values(array_filter([
         ['ruta' => 'admin.resumen',             'activo' => 'admin.resumen',          'icono' => 'bi-grid-1x2',        'texto' => 'Inicio', 'seccion' => 'resumen'],
-        ['ruta' => 'admin.tareas.index',        'activo' => 'admin.tareas.*',         'icono' => 'bi-check2-square',   'texto' => $puede('tareas') ? 'Tareas' : 'Mis tareas', 'cuenta' => $tareasNav, 'seccion' => null, 'modulo' => 'tareas', 'grupo' => 'Trabajo'],
-        $gymNav ? ['ruta' => 'admin.seguimiento', 'activo' => 'admin.seguimiento*', 'icono' => 'bi-person-plus', 'texto' => 'Seguimiento', 'seccion' => 'ventas', 'grupo' => 'Clientes']
+        ['ruta' => 'admin.tareas.index',        'activo' => 'admin.tareas.*',         'icono' => 'bi-check2-square',   'texto' => $puede('tareas') ? 'Tareas' : 'Mis tareas', 'cuenta' => $tareasNav, 'seccion' => null, 'modulo' => 'tareas', 'grupo' => 'Operación'],
+        $gymNav ? ['ruta' => 'admin.seguimiento', 'activo' => 'admin.seguimiento*', 'icono' => 'bi-person-plus', 'texto' => 'Seguimiento', 'seccion' => 'ventas', 'grupo' => 'Vender']
                 : ['ruta' => 'admin.ventas.index',        'activo' => 'admin.ventas.*',         'icono' => 'bi-funnel',          'texto' => 'Prospectos', 'cuenta' => $prospectosNav, 'nuevos' => true, 'seccion' => 'ventas', 'grupo' => 'Vender'],
         ['ruta' => 'admin.clases.index',        'activo' => ['admin.clases.*', 'admin.clase-tipos*', 'admin.ejercicios*'], 'icono' => 'bi-calendar-week', 'texto' => 'Agenda', 'cuenta' => $hoyNav, 'seccion' => ['clases', 'asistencia'], 'modulo' => 'fitness', 'grupo' => 'Operación'],
         ['ruta' => 'admin.lealtad.escanear',    'activo' => 'admin.lealtad.escanear*', 'icono' => 'bi-qr-code-scan',  'texto' => 'Escanear', 'seccion' => 'canjes', 'modulo' => 'lealtad', 'grupo' => 'Operación'],
@@ -37,19 +37,22 @@
         ['ruta' => 'admin.presupuestos.index',  'activo' => 'admin.presupuestos.*',   'icono' => 'bi-file-earmark-text','texto' => 'Cotizaciones', 'cuenta' => $vigentesNav, 'seccion' => 'cotizaciones', 'modulo' => 'cotizaciones', 'grupo' => 'Vender'],
         ['ruta' => 'admin.unidades.index',      'activo' => 'admin.unidades.*',       'icono' => 'bi-car-front',       'texto' => 'Unidades', 'seccion' => ['unidades', 'cobranza'], 'modulo' => 'autos', 'grupo' => 'Vender'],
         ['ruta' => 'admin.creditos.index',      'activo' => 'admin.creditos.*',       'icono' => 'bi-cash-coin',       'texto' => 'Cobranza', 'cuenta' => $atrasoNav, 'seccion' => 'cobranza', 'modulo' => 'autos', 'grupo' => 'Dinero'],
-        ['ruta' => 'admin.proyectos.index',     'activo' => 'admin.proyectos.*',      'icono' => 'bi-kanban',          'texto' => 'Proyectos', 'cuenta' => $activosNav, 'seccion' => 'proyectos', 'grupo' => 'Trabajo'],
-        ['ruta' => 'admin.redes',               'activo' => 'admin.redes*',           'icono' => 'bi-grid-3x3-gap',    'texto' => 'Redes sociales', 'cuenta' => $redesNav ?? 0, 'seccion' => 'redes', 'grupo' => 'Trabajo'],
+        ['ruta' => 'admin.proyectos.index',     'activo' => 'admin.proyectos.*',      'icono' => 'bi-kanban',          'texto' => 'Proyectos', 'cuenta' => $activosNav, 'seccion' => 'proyectos', 'grupo' => 'Operación'],
+        ['ruta' => 'admin.redes',               'activo' => 'admin.redes*',           'icono' => 'bi-grid-3x3-gap',    'texto' => 'Redes sociales', 'cuenta' => $redesNav ?? 0, 'seccion' => 'redes', 'grupo' => 'Operación'],
         ['ruta' => 'admin.clientes.index',      'activo' => 'admin.clientes.*',       'icono' => 'bi-people',          'texto' => $gymNav ? 'Atletas' : 'Clientes', 'cuenta' => $gymNav ? 0 : $nuevosNav, 'nuevos' => true, 'seccion' => 'clientes', 'grupo' => 'Clientes'],
         ['ruta' => 'admin.paquetes',            'activo' => 'admin.paquetes*',        'icono' => 'bi-ticket-perforated', 'texto' => 'Paquetes', 'cuenta' => $renovarNav, 'seccion' => 'membresias', 'modulo' => 'fitness', 'grupo' => 'Vender'],
-        ['ruta' => 'admin.productos.index',     'activo' => 'admin.productos.*',      'icono' => 'bi-box-seam',        'texto' => 'Productos', 'cuenta' => $bajosNav, 'seccion' => ['productos', 'cotizaciones'], 'modulo' => 'stock', 'grupo' => 'Compras e inventario'],
-        ['ruta' => 'admin.proveedores.index',   'activo' => ['admin.proveedores.*', 'admin.ordenes.*'], 'icono' => 'bi-truck', 'texto' => 'Proveedores', 'seccion' => 'proveedores', 'modulo' => 'proveedores', 'grupo' => 'Compras e inventario'],
+        ['ruta' => 'admin.productos.index',     'activo' => 'admin.productos.*',      'icono' => 'bi-box-seam',        'texto' => 'Productos', 'cuenta' => $bajosNav, 'seccion' => ['productos', 'cotizaciones'], 'modulo' => 'stock', 'grupo' => 'Operación'],
+        ['ruta' => 'admin.proveedores.index',   'activo' => ['admin.proveedores.*', 'admin.ordenes.*'], 'icono' => 'bi-truck', 'texto' => 'Proveedores', 'seccion' => 'proveedores', 'modulo' => 'proveedores', 'grupo' => 'Operación'],
+        ['ruta' => 'admin.archivos',            'activo' => 'admin.archivos*',        'icono' => 'bi-folder2-open',    'texto' => 'Archivos', 'seccion' => 'archivos', 'modulo' => 'archivos', 'grupo' => 'Operación'],
         ['ruta' => 'admin.finanzas',            'activo' => 'admin.finanzas*',        'icono' => 'bi-graph-up-arrow',  'texto' => 'Finanzas', 'seccion' => 'finanzas', 'grupo' => 'Dinero'],
-        ['ruta' => 'admin.gastos',              'activo' => 'admin.gastos*',          'icono' => 'bi-receipt',         'texto' => $puede('finanzas') ? 'Gastos' : 'Mis gastos', 'seccion' => ['gastos', 'finanzas'], 'modulo' => 'gastos', 'grupo' => ($cuentaNav?->tiene('stock') || $cuentaNav?->tiene('proveedores')) ? 'Compras e inventario' : 'Dinero'],
+        ['ruta' => 'admin.gastos',              'activo' => 'admin.gastos*',          'icono' => 'bi-receipt',         'texto' => $puede('finanzas') ? 'Gastos' : 'Mis gastos', 'seccion' => ['gastos', 'finanzas'], 'modulo' => 'gastos', 'grupo' => 'Dinero'],
         ['ruta' => 'admin.fitness-reportes',    'activo' => 'admin.fitness-reportes*', 'icono' => 'bi-bar-chart-line', 'texto' => 'Reportes', 'seccion' => ['clases', 'finanzas'], 'modulo' => 'fitness', 'grupo' => 'Dinero'],
     ], fn ($i) => (! isset($i['modulo']) || $cuentaNav?->tiene($i['modulo'])) && ($i['seccion'] === null || collect((array) $i['seccion'])->contains(fn ($s) => $puede($s)))));
-    // Menú agrupado por intención: Vender, Clientes, Operación, Trabajo, Compras e inventario, Dinero
-    $ordenGrupos = ['' => 0, 'Vender' => 1, 'Clientes' => 2, 'Operación' => 3, 'Trabajo' => 4, 'Compras e inventario' => 5, 'Dinero' => 6];
+    // Las mismas áreas para todos los negocios: Inicio, Vender, Clientes, Operación (lo que entregas) y Dinero; Ajustes va abajo
+    $ordenGrupos = ['' => 0, 'Vender' => 1, 'Clientes' => 2, 'Operación' => 3, 'Dinero' => 4];
     $nav = collect($nav)->values()->sortBy(fn ($i, $k) => ($ordenGrupos[$i['grupo'] ?? ''] ?? 9) * 100 + $k)->values()->all();
+    // El título de un área solo aparece si tiene dos o más opciones (un título para un solo enlace es ruido)
+    $porGrupo = collect($nav)->countBy(fn ($i) => $i['grupo'] ?? '');
     $inicioNav = $usuario ? \App\Support\Permisos::inicio($usuario) : route('admin.resumen');
     // Barra inferior del celular: hasta 4 accesos (+ el botón de nueva cotización si la puede hacer)
     $tabs = array_slice(array_values(array_filter([
@@ -157,6 +160,7 @@
         .side-cta .side-cta-menu i { color: var(--marca); }
         .side-label { padding: 0 22px 8px; font-size: 12px; color: #8E86B0; }
         .side-grupo { padding: 14px 22px 4px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #6F6796; }
+        .side-sep { height: 10px; }
         .side nav a { position: relative; display: flex; align-items: center; gap: 12px; margin: 2px 12px; padding: 9px 12px;
                       border-radius: 8px; color: #C9CDD6; text-decoration: none; font-size: 14.5px; }
         .side nav a i { font-size: 17px; width: 18px; text-align: center; color: #9C94C2; }
@@ -183,6 +187,16 @@
 
         .main { margin-left: var(--side); min-height: 100vh; }
         .page { max-width: 1240px; margin: 0 auto; padding: 32px 36px 64px; }
+        .regresar { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--muted); text-decoration: none; margin: -6px 0 10px; padding: 4px 0; }
+        .regresar:hover { color: var(--ink); }
+        /* Confirmaciones propias (reemplazan la ventanita del navegador) */
+        .cfm-fondo { position: fixed; inset: 0; background: rgba(16, 12, 32, .45); display: grid; place-items: center; z-index: 2000; padding: 16px; }
+        .cfm { background: #fff; border-radius: 16px; max-width: 420px; width: 100%; padding: 22px 22px 18px; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+        .cfm .cfm-ico { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 19px; background: var(--sunken); margin-bottom: 12px; }
+        .cfm.peligro .cfm-ico { background: var(--red-soft); color: var(--red); }
+        .cfm p { margin: 0 0 18px; font-size: 15.5px; line-height: 1.45; white-space: pre-line; }
+        .cfm .cfm-acc { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+        .cfm.peligro .btn-primario { background: var(--red); border-color: var(--red); }
         .page-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
         .page-head h1 { font-size: 26px; font-weight: 600; letter-spacing: -.02em; margin: 0; }
         .page-head .sub { color: var(--muted); margin: 4px 0 0; }
@@ -515,13 +529,12 @@
         </div>
     @endif
     <button type="button" class="side-buscar" data-buscar><i class="bi bi-search"></i> Buscar… <kbd>⌘K</kbd></button>
-    <div class="side-label">Panel</div>
     <nav>
         @php $grupoActual = null; @endphp
         @foreach($nav as $item)
             @if(($item['grupo'] ?? null) && ($item['grupo'] ?? null) !== $grupoActual)
                 @php $grupoActual = $item['grupo']; @endphp
-                <div class="side-grupo">{{ $grupoActual }}</div>
+                @if(($porGrupo[$grupoActual] ?? 0) > 1)<div class="side-grupo">{{ $grupoActual }}</div>@else<div class="side-sep"></div>@endif
             @endif
             <a href="{{ route($item['ruta']) }}" class="{{ request()->routeIs($item['activo']) ? 'activo' : '' }}"
                @if(request()->routeIs($item['activo'])) aria-current="page" @endif>
@@ -537,11 +550,6 @@
         @elseif(config('vandu.marca.sitio'))
             <a href="https://{{ preg_replace('#^https?://#', '', config('vandu.marca.sitio')) }}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> {{ preg_replace('#^https?://#', '', config('vandu.marca.sitio')) }}</a>
         @endif
-        @if($puede('archivos'))
-        <a href="{{ route('admin.archivos') }}" class="{{ request()->routeIs('admin.archivos*') ? 'activo' : '' }}">
-            <i class="bi {{ request()->routeIs('admin.archivos*') ? 'bi-folder-fill' : 'bi-folder2-open' }}"></i> Archivos
-        </a>
-        @endif
         @if(\App\Support\Configuracion::tieneAlgo($usuario))
         <a href="{{ route('admin.configuracion') }}" class="{{ request()->routeIs(...\App\Support\Configuracion::patrones($usuario)) ? 'activo' : '' }}">
             <i class="bi bi-sliders"></i> Configuración
@@ -551,11 +559,6 @@
         <a href="{{ route('admin.mi-plan') }}" class="{{ request()->routeIs('admin.mi-plan*') ? 'activo' : '' }}">
             <i class="bi bi-patch-check"></i> Mi plan
             @if(in_array($licenciaEstado->clave, ['por_vencer', 'gracia', 'lectura', 'mantenimiento'], true))<span class="ms-auto" style="width:8px;height:8px;border-radius:50%;background:{{ in_array($licenciaEstado->clave, ['gracia', 'lectura'], true) ? '#E5484D' : '#F5A524' }}"></span>@endif
-        </a>
-        @endif
-        @if($puede('usuarios'))
-        <a href="{{ route('admin.usuarios') }}" class="{{ request()->routeIs('admin.usuarios*') ? 'activo' : '' }}">
-            <i class="bi {{ request()->routeIs('admin.usuarios*') ? 'bi-person-gear' : 'bi-person-gear' }}"></i> Usuarios
         </a>
         @endif
         @if($usuario?->plataforma)
@@ -577,7 +580,7 @@
 
     <div class="side-foot">
         <span class="avatar av-yo">{{ $iniciales }}</span>
-        <a href="{{ route('admin.cuenta') }}" class="yo text-decoration-none" title="Mi cuenta"><b>{{ $usuario?->name }}</b><span>{{ $usuario?->puesto ?: $usuario?->email }}</span></a>
+        <a href="{{ route('admin.cuenta') }}" class="yo text-decoration-none" title="Mi perfil"><b>{{ $usuario?->name }}</b><span>{{ $usuario?->puesto ?: $usuario?->email }}</span></a>
         <form method="post" action="{{ route('logout') }}" class="m-0">
             @csrf
             <button type="submit" title="Cerrar sesión" aria-label="Cerrar sesión"><i class="bi bi-box-arrow-right"></i></button>
@@ -608,6 +611,23 @@
             </div>
         @endif
 
+        @php
+            // "Regresar": a la sección del menú de donde cuelga esta pantalla (o a Configuración / Plataforma)
+            $rutaAct = request()->route()?->getName();
+            $regresar = null;
+            if ($rutaAct && ! View::hasSection('sin_regresar')) {
+                $esInicioDeSeccion = collect($nav)->contains(fn ($i) => $i['ruta'] === $rutaAct) || in_array($rutaAct, ['admin.resumen', 'admin.configuracion', 'admin.plataforma', 'admin.notificaciones'], true);
+                if (! $esInicioDeSeccion) {
+                    $padreNav = collect($nav)->first(fn ($i) => request()->routeIs(...(array) $i['activo']));
+                    if ($padreNav) $regresar = ['url' => route($padreNav['ruta']), 'texto' => $padreNav['texto']];
+                    elseif (request()->routeIs('admin.plataforma*')) $regresar = ['url' => route('admin.plataforma'), 'texto' => 'Plataforma'];
+                    elseif (request()->routeIs(...array_merge(\App\Support\Configuracion::patrones($usuario), ['admin.mi-plan*', 'admin.cuenta*', 'admin.funciones*']))) $regresar = ['url' => route('admin.configuracion'), 'texto' => 'Configuración'];
+                }
+            }
+        @endphp
+        @if($regresar)
+            <a href="{{ $regresar['url'] }}" class="regresar" data-regresar><i class="bi bi-arrow-left"></i> {{ $regresar['texto'] }}</a>
+        @endif
         @yield('contenido')
     </main>
 </div>
@@ -1100,5 +1120,48 @@
 })();
 </script>
 @stack('scripts')
+<div class="cfm-fondo" id="cfm" hidden role="dialog" aria-modal="true" aria-labelledby="cfm-msg">
+    <div class="cfm"><div class="cfm-ico"><i class="bi bi-question-lg"></i></div><p id="cfm-msg"></p>
+        <div class="cfm-acc"><button type="button" class="btn btn-borde" data-cfm="no">Cancelar</button><button type="button" class="btn btn-primario" data-cfm="si">Sí, continuar</button></div></div>
+</div>
+<script>
+/* Confirmaciones propias: el código sigue usando confirm(); aquí se muestra un cuadro del panel y, si acepta, se repite la acción */
+(function () {
+    var nativo = window.confirm, aprobado = false, ultimo = null, abierto = false;
+    var caja = document.getElementById('cfm'), msg = document.getElementById('cfm-msg'), si = caja.querySelector('[data-cfm=si]'), no = caja.querySelector('[data-cfm=no]');
+    document.addEventListener('click', function (e) { if (!caja.contains(e.target)) ultimo = { tipo: 'click', el: e.target }; }, true);
+    document.addEventListener('submit', function (e) { ultimo = { tipo: 'submit', el: e.target, boton: e.submitter || null }; }, true);
+    function cerrar() { caja.hidden = true; abierto = false; }
+    function mostrar(texto, accion) {
+        var peligro = /eliminar|borrar|quitar|cancelar|reiniciar|desactivar|no se puede deshacer/i.test(texto);
+        msg.textContent = texto;
+        caja.querySelector('.cfm').classList.toggle('peligro', peligro);
+        caja.querySelector('.cfm-ico i').className = 'bi ' + (peligro ? 'bi-exclamation-triangle' : 'bi-question-lg');
+        si.textContent = /eliminar|borrar/i.test(texto) ? 'Sí, eliminar' : /quitar/i.test(texto) ? 'Sí, quitar' : /cancelar/i.test(texto) ? 'Sí, cancelar' : 'Sí, continuar';
+        caja.hidden = false; abierto = true; setTimeout(function () { si.focus(); }, 30);
+        si.onclick = function () { cerrar(); aprobado = true; setTimeout(function () { aprobado = false; }, 1500); accion(); };
+    }
+    no.onclick = cerrar;
+    caja.addEventListener('click', function (e) { if (e.target === caja) cerrar(); });
+    document.addEventListener('keydown', function (e) { if (abierto && e.key === 'Escape') cerrar(); });
+    window.confirm = function (texto) {
+        if (aprobado) { aprobado = false; return true; }
+        var a = ultimo; ultimo = null;
+        if (!a || abierto) return nativo.call(window, texto);
+        setTimeout(function () {
+            mostrar(String(texto), function () {
+                if (a.tipo === 'submit') { a.boton && a.boton.form === a.el ? a.el.requestSubmit(a.boton) : a.el.requestSubmit(); }
+                else a.el.click();
+            });
+        }, 0);
+        return false;
+    };
+    /* Regresar: si vienes de la misma sección, vuelve a donde estabas (con tus filtros) */
+    var r = document.querySelector('[data-regresar]');
+    if (r && document.referrer && document.referrer.indexOf(r.href.split('?')[0]) === 0 && document.referrer !== location.href) {
+        r.addEventListener('click', function (e) { e.preventDefault(); history.back(); });
+    }
+})();
+</script>
 </body>
 </html>

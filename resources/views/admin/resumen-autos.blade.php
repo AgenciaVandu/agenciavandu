@@ -1,5 +1,5 @@
 @extends('admin.layout')
-@section('titulo', 'Resumen')
+@section('titulo', 'Inicio')
 
 @php
     $dinero = fn ($n) => '$' . number_format((float) $n, 0);

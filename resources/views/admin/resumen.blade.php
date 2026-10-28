@@ -87,6 +87,7 @@
     @endunless
 </div>
 @include('admin._inicio-rapido')
+@include('admin._hoy')
 
 <div class="aviso-push" x-data="avisoPush()" x-show="visible" x-cloak>
     <i class="bi bi-bell"></i>

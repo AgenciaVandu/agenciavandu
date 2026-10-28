@@ -73,7 +73,7 @@ class AdminAuth
             // El inicio lleva a lo primero que sí puede ver
             if ($ruta === 'admin.resumen') return redirect()->to(Permisos::inicio($u));
             if ($request->expectsJson()) return response()->json(['message' => 'Tu rol no tiene acceso a esta sección.'], 403);
-            return response()->view('admin.sin-permiso', ['inicio' => Permisos::inicio($u), 'porGiro' => Permisos::faltaModulo($ruta)], 403);
+            return response()->view('admin.sin-permiso', ['inicio' => Permisos::inicio($u), 'porGiro' => Permisos::faltaModulo($ruta), 'apagada' => Permisos::apagadaDeRuta($ruta)], 403);
         }
 
         return $next($request);

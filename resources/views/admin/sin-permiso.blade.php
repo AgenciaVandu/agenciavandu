@@ -4,7 +4,12 @@
 @section('contenido')
 <div class="panel" style="max-width: 560px; margin: 40px auto 0">
     <div class="vacio">
-        @if($porGiro ?? false)
+        @if($apagada ?? false)
+            <div class="ico"><i class="bi bi-toggle-off"></i></div>
+            <h3>{{ $apagada }} está apagada</h3>
+            <p>Tu negocio apagó esta parte del panel. No se borró nada: la puedes volver a prender cuando quieras.</p>
+            @if(\App\Support\Permisos::puedeRuta(auth()->user(), 'admin.funciones'))<a href="{{ route('admin.funciones') }}" class="btn btn-primario mt-2">Ir a Funciones del panel</a>@endif
+        @elseif($porGiro ?? false)
             <div class="ico"><i class="bi bi-puzzle"></i></div>
             <h3>Esta sección no viene con tu tipo de negocio</h3>
             <p>Tu panel está armado para lo que haces y esta parte no la incluye. Si te serviría, escríbenos y lo vemos.</p>

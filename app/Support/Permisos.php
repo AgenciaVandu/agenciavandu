@@ -78,6 +78,7 @@ class Permisos
         ['admin.creditos.*', 'cobranza'],
         ['admin.sucursales*', 'configuracion'],
         ['admin.mi-plan*', 'configuracion'],
+        ['admin.funciones*', 'configuracion'],
         ['admin.credito-ajustes*', 'configuracion'],
         // Gimnasio: el entrenador ve la agenda y sus clases; programarlas y cambiar cupos es de "clases"
         ['admin.clases.index', ['clases', 'asistencia']],
@@ -142,6 +143,17 @@ class Permisos
         }
         $s = self::deRuta($nombre);
         return $s !== null && $s !== ['*'] && $s !== ['@plataforma'] && ! array_filter($s, fn ($x) => ! isset(self::MODULOS[$x]) || $c?->tiene(self::MODULOS[$x]));
+    }
+
+    /** Si la ruta es de una función que el negocio apagó, su nombre ("Tareas") */
+    public static function apagadaDeRuta(?string $nombre): ?string
+    {
+        $c = Cuentas::actual();
+        if (! $nombre || ! $c) return null;
+        $modulos = collect(self::RUTAS_MODULO)->filter(fn ($r) => Str::is($r[0], $nombre))->pluck(1)
+            ->merge(collect(self::deRuta($nombre) ?? [])->map(fn ($s) => self::MODULOS[$s] ?? null)->filter());
+        foreach ($modulos as $m) if ($c->apagado($m)) return \App\Models\Cuenta::OPCIONALES[$m][0];
+        return null;
     }
 
     /** Secciones que pide una ruta; null = no está mapeada (solo super admin) */

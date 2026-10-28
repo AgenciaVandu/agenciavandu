@@ -91,6 +91,8 @@ return [
             'nombre'  => 'Venta de productos y servicios',
             'icono'   => 'bi-shop',
             'modulos' => ['stock'],
+            // Arranca sin lo que una tienda casi no usa; el dueño lo prende en Configuración → Funciones
+            'apagados' => ['tareas', 'archivos'],
             // El costo de cada producto entra solo al elegirlo del catálogo; lo demás se captura si aplica
             'costeo'  => [
                 'utilidad'    => 35,

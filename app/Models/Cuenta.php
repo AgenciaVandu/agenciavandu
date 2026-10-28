@@ -46,14 +46,39 @@ class Cuenta extends Model
         return config("vandu.giros.{$this->giro}") ?? config('vandu.giros.agencia');
     }
 
-    /** Módulos del giro, más los que se le activen a un negocio en particular (ajustes.modulos) */
-    public function tiene(string $modulo): bool
+    /** Partes del panel que cada negocio puede prender o apagar (Configuración → Funciones). Apagar no borra nada. */
+    public const OPCIONALES = [
+        'ventas'       => ['Prospectos', 'Quién te pregunta pero aún no compra, con su seguimiento', 'bi-funnel'],
+        'cotizaciones' => ['Cotizaciones', 'Propuestas con precio que tu cliente acepta en línea', 'bi-file-earmark-text'],
+        'proyectos'    => ['Proyectos', 'Trabajos con etapas, pagos y un enlace para que tu cliente vea el avance', 'bi-kanban'],
+        'tareas'       => ['Tareas', 'Pendientes que asignas a tu equipo', 'bi-check2-square'],
+        'proveedores'  => ['Proveedores y compras', 'Órdenes de compra, sus facturas y lo que les debes', 'bi-truck'],
+        'archivos'     => ['Archivos (Dropbox)', 'Explorar tu Dropbox desde el panel', 'bi-folder2-open'],
+        'redes'        => ['Redes sociales', 'Calendario de publicaciones con aprobación de tus clientes', 'bi-grid-3x3-gap'],
+    ];
+
+    /** El negocio la apagó en Configuración → Funciones */
+    public function apagado(string $modulo): bool
     {
-        // Proyectos, Cotizaciones, Proveedores, Archivos (Dropbox) y Tareas vienen prendidos; un tipo de empresa los apaga con "sin_…"
+        return isset(self::OPCIONALES[$modulo]) && in_array($modulo, (array) $this->ajuste('apagados', []), true);
+    }
+
+    /** Lo que trae su tipo de negocio, sin contar lo que el negocio apagó (para saber qué puede prender) */
+    public function incluye(string $modulo): bool
+    {
+        // Proyectos, Cotizaciones, Proveedores, Archivos (Dropbox) y Tareas vienen prendidos; un tipo de empresa los quita con "sin_…"
         if (in_array($modulo, ['proyectos', 'cotizaciones', 'proveedores', 'archivos', 'tareas', 'clientes', 'ventas', 'finanzas'], true)) return ! $this->tiene('sin_' . $modulo);
         return in_array($modulo, $this->giro_info['modulos'] ?? [], true)
             || in_array($modulo, (array) $this->ajuste('modulos', []), true);
     }
+
+    /** Módulos del giro, más los que se le activen a un negocio en particular (ajustes.modulos), menos los que apagó */
+    public function tiene(string $modulo): bool
+    {
+        if ($this->apagado($modulo)) return false;
+        return $this->incluye($modulo);
+    }
+
 
     /** Logo como data URI (para el panel, la vista del cliente, el PDF y los correos) */
     public function logo(bool $oscuro = false): ?string

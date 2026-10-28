@@ -46,7 +46,7 @@
 @section('contenido')
 <div class="page-head">
     <div>
-        <a href="{{ route('admin.plataforma') }}" class="secundario small text-decoration-none"><i class="bi bi-arrow-left"></i> Plataforma</a>
+
         <h1>{{ $cuenta->nombre }}</h1>
         <p class="sub">Licencia, pagos y límites. <span class="estado estado-{{ $e->clase }}">{{ $e->texto }}</span></p>
     </div>

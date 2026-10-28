@@ -1,10 +1,10 @@
 @extends('admin.layout')
-@section('titulo', 'Mi cuenta')
+@section('titulo', 'Mi perfil')
 
 @section('contenido')
 <div class="page-head">
     <div>
-        <h1>Mi cuenta</h1>
+        <h1>Mi perfil</h1>
         <p class="sub">{{ $u->puesto ?: 'Sin puesto' }} · {{ $u->rol?->nombre ?? 'Sin rol' }} · {{ $u->rol?->resumen }}</p>
     </div>
 </div>
