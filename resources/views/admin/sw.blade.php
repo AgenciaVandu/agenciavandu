@@ -42,8 +42,8 @@ const ICONO = @json(\App\Support\IconoApp::url(null, 'icono-192.png'));
 
 self.addEventListener('push', (e) => {
     let d = {};
-    try { d = e.data ? e.data.json() : {}; } catch (err) { d = { titulo: 'Vandu', cuerpo: e.data ? e.data.text() : '' }; }
-    e.waitUntil(self.registration.showNotification(d.titulo || 'Vandu', {
+    try { d = e.data ? e.data.json() : {}; } catch (err) { d = { titulo: {{ Js::from(config('vandu.plataforma.nombre')) }}, cuerpo: e.data ? e.data.text() : '' }; }
+    e.waitUntil(self.registration.showNotification(d.titulo || {{ Js::from(config('vandu.plataforma.nombre')) }}, {
         body: d.cuerpo || '',
         icon: ICONO,
         badge: ICONO,

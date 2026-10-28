@@ -43,10 +43,10 @@ class IconoApp
         return $v ??= substr(md5((string) @md5_file(resource_path('img/app/icono-512.png'))), 0, 8);
     }
 
-    /** Nombre de la app instalada: el del negocio (la cuenta principal es Vandu) */
+    /** Nombre de la app instalada: el del negocio (en la cuenta principal, el de la plataforma: Nerby) */
     public static function nombre(?Cuenta $c): string
     {
-        return ! $c || $c->id === Cuentas::principalId() ? 'Vandu' : $c->nombre;
+        return ! $c || $c->id === Cuentas::principalId() ? config('vandu.plataforma.nombre') : $c->nombre;
     }
 
     /**

@@ -6,14 +6,14 @@
     {{-- App en el celular: sin zoom por doble toque (pellizcar sigue funcionando) y sin el zoom de iPhone al escribir en un campo --}}
     <style>html { touch-action: manipulation; -webkit-text-size-adjust: 100%; } @media (pointer: coarse) { input, select, textarea { font-size: max(16px, 1em) !important; } }</style>
     <meta name="robots" content="noindex, nofollow">
-    <title>{{ $u && $u->pendiente ? 'Bienvenido' : 'Nueva contraseña' }} · Vandu</title>
+    <title>{{ $u && $u->pendiente ? 'Bienvenido' : 'Nueva contraseña' }} · {{ config('vandu.plataforma.nombre') }}</title>
     <link rel="icon" href="/favi.svg" type="image/svg+xml">
     <link rel="manifest" href="{{ route('app.manifiesto') }}">
     <meta name="theme-color" content="#1A103D">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Vandu">
+    <meta name="apple-mobile-web-app-title" content="{{ config('vandu.plataforma.nombre') }}">
     <link rel="apple-touch-icon" href="{{ \App\Support\IconoApp::url(null, 'apple-touch-icon.png') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ \App\Support\IconoApp::url(null, 'favicon-32.png') }}">
     <link rel="preload" href="{{ route('vandu.fuente') }}" as="font" type="font/woff2" crossorigin>
@@ -80,7 +80,7 @@
 <aside class="marca">
     <x-logo-vandu width="128" height="41" />
     <div>
-        <h1>El panel del equipo Vandu</h1>
+        <h1>Tu panel de {{ config('vandu.plataforma.nombre') }}</h1>
         <p>Tus tareas, tus entregas y lo que necesitas de cada cliente, en un solo lugar.</p>
     </div>
     <span class="pie">agenciavandu.com</span>

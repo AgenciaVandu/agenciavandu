@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#13161D">
-    <title>Sin conexión · Vandu</title>
+    <title>Sin conexión · {{ config('vandu.plataforma.nombre') }}</title>
     <style>
         @font-face { font-family: 'Geist'; src: url('{{ route('vandu.fuente') }}') format('woff2'); font-weight: 100 900; font-display: swap; }
         * { box-sizing: border-box; }

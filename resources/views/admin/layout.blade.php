@@ -97,14 +97,14 @@
     {{-- App en el celular: sin zoom por doble toque (pellizcar sigue funcionando) y sin el zoom de iPhone al escribir en un campo --}}
     <style>html { touch-action: manipulation; -webkit-text-size-adjust: 100%; } @media (pointer: coarse) { input, select, textarea { font-size: max(16px, 1em) !important; } }</style>
     <meta name="robots" content="noindex, nofollow">
-    <title>@yield('titulo', 'Panel') · {{ \App\Support\Cuentas::esPrincipal() ? 'Vandu' : \App\Support\Cuentas::actual()?->nombre }}</title>
+    <title>@yield('titulo', 'Panel') · {{ \App\Support\Cuentas::esPrincipal() ? config('vandu.plataforma.nombre') : \App\Support\Cuentas::actual()?->nombre }}</title>
     <link rel="icon" href="/favi.svg" type="image/svg+xml">
     <link rel="manifest" href="{{ route('app.manifiesto', ['v' => \App\Support\IconoApp::huella(\App\Support\Cuentas::actual())]) }}">
     <meta name="theme-color" content="#1A103D">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="{{ \App\Support\Cuentas::esPrincipal() ? 'Vandu' : \App\Support\Cuentas::actual()?->nombre }}">
+    <meta name="apple-mobile-web-app-title" content="{{ \App\Support\Cuentas::esPrincipal() ? config('vandu.plataforma.nombre') : \App\Support\Cuentas::actual()?->nombre }}">
     <link rel="apple-touch-icon" href="{{ \App\Support\IconoApp::url(\App\Support\Cuentas::actual(), 'apple-touch-icon.png') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ \App\Support\IconoApp::url(\App\Support\Cuentas::actual(), 'favicon-32.png') }}">
     <link rel="preload" href="{{ route('vandu.fuente') }}" as="font" type="font/woff2" crossorigin>
@@ -476,7 +476,7 @@
     <div class="ios-in">
         <img src="{{ \App\Support\IconoApp::url($cuentaNav, 'icono-192.png') }}" alt="" width="40" height="40">
         <div class="t">
-            <b>Instala {{ \App\Support\Cuentas::esPrincipal() ? 'Vandu' : $cuentaNav?->nombre }} en tu iPhone</b>
+            <b>Instala {{ \App\Support\Cuentas::esPrincipal() ? config('vandu.plataforma.nombre') : $cuentaNav?->nombre }} en tu iPhone</b>
             <template x-if="paso === 'safari'"><span>Toca <i class="bi bi-box-arrow-up"></i> <b>Compartir</b> abajo y luego <b>«Agregar a inicio»</b>.</span></template>
             <template x-if="paso === 'chrome'"><span>Toca <i class="bi bi-box-arrow-up"></i> <b>Compartir</b> en la barra de arriba y luego <b>«Agregar a pantalla de inicio»</b>.</span></template>
             <template x-if="paso === 'abrir'"><span>Esta ventana no permite instalar. Abre <b>agenciavandu.com/admin</b> en <b>Safari</b> y ahí sigue los pasos.</span></template>

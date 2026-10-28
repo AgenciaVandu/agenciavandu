@@ -18,9 +18,6 @@ return [
     | Los datos de abajo (emisor, banco, marca…) son los de la cuenta principal;
     | cada cuenta nueva los captura en "Mi negocio".
     */
-    'plataforma' => [
-        'nombre' => env('VANDU_PLATAFORMA', 'Vandu'),
-    ],
     'cuenta_principal' => (int) env('VANDU_CUENTA_PRINCIPAL', 1),
 
     // La plataforma (el producto que usan todos los negocios). Agencia Vandu es quien la hace y la vende
