@@ -119,4 +119,26 @@
         @if($gastos->hasPages())<div class="px-3 py-2">{{ $gastos->links() }}</div>@endif
     @endif
 </section>
+@if($compras->isNotEmpty())
+    @php $ctasD = \App\Support\Dinero\Movimientos::cuentas()->keyBy('id'); @endphp
+    <section class="panel mt-4" id="pagos-proveedores">
+        <div class="panel-head"><div><h2>Pagos a proveedores</h2><span class="ayuda">Órdenes de compra pagadas en este periodo. Ya se descontaron de tu dinero: no las registres otra vez como gasto.</span></div>
+            <span class="num fw-semibold">{{ $d2($compras->sum(fn ($o) => $conIva ? $o->total_final : $o->subtotal_final)) }}</span></div>
+        <div class="gx-lista">
+            @foreach($compras as $o)
+                <a href="{{ route('admin.ordenes.show', $o) }}" class="gx-fila">
+                    <span class="ico"><i class="bi bi-truck"></i></span>
+                    <span class="min-w-0">
+                        <span class="t d-block text-truncate">{{ $o->folio }} · {{ $o->proveedor?->empresa }}</span>
+                        <span class="s d-block text-truncate">Pagada el {{ $o->pagada_el->locale('es')->isoFormat('D MMM YYYY') }} · {{ \App\Models\Gasto::FORMAS[$o->forma_pago ?: 'transferencia'] ?? 'Transferencia' }}@if($o->cuenta_dinero_id && $ctasD->has($o->cuenta_dinero_id)) · de {{ $ctasD[$o->cuenta_dinero_id]->nombre }}@endif @if($o->proyecto) · costo de {{ $o->proyecto->nombre }}@endif</span>
+                    </span>
+                    <span class="m">
+                        <span class="num d-block">{{ $d2($conIva ? $o->total_final : $o->subtotal_final) }}</span>
+                        <span class="gx-comp {{ $o->factura_total ? 'xml' : '' }}">{{ $o->factura_total ? 'Factura' : 'Sin factura' }}</span>
+                    </span>
+                </a>
+            @endforeach
+        </div>
+    </section>
+@endif
 @endsection

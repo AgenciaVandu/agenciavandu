@@ -115,7 +115,26 @@ class OrdenCompraController extends Controller
         }
         $cambios = ['estado' => $d['estado'], 'cancelada_at' => null, 'motivo_cancelacion' => null];
         if ($d['estado'] !== 'borrador' && ! $orden->enviada_at) $cambios['enviada_at'] = now();
+        // Pagada: cuándo, cómo y de qué cuenta salió el dinero (así no hay que capturarlo otra vez en Gastos)
+        if ($d['estado'] === 'pagada') {
+            $tz = config('vandu.zona_horaria');
+            $p = $request->validate([
+                'pagada_el' => 'nullable|date|before_or_equal:' . now($tz)->toDateString(),
+                'forma_pago' => ['nullable', \Illuminate\Validation\Rule::in(array_keys(\App\Models\Gasto::FORMAS))],
+                'cuenta_dinero_id' => ['nullable', 'integer', \Illuminate\Validation\Rule::in(\App\Support\Dinero\Movimientos::cuentas()->pluck('id')->all())],
+            ], ['pagada_el.before_or_equal' => 'El pago no puede tener fecha futura.', 'cuenta_dinero_id.in' => 'Elige una de tus cuentas.']);
+            $orden->forceFill([
+                'pagada_el' => $p['pagada_el'] ?? ($orden->pagada_el?->toDateString() ?? now($tz)->toDateString()),
+                'forma_pago' => $p['forma_pago'] ?? ($orden->forma_pago ?: 'transferencia'),
+                // Sin cuenta elegida, cae en la de esa forma de pago
+                'cuenta_dinero_id' => $p['cuenta_dinero_id'] ?? \App\Support\Dinero\Movimientos::cuentaPara($p['forma_pago'] ?? ($orden->forma_pago ?: 'transferencia')),
+            ]);
+        }
         $orden->update($cambios);
+        if ($d['estado'] === 'pagada') {
+            $cta = \App\Support\Dinero\Movimientos::cuentas()->firstWhere('id', $orden->cuenta_dinero_id);
+            return back()->with('ok', "Orden {$orden->folio} pagada: \$" . number_format($orden->total_final, 2) . ($cta ? " salió de {$cta->nombre}." : '.') . ' Ya cuenta en Gastos y en tu dinero.');
+        }
         return back()->with('ok', 'Estado: ' . OrdenCompra::ESTADOS[$d['estado']]['texto'] . '.');
     }
 

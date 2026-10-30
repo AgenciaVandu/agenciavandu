@@ -69,6 +69,12 @@ class GastosController extends Controller
         return view('admin.gastos.index', [
             'gastos' => $gastos, 'todos' => $todos, 'periodo' => $periodo, 'conIva' => $conIva, 'categoria' => $categoria, 'q' => $q, 'sinFactura' => $sinFactura,
             'rep' => Reporte::datos($desde, $hasta, $conIva, $todos ? null : $request->user()->id),
+            // Órdenes de compra pagadas en el periodo: ya salieron de tu dinero, no se capturan otra vez como gasto
+            'compras' => $todos && Cuentas::actual()->tiene('proveedores')
+                ? \App\Models\OrdenCompra::with('conceptos', 'proveedor:id,empresa', 'proyecto:id,nombre')->where('estado', 'pagada')->whereNotNull('pagada_el')
+                    ->when($desde, fn ($w) => $w->whereDate('pagada_el', '>=', $desde))->when($hasta, fn ($w) => $w->whereDate('pagada_el', '<=', $hasta))
+                    ->orderByDesc('pagada_el')->get()
+                : collect(),
             'ia' => LectorTicket::activo(),
         ]);
     }

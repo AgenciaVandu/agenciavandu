@@ -44,6 +44,9 @@
     .cancelar-o[open] > summary { display: none; }
     .estados button.activo { background: #13161D; color: #fff; border-color: #13161D; }
     .estados button:hover:not(.activo) { border-color: #13161D; }
+    .pago-info { background: var(--green-soft); color: var(--green-ink); border-radius: 10px; padding: 10px 12px; font-size: 13.5px; display: grid; gap: 2px; }
+    .pago-info .btn-link { color: var(--green-ink); justify-self: start; }
+    .pago-form { display: grid; gap: .5rem; } /* sin d-grid: su !important no deja que se oculte */
     @media (max-width: 991.98px) { .ficha { grid-template-columns: minmax(0, 1fr); } }
 </style>
 @endpush
@@ -216,13 +219,58 @@
     </div>
 
     <div class="d-grid gap-4">
-        <section class="panel">
+        @php
+            $ctasPago = \App\Support\Dinero\Movimientos::cuentas();
+            $erroresPago = $errors->hasAny(['pagada_el', 'forma_pago', 'cuenta_dinero_id']);
+            $ctaPagada = $o->cuenta_dinero_id ? $ctasPago->firstWhere('id', $o->cuenta_dinero_id) : null;
+            $hoyPago = now(config('vandu.zona_horaria'))->toDateString();
+            // A qué cuenta cae cada forma de pago (para preseleccionarla al cambiar la forma)
+            $cuentaDeForma = collect(\App\Models\Gasto::FORMAS)->keys()->mapWithKeys(fn ($f) => [$f => \App\Support\Dinero\Movimientos::cuentaPara($f)]);
+        @endphp
+        <section class="panel" x-data="{ pagar: {{ $erroresPago ? 'true' : 'false' }}, forma: {{ Js::from(old('forma_pago', $o->forma_pago ?: 'transferencia')) }}, cuenta: {{ Js::from((string) old('cuenta_dinero_id', $o->cuenta_dinero_id ?? $cuentaDeForma[$o->forma_pago ?: 'transferencia'] ?? '')) }}, mapa: {{ Js::from($cuentaDeForma) }} }">
             <div class="panel-head"><h2>Estado</h2></div>
             <form method="post" action="{{ route('admin.ordenes.estado', $o) }}" class="panel-body estados">
                 @csrf @method('patch')
                 @foreach(\Illuminate\Support\Arr::except(\App\Models\OrdenCompra::ESTADOS, $o->estado === 'cancelada' ? [] : ['cancelada']) as $k => $e)
-                    <button name="estado" value="{{ $k }}" class="{{ $o->estado === $k ? 'activo' : '' }}" @if($o->estado === $k) aria-pressed="true" disabled @endif>{{ $e['texto'] }}</button>
+                    @if($k === 'pagada' && $o->estado !== 'pagada')
+                        {{-- Pagada pregunta cuándo, cómo y de qué cuenta salió el dinero --}}
+                        <button type="button" @click="pagar = ! pagar" :class="{ activo: pagar }">{{ $e['texto'] }}</button>
+                    @else
+                        <button name="estado" value="{{ $k }}" class="{{ $o->estado === $k ? 'activo' : '' }}" @if($o->estado === $k) aria-pressed="true" disabled @endif>{{ $e['texto'] }}</button>
+                    @endif
                 @endforeach
+            </form>
+            @if($o->estado === 'pagada')
+                <div class="panel-body pt-0">
+                    <div class="pago-info">
+                        <b><i class="bi bi-check2-circle me-1"></i> Pagada el {{ $o->pagada_el?->locale('es')->isoFormat('D [de] MMMM') }}</b>
+                        <div>{{ \App\Models\Gasto::FORMAS[$o->forma_pago ?: 'transferencia'] ?? 'Transferencia' }}@if($ctaPagada) · salió de <b>{{ $ctaPagada->nombre }}</b>@else · sin cuenta asignada @endif · ${{ number_format($o->total_final, 2) }}</div>
+                        <button type="button" class="btn btn-link btn-sm p-0" @click="pagar = ! pagar">Cambiar cómo se pagó</button>
+                    </div>
+                </div>
+            @endif
+            <form method="post" action="{{ route('admin.ordenes.estado', $o) }}" class="panel-body pt-0 pago-form" x-show="pagar" x-cloak>
+                @csrf @method('patch') <input type="hidden" name="estado" value="pagada">
+                <div class="secundario small">Se descuenta <b class="num">${{ number_format($o->total_final, 2) }}</b> de la cuenta que elijas y aparece en Gastos. No la registres otra vez como gasto.</div>
+                <div><label class="form-label small mb-1" for="pago-fecha">Fecha del pago</label>
+                    <input type="date" id="pago-fecha" name="pagada_el" value="{{ old('pagada_el', $o->pagada_el?->toDateString() ?? $hoyPago) }}" max="{{ $hoyPago }}" class="form-control @error('pagada_el') is-invalid @enderror">
+                    @error('pagada_el')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                <div><label class="form-label small mb-1" for="pago-forma">Cómo se pagó</label>
+                    <select id="pago-forma" name="forma_pago" class="form-select" x-model="forma" @change="if (mapa[forma]) cuenta = String(mapa[forma])">
+                        @foreach(\App\Models\Gasto::FORMAS as $k => $f)<option value="{{ $k }}">{{ $f }}</option>@endforeach
+                    </select></div>
+                @if($ctasPago->isNotEmpty())
+                    <div><label class="form-label small mb-1" for="pago-cuenta">De qué cuenta salió</label>
+                        <select id="pago-cuenta" name="cuenta_dinero_id" class="form-select @error('cuenta_dinero_id') is-invalid @enderror" x-model="cuenta">
+                            <option value="">Según la forma de pago</option>
+                            @foreach($ctasPago as $cta)<option value="{{ $cta->id }}">{{ $cta->nombre }}</option>@endforeach
+                        </select>
+                        @error('cuenta_dinero_id')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                @else
+                    <div class="secundario small"><i class="bi bi-info-circle me-1"></i> Aún no das de alta tu caja o tu banco. @if(auth()->user()->puede('finanzas'))<a href="{{ route('admin.finanzas', ['seccion' => 'dinero']) }}">Créalas en Finanzas</a> y @endif el pago se asigna solo según su forma.</div>
+                @endif
+                <div class="d-flex gap-2"><button class="btn btn-primario btn-sm"><i class="bi bi-check2 me-1"></i> {{ $o->estado === 'pagada' ? 'Guardar' : 'Marcar como pagada' }}</button>
+                    <button type="button" class="btn btn-fantasma btn-sm" @click="pagar = false">Cancelar</button></div>
             </form>
             <div class="panel-body pt-0">
                 @if($o->estado === 'cancelada')

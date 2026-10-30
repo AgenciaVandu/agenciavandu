@@ -58,13 +58,15 @@ class OrdenCompra extends Model
             $o->folio ??= static::siguienteFolio();
             $o->fecha ??= now(config('vandu.zona_horaria'))->toDateString();
         });
-        // Pagada: con fecha (para el flujo) y la cuenta de donde salió (transferencia, si nadie la eligió)
+        // Pagada: con fecha (para el flujo), cómo se pagó y la cuenta de donde salió (la de esa forma de pago, si nadie la eligió)
         static::saving(function (OrdenCompra $o) {
             if ($o->estado === 'pagada') {
                 $o->pagada_el ??= now(config('vandu.zona_horaria'))->toDateString();
-                \App\Support\Dinero\Movimientos::asignar($o, 'transferencia');
+                $o->forma_pago ??= 'transferencia';
+                \App\Support\Dinero\Movimientos::asignar($o, $o->forma_pago);
             } elseif ($o->isDirty('estado')) {
                 $o->pagada_el = null;
+                $o->forma_pago = null;
                 $o->cuenta_dinero_id = null;
             }
         });

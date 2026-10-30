@@ -224,4 +224,45 @@ class DineroTest extends TestCase
         $this->get($url)->assertOk()->assertHeader('content-type', 'application/zip');
         $this->get(route('contador.paquete', ['cuenta' => $this->tienda->id, 'mes' => '2026-09']))->assertForbidden();
     }
+
+    public function test_orden_pagada_pregunta_como_se_pago_y_cuenta_como_gasto(): void
+    {
+        $caja = CuentaDinero::create(['nombre' => 'Caja', 'tipo' => 'efectivo', 'formas' => ['efectivo'], 'saldo_inicial' => 2000, 'saldo_desde' => '2026-10-01']);
+        $banco = CuentaDinero::create(['nombre' => 'BBVA', 'tipo' => 'banco', 'formas' => ['transferencia'], 'saldo_inicial' => 10000, 'saldo_desde' => '2026-10-01']);
+        $chica = CuentaDinero::create(['nombre' => 'Caja chica', 'tipo' => 'efectivo', 'formas' => [], 'saldo_inicial' => 500, 'saldo_desde' => '2026-10-01']);
+        Movimientos::olvidar();
+        $prov = Proveedor::create(['empresa' => 'Empaques del Sur']);
+        $o = OrdenCompra::create(['proveedor_id' => $prov->id, 'titulo' => 'Bolsas', 'estado' => 'entregada', 'con_iva' => false, 'iva_porcentaje' => 16]);
+        $o->conceptos()->create(['descripcion' => 'Bolsas', 'cantidad' => 4, 'precio' => 100, 'unidad' => 'paquete']);
+
+        // La pantalla pregunta cómo se pagó y de qué cuenta
+        $this->get(route('admin.ordenes.show', $o))->assertOk()->assertSee('De qué cuenta salió')->assertSee('Caja chica')->assertSee('Marcar como pagada');
+        // En efectivo, sin elegir cuenta: cae en la caja
+        $this->patch(route('admin.ordenes.estado', $o), ['estado' => 'pagada', 'pagada_el' => '2026-10-24', 'forma_pago' => 'efectivo'])->assertSessionHas('ok', fn ($m) => str_contains($m, 'salió de Caja'));
+        $o->refresh();
+        $this->assertSame([$caja->id, 'efectivo', '2026-10-24'], [$o->cuenta_dinero_id, $o->forma_pago, $o->pagada_el->toDateString()]);
+        $this->assertEquals(1600, Movimientos::saldos()[$caja->id]['saldo']);
+
+        // Se cambia a la caja chica: sale de ahí y no de la caja
+        $this->patch(route('admin.ordenes.estado', $o), ['estado' => 'pagada', 'pagada_el' => '2026-10-24', 'forma_pago' => 'efectivo', 'cuenta_dinero_id' => $chica->id])->assertSessionHas('ok');
+        Movimientos::olvidar();
+        $s = Movimientos::saldos();
+        $this->assertEquals([2000, 100], [$s[$caja->id]['saldo'], $s[$chica->id]['saldo']]);
+        $this->get(route('admin.ordenes.show', $o))->assertSee('salió de <b>Caja chica</b>', false)->assertSee('Cambiar cómo se pagó');
+
+        // Una cuenta de otro negocio no se acepta; fecha futura tampoco
+        $this->patch(route('admin.ordenes.estado', $o), ['estado' => 'pagada', 'cuenta_dinero_id' => 99999])->assertSessionHasErrors('cuenta_dinero_id');
+        $this->patch(route('admin.ordenes.estado', $o), ['estado' => 'pagada', 'pagada_el' => '2026-12-01'])->assertSessionHasErrors('pagada_el');
+
+        // Sin proyecto: es gasto del negocio (en utilidad) y aparece en Gastos, sin capturarla dos veces
+        $c = \App\Support\Finanzas\Contabilidad::datos('2026-10-01', '2026-10-31');
+        $this->assertEquals(400, collect($c['resultados']['porCategoria'])->firstWhere('texto', 'Compras a proveedores')['monto']);
+        $this->get(route('admin.gastos'))->assertOk()->assertSee('Pagos a proveedores')->assertSee('Empaques del Sur')->assertSee('de Caja chica');
+
+        // Si deja de estar pagada, sale del dinero y de los gastos
+        $this->patch(route('admin.ordenes.estado', $o), ['estado' => 'entregada'])->assertSessionHas('ok');
+        $this->assertNull($o->fresh()->forma_pago);
+        Movimientos::olvidar();
+        $this->assertEquals(500, Movimientos::saldos()[$chica->id]['saldo']);
+    }
 }

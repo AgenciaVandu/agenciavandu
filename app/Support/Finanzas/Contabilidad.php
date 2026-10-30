@@ -18,7 +18,8 @@ use Illuminate\Support\Collection;
  *      · Ventas: cotizaciones aceptadas en el periodo + ventas directas que no salieron de una cotización.
  *      · Costo: órdenes de compra del proyecto si las hay; si no, el costeo de la cotización; si no, el costo
  *        de los productos del catálogo que salieron. Lo que no tiene costo se avisa (la utilidad sale inflada).
- *      · Gastos: los del módulo de Gastos, por categoría.
+ *      · Gastos: los del módulo de Gastos, por categoría, más las órdenes de compra pagadas que no son de un
+ *        proyecto (las de un proyecto ya son su costo de lo vendido). Así una compra no se captura dos veces.
  *  - IVA (sobre lo cobrado y lo pagado, como lo pide el SAT): IVA de cada cobro − IVA de facturas de gastos
  *    y de órdenes de compra con XML. Un ticket sin factura no da IVA acreditable.
  *  - Comprobantes: gastos con factura (deducibles) contra gastos sin factura.
@@ -111,6 +112,12 @@ class Contabilidad
             'texto' => Gasto::CATEGORIAS[$k]['texto'] ?? 'Otros', 'icono' => Gasto::CATEGORIAS[$k]['icono'] ?? 'bi-three-dots',
             'monto' => round($c->sum('subtotal'), 2), 'n' => $c->count(),
         ])->sortByDesc('monto')->values() : collect();
+        // Compras a proveedores que no son de un proyecto: se pagaron en el periodo y son gasto del negocio
+        $compras = self::comprasSinProyecto($desde, $hasta);
+        if ($compras->isNotEmpty()) {
+            $porCategoria = $porCategoria->push(['texto' => 'Compras a proveedores', 'icono' => 'bi-truck',
+                'monto' => round($compras->sum(fn ($o) => $o->subtotal_final), 2), 'n' => $compras->count()])->sortByDesc('monto')->values();
+        }
         $gastosTot = round($porCategoria->sum('monto'), 2);
         $utilidad = round($bruta - $gastosTot, 2);
 
@@ -130,6 +137,15 @@ class Contabilidad
             'sinCosto'     => $sinCosto,
             'sinCostoMonto'=> round($sinCostoMonto, 2),
         ];
+    }
+
+    /** Órdenes de compra pagadas en el periodo que no son de un proyecto */
+    public static function comprasSinProyecto(?string $desde, ?string $hasta): Collection
+    {
+        if (! Cuentas::actual()?->tiene('proveedores')) return collect();
+        return OrdenCompra::with('conceptos', 'proveedor:id,empresa')->where('estado', 'pagada')->whereNull('proyecto_id')->whereNotNull('pagada_el')
+            ->when($desde, fn ($q) => $q->whereDate('pagada_el', '>=', $desde))->when($hasta, fn ($q) => $q->whereDate('pagada_el', '<=', $hasta))
+            ->orderByDesc('pagada_el')->get();
     }
 
     private static function iva(?string $desde, ?string $hasta, ?Collection $gastos): array

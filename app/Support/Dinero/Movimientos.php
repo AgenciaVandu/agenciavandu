@@ -85,7 +85,7 @@ class Movimientos
             }
         }
         foreach (OrdenCompra::whereNull('cuenta_dinero_id')->whereNotNull('pagada_el')->whereDate('pagada_el', '>=', $desde)->get() as $x) {
-            if ($toca('transferencia')) { $x->forceFill(['cuenta_dinero_id' => $c->id])->saveQuietly(); $n++; }
+            if ($toca($x->forma_pago ?: 'transferencia')) { $x->forceFill(['cuenta_dinero_id' => $c->id])->saveQuietly(); $n++; }
         }
         return $n;
     }
@@ -130,7 +130,7 @@ class Movimientos
         }
         foreach ($rango(OrdenCompra::with('conceptos', 'proveedor:id,empresa')->whereNotNull('pagada_el')->where('estado', 'pagada'), 'pagada_el')->get() as $o) {
             $filas->push((object) ['fecha' => $o->pagada_el->toDateString(), 'clase' => 'compra', 'id' => $o->id, 'concepto' => 'Orden ' . $o->folio,
-                'detalle' => $o->proveedor?->empresa, 'monto' => -round($o->total_final, 2), 'cuenta' => $o->cuenta_dinero_id, 'forma' => 'transferencia',
+                'detalle' => $o->proveedor?->empresa, 'monto' => -round($o->total_final, 2), 'cuenta' => $o->cuenta_dinero_id, 'forma' => self::forma($o->forma_pago ?: 'transferencia'),
                 'url' => route('admin.ordenes.show', $o)]);
         }
         if (self::cobraLicencias()) {
