@@ -322,6 +322,17 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::put('roles/{rol}', [Admin\UsuariosController::class, 'rolUpdate'])->name('roles.update');
     Route::delete('roles/{rol}', [Admin\UsuariosController::class, 'rolDestroy'])->name('roles.destroy');
     Route::get('cobrar', [Admin\CobrarController::class, 'index'])->name('cobrar');
+    // Bandeja de facturas (cotizaciones y ventas directas)
+    Route::get('facturas', [Admin\FacturasController::class, 'index'])->name('facturas');
+    Route::post('facturas/enviar-varias', [Admin\FacturasController::class, 'enviarVarias'])->name('facturas.enviar-varias');
+    Route::post('facturas/{tipo}/{id}/subir', [Admin\FacturasController::class, 'subir'])->whereIn('tipo', ['presupuesto', 'venta'])->whereNumber('id')->name('facturas.subir');
+    Route::post('facturas/{tipo}/{id}/enviar', [Admin\FacturasController::class, 'enviar'])->whereIn('tipo', ['presupuesto', 'venta'])->whereNumber('id')->name('facturas.enviar');
+    Route::get('facturas/{tipo}/{id}/whatsapp', [Admin\FacturasController::class, 'whatsapp'])->whereIn('tipo', ['presupuesto', 'venta'])->whereNumber('id')->name('facturas.whatsapp');
+    Route::post('facturas/{tipo}/{id}/timbrar', [Admin\FacturasController::class, 'timbrar'])->whereIn('tipo', ['presupuesto', 'venta'])->whereNumber('id')->name('facturas.timbrar');
+    Route::get('pedidos/{venta}/facturas/{factura}', [Admin\PedidosController::class, 'verFactura'])->whereNumber('venta')->name('pedidos.factura.ver');
+    Route::delete('pedidos/{venta}/facturas/{factura}', [Admin\PedidosController::class, 'borrarFactura'])->whereNumber('venta')->name('pedidos.factura.borrar');
+    Route::get('configuracion/facturacion', [Admin\FacturacionController::class, 'index'])->name('facturacion');
+    Route::put('configuracion/facturacion', [Admin\FacturacionController::class, 'guardar'])->name('facturacion.guardar');
     Route::post('ejemplos', [Admin\EjemplosController::class, 'cargar'])->name('ejemplos');
     Route::delete('ejemplos', [Admin\EjemplosController::class, 'quitar'])->name('ejemplos.quitar');
     Route::get('configuracion/funciones', [Admin\FuncionesController::class, 'index'])->name('funciones');
@@ -392,6 +403,8 @@ Route::get('/cotizacion/{token}/descargar', [PresupuestoPublicoController::class
     ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:presupuesto')->middleware('throttle:30,1')->name('presupuesto.descargar');
 Route::get('/cotizacion/{token}/factura/{factura}', [PresupuestoPublicoController::class, 'factura'])
     ->where(['token' => '[A-Za-z0-9]{32}', 'factura' => '[0-9]+'])->middleware('cuenta.enlace:presupuesto')->middleware('throttle:30,1')->name('presupuesto.factura');
+Route::post('/cotizacion/{token}/pedir-factura', [PresupuestoPublicoController::class, 'pedirFactura'])
+    ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:presupuesto')->middleware('throttle:8,1,pedir-factura')->name('presupuesto.pedir-factura');
 Route::post('/cotizacion/{token}/responder', [PresupuestoPublicoController::class, 'responder'])
     ->where('token', '[A-Za-z0-9]{32}')->middleware('cuenta.enlace:presupuesto')->middleware('throttle:12,1')->name('presupuesto.responder');
 
@@ -420,6 +433,8 @@ Route::prefix('/pedido/{token}')->where(['token' => '[A-Za-z0-9]{32}'])->middlew
     Route::get('/', [\App\Http\Controllers\PedidoPublicoController::class, 'show'])->name('pedido.publico');
     Route::post('/', [\App\Http\Controllers\PedidoPublicoController::class, 'guardar'])->middleware('throttle:10,1')->name('pedido.publico.guardar');
     Route::get('/nota', [\App\Http\Controllers\PedidoPublicoController::class, 'nota'])->name('pedido.publico.nota');
+    Route::get('/factura/{factura}', [\App\Http\Controllers\PedidoPublicoController::class, 'factura'])->whereNumber('factura')->name('pedido.publico.factura');
+    Route::post('/pedir-factura', [\App\Http\Controllers\PedidoPublicoController::class, 'pedirFactura'])->middleware('throttle:8,1,pedir-factura')->name('pedido.publico.pedir-factura');
 });
 
 // Espacio del proveedor: sus órdenes de compra, facturas, archivos y comentarios

@@ -170,6 +170,47 @@
             @endif
         </section>
 
+        @unless($v->presupuesto_id || $v->estado === 'cancelada')
+            @php
+                $fdoc = new \App\Support\Facturas\Documento($v);
+                $farch = $fdoc->archivos();
+                $fcorreo = $fdoc->correo();
+            @endphp
+            <section class="panel" id="factura">
+                <div class="panel-head"><h2><i class="bi bi-receipt me-1"></i> Factura</h2>
+                    @if($fdoc->enviada())<span class="ayuda">Enviada {{ $fdoc->enviada()->locale('es')->isoFormat('D MMM') }}</span>@elseif($v->factura_solicitada_at)<span class="ayuda" style="color: var(--marca-2)">La pidió el cliente</span>@endif</div>
+                <div class="panel-body d-grid gap-2">
+                    @if($fdoc->fiscales()['rfc'])<div class="small secundario">{{ $fdoc->fiscales()['razon_social'] }} · RFC {{ mb_strtoupper($fdoc->fiscales()['rfc']) }}</div>@endif
+                    @foreach($farch as $f)
+                        <div class="d-flex align-items-center gap-2 small">
+                            <i class="bi {{ $f->icono }}"></i>
+                            <a href="{{ route('admin.pedidos.factura.ver', [$v, $f->id]) }}" target="_blank" class="text-truncate">{{ $f->nombre }}</a>
+                            <form method="post" action="{{ route('admin.pedidos.factura.borrar', [$v, $f->id]) }}" class="ms-auto" onsubmit="return confirm('¿Quitar este archivo?')">@csrf @method('DELETE')
+                                <button class="btn btn-fantasma btn-sm px-1" aria-label="Quitar {{ $f->nombre }}"><i class="bi bi-x-lg"></i></button></form>
+                        </div>
+                    @endforeach
+                    @foreach($fdoc->diferencias() as $dif)<div class="small" style="color: var(--amber)"><i class="bi bi-exclamation-triangle me-1"></i>{{ $dif }}</div>@endforeach
+                    <form method="post" action="{{ route('admin.facturas.subir', ['venta', $v->id]) }}" enctype="multipart/form-data">
+                        @csrf
+                        <label class="btn btn-borde w-100 mb-0" style="position: relative; overflow: hidden"><i class="bi bi-upload me-1"></i> {{ $farch->isEmpty() ? 'Subir PDF y XML' : 'Subir otra' }}
+                            <input type="file" name="facturas[]" multiple accept=".pdf,.xml,application/pdf,text/xml" onchange="this.form.submit()" style="position: absolute; inset: 0; opacity: 0; cursor: pointer"></label>
+                        @error('facturas')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                        @error('facturas.*')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                    </form>
+                    @if($farch->isNotEmpty())
+                        <form method="post" action="{{ route('admin.facturas.enviar', ['venta', $v->id]) }}" class="d-grid gap-2">
+                            @csrf
+                            @unless($fcorreo)<input type="email" name="para" class="form-control" placeholder="Correo del cliente" required>@endunless
+                            <button class="btn btn-primario"><i class="bi bi-envelope me-1"></i> {{ $fdoc->enviada() ? 'Reenviar' : 'Enviar' }}{{ $fcorreo ? ' a ' . $fcorreo : ' por correo' }}</button>
+                        </form>
+                        @if($fdoc->whatsapp())<a href="{{ route('admin.facturas.whatsapp', ['venta', $v->id]) }}" target="_blank" rel="noopener" class="btn btn-borde"><i class="bi bi-whatsapp me-1"></i> Mandar por WhatsApp</a>@endif
+                    @elseif(\App\Support\Facturas\Timbrado::activo())
+                        <a href="{{ route('admin.facturas', ['ver' => 'por_facturar']) }}" class="small">Generarla desde Facturas</a>
+                    @endif
+                </div>
+            </section>
+        @endunless
+
         <section class="panel panel-body d-grid gap-2">
             <div class="pd-dato"><span class="k">Cliente</span>
                 @if($v->cliente)<a href="{{ route('admin.clientes.show', $v->cliente) }}" class="fw-semibold">{{ $v->quien }}</a>@else<b>{{ $v->quien }}</b>@endif

@@ -41,6 +41,8 @@ class Configuracion
                 $t($conf && $c->tiene('autos'), 'Crédito y cobranza', 'Intereses, recargos y termómetro de clientes', 'bi-percent', 'admin.credito-ajustes', 'admin.credito-ajustes*'),
             ],
             'Conexiones' => [
+                $t($conf && ($c->tiene('cotizaciones') || $c->tiene('stock')), 'Facturación', 'Genera tus facturas desde Nerby con Facturapi', 'bi-receipt-cutoff', 'admin.facturacion', 'admin.facturacion*',
+                    \App\Support\Facturas\Timbrado::activo() ? 'Conectado' : 'Sin conectar'),
                 $t($conf && $c->tiene('archivos'), 'Dropbox', 'Dónde se guardan los archivos de tus proyectos', 'bi-dropbox', 'admin.dropbox', 'admin.dropbox*',
                     rescue(fn () => \App\Support\Dropbox\Dropbox::conectado(), false, false) ? 'Conectado' : 'Sin conectar'),
             ],

@@ -35,12 +35,13 @@ class FacturaController extends Controller
             // Si vuelves a subir un archivo con el mismo nombre, reemplaza al anterior
             $presupuesto->facturas()->where('nombre', $nombre)->get()->each->delete();
             $ruta = $f->storeAs("presupuestos/{$presupuesto->id}/facturas", Str::uuid() . '.' . Str::lower($f->getClientOriginalExtension()), 'local');
+            $esXml = Str::lower($f->getClientOriginalExtension()) === 'xml';
             $presupuesto->facturas()->create([
                 'tipo'   => $presupuesto->es_nota ? 'nota' : 'factura',
                 'nombre' => $nombre, 'ruta' => $ruta,
-                'mime'   => Str::lower($f->getClientOriginalExtension()) === 'xml' ? 'application/xml' : ($f->getMimeType() ?: 'application/octet-stream'),
+                'mime'   => $esXml ? 'application/xml' : ($f->getMimeType() ?: 'application/octet-stream'),
                 'peso'   => $f->getSize(),
-            ]);
+            ] + (($esXml && ($x = \App\Support\Facturas\Archivos::leerXml((string) file_get_contents($f->getRealPath())))) ? $x : []));
         }
 
         $n = count($request->file('facturas'));

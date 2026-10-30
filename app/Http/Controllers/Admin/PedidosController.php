@@ -139,7 +139,7 @@ class PedidosController extends Controller
 
     public function show(Request $request, Venta $venta)
     {
-        $venta->load(['conceptos', 'pagos.usuario:id,name', 'cliente', 'vendedor:id,name', 'repartidor:id,name', 'presupuesto:id,folio']);
+        $venta->load(['conceptos', 'pagos.usuario:id,name', 'cliente', 'vendedor:id,name', 'repartidor:id,name', 'presupuesto:id,folio', 'facturas', 'razon']);
         return view('admin.pedidos.show', [
             'v' => $venta,
             'equipo' => User::where('activo', true)->orderBy('name')->get(['id', 'name']),
@@ -182,6 +182,18 @@ class PedidosController extends Controller
         Envios::guardarDatos($venta, ['nombre' => $d['envio_nombre'] ?? null, 'telefono' => $d['envio_telefono'] ?? null, 'direccion' => $d['envio_direccion'],
             'referencias' => $d['envio_referencias'] ?? null, 'lat' => $d['envio_lat'] ?? null, 'lng' => $d['envio_lng'] ?? null], 'vendedor');
         return back()->with('ok', 'Datos de envío guardados' . ($venta->envio_km ? ' · ' . $venta->envio_km . ' km' : '') . ' · envío ' . Venta::dinero($venta->envio_costo) . '.');
+    }
+
+    public function verFactura(Venta $venta, int $factura)
+    {
+        return $venta->facturas()->findOrFail($factura)->respuesta();
+    }
+
+    public function borrarFactura(Venta $venta, int $factura)
+    {
+        $f = $venta->facturas()->findOrFail($factura);
+        $f->delete();
+        return back()->with('ok', "Quitamos {$f->nombre}.");
     }
 
     public function cancelar(Venta $venta)

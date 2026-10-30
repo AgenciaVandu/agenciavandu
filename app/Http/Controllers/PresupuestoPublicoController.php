@@ -68,6 +68,16 @@ class PresupuestoPublicoController extends Controller
         return $f->respuesta();
     }
 
+    /** "Necesito factura": el cliente deja sus datos fiscales desde su cotización aceptada */
+    public function pedirFactura(Request $request, string $token)
+    {
+        $p = Presupuesto::where('token', $token)->firstOrFail();
+        abort_unless($p->estado === 'aceptada' && $p->facturas()->where('tipo', 'factura')->doesntExist(), 410, 'Esta cotización ya no recibe solicitudes de factura.');
+        $request->merge(\App\Support\Facturas\Solicitud::limpiar($request->all()));
+        \App\Support\Facturas\Solicitud::guardar($p, $request->validate(\App\Support\Facturas\Solicitud::reglas(), \App\Support\Facturas\Solicitud::MENSAJES));
+        return redirect()->route('presupuesto.publico', $token)->with('respuesta_ok', '¡Listo! Recibimos tus datos. Te avisaremos cuando tu factura esté lista.')->withFragment('factura');
+    }
+
     /** El cliente acepta o pide cambios desde su enlace (con su nombre y su confirmación) */
     public function responder(Request $request, string $token)
     {

@@ -324,6 +324,10 @@
         @if(session('respuesta_ok'))<div class="aviso-flash ok" role="status">{{ session('respuesta_ok') }}</div>@endif
         @if(session('respuesta_error'))<div class="aviso-flash error" role="alert">{{ session('respuesta_error') }}</div>@endif
 
+        @if($aceptada && $p->comprobante !== 'nota' && $p->facturas->where('tipo', 'factura')->isEmpty())
+            <div style="margin: 16px 0">@include('facturas._pedir', ['accion' => route('presupuesto.pedir-factura', $p->token), 'f' => (new \App\Support\Facturas\Documento($p))->fiscales(), 'pedida' => $p->factura_solicitada_at])</div>
+        @endif
+
         @if($aceptada)
             <section class="resp ok" aria-label="Cotización aceptada">
                 <h2>Cotización aceptada</h2>

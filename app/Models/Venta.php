@@ -16,12 +16,12 @@ class Venta extends Model
     protected $fillable = ['cuenta_id', 'folio', 'cliente_id', 'cliente_nombre', 'cliente_telefono', 'presupuesto_id', 'user_id', 'sucursal_id', 'fecha',
         'subtotal', 'descuento', 'con_iva', 'iva_porcentaje', 'iva', 'envio_costo', 'total', 'pagado', 'credito', 'vence_el', 'estado', 'notas',
         'lleva_envio', 'envio_nombre', 'envio_telefono', 'envio_direccion', 'envio_referencias', 'envio_lat', 'envio_lng', 'envio_km', 'envio_costo_manual',
-        'repartidor_id', 'token', 'datos_at', 'datos_por', 'entregada_at', 'cancelada_at'];
+        'repartidor_id', 'token', 'datos_at', 'datos_por', 'entregada_at', 'cancelada_at', 'factura_solicitada_at', 'razon_id'];
 
     protected $casts = ['fecha' => 'date', 'vence_el' => 'date', 'subtotal' => 'float', 'descuento' => 'float', 'con_iva' => 'boolean', 'iva_porcentaje' => 'float',
         'iva' => 'float', 'envio_costo' => 'float', 'total' => 'float', 'pagado' => 'float', 'credito' => 'boolean', 'lleva_envio' => 'boolean',
         'envio_lat' => 'float', 'envio_lng' => 'float', 'envio_km' => 'float', 'envio_costo_manual' => 'boolean',
-        'datos_at' => 'datetime', 'entregada_at' => 'datetime', 'cancelada_at' => 'datetime'];
+        'datos_at' => 'datetime', 'entregada_at' => 'datetime', 'cancelada_at' => 'datetime', 'factura_solicitada_at' => 'datetime'];
 
     public const ESTADOS = [
         'por_surtir' => ['texto' => 'Por surtir', 'clase' => 'pend', 'icono' => 'bi-box-seam'],
@@ -51,6 +51,9 @@ class Venta extends Model
     public function conceptos(): HasMany { return $this->hasMany(VentaConcepto::class)->orderBy('orden')->orderBy('id'); }
     public function pagos(): HasMany { return $this->hasMany(VentaPago::class)->orderBy('fecha')->orderBy('id'); }
     public function cliente(): BelongsTo { return $this->belongsTo(Cliente::class); }
+    /** Su factura (PDF y XML), y con qué razón social la pidió el cliente */
+    public function facturas(): \Illuminate\Database\Eloquent\Relations\HasMany { return $this->hasMany(VentaFactura::class); }
+    public function razon(): BelongsTo { return $this->belongsTo(ClienteRazon::class, 'razon_id'); }
     public function vendedor(): BelongsTo { return $this->belongsTo(User::class, 'user_id'); }
     public function repartidor(): BelongsTo { return $this->belongsTo(User::class, 'repartidor_id'); }
     public function presupuesto(): BelongsTo { return $this->belongsTo(Presupuesto::class); }

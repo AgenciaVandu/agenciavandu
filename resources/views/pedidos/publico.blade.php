@@ -97,6 +97,18 @@
         @if(! $v->pagada && $v->estado !== 'cancelada')<div class="linea"><span>Por pagar</span><b>{{ $d($v->saldo) }}</b></div>@endif
         <a href="{{ route('pedido.publico.nota', $v->token) }}" target="_blank" class="btn" style="margin-top: 12px; width: 100%">Ver mi nota (PDF)</a>
     </div>
+
+    @php($misFacturas = $v->facturas->where('tipo', 'factura')->sortBy(fn ($f) => $f->ext === 'pdf' ? 0 : 1))
+    @if($misFacturas->isNotEmpty())
+        <div class="caja">
+            <h2>Tu factura</h2>
+            <div style="display: grid; gap: 8px">
+                @foreach($misFacturas as $fa)<a href="{{ route('pedido.publico.factura', [$v->token, $fa->id]) }}" class="btn" style="width: 100%">Descargar {{ strtoupper($fa->ext) }}</a>@endforeach
+            </div>
+        </div>
+    @elseif($v->estado !== 'cancelada')
+        @include('facturas._pedir', ['accion' => route('pedido.publico.pedir-factura', $v->token), 'f' => (new \App\Support\Facturas\Documento($v))->fiscales(), 'pedida' => $v->factura_solicitada_at])
+    @endif
     <p class="pie">{{ $c?->nombre }} · tus datos solo se usan para entregarte este pedido.@if(Route::has('privacidad')) <a href="{{ route('privacidad') }}">Aviso de privacidad</a>@endif</p>
 </main>
 @if($abierto)

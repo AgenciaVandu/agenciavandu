@@ -39,6 +39,7 @@ class Presupuesto extends Model
     protected $casts = [
         'fecha'           => 'date',
         'aceptada_el'     => 'date',
+        'factura_solicitada_at' => 'datetime',
         'vigente_hasta'   => 'datetime',
         'ultima_vista_at' => 'datetime',
         'cancelada_at'    => 'datetime',

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Venta;
+use App\Support\Facturas\Solicitud;
 use App\Support\Push\Notificar;
 use App\Support\Ventas\Envios;
 use Illuminate\Http\Request;
@@ -12,7 +13,7 @@ class PedidoPublicoController extends Controller
 {
     private function venta(string $token): Venta
     {
-        $v = Venta::where('token', $token)->with('conceptos')->first();
+        $v = Venta::where('token', $token)->with(['conceptos', 'facturas', 'cliente', 'razon'])->first();
         abort_unless($v, 404);
         return $v;
     }
@@ -41,6 +42,27 @@ class PedidoPublicoController extends Controller
     {
         $v = $this->venta($token);
         return Admin\PedidosController::pdf($v)->stream('nota-' . $v->folio . '.pdf');
+    }
+
+    /** El cliente descarga su factura (PDF o XML) */
+    public function factura(string $token, int $factura)
+    {
+        $v = $this->venta($token);
+        $f = $v->facturas()->where('tipo', 'factura')->findOrFail($factura);
+        if (! auth()->check()) {
+            Notificar::evento('cotizacion_descargada', "{$v->quien} descargó su factura", "{$v->folio} · {$f->nombre}", route('admin.pedidos.show', $v), 'factura-venta-' . $v->id);
+        }
+        return $f->respuesta();
+    }
+
+    /** "Necesito factura": el cliente deja sus datos fiscales */
+    public function pedirFactura(Request $request, string $token)
+    {
+        $v = $this->venta($token);
+        abort_if($v->estado === 'cancelada' || $v->facturas->where('tipo', 'factura')->isNotEmpty(), 410, 'Este pedido ya no recibe solicitudes de factura.');
+        $request->merge(Solicitud::limpiar($request->all()));
+        Solicitud::guardar($v, $request->validate(Solicitud::reglas(), Solicitud::MENSAJES));
+        return redirect()->route('pedido.publico', $token)->with('ok', '¡Listo! Recibimos tus datos. Te avisaremos cuando tu factura esté lista.');
     }
 
     /** Puede llenar o corregir sus datos mientras el pedido no salga, no se cancele y hasta 7 días después de la venta */
