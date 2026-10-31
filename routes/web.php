@@ -191,6 +191,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::get('pedidos', [Admin\PedidosController::class, 'index'])->name('pedidos');
     Route::get('pedidos/nueva', [Admin\PedidosController::class, 'create'])->name('pedidos.create');
     Route::post('pedidos', [Admin\PedidosController::class, 'store'])->name('pedidos.store');
+    Route::post('pedidos/dictar', [Admin\PedidosController::class, 'dictar'])->middleware('throttle:20,1,dictar')->name('pedidos.dictar');
     Route::get('pedidos/ajustes', [Admin\PedidosController::class, 'ajustes'])->name('pedidos.ajustes');
     Route::post('pedidos/ajustes', [Admin\PedidosController::class, 'guardarAjustes'])->name('pedidos.ajustes.guardar');
     Route::post('pedidos/desde-cotizacion/{presupuesto}', [Admin\PedidosController::class, 'desdeCotizacion'])->name('pedidos.desde-cotizacion');

@@ -86,6 +86,7 @@ class PedidosController extends Controller
             'equipo' => User::where('activo', true)->orderBy('name')->get(['id', 'name']),
             'envios' => $env,
             'conIva' => (bool) Cuentas::actual()->ajuste('ventas.iva', true),
+            'dictar' => \App\Support\Ventas\Dictado::activo(),
         ]);
     }
 
@@ -93,7 +94,8 @@ class PedidosController extends Controller
     {
         $d = $request->validate([
             'productos' => 'required|array|min:1',
-            'productos.*.producto_id' => 'required|integer',
+            'productos.*.producto_id' => 'nullable|integer',
+            'productos.*.descripcion' => 'nullable|required_without:productos.*.producto_id|string|max:250',
             'productos.*.cantidad' => 'required|numeric|min:0.01|max:999999',
             'productos.*.precio' => 'required|numeric|min:0|max:99999999',
             'cliente_id' => 'nullable|integer',
@@ -119,8 +121,10 @@ class PedidosController extends Controller
             'notas' => 'nullable|string|max:2000',
         ], [
             'productos.required' => 'Agrega al menos un producto.',
+            'productos.*.descripcion.required_without' => 'Escribe qué se vendió en cada concepto.',
+            'productos.*.precio.required' => 'Pon el precio de cada producto.',
         ]);
-        foreach ($d['productos'] as $f) abort_unless(Producto::whereKey($f['producto_id'])->exists(), 422, 'Ese producto ya no existe.');
+        foreach ($d['productos'] as $f) if (! empty($f['producto_id'])) abort_unless(Producto::whereKey($f['producto_id'])->exists(), 422, 'Ese producto ya no existe.');
         if ($d['pago'] !== 'contado' && empty($d['cliente_id']) && (blank($d['cliente_nombre'] ?? null) || blank($d['cliente_telefono'] ?? null))) {
             return back()->withErrors(['cliente_nombre' => 'Para vender a crédito o con abonos, captura el nombre y el teléfono del cliente.'])->withInput();
         }
@@ -135,6 +139,14 @@ class PedidosController extends Controller
         $v = Registrar::crear($d, $request->user());
         $msg = 'Venta ' . $v->folio . ' registrada por ' . Venta::dinero($v->total) . '.';
         return redirect()->route('admin.pedidos.show', [$v, 'nueva' => 1])->with('ok', $msg);
+    }
+
+    /** Venta dictada: regresa la venta armada para revisarla en la pantalla (no guarda nada) */
+    public function dictar(Request $request)
+    {
+        $d = $request->validate(['texto' => 'required|string|min:3|max:2000'], ['texto.required' => 'Dicta o escribe la venta.']);
+        $r = \App\Support\Ventas\Dictado::armar($d['texto'], Cuentas::actual(), $request->user());
+        return response()->json($r, $r['ok'] ? 200 : 422);
     }
 
     public function show(Request $request, Venta $venta)

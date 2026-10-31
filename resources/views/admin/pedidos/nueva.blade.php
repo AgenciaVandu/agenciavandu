@@ -9,6 +9,8 @@
         'envios' => ['modo' => $envios['modo'], 'fijo' => (float) $envios['fijo'], 'base' => (float) $envios['base'], 'por_km' => (float) $envios['por_km'],
                      'minimo' => (float) $envios['minimo'], 'factor' => (float) ($envios['factor'] ?: 1.3), 'lat' => $envios['lat'], 'lng' => $envios['lng']],
         'cliente' => $cliente ? ['id' => $cliente->id, 'nombre' => $cliente->empresa ?: $cliente->nombre, 'telefono' => $cliente->telefono] : null,
+        'dictar' => $dictar ? route('admin.pedidos.dictar') : null,
+        'old' => ['nombre' => old('cliente_nombre', ''), 'telefono' => old('cliente_telefono', ''), 'guardar' => (bool) old('guardar_cliente'), 'notas' => old('notas', ''), 'direccion' => old('envio_direccion', '')],
     ];
 @endphp
 
@@ -38,6 +40,22 @@
     .pv-tot { display: grid; gap: 4px; font-size: 14px; } .pv-tot > div { display: flex; justify-content: space-between; } .pv-tot .t { font-size: 22px; font-weight: 700; margin-top: 4px; }
     .pv-caja { position: sticky; top: 16px; }
     .pv-vacio { padding: 26px 16px; text-align: center; color: var(--muted); font-size: 14px; }
+    .pv-linea .libre { font-size: 11.5px; font-weight: 600; color: var(--muted); background: var(--sunken); border-radius: 99px; padding: 1px 7px; margin-left: 4px; }
+    .pv-linea input.desc { font-weight: 600; font-size: 14px; padding: 2px 6px; height: 30px; }
+    .pv-precio.falta { border-color: var(--red); box-shadow: 0 0 0 2px var(--red-soft); }
+    .dv { margin-bottom: 16px; padding: 14px 16px; }
+    .dv-fila { display: flex; gap: 10px; align-items: flex-start; }
+    .dv-mic { width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--marca); color: #fff; font-size: 21px; flex: none; display: grid; place-items: center; }
+    .dv-mic.oye { background: var(--red); animation: dv-pulso 1.2s infinite; }
+    @keyframes dv-pulso { 0% { box-shadow: 0 0 0 0 rgba(229,72,77,.45); } 100% { box-shadow: 0 0 0 14px rgba(229,72,77,0); } }
+    .dv textarea { resize: none; min-height: 48px; font-size: 15px; }
+    .dv-avisos { display: grid; gap: 6px; margin-top: 12px; font-size: 13.5px; }
+    .dv-avisos > div { display: flex; gap: 6px 8px; align-items: baseline; flex-wrap: wrap; }
+    .dv-avisos > div > span { flex: 1 1 260px; min-width: 0; }
+    .dv-avisos > div > span[style*="display: none"] { display: none; }
+    .dv-avisos i { margin-top: 2px; } .dv-avisos .ok i { color: var(--green-ink); } .dv-avisos .ojo i { color: var(--amber); } .dv-avisos .mal i { color: var(--red); }
+    .dv-chip { font-size: 12.5px; padding: 2px 10px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface, #fff); color: inherit; }
+    .dv-chip:hover { border-color: var(--marca); color: var(--marca); }
 </style>
 @endpush
 
@@ -73,6 +91,36 @@
     @csrf
     {{-- Catálogo --}}
     <section>
+        @if($dictar)
+            <div class="panel dv">
+                <div class="dv-fila">
+                    <button type="button" class="dv-mic" :class="oyendo && 'oye'" x-show="voz" @click="oyendo ? callar() : oir()" :aria-label="oyendo ? 'Dejar de escuchar' : 'Dictar la venta'"><i class="bi" :class="oyendo ? 'bi-stop-fill' : 'bi-mic-fill'"></i></button>
+                    <div class="flex-grow-1 min-w-0">
+                        <textarea class="form-control" rows="2" x-model="dictado" maxlength="2000" @keydown.enter.prevent="armar()" :placeholder="voz ? 'Toca el micrófono y di la venta: «20 paletas de mango para Juan Pérez, pagó con transferencia»' : 'Escribe o pega la venta: «20 paletas de mango para Juan Pérez, pagó con transferencia»'" aria-label="Venta dictada"></textarea>
+                        <div class="small secundario mt-1" x-show="oyendo">Te escucho… toca ■ cuando termines.</div>
+                        <div class="small text-danger mt-1" x-show="errorDictado" x-text="errorDictado"></div>
+                    </div>
+                    <button type="button" class="btn btn-borde" style="height: 48px" @click="armar()" :disabled="armando || dictado.trim().length < 3">
+                        <span x-show="! armando"><i class="bi bi-stars me-1"></i> Armar venta</span><span x-show="armando" class="spinner-border spinner-border-sm"></span></button>
+                </div>
+                <div class="dv-avisos" x-show="armada" x-cloak>
+                    <div class="secundario small">Revisa lo que entendí y cobra cuando esté bien:</div>
+                    <template x-if="armada && armada.cliente.tipo === 'existe'"><div class="ok"><i class="bi bi-person-check"></i> <span>Cliente: <b x-text="armada.cliente.cliente.nombre"></b> <span class="secundario" x-text="armada.cliente.cliente.detalle"></span></span></div></template>
+                    <template x-if="armada && armada.cliente.tipo === 'nuevo'"><div class="ojo"><i class="bi bi-person-plus"></i> <span>Cliente nuevo: <b x-text="armada.cliente.nombre"></b>. Se guardará en Clientes al cobrar.</span></div></template>
+                    <template x-if="armada && armada.cliente.tipo === 'varios' && ! cliente"><div class="ojo"><i class="bi bi-people"></i> <span>¿Cuál <b x-text="armada.cliente.nombre"></b>?</span>
+                        <template x-for="c in armada.cliente.candidatos" :key="c.id"><button type="button" class="dv-chip" @click="cliente = c" x-text="c.nombre + (c.detalle ? ' · ' + c.detalle : '')"></button></template>
+                        <button type="button" class="dv-chip" @click="nuevoCliente(armada.cliente)">Es otro (nuevo)</button></div></template>
+                    <template x-for="l in lineas.filter(x => x.dicho && (x.libre || x.precio_dicho))" :key="'a' + l.k">
+                        <div :class="l.libre && (l.precio === null || l.precio === '') ? 'mal' : 'ojo'">
+                            <i class="bi" :class="l.libre ? 'bi-question-circle' : 'bi-tag'"></i>
+                            <span x-show="l.libre"><b x-text="l.nombre"></b> no está en tu catálogo: va como concepto libre, sin inventario<span x-show="l.precio === null || l.precio === ''">. <b>Ponle precio.</b></span></span>
+                            <span x-show="! l.libre"><b x-text="l.nombre"></b> a <span x-text="dinero(l.precio)"></span> (en tu catálogo <span x-text="dinero(l.precio_catalogo)"></span>)</span>
+                            <template x-for="s in (l.libre ? l.sugerencias : [])" :key="s.id"><button type="button" class="dv-chip" @click="cambiar(l, s)" x-text="'¿' + s.nombre + '?'"></button></template>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </template>
         <div class="pv-buscar"><i class="bi bi-search"></i>
             <input type="search" class="form-control" placeholder="Busca por nombre o clave" x-model="q" @input.debounce.250ms="buscar()" @keydown.enter.prevent="primero()" aria-label="Buscar producto" autofocus></div>
         <div class="pv-prods">
@@ -93,17 +141,19 @@
         <section class="panel">
             <div class="panel-head"><h2>Venta</h2><span class="ayuda" x-text="lineas.length ? lineas.length + (lineas.length === 1 ? ' producto' : ' productos') : ''"></span></div>
             <div class="pv-cesta">
-                <template x-for="(l, i) in lineas" :key="l.id">
+                <template x-for="(l, i) in lineas" :key="l.k">
                     <div class="pv-linea">
-                        <div class="min-w-0"><div class="n text-truncate" x-text="l.nombre"></div>
+                        <div class="min-w-0">
+                            <template x-if="! l.libre"><div class="n text-truncate" x-text="l.nombre"></div></template>
+                            <template x-if="l.libre"><div class="d-flex align-items-center"><input class="form-control form-control-sm desc" x-model="l.nombre" :name="`productos[${i}][descripcion]`" maxlength="250" required aria-label="Concepto"><span class="libre">libre</span></div></template>
                             <div class="d-flex align-items-center gap-2 mt-1">
                                 <span class="pv-cant"><button type="button" @click="l.cantidad = Math.max(0, +l.cantidad - 1); if (+l.cantidad === 0) lineas.splice(i, 1)" aria-label="Menos">−</button>
                                     <input type="number" step="any" min="0" x-model.number="l.cantidad" :name="`productos[${i}][cantidad]`" aria-label="Cantidad" inputmode="decimal">
                                     <button type="button" @click="l.cantidad = +l.cantidad + 1" aria-label="Más">+</button></span>
                                 <span class="secundario small">×</span>
-                                <input type="number" step="0.01" min="0" class="form-control form-control-sm num pv-precio" x-model.number="l.precio" :name="`productos[${i}][precio]`" aria-label="Precio">
+                                <input type="number" step="0.01" min="0" class="form-control form-control-sm num pv-precio" :class="(l.precio === null || l.precio === '') && 'falta'" x-model.number="l.precio" :name="`productos[${i}][precio]`" required placeholder="Precio" aria-label="Precio">
                             </div>
-                            <input type="hidden" :name="`productos[${i}][producto_id]`" :value="l.id">
+                            <template x-if="l.id"><input type="hidden" :name="`productos[${i}][producto_id]`" :value="l.id"></template>
                         </div>
                         <div class="text-end"><div class="pv-imp num" x-text="dinero(l.cantidad * l.precio)"></div>
                             <button type="button" class="btn btn-fantasma btn-sm text-danger px-1" @click="lineas.splice(i, 1)" aria-label="Quitar"><i class="bi bi-x-lg"></i></button></div>
@@ -120,9 +170,9 @@
                 <template x-if="cliente"><div class="d-flex align-items-center gap-2"><b x-text="cliente.nombre"></b><span class="secundario small" x-text="cliente.telefono || ''"></span>
                     <button type="button" class="btn btn-fantasma btn-sm ms-auto" @click="cliente = null">Cambiar</button><input type="hidden" name="cliente_id" :value="cliente.id"></div></template>
                 <template x-if="! cliente"><div class="row g-2">
-                    <div class="col-7"><input name="cliente_nombre" class="form-control" placeholder="Mostrador" value="{{ old('cliente_nombre') }}" maxlength="160" aria-label="Nombre del cliente"></div>
-                    <div class="col-5"><input name="cliente_telefono" class="form-control num" placeholder="WhatsApp" value="{{ old('cliente_telefono') }}" maxlength="30" inputmode="tel" aria-label="WhatsApp del cliente"></div>
-                    <div class="col-12" x-show="pago === 'contado'"><label class="form-check small m-0"><input type="checkbox" name="guardar_cliente" value="1" class="form-check-input" @checked(old('guardar_cliente'))> <span class="form-check-label">Guardarlo en Clientes</span></label></div>
+                    <div class="col-7"><input name="cliente_nombre" class="form-control" placeholder="Mostrador" x-model="nombreNuevo" maxlength="160" aria-label="Nombre del cliente"></div>
+                    <div class="col-5"><input name="cliente_telefono" class="form-control num" placeholder="WhatsApp" x-model="telNuevo" maxlength="30" inputmode="tel" aria-label="WhatsApp del cliente"></div>
+                    <div class="col-12" x-show="pago === 'contado'"><label class="form-check small m-0"><input type="checkbox" name="guardar_cliente" value="1" class="form-check-input" x-model="guardar"> <span class="form-check-label">Guardarlo en Clientes</span></label></div>
                 </div></template>
             </div>
 
@@ -144,7 +194,7 @@
                 <input type="hidden" name="datos" :value="datos">
                 <div class="secundario small" x-show="datos === 'cliente'">Al guardar te damos el enlace para mandárselo por WhatsApp: ahí pone su dirección y su ubicación{{ $envios['modo'] === 'km' ? ', y el envío se calcula solo' : '' }}.</div>
                 <div x-show="datos === 'vendedor'"><div class="d-grid gap-2">
-                    <input name="envio_direccion" class="form-control" placeholder="Calle, número, colonia" maxlength="300" value="{{ old('envio_direccion') }}" aria-label="Dirección">
+                    <input name="envio_direccion" class="form-control" placeholder="Calle, número, colonia" maxlength="300" x-model="direccion" aria-label="Dirección">
                     <input name="envio_referencias" class="form-control" placeholder="Referencias (portón negro, frente al parque…)" maxlength="300" value="{{ old('envio_referencias') }}" aria-label="Referencias">
                     <input type="hidden" name="envio_lat" id="nv-lat" value="{{ old('envio_lat') }}" @input="km = distancia()">
                     <input type="hidden" name="envio_lng" id="nv-lng" value="{{ old('envio_lng') }}" @input="km = distancia()">
@@ -172,14 +222,14 @@
                 <input type="hidden" name="pago" :value="pago">
             </div>
             <div class="row g-2" x-show="pago !== 'credito'">
-                <div class="col-6"><select name="forma" class="form-select" aria-label="Forma de pago">@foreach(\App\Models\Venta::FORMAS as $k => $t)<option value="{{ $k }}">{{ $t }}</option>@endforeach</select></div>
+                <div class="col-6"><select name="forma" class="form-select" x-model="forma" aria-label="Forma de pago">@foreach(\App\Models\Venta::FORMAS as $k => $t)<option value="{{ $k }}">{{ $t }}</option>@endforeach</select></div>
                 <div class="col-6" x-show="pago === 'contado'"><div class="input-group"><span class="input-group-text">Recibí</span><input type="number" step="0.01" min="0" class="form-control num" x-model.number="recibido" aria-label="Efectivo recibido"></div></div>
                 <div class="col-6" x-show="pago === 'parcial'"><div class="input-group"><span class="input-group-text">$</span><input type="number" name="monto" step="0.01" min="0" class="form-control num" x-model.number="abono" aria-label="Monto del abono"></div></div>
                 <div class="col-12 small" x-show="pago === 'contado' && recibido > total()" x-text="'Cambio: ' + dinero(recibido - total())" style="font-weight: 600"></div>
             </div>
             <div x-show="pago !== 'contado'" x-cloak><div class="d-flex align-items-center gap-2">
                 <label class="small m-0" for="nv-dias">Paga el resto en</label>
-                <input id="nv-dias" name="dias" type="number" min="1" max="365" value="15" class="form-control form-control-sm num" style="width: 70px"><span class="small">días</span>
+                <input id="nv-dias" name="dias" type="number" min="1" max="365" x-model.number="dias" class="form-control form-control-sm num" style="width: 70px"><span class="small">días</span>
             </div></div>
 
             <div class="row g-2 align-items-center">
@@ -194,8 +244,8 @@
                 <div x-show="entrega === 'envio'"><span class="secundario">Envío</span><span class="num" x-text="envio() === null ? 'con la ubicación' : dinero(envio())"></span></div>
                 <div class="t"><span>Total</span><span class="num" x-text="dinero(total())"></span></div>
             </div>
-            <input type="text" name="notas" class="form-control form-control-sm" placeholder="Nota (opcional)" maxlength="2000" value="{{ old('notas') }}" aria-label="Nota">
-            <button class="btn btn-primario btn-lg" :disabled="lineas.length === 0 || enviando">
+            <input type="text" name="notas" class="form-control form-control-sm" placeholder="Nota (opcional)" maxlength="2000" x-model="notas" aria-label="Nota">
+            <button class="btn btn-primario btn-lg" :disabled="lineas.length === 0 || enviando || faltaPrecio()">
                 <i class="bi bi-check2 me-1"></i> <span x-text="pago === 'contado' ? 'Cobrar ' + dinero(total()) : 'Registrar venta'"></span></button>
         </section>
     </aside>
@@ -208,7 +258,51 @@ window.posVenta = function (cfg) {
     return {
         q: '', resultados: [], cargando: false, lineas: [], cliente: cfg.cliente, entrega: 'ahora', datos: 'cliente', pago: 'contado',
         recibido: null, abono: null, descuento: 0, conIva: cfg.conIva, costoManual: '', km: null, enviando: false,
+        cfg: cfg, forma: '{{ array_key_first(\App\Models\Venta::FORMAS) }}', dias: 15, nombreNuevo: cfg.old.nombre, telNuevo: cfg.old.telefono, guardar: cfg.old.guardar,
+        notas: cfg.old.notas, direccion: cfg.old.direccion, sig: 1,
+        dictado: '', oyendo: false, voz: !!(window.SpeechRecognition || window.webkitSpeechRecognition), rec: null, armando: false, armada: null, errorDictado: '',
         init() { this.buscar(); },
+        oir() {
+            const R = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!R) return;
+            const base = this.dictado ? this.dictado.trim() + ' ' : '';
+            this.rec = new R(); this.rec.lang = 'es-MX'; this.rec.continuous = true; this.rec.interimResults = true;
+            this.rec.onresult = (e) => { let t = ''; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript; this.dictado = (base + t).trim(); };
+            this.rec.onerror = (e) => { this.errorDictado = e.error === 'not-allowed' ? 'Permite el micrófono en tu navegador para dictar.' : (e.error === 'no-speech' ? 'No te escuché. Intenta otra vez.' : ''); };
+            this.rec.onend = () => { const ya = this.oyendo; this.oyendo = false; if (ya && this.dictado.trim().length >= 3) this.armar(); };
+            this.errorDictado = ''; this.oyendo = true; this.rec.start();
+        },
+        callar() { if (this.rec) this.rec.stop(); },
+        async armar() {
+            if (this.oyendo) { this.callar(); return; }
+            if (this.armando || this.dictado.trim().length < 3) return;
+            this.armando = true; this.errorDictado = '';
+            try {
+                const r = await fetch(cfg.dictar, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content || '{{ csrf_token() }}' }, body: JSON.stringify({ texto: this.dictado }) });
+                const j = await r.json().catch(() => ({}));
+                if (!r.ok || !j.ok) { this.errorDictado = j.mensaje || j.message || 'No pudimos entender la venta. Intenta otra vez.'; return; }
+                this.aplicar(j.venta);
+            } catch (e) { this.errorDictado = 'Sin conexión. Intenta otra vez.'; }
+            finally { this.armando = false; }
+        },
+        aplicar(v) {
+            v.lineas.forEach(l => this.lineas.push(Object.assign({ k: this.sig++ }, l)));
+            const c = v.cliente;
+            if (c.tipo === 'existe') this.cliente = c.cliente;
+            else if (c.tipo === 'nuevo') this.nuevoCliente(c);
+            else if (c.tipo === 'varios') this.cliente = null;
+            this.pago = v.pago; this.entrega = v.entrega;
+            if (v.forma) this.forma = v.forma;
+            if (v.abono !== null) this.abono = v.abono;
+            if (v.dias) this.dias = v.dias;
+            if (v.descuento) this.descuento = v.descuento;
+            if (v.notas) this.notas = this.notas ? this.notas + ' · ' + v.notas : v.notas;
+            if (v.entrega === 'envio' && v.direccion) { this.datos = 'vendedor'; this.direccion = v.direccion; }
+            this.armada = v; this.dictado = '';
+        },
+        nuevoCliente(c) { this.cliente = null; this.nombreNuevo = c.nombre || ''; this.telNuevo = c.telefono || ''; this.guardar = true; },
+        cambiar(l, s) { Object.assign(l, { id: s.id, libre: false, nombre: s.nombre, precio: (l.precio === null || l.precio === '') ? s.precio : l.precio, precio_catalogo: s.precio, precio_dicho: false, controla: s.controla, existencia: s.existencia, sugerencias: [] }); },
+        faltaPrecio() { return this.lineas.some(l => l.precio === null || l.precio === ''); },
         dinero(n) { return '$' + (Math.round((+n || 0) * 100) / 100).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
         async buscar() {
             this.cargando = true;
@@ -219,7 +313,7 @@ window.posVenta = function (cfg) {
         agregar(p) {
             const l = this.lineas.find(x => x.id === p.id);
             if (l) l.cantidad = +l.cantidad + 1;
-            else this.lineas.push({ id: p.id, nombre: p.nombre, precio: +p.precio, cantidad: 1, controla: !!p.controla, existencia: +(p.existencia || 0) });
+            else this.lineas.push({ k: this.sig++, id: p.id, nombre: p.nombre, precio: +p.precio, cantidad: 1, controla: !!p.controla, existencia: +(p.existencia || 0) });
         },
         subtotal() { return this.lineas.reduce((s, l) => s + (+l.cantidad || 0) * (+l.precio || 0), 0); },
         base() { return Math.max(0, this.subtotal() - (+this.descuento || 0)); },

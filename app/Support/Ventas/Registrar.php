@@ -39,6 +39,14 @@ class Registrar
             ]);
 
             foreach (array_values($d['productos']) as $i => $f) {
+                if (empty($f['producto_id'])) {
+                    // Concepto libre: lo que no está en el catálogo (no mueve inventario)
+                    $cant = round((float) $f['cantidad'], 2);
+                    $precio = round((float) ($f['precio'] ?? 0), 2);
+                    $v->conceptos()->create(['producto_id' => null, 'descripcion' => trim((string) $f['descripcion']), 'unidad' => null, 'cantidad' => $cant,
+                        'precio' => $precio, 'importe' => round($cant * $precio, 2), 'orden' => $i]);
+                    continue;
+                }
                 $p = Producto::findOrFail($f['producto_id']);
                 $cant = round((float) $f['cantidad'], 2);
                 $precio = round((float) ($f['precio'] ?? $p->precio), 2);
