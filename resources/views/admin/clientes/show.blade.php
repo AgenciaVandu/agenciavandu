@@ -471,6 +471,7 @@
                     <dl class="datos mb-0 mt-2" style="font-size:13.5px">
                         <dt>Régimen fiscal</dt><dd>{{ $cliente->regimen_texto ?: '—' }}</dd>
                         <dt>C.P. fiscal</dt><dd class="num">{{ $cliente->cp_fiscal ?: '—' }}</dd>
+                        @if($cliente->direccion)<dt>Dirección fiscal</dt><dd>{{ $cliente->direccion }}</dd>@endif
                         <dt>Uso de CFDI</dt><dd>{{ $cliente->uso_cfdi_texto ?: '—' }}</dd>
                         <dt>Método de pago</dt><dd>{{ $cliente->metodo_pago_texto ?: '—' }}@if($cliente->metodo_pago === 'credito' && $cliente->dias_credito) a {{ $cliente->dias_credito }} días @endif</dd>
                         <dt>Correo para la factura</dt><dd>{{ $cliente->email_factura ?: ($cliente->email ? $cliente->email . ' (contacto)' : '—') }}</dd>

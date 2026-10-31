@@ -22,7 +22,7 @@ class Cliente extends Model implements AuthenticatableContract
 
     protected $fillable = [
         'nombre', 'empresa', 'email', 'telefono',
-        'rfc', 'razon_social', 'regimen_fiscal', 'cp_fiscal', 'uso_cfdi', 'metodo_pago', 'dias_credito', 'email_factura', 'notas',
+        'rfc', 'razon_social', 'regimen_fiscal', 'cp_fiscal', 'direccion', 'uso_cfdi', 'metodo_pago', 'dias_credito', 'email_factura', 'notas',
         'origen', 'nuevo', 'interes', 'contacto_at', 'ejemplo',
     ];
 

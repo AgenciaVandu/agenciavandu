@@ -51,12 +51,12 @@
     </div>
 
     <div class="seccion">
-        <div><h2>Datos de facturación</h2><p>Sube la Constancia de Situación Fiscal y llenamos RFC, razón social, régimen y código postal. Queda en el expediente del cliente.</p></div>
+        <div><h2>Datos de facturación</h2><p>Sube la Constancia de Situación Fiscal y llenamos RFC, razón social, régimen, código postal y dirección. Queda en el expediente del cliente.</p></div>
         <div class="panel panel-body row g-3 mx-0">
             <div class="col-md-8">
                 <label class="form-label" for="constancia">Constancia de Situación Fiscal <span class="text-secondary fw-normal">(PDF o foto, opcional)</span></label>
                 <input type="file" name="constancia" id="constancia" class="form-control @error('constancia') is-invalid @enderror" accept="application/pdf,image/jpeg,image/png"
-                       data-leer-constancia='{"rfc":"rfc","razon_social":"razon_social","regimen_fiscal":"regimen_fiscal","cp_fiscal":"cp_fiscal","emitida_el":"constancia_emitida_el","empresa":"empresa"}'>
+                       data-leer-constancia='{"rfc":"rfc","razon_social":"razon_social","regimen_fiscal":"regimen_fiscal","cp_fiscal":"cp_fiscal","direccion":"direccion","emitida_el":"constancia_emitida_el","empresa":"empresa"}'>
                 <div class="lc-estado" id="constancia-estado" role="status" aria-live="polite"></div>
                 @error('constancia')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 @if(! $nuevo && $cliente->constancias()->exists())
@@ -89,6 +89,11 @@
                 <label class="form-label" for="cp_fiscal">C.P. fiscal</label>
                 <input name="cp_fiscal" id="cp_fiscal" class="form-control num @error('cp_fiscal') is-invalid @enderror" inputmode="numeric" maxlength="5" value="{{ old('cp_fiscal', $cliente->cp_fiscal) }}" placeholder="97000">
                 @error('cp_fiscal')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="col-12">
+                <label class="form-label" for="direccion">Dirección fiscal</label>
+                <input name="direccion" id="direccion" class="form-control @error('direccion') is-invalid @enderror" maxlength="300" value="{{ old('direccion', $cliente->direccion) }}" placeholder="Calle 21 #104 x 18 y 20, Col. Itzimná, Mérida, Yucatán, C.P. 97100">
+                @error('direccion')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="col-md-6">
                 <label class="form-label" for="uso_cfdi">Uso de CFDI</label>

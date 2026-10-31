@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Storage;
 class UnirClientes
 {
     /** Campos de contacto y facturación que se toman del duplicado si al que se queda le faltan */
-    private const COMPLETAR = ['email', 'telefono', 'empresa', 'rfc', 'razon_social', 'regimen_fiscal', 'cp_fiscal', 'uso_cfdi', 'metodo_pago', 'dias_credito', 'email_factura'];
+    private const COMPLETAR = ['email', 'telefono', 'empresa', 'rfc', 'razon_social', 'regimen_fiscal', 'cp_fiscal', 'direccion', 'uso_cfdi', 'metodo_pago', 'dias_credito', 'email_factura'];
     private const FISCALES = ['razon_social', 'rfc', 'regimen_fiscal', 'cp_fiscal', 'uso_cfdi', 'email_factura'];
 
     /** @return array{cotizaciones: int, proyectos: int, razon: ?ClienteRazon} */

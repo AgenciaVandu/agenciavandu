@@ -10,7 +10,7 @@ use Symfony\Component\Process\Process;
 use Throwable;
 
 /**
- * Lee la Constancia de Situación Fiscal del SAT y regresa RFC, razón social, régimen, código postal y fecha de emisión.
+ * Lee la Constancia de Situación Fiscal del SAT y regresa RFC, razón social, régimen, código postal, domicilio fiscal y fecha de emisión.
  *  1. El PDF que se descarga del SAT trae texto: se lee directo, exacto y sin costo.
  *  2. Si es una foto o un PDF escaneado, la lee la IA (si el negocio la tiene activa).
  * No guarda nada: llena el formulario y la persona confirma.
@@ -25,6 +25,40 @@ class Constancia
         'grupos de sociedades' => '623', 'coordinados' => '624', 'demas ingresos' => '608', 'intereses' => '614', 'dividendos' => '611',
         'enajenacion' => '607', 'premios' => '615', 'actividad empresarial' => '612',
     ];
+
+    /** Campos del domicilio fiscal en la constancia → su etiqueta */
+    private const DOMICILIO = [
+        'tipo_vialidad' => 'Tipo\s+de\s+Vialidad', 'vialidad' => 'Nombre\s+de\s+(?:la\s+)?Vialidad', 'exterior' => 'N[uú]mero\s+Exterior',
+        'interior' => 'N[uú]mero\s+Interior', 'colonia' => 'Nombre\s+de\s+la\s+Colonia', 'localidad' => 'Nombre\s+de\s+la\s+Localidad',
+        'municipio' => 'Nombre\s+del\s+Municipio\s+o\s+Demarcaci[oó]n\s+Territorial', 'estado' => 'Nombre\s+de\s+la\s+Entidad\s+Federativa',
+        'entre' => 'Entre\s+Calle', 'y_calle' => '(?<!Entre\s)(?<![A-Za-zÁÉÍÓÚáéíóú])Y\s+Calle',
+    ];
+
+    /**
+     * Arma la dirección en una línea, como se escribe en México (con cruzamientos, como en Yucatán):
+     * "Calle 21 #104 Int. 3 x 18 y 20, Col. Itzimná, Mérida, Yucatán, C.P. 97100"
+     */
+    public static function direccion(array $d): ?string
+    {
+        $t = fn ($k) => isset($d[$k]) && is_string($d[$k]) && trim($d[$k]) !== '' && ! in_array(Str::upper(Str::ascii(trim($d[$k]))), ['SIN NUMERO', 'S/N', 'SN', 'NINGUNO', 'NA', 'N/A', '-'], true)
+            ? mb_convert_case(trim(preg_replace('/\s+/u', ' ', $d[$k])), MB_CASE_TITLE, 'UTF-8') : null;
+        $calle = trim(implode(' ', array_filter([$t('tipo_vialidad'), $t('vialidad')])));
+        if ($calle === '' && ! $t('colonia')) return null;
+        $linea = $calle;
+        if ($ext = $t('exterior')) $linea .= ' #' . $ext;
+        elseif ($calle !== '' && isset($d['exterior'])) $linea .= ' S/N';
+        if ($int = $t('interior')) $linea .= ' Int. ' . $int;
+        if (($e = $t('entre')) && ($y = $t('y_calle'))) $linea .= ' x ' . $e . ' y ' . $y;
+        elseif ($e) $linea .= ' entre ' . $e;
+        $partes = array_filter([
+            trim($linea) ?: null,
+            ($c = $t('colonia')) ? (preg_match('/^(col|fracc|barrio|unidad|residencial|privada)\b/iu', $c) ? $c : 'Col. ' . $c) : null,
+            ($l = $t('localidad')) && $l !== $t('municipio') ? $l : null,
+            $t('municipio'), $t('estado'),
+            isset($d['cp']) && preg_match('/^\d{5}$/', (string) $d['cp']) ? 'C.P. ' . $d['cp'] : null,
+        ]);
+        return $partes ? mb_substr(implode(', ', $partes), 0, 300) : null;
+    }
 
     private const MESES = ['ENERO' => 1, 'FEBRERO' => 2, 'MARZO' => 3, 'ABRIL' => 4, 'MAYO' => 5, 'JUNIO' => 6, 'JULIO' => 7, 'AGOSTO' => 8,
                            'SEPTIEMBRE' => 9, 'OCTUBRE' => 10, 'NOVIEMBRE' => 11, 'DICIEMBRE' => 12];
@@ -110,8 +144,18 @@ class Constancia
         if (preg_match('/A\s+(\d{1,2})\s+DE\s+([A-Z]+)\s+DE\s+(\d{4})/u', $plano, $m) && isset(self::MESES[$m[2]])) {
             $emitida = sprintf('%04d-%02d-%02d', $m[3], self::MESES[$m[2]], $m[1]);
         }
+        $dom = [];
+        $otra = '/\s*(?:' . implode('|', [...array_values(self::DOMICILIO), 'C[oó]digo\s+Postal']) . ')\s*:.*$/iu';
+        foreach (self::DOMICILIO as $k => $etiqueta) {
+            $v = $campo($etiqueta);
+            // El texto puede pegar la columna de al lado ("YUCATAN Entre Calle: 18") o, si el campo viene vacío, traer la etiqueta siguiente
+            $v = $v !== null ? trim(preg_replace($otra, '', $v)) : null;
+            if ($v !== null && $v !== '' && ! str_contains($v, ':')) $dom[$k] = $v;
+        }
         return [
             'rfc'            => $rfc,
+            'direccion'      => self::direccion($dom + ['cp' => $cp]),
+            'domicilio'      => $dom ?: null,
             'razon_social'   => $razon ? mb_substr(Str::upper(trim(preg_replace('/\s+/', ' ', $razon))), 0, 255) : null,
             'nombre_comercial' => ($n = $campo('Nombre\s+Comercial')) ? mb_substr(trim($n), 0, 160) : null,
             'regimen_fiscal' => $regimen,
@@ -129,8 +173,12 @@ class Constancia
         $rfc = $rfc && preg_match('/^[A-Z&Ñ]{3,4}\d{6}[A-Z0-9]{3}$/u', $rfc) ? $rfc : null;
         $reg = is_string($e['regimen_fiscal'] ?? null) && array_key_exists($e['regimen_fiscal'], config('vandu.sat.regimenes')) ? $e['regimen_fiscal'] : null;
         $fecha = is_string($e['emitida_el'] ?? null) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $e['emitida_el']) && strtotime($e['emitida_el']) <= time() + 86400 ? $e['emitida_el'] : null;
+        $cp = is_string($e['cp_fiscal'] ?? null) && preg_match('/^\d{5}$/', $e['cp_fiscal']) ? $e['cp_fiscal'] : null;
+        $dom = array_filter(array_intersect_key((array) ($e['domicilio'] ?? []), self::DOMICILIO), fn ($v) => is_string($v) && trim($v) !== '');
         return [
             'rfc'            => $rfc,
+            'direccion'      => self::direccion($dom + ['cp' => $cp]),
+            'domicilio'      => $dom ?: null,
             'razon_social'   => is_string($e['razon_social'] ?? null) && trim($e['razon_social']) !== '' ? mb_substr(Str::upper(trim($e['razon_social'])), 0, 255) : null,
             'nombre_comercial' => is_string($e['nombre_comercial'] ?? null) && trim($e['nombre_comercial']) !== '' ? mb_substr(trim($e['nombre_comercial']), 0, 160) : null,
             'regimen_fiscal' => $reg,
@@ -147,6 +195,7 @@ class Constancia
             . "- razon_social: para personas morales, la Denominación/Razón Social tal cual (sin el régimen de capital); para personas físicas, nombre(s) y apellidos.\n"
             . "- regimen_fiscal: la clave del régimen vigente principal. Claves: " . collect(config('vandu.sat.regimenes'))->map(fn ($v, $k) => "$k $v")->join('; ') . ".\n"
             . "- cp_fiscal: el código postal del domicilio fiscal. emitida_el: la fecha de emisión en AAAA-MM-DD.\n"
+            . "- domicilio: los datos del domicilio registrado tal como aparecen (tipo y nombre de vialidad, número exterior e interior, colonia, localidad, municipio, entidad federativa, entre calle y y calle). Los que vengan vacíos, null.\n"
             . "- No inventes: si un dato no se lee con seguridad, déjalo en null. Si el documento no es una constancia fiscal, es_constancia = false.";
     }
 
@@ -167,6 +216,7 @@ class Constancia
                     'regimenes'        => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => $claves]],
                     'cp_fiscal'        => ['type' => ['string', 'null']],
                     'emitida_el'       => ['type' => ['string', 'null']],
+                    'domicilio'        => ['type' => ['object', 'null'], 'properties' => collect(array_keys(self::DOMICILIO))->mapWithKeys(fn ($k) => [$k => ['type' => ['string', 'null']]])->all()],
                 ],
                 'required' => ['es_constancia', 'rfc', 'razon_social', 'regimen_fiscal', 'cp_fiscal'],
             ],

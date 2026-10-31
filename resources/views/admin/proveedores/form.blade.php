@@ -76,7 +76,7 @@
             <div class="col-12">
                 <label class="form-label" for="constancia-proveedor">Llenar con su Constancia <span class="text-secondary fw-normal">(PDF o foto; no se guarda)</span></label>
                 <input type="file" id="constancia-proveedor" class="form-control" accept="application/pdf,image/jpeg,image/png"
-                       data-leer-constancia='{"rfc":"rfc","razon_social":"razon_social","empresa":"empresa"}'>
+                       data-leer-constancia='{"rfc":"rfc","razon_social":"razon_social","direccion":"direccion","empresa":"empresa"}'>
                 <div class="lc-estado" id="constancia-proveedor-estado" role="status" aria-live="polite"></div>
             </div>
             <div class="col-md-5">

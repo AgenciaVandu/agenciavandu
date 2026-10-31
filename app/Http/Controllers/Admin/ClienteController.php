@@ -336,6 +336,7 @@ class ClienteController extends Controller
             'razon_social'   => 'nullable|string|max:255',
             'regimen_fiscal' => ['nullable', Rule::in(array_keys(config('vandu.sat.regimenes')))],
             'cp_fiscal'      => 'nullable|digits:5',
+            'direccion'      => 'nullable|string|max:300',
             'uso_cfdi'       => ['nullable', Rule::in(array_keys(config('vandu.sat.usos_cfdi')))],
             'metodo_pago'    => ['nullable', Rule::in(array_keys(config('vandu.metodos_pago')))],
             'dias_credito'   => 'nullable|integer|min:1|max:365',

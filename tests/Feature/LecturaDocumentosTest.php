@@ -51,12 +51,19 @@ class LecturaDocumentosTest extends TestCase
         $moral = $this->constanciaPdf('<h3>CONSTANCIA DE SITUACIÓN FISCAL</h3><p>MÉRIDA , YUCATÁN A 03 DE OCTUBRE DE 2026</p>
             <table><tr><td>RFC:</td><td>LOS200115AB3</td></tr><tr><td>Denominación/Razón Social:</td><td>LOSOS</td></tr>
             <tr><td>Régimen Capital:</td><td>SOCIEDAD ANONIMA DE CAPITAL VARIABLE</td></tr><tr><td>Nombre Comercial:</td><td>LOSOS ACABADOS</td></tr></table>
-            <table><tr><td>Código Postal:97130</td><td>Tipo de Vialidad: CALLE</td></tr></table>
+            <h4>Datos del domicilio registrado</h4>
+            <table><tr><td>Código Postal:97130</td><td>Tipo de Vialidad: CALLE</td></tr>
+            <tr><td>Nombre de Vialidad: 21</td><td>Número Exterior: 104</td></tr>
+            <tr><td>Número Interior:</td><td>Nombre de la Colonia: ITZIMNA</td></tr>
+            <tr><td>Nombre de la Localidad: MERIDA</td><td>Nombre del Municipio o Demarcación Territorial: MERIDA</td></tr>
+            <tr><td>Nombre de la Entidad Federativa: YUCATAN</td><td>Entre Calle: 18</td></tr>
+            <tr><td>Y Calle: 20</td><td></td></tr></table>
             <h4>Regímenes:</h4><table><tr><td>Régimen</td><td>Fecha Inicio</td><td>Fecha Fin</td></tr>
             <tr><td>Régimen General de Ley Personas Morales</td><td>15/01/2020</td><td></td></tr></table><h4>Obligaciones:</h4>');
         $this->actingAs($this->dueno)->post(route('admin.documentos.constancia'), ['archivo' => $moral], ['Accept' => 'application/json'])->assertOk()
             ->assertJson(['ok' => true, 'origen' => 'texto', 'datos' => ['rfc' => 'LOS200115AB3', 'razon_social' => 'LOSOS', 'nombre_comercial' => 'LOSOS ACABADOS',
-                'regimen_fiscal' => '601', 'cp_fiscal' => '97130', 'emitida_el' => '2026-10-03', 'persona' => 'moral']]);
+                'regimen_fiscal' => '601', 'cp_fiscal' => '97130', 'emitida_el' => '2026-10-03', 'persona' => 'moral',
+                'direccion' => 'Calle 21 #104 x 18 y 20, Col. Itzimna, Merida, Yucatan, C.P. 97130']]);
 
         // Persona física con un régimen que ya terminó y otro vigente
         $fisica = $this->constanciaPdf('<h3>CONSTANCIA DE SITUACIÓN FISCAL</h3><p>MÉRIDA , YUCATÁN A 1 DE SEPTIEMBRE DE 2026</p>
@@ -69,7 +76,7 @@ class LecturaDocumentosTest extends TestCase
 
         // Un PDF cualquiera no es constancia
         $this->post(route('admin.documentos.constancia'), ['archivo' => $this->constanciaPdf('<p>Factura de luz</p>')], ['Accept' => 'application/json'])->assertJson(['ok' => false]);
-        $this->get(route('admin.clientes.create'))->assertOk()->assertSee('data-leer-constancia', false);
+        $this->get(route('admin.clientes.create'))->assertOk()->assertSee('data-leer-constancia', false)->assertSee('"direccion":"direccion"', false)->assertSee('Dirección fiscal');
         $this->get(route('admin.proveedores.create'))->assertOk()->assertSee('Llenar con su Constancia');
     }
 
@@ -82,9 +89,11 @@ class LecturaDocumentosTest extends TestCase
         $this->conIa();
         Http::fake(['api.anthropic.com/*' => Http::response(['content' => [['type' => 'tool_use', 'name' => 'registrar_constancia', 'input' => [
             'es_constancia' => true, 'rfc' => 'los200115ab3', 'razon_social' => 'Losos', 'regimen_fiscal' => '601', 'regimenes' => ['601'], 'cp_fiscal' => '97130', 'emitida_el' => '2026-10-03',
+            'domicilio' => ['tipo_vialidad' => 'CALLE', 'vialidad' => '60', 'exterior' => 'SN', 'interior' => null, 'colonia' => 'CENTRO', 'municipio' => 'MÉRIDA', 'estado' => 'YUCATÁN', 'entre' => '45', 'y_calle' => null],
         ]]], 'usage' => ['input_tokens' => 2000, 'output_tokens' => 90]])]);
         $this->post(route('admin.documentos.constancia'), ['archivo' => UploadedFile::fake()->image('constancia.jpg', 800, 1100)], ['Accept' => 'application/json'])
-            ->assertJson(['ok' => true, 'origen' => 'ia', 'datos' => ['rfc' => 'LOS200115AB3', 'razon_social' => 'LOSOS', 'regimen_fiscal' => '601']]);
+            ->assertJson(['ok' => true, 'origen' => 'ia', 'datos' => ['rfc' => 'LOS200115AB3', 'razon_social' => 'LOSOS', 'regimen_fiscal' => '601',
+                'direccion' => 'Calle 60 S/N entre 45, Col. Centro, Mérida, Yucatán, C.P. 97130']]);
         $this->assertSame('constancia', \DB::table('gasto_lecturas')->value('tipo'));
     }
 
