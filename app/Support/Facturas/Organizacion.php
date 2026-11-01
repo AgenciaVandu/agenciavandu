@@ -62,10 +62,11 @@ class Organizacion
             'name' => Str::limit($c->nombre, 80, ''),
             'legal_name' => mb_strtoupper(trim($d['razon_social'])),
             'tax_system' => (string) $d['regimen'],
-            'address' => array_filter(['zip' => (string) $d['cp'], 'street' => $d['direccion'] ?? null, 'country' => 'MEX']),
-            'phone' => $c->ajuste('emisor.telefono') ?: null,
-            'support_email' => $c->ajuste('emisor.email') ?: null,
-            'website' => $c->ajuste('marca.sitio') ?: null,
+            // Facturapi no acepta "country" en el domicilio del emisor (es México siempre)
+            'address' => array_filter(['zip' => (string) $d['cp'], 'street' => filled($d['direccion'] ?? null) ? Str::limit(trim($d['direccion']), 100, '') : null]),
+            'phone' => preg_replace('/\D/', '', (string) $c->ajuste('emisor.telefono')) ?: null,
+            'support_email' => filter_var($c->ajuste('emisor.email'), FILTER_VALIDATE_EMAIL) ?: null,
+            'website' => self::sitio($c->ajuste('marca.sitio')),
         ]));
         if (! $r->successful()) throw self::error($r, 'Facturapi no aceptó tus datos fiscales');
 
@@ -75,7 +76,16 @@ class Organizacion
             'cp' => (string) $d['cp'], 'direccion' => $d['direccion'] ?? null]]);
     }
 
-    /** Logo (PNG o JPG de Mi negocio) y color de la marca en el PDF de la factura. Si falla no detiene nada */
+    /** El sitio web con https:// (como lo pide Facturapi), o nada si no parece un sitio */
+    private static function sitio(?string $s): ?string
+    {
+        $s = trim((string) $s);
+        if ($s === '') return null;
+        if (! preg_match('#^https?://#i', $s)) $s = 'https://' . $s;
+        return filter_var($s, FILTER_VALIDATE_URL) ? $s : null;
+    }
+
+        /** Logo (PNG o JPG de Mi negocio) y color de la marca en el PDF de la factura. Si falla no detiene nada */
     public static function imagen(string $org, Cuenta $c): void
     {
         try {

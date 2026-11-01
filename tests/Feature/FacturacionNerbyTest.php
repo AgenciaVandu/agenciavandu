@@ -95,7 +95,7 @@ class FacturacionNerbyTest extends TestCase
         $a = Timbrado::ajustes();
         $this->assertSame(['org_lupe', 'sk_test_lupe', true, '97000'], [$a['org_id'], $a['test_key'], $a['pruebas'], $a['emisor']['cp']]);
         Http::assertSent(fn ($r) => str_ends_with($r->url(), '/organizations/org_lupe/legal') && $r['legal_name'] === 'GUADALUPE CANCHÉ' && $r['tax_system'] === '626'
-            && $r['address']['zip'] === '97000' && $r->hasHeader('Authorization', 'Bearer sk_user_nerby123'));
+            && $r['address']['zip'] === '97000' && ! isset($r['address']['country']) && $r->hasHeader('Authorization', 'Bearer sk_user_nerby123'));
         $this->assertTrue(Timbrado::activo());
         $this->assertTrue(Timbrado::enPruebas());
 
