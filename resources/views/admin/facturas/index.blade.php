@@ -83,7 +83,7 @@
                 @endif
             </div>
             <div>
-                <a href="{{ $doc->url() }}" class="t">{{ $doc->quien() }}</a>
+                <a href="{{ $doc->url() }}" class="t">{{ $doc->quien() }}@if($doc->concepto()) <span class="fw-normal">– {{ $doc->concepto() }}</span>@endif</a>
                 <div class="s">
                     <span>{{ $doc->folio() }}</span>
                     @if($doc->fecha())<span>{{ $doc->fecha()->locale('es')->isoFormat('D MMM YYYY') }}</span>@endif

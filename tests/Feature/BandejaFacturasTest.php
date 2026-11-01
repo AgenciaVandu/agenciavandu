@@ -80,7 +80,7 @@ class BandejaFacturasTest extends TestCase
 
         // Por facturar: solo la del cliente con RFC
         $this->get(route('admin.facturas'));   // (se lleva el aviso de la venta)
-        $this->get(route('admin.facturas'))->assertOk()->assertSee('Hotel Sol')->assertSee($conRfc->folio)->assertDontSee($mostrador->folio)->assertSee('Subir PDF y XML');
+        $this->get(route('admin.facturas'))->assertOk()->assertSee('Hotel Sol')->assertSee('– Paleta de mango', false)->assertSee($conRfc->folio)->assertDontSee($mostrador->folio)->assertSee('Subir PDF y XML');
 
         // Se sube el PDF y un XML con otro total: avisa la diferencia
         $this->post(route('admin.facturas.subir', ['venta', $conRfc->id]), ['facturas' => [$this->pdf(), $this->xml(300, 'HSO010101AB1')]])

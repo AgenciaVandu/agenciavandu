@@ -32,6 +32,20 @@ class Documento
         return $this->m instanceof Venta ? $this->m->quien : ($this->m->cliente_empresa ?: $this->m->cliente_nombre ?: 'Cliente');
     }
 
+    /** De qué es: el título de la cotización o lo que se vendió ("Paletas para evento y 2 más") */
+    public function concepto(): ?string
+    {
+        $m = $this->m;
+        if ($m instanceof Presupuesto) {
+            $t = trim((string) ($m->titulo ?: $m->conceptos->first()?->resumen));
+        } else {
+            $c = $m->relationLoaded('conceptos') ? $m->conceptos : $m->conceptos()->get(['id', 'descripcion']);
+            $t = trim((string) $c->first()?->descripcion);
+            if ($t !== '' && $c->count() > 1) $t .= ' y ' . ($c->count() - 1) . ' más';
+        }
+        return $t === '' ? null : \Illuminate\Support\Str::limit($t, 70);
+    }
+
     /** La razón social con la que se factura: la elegida, o la principal del cliente si tiene datos fiscales */
     public function razon(): ?ClienteRazon
     {

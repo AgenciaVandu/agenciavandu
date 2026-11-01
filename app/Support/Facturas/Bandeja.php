@@ -31,12 +31,12 @@ class Bandeja
     {
         $r = collect();
         if (self::cotizaciones()) {
-            Presupuesto::with(['cliente', 'facturas', 'razon'])->where('estado', 'aceptada')->where(fn ($q) => $q->whereNull('comprobante')->orWhere('comprobante', '!=', 'nota'))
+            Presupuesto::with(['cliente', 'facturas', 'razon', 'conceptos'])->where('estado', 'aceptada')->where(fn ($q) => $q->whereNull('comprobante')->orWhere('comprobante', '!=', 'nota'))
                 ->whereDoesntHave('facturas', fn ($q) => $q->where('tipo', 'factura'))->latest('id')->take(150)->get()
                 ->each(fn ($p) => $r->push(new Documento($p)));
         }
         if (self::ventas()) {
-            Venta::with(['cliente', 'facturas', 'razon'])->vigentes()->whereNull('presupuesto_id')->whereDoesntHave('facturas', fn ($q) => $q->where('tipo', 'factura'))
+            Venta::with(['cliente', 'facturas', 'razon', 'conceptos'])->vigentes()->whereNull('presupuesto_id')->whereDoesntHave('facturas', fn ($q) => $q->where('tipo', 'factura'))
                 ->where(fn ($q) => $q->whereNotNull('factura_solicitada_at')->orWhereHas('cliente', fn ($c) => $c->whereNotNull('rfc')->where('rfc', '!=', '')))
                 ->latest('id')->take(150)->get()
                 ->each(fn ($v) => $r->push(new Documento($v)));
@@ -62,8 +62,8 @@ class Bandeja
     private static function conFactura(callable $filtro): Collection
     {
         $r = collect();
-        if (self::cotizaciones()) $filtro(Presupuesto::with(['cliente', 'facturas', 'razon']))->latest('id')->take(200)->get()->each(fn ($p) => $r->push(new Documento($p)));
-        if (self::ventas()) $filtro(Venta::with(['cliente', 'facturas', 'razon']))->latest('id')->take(200)->get()->each(fn ($v) => $r->push(new Documento($v)));
+        if (self::cotizaciones()) $filtro(Presupuesto::with(['cliente', 'facturas', 'razon', 'conceptos']))->latest('id')->take(200)->get()->each(fn ($p) => $r->push(new Documento($p)));
+        if (self::ventas()) $filtro(Venta::with(['cliente', 'facturas', 'razon', 'conceptos']))->latest('id')->take(200)->get()->each(fn ($v) => $r->push(new Documento($v)));
         return $r;
     }
 
