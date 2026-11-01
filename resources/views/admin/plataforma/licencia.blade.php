@@ -88,11 +88,13 @@
     {{-- Comprobantes del negocio --}}
     @php $porRevisar = $l?->comprobantes->where('estado', 'pendiente') ?? collect(); @endphp
     @foreach($porRevisar as $cp)
-        <section class="panel" style="border-color: #F5DDB0" x-data="{ concepto: '{{ $l->tipo === 'perpetua' ? 'mantenimiento' : 'periodo' }}', rechazar: false }">
+        @php $paqCp = $cp->paquete_id ? $paquetes->firstWhere('id', $cp->paquete_id) : null; @endphp
+        <section class="panel" style="border-color: #F5DDB0" x-data="{ concepto: '{{ $paqCp ? 'timbres' : ($l->tipo === 'perpetua' ? 'mantenimiento' : 'periodo') }}', rechazar: false }">
             <div class="panel-head"><div><h2>Comprobante por revisar</h2><span class="ayuda">{{ $cp->usuario?->name }} · enviado {{ $cp->created_at->locale('es')->diffForHumans() }}</span></div>
                 <a href="{{ route('admin.plataforma.licencia.comprobante', [$cuenta, $cp]) }}" target="_blank" class="btn btn-borde btn-sm" data-recargar><i class="bi bi-eye me-1"></i> Ver comprobante</a></div>
             <div class="panel-body pb-0">
                 <div><b class="num">{{ $d2($cp->monto) }}</b> pagados el {{ $f($cp->fecha) }}{{ $cp->referencia ? ' · ref. ' . $cp->referencia : '' }}</div>
+                @if($paqCp)<div class="mt-1"><i class="bi bi-receipt-cutoff me-1"></i> Compra: <b>{{ $paqCp->nombre }}</b> ({{ number_format($paqCp->timbres) }} timbres, {{ $d2($paqCp->precio) }}). Al confirmar se cargan solos.</div>@endif
                 @if($cp->nota)<div class="secundario small mt-1">“{{ $cp->nota }}”</div>@endif
             </div>
             <form method="post" action="{{ route('admin.plataforma.licencia.confirmar', [$cuenta, $cp]) }}" class="panel-body lic-form" x-show="! rechazar">
@@ -136,6 +138,34 @@
             </form>
         </section>
     @endif
+
+    {{-- Timbres --}}
+    <section class="panel" id="timbres" x-data="{ tipo: 'compra' }">
+        <div class="panel-head"><div><h2>Timbres</h2><span class="ayuda">Para facturar con tu cuenta de Facturapi · este mes: {{ \App\Support\Facturas\Timbrado::timbradasEsteMes($cuenta) }} timbradas</span></div>
+            <b class="num" style="font-size: 20px">{{ number_format($timbres['disponibles']) }} <span class="secundario fw-normal small">disponibles</span></b></div>
+        <div class="panel-body pb-0 secundario small">{{ $timbres['plan'] ? 'Su plan incluye ' . $timbres['plan'] . ' al mes (le quedan ' . $timbres['plan_restantes'] . ')' : 'Su plan no incluye timbres' }} · {{ number_format($timbres['comprados']) }} comprados</div>
+        <form method="post" action="{{ route('admin.plataforma.licencia.timbres', $cuenta) }}" class="panel-body lic-form">
+            @csrf
+            <div><label class="form-label small">Movimiento</label>
+                <select name="tipo" class="form-select" x-model="tipo"><option value="compra">Compra de paquete</option><option value="regalo">Regalo</option><option value="ajuste">Ajuste (+ o −)</option></select></div>
+            <div x-show="tipo === 'compra'"><label class="form-label small">Paquete</label>
+                <select name="paquete_id" class="form-select">@forelse($paquetes as $pq)<option value="{{ $pq->id }}">{{ $pq->nombre }} · {{ number_format($pq->timbres) }} · {{ $d2($pq->precio) }}</option>@empty<option value="">Crea paquetes en Planes y precios</option>@endforelse</select></div>
+            <div x-show="tipo !== 'compra'" x-cloak><label class="form-label small">Timbres</label><input type="number" name="cantidad" min="-100000" max="100000" class="form-control num" placeholder="20"></div>
+            <div x-show="tipo === 'compra'"><label class="form-label small">Monto cobrado <span class="secundario">(vacío = precio)</span></label><input type="number" step="0.01" min="0" name="monto" class="form-control num"></div>
+            <div x-show="tipo === 'compra'"><label class="form-label small">Forma</label><select name="forma" class="form-select">@foreach(LicenciaPago::FORMAS as $k => $t)<option value="{{ $k }}">{{ $t }}</option>@endforeach</select></div>
+            <div><label class="form-label small">Nota o referencia</label><input name="nota" maxlength="200" class="form-control"></div>
+            <div class="ancho"><button class="btn btn-primario"><i class="bi bi-plus-lg me-1"></i> Cargar timbres</button></div>
+        </form>
+        @if($movTimbres->isNotEmpty())
+            <div class="table-responsive"><table class="tabla"><tbody>
+                @foreach($movTimbres as $mv)
+                    <tr><td class="secundario text-nowrap">{{ $f($mv->created_at) }}</td>
+                        <td>{{ \App\Models\TimbreMovimiento::TIPOS[$mv->tipo] ?? $mv->tipo }}{{ $mv->paquete ? ' · ' . $mv->paquete->nombre : '' }}<div class="secundario">{{ $mv->referencia ?: $mv->nota }}</div></td>
+                        <td class="text-end num {{ $mv->cantidad < 0 ? 'text-danger' : '' }}">{{ $mv->cantidad > 0 ? '+' : '' }}{{ $mv->cantidad }}</td></tr>
+                @endforeach
+            </tbody></table></div>
+        @endif
+    </section>
 
     {{-- Historial --}}
     @if($l)

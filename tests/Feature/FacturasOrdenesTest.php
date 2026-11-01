@@ -24,11 +24,19 @@ class FacturasOrdenesTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // Las órdenes son de octubre: los reportes del mes se ven en octubre
+        \Illuminate\Support\Carbon::setTestNow(\Illuminate\Support\Carbon::parse('2026-10-20 10:00:00', 'America/Merida'));
         config(['vandu.dropbox.simulado' => false, 'vandu.dropbox.app_key' => null, 'vandu.dropbox.app_secret' => null]);
         Dropbox::usar(null);
         Storage::fake('local');
         $this->admin = User::factory()->create(['name' => 'Alvar Buenfil']);
         $this->bordados = Proveedor::create(['empresa' => 'Bordados Mérida', 'nombre' => 'Carlos Pech', 'rubro' => 'Bordados', 'telefono' => '999 123 4567']);
+    }
+
+    protected function tearDown(): void
+    {
+        \Illuminate\Support\Carbon::setTestNow();
+        parent::tearDown();
     }
 
     private function orden(): OrdenCompra

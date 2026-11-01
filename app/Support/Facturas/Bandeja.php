@@ -13,7 +13,14 @@ use Illuminate\Support\Collection;
  */
 class Bandeja
 {
-    private static function ventas(): bool { return (bool) Cuentas::actual()?->tiene('stock'); }
+    private static function ventas(): bool { $c = Cuentas::actual(); return (bool) ($c?->tiene('stock') || $c?->tiene('facturacion')); }
+
+    /** Negocio que solo factura (sin ventas, cotizaciones ni proyectos) */
+    public static function soloFacturacion(): bool
+    {
+        $c = Cuentas::actual();
+        return (bool) $c?->tiene('facturacion') && ! $c->tiene('stock') && ! $c->tiene('cotizaciones') && ! $c->tiene('proyectos') && ! $c->tiene('fitness') && ! $c->tiene('autos');
+    }
     private static function cotizaciones(): bool { return (bool) Cuentas::actual()?->tiene('cotizaciones'); }
 
     /**

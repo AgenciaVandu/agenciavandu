@@ -31,6 +31,7 @@ class Permisos
         'canjes'        => ['texto' => 'Escanear visitas y premios', 'icono' => 'bi-qr-code-scan', 'ayuda' => 'Escanear el QR del comensal para sumar su visita, unirlo al programa y entregarle premios'],
         'comensales'    => ['texto' => 'Comensales',            'icono' => 'bi-person-hearts',     'ayuda' => 'Ver a los comensales del programa con su nombre, teléfono, correo y visitas'],
         'gastos'        => ['texto' => 'Subir gastos',          'icono' => 'bi-receipt',           'ayuda' => 'Registrar gastos con foto del ticket, XML de factura o a mano. Ve solo los suyos; ver los de todos es de Finanzas'],
+        'facturas'      => ['texto' => 'Facturación',           'icono' => 'bi-receipt-cutoff',    'ayuda' => 'Hacer, enviar y cancelar facturas, complementos de pago, notas de crédito, factura global y reportes'],
         'finanzas'      => ['texto' => 'Finanzas',              'icono' => 'bi-graph-up-arrow',    'ayuda' => 'Cobros, ingresos y exportar a Excel'],
         'archivos'      => ['texto' => 'Archivos',              'icono' => 'bi-folder2-open',      'ayuda' => 'Explorar todo el Dropbox de la agencia desde el panel'],
         'configuracion' => ['texto' => 'Configuración',         'icono' => 'bi-sliders',           'ayuda' => 'Conexión con Dropbox, tipos de proyecto y plantillas de correo'],
@@ -40,7 +41,7 @@ class Permisos
     /** Secciones que solo existen en ciertos giros: sección => módulo del giro */
     public const MODULOS = ['redes' => 'redes', 'productos' => 'stock', 'proyectos' => 'proyectos', 'unidades' => 'autos', 'cobranza' => 'autos',
                                'clases' => 'fitness', 'asistencia' => 'fitness', 'membresias' => 'fitness', 'cotizaciones' => 'cotizaciones', 'proveedores' => 'proveedores', 'archivos' => 'archivos', 'tareas' => 'tareas',
-                               'clientes' => 'clientes', 'ventas' => 'ventas', 'finanzas' => 'finanzas', 'lealtad' => 'lealtad', 'canjes' => 'lealtad', 'comensales' => 'lealtad', 'gastos' => 'gastos', 'vender' => 'stock'];
+                               'clientes' => 'clientes', 'ventas' => 'ventas', 'finanzas' => 'finanzas', 'lealtad' => 'lealtad', 'canjes' => 'lealtad', 'comensales' => 'lealtad', 'gastos' => 'gastos', 'vender' => 'stock', 'facturas' => 'facturacion'];
 
     /** Secciones disponibles para la cuenta activa (para armar roles) */
     public static function disponibles(): array
@@ -61,7 +62,7 @@ class Permisos
         ['admin.presupuestos.*', 'cotizaciones'],
         // Quien cotiza consulta el catálogo y elige productos; administrarlo (costos, existencias, importar) es de Productos
         ['admin.productos.index', ['productos', 'cotizaciones']],
-        ['admin.productos.buscar', ['productos', 'cotizaciones']],
+        ['admin.productos.buscar', ['productos', 'cotizaciones', 'facturas']],
         ['admin.productos.show', ['productos', 'cotizaciones']],
         ['admin.productos.*', 'productos'],
         ['admin.ventas.*', 'ventas'],
@@ -81,7 +82,7 @@ class Permisos
         ['admin.funciones*', 'configuracion'],
         ['admin.ejemplos*', 'configuracion'],
         ['admin.cobrar', ['finanzas', 'vender', 'proyectos', 'cobranza']],
-        ['admin.facturas*', ['finanzas', 'vender', 'cotizaciones']],
+        ['admin.facturas*', ['facturas', 'finanzas', 'vender', 'cotizaciones']],
         ['admin.facturacion*', 'configuracion'],
         ['admin.credito-ajustes*', 'configuracion'],
         // Gimnasio: el entrenador ve la agenda y sus clases; programarlas y cambiar cupos es de "clases"
@@ -186,7 +187,7 @@ class Permisos
     /** Primera página a la que puede entrar (para el inicio) */
     public static function inicio(User $u): string
     {
-        foreach (['resumen' => 'admin.resumen', 'vender' => 'admin.pedidos', 'canjes' => 'admin.lealtad.escanear', 'clases' => 'admin.clases.index', 'asistencia' => 'admin.clases.index', 'proyectos' => 'admin.proyectos.index', 'unidades' => 'admin.unidades.index', 'cobranza' => 'admin.creditos.index', 'cotizaciones' => 'admin.presupuestos.index', 'redes' => 'admin.redes'] as $s => $r) {
+        foreach (['resumen' => 'admin.resumen', 'facturas' => 'admin.facturas', 'vender' => 'admin.pedidos', 'canjes' => 'admin.lealtad.escanear', 'clases' => 'admin.clases.index', 'asistencia' => 'admin.clases.index', 'proyectos' => 'admin.proyectos.index', 'unidades' => 'admin.unidades.index', 'cobranza' => 'admin.creditos.index', 'cotizaciones' => 'admin.presupuestos.index', 'redes' => 'admin.redes'] as $s => $r) {
             if ($u->puede($s)) return route($r);
         }
         return Cuentas::actual()?->tiene('tareas') === false ? route('admin.cuenta') : route('admin.tareas.index');

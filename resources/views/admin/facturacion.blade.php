@@ -56,6 +56,43 @@
         @endif
     </div>
 
+    {{-- Timbres --}}
+    @if($timbres)
+        <section class="panel mt-4" id="timbres" x-data="{ comprar: {{ $errors->hasAny(['paquete_id', 'archivo', 'fecha']) ? 'true' : 'false' }} }">
+            <div class="panel-head"><div><h2>Tus timbres</h2><span class="ayuda">Cada factura, complemento de pago, nota de crédito o factura global usa uno. Las de prueba no cuentan.</span></div>
+                <b class="num" style="font-size: 22px; color: {{ $timbres['disponibles'] <= \App\Support\Facturas\Timbres::AVISO ? 'var(--red)' : 'inherit' }}">{{ number_format($timbres['disponibles']) }}</b></div>
+            <div class="panel-body">
+                <div class="small secundario">@if($timbres['plan'])Tu plan incluye {{ $timbres['plan'] }} al mes (te quedan {{ $timbres['plan_restantes'] }} de este mes) · @endif{{ number_format($timbres['comprados']) }} comprados</div>
+                @foreach($pedidos as $pd)<div class="fc-aviso mt-2"><i class="bi bi-hourglass-split me-1"></i> Estamos revisando tu pago de {{ $pd->nota }}.</div>@endforeach
+                @if($paquetes->isNotEmpty() && $licencia)
+                    <button type="button" class="btn btn-primario btn-sm mt-3" x-show="! comprar" @click="comprar = true"><i class="bi bi-cart-plus me-1"></i> Comprar timbres</button>
+                    <form method="post" action="{{ route('admin.facturacion.comprar') }}" enctype="multipart/form-data" class="mt-3 d-grid gap-3" x-show="comprar" x-cloak>
+                        @csrf
+                        <div class="d-grid gap-2" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr))">
+                            @foreach($paquetes as $pq)
+                                <label class="panel panel-body m-0 d-flex gap-2 align-items-start" style="cursor: pointer">
+                                    <input type="radio" name="paquete_id" value="{{ $pq->id }}" class="form-check-input mt-1" @checked(old('paquete_id') == $pq->id || ($loop->first && ! old('paquete_id')))>
+                                    <span><b class="d-block">{{ $pq->nombre }}</b><span class="num">{{ number_format($pq->timbres) }} timbres · ${{ number_format($pq->precio, 2) }}</span><span class="d-block secundario small">${{ number_format($pq->por_timbre, 2) }} c/u</span></span>
+                                </label>
+                            @endforeach
+                        </div>
+                        @if(! empty($pagoNerby['clabe']))
+                            <div class="fc-sello"><div><span class="k">Banco</span>{{ $pagoNerby['banco'] ?? '—' }}</div><div><span class="k">A nombre de</span>{{ $pagoNerby['titular'] ?? '—' }}</div><div><span class="k">CLABE</span><span class="num">{{ $pagoNerby['clabe'] }}</span></div></div>
+                        @endif
+                        <div class="row g-2">
+                            <div class="col-sm-4"><label class="form-label small" for="tb-fecha">Fecha del pago</label><input id="tb-fecha" type="date" name="fecha" value="{{ old('fecha', now(config('vandu.zona_horaria'))->toDateString()) }}" class="form-control"></div>
+                            <div class="col-sm-4"><label class="form-label small" for="tb-ref">Referencia <span class="secundario">(opcional)</span></label><input id="tb-ref" name="referencia" maxlength="120" class="form-control" value="{{ old('referencia') }}"></div>
+                            <div class="col-sm-4"><label class="form-label small" for="tb-arch">Comprobante</label><input id="tb-arch" type="file" name="archivo" accept="image/*,application/pdf" class="form-control @error('archivo') is-invalid @enderror">@error('archivo')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                        </div>
+                        <div><button class="btn btn-primario"><i class="bi bi-send me-1"></i> Enviar comprobante</button></div>
+                    </form>
+                @elseif($paquetes->isNotEmpty())
+                    <div class="small mt-2">Para comprar timbres, escríbenos{{ ! empty($pagoNerby['whatsapp']) ? ' por WhatsApp al ' . $pagoNerby['whatsapp'] : '' }}.</div>
+                @endif
+            </div>
+        </section>
+    @endif
+
     {{-- Paso 1: datos fiscales --}}
     <form method="post" action="{{ route('admin.facturacion.emisor') }}" class="panel panel-body mt-4" x-data="{ editar: {{ $a['org_id'] && ! $errors->hasAny(['razon_social', 'regimen', 'cp', 'direccion']) ? 'false' : 'true' }} }">
         @csrf
@@ -205,8 +242,6 @@
                     <input id="clave_unidad" name="clave_unidad" value="{{ old('clave_unidad', $a['clave_unidad']) }}" class="form-control" maxlength="3"><div class="form-text">H87 = pieza</div></div>
                 <div class="col-sm-4"><label class="form-label" for="clave_servicio">Unidad (servicios)</label>
                     <input id="clave_servicio" name="clave_servicio" value="{{ old('clave_servicio', $a['clave_servicio']) }}" class="form-control" maxlength="3"><div class="form-text">E48 = unidad de servicio</div></div>
-                <div class="col-sm-4"><label class="form-label" for="serie">Serie <span class="secundario">(opcional)</span></label>
-                    <input id="serie" name="serie" value="{{ old('serie', $a['serie']) }}" class="form-control" maxlength="10" placeholder="A"></div>
             </div>
         </section>
 
@@ -215,6 +250,41 @@
             <a href="{{ route('admin.facturas') }}" class="btn btn-borde">Ir a Facturas</a>
         </div>
     </form>
+
+    {{-- Series --}}
+    <section class="panel mt-4" id="series">
+        <div class="panel-head"><div><h2>Series y folios</h2><span class="ayuda">Para separar tus comprobantes (por ejemplo A para productos, B para servicios). Nerby lleva el folio de cada una.</span></div></div>
+        @if($series->isEmpty())
+            <div class="panel-body secundario small pb-0">Al timbrar por primera vez se crean A (facturas), NC (notas de crédito), CP (complementos) y G (globales). Puedes agregar las tuyas.</div>
+        @else
+            @foreach($series as $s)<form method="post" action="{{ route('admin.facturacion.series.update', $s) }}" id="serie-{{ $s->id }}">@csrf @method('PUT')</form>@endforeach
+            <div class="table-responsive"><table class="tabla">
+                <thead><tr><th>Serie</th><th>Para</th><th>Descripción</th><th>Siguiente folio</th><th>Activa</th><th>Predeterminada</th><th></th></tr></thead>
+                <tbody>
+                @foreach($series as $s)
+                    <tr>
+                        <td class="fw-semibold num">{{ $s->serie }}</td>
+                        <td class="secundario">{{ $s->tipo_texto }}</td>
+                        <td><input form="serie-{{ $s->id }}" name="descripcion" value="{{ $s->descripcion }}" maxlength="120" class="form-control form-control-sm" aria-label="Descripción de {{ $s->serie }}"></td>
+                        <td><input form="serie-{{ $s->id }}" type="number" min="1" name="siguiente" value="{{ $s->siguiente }}" class="form-control form-control-sm num" style="width: 100px" aria-label="Siguiente folio de {{ $s->serie }}"></td>
+                        <td><input form="serie-{{ $s->id }}" type="checkbox" name="activa" value="1" class="form-check-input" @checked($s->activa) aria-label="Activa"></td>
+                        <td><input form="serie-{{ $s->id }}" type="checkbox" name="predeterminada" value="1" class="form-check-input" @checked($s->predeterminada) aria-label="Predeterminada"></td>
+                        <td><button form="serie-{{ $s->id }}" class="btn btn-fantasma btn-sm">Guardar</button></td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table></div>
+        @endif
+        <form method="post" action="{{ route('admin.facturacion.series.store') }}" class="panel-body d-flex flex-wrap gap-2 align-items-end">
+            @csrf
+            <div><label class="form-label small" for="ns-serie">Nueva serie</label><input id="ns-serie" name="serie" maxlength="10" class="form-control text-uppercase @error('serie') is-invalid @enderror" style="width: 110px" placeholder="B" value="{{ old('serie') }}"></div>
+            <div><label class="form-label small" for="ns-tipo">Para</label><select id="ns-tipo" name="tipo" class="form-select">@foreach(\App\Models\FacturaSerie::TIPOS as $k => $t)<option value="{{ $k }}">{{ $t }}</option>@endforeach</select></div>
+            <div style="flex: 1 1 200px"><label class="form-label small" for="ns-desc">Descripción</label><input id="ns-desc" name="descripcion" maxlength="120" class="form-control" placeholder="Servicios"></div>
+            <div><label class="form-label small" for="ns-sig">Empieza en</label><input id="ns-sig" type="number" min="1" name="siguiente" value="1" class="form-control num" style="width: 100px"></div>
+            <button class="btn btn-borde"><i class="bi bi-plus-lg me-1"></i> Agregar</button>
+            @error('serie')<div class="text-danger small w-100">{{ $message }}</div>@enderror
+        </form>
+    </section>
 </div>
 @include('admin._leer-constancia')
 @endsection

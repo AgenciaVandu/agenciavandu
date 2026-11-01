@@ -14,9 +14,9 @@ class VentaFactura extends Model
 
     protected $table = 'venta_facturas';
 
-    protected $fillable = ['venta_id', 'tipo', 'nombre', 'ruta', 'mime', 'peso', 'uuid', 'rfc_receptor', 'total_cfdi', 'origen', 'facturapi_id', 'cancelacion', 'cancelada_at', 'enviada_at'];
+    protected $fillable = ['venta_id', 'tipo', 'nombre', 'ruta', 'mime', 'peso', 'uuid', 'rfc_receptor', 'total_cfdi', 'origen', 'facturapi_id', 'cancelacion', 'cancelada_at', 'enviada_at', 'serie', 'folio', 'venta_pago_id', 'monto', 'motivo'];
 
-    protected $casts = ['peso' => 'integer', 'total_cfdi' => 'float', 'enviada_at' => 'datetime'];
+    protected $casts = ['peso' => 'integer', 'total_cfdi' => 'float', 'monto' => 'float', 'enviada_at' => 'datetime', 'cancelada_at' => 'datetime'];
 
     protected static function booted(): void
     {

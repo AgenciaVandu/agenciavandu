@@ -84,6 +84,16 @@ return [
                 ['nombre' => 'Caja / Mesero', 'descripcion' => 'Escanea el QR del comensal para sumar su visita y entregarle sus premios.', 'permisos' => ['canjes']],
             ],
         ],
+        'facturacion' => [
+            'nombre'  => 'Solo facturación',
+            'icono'   => 'bi-receipt-cutoff',
+            // Facturas, clientes y reportes; nada de ventas, proyectos, cotizaciones ni inventario
+            'modulos' => ['facturacion', 'sin_proyectos', 'sin_cotizaciones', 'sin_proveedores', 'sin_archivos', 'sin_tareas', 'sin_ventas', 'sin_finanzas'],
+            'roles'   => [
+                ['nombre' => 'Facturación', 'descripcion' => 'Hace, envía y cancela facturas; registra pagos y sus complementos.', 'permisos' => ['facturas', 'clientes']],
+                ['nombre' => 'Contador', 'descripcion' => 'Ve los reportes y descarga los XML del mes.', 'permisos' => ['facturas']],
+            ],
+        ],
         'comercio' => [
             'nombre'  => 'Venta de productos y servicios',
             'icono'   => 'bi-shop',

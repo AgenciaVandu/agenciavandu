@@ -19,6 +19,8 @@ class ResumenController extends Controller
             if (count($accesos) <= 1) return redirect()->to(\App\Support\Permisos::inicio($u));
             return view('admin.mi-dia', ['accesos' => $accesos]);
         }
+        // Solo facturación: su inicio es la bandeja de facturas
+        if (\App\Support\Facturas\Bandeja::soloFacturacion()) return redirect()->route('admin.facturas');
         // Lote de autos: su propio resumen (por vender, por cobrar, adeudos y termómetro)
         if (\App\Support\Cuentas::actual()?->tiene('autos')) return $this->autos();
         // Gimnasio: clases de hoy, reservaciones, asistencia y paquetes por renovar

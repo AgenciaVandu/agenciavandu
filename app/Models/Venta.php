@@ -16,7 +16,7 @@ class Venta extends Model
     protected $fillable = ['cuenta_id', 'folio', 'cliente_id', 'cliente_nombre', 'cliente_telefono', 'presupuesto_id', 'user_id', 'sucursal_id', 'fecha',
         'subtotal', 'descuento', 'con_iva', 'iva_porcentaje', 'iva', 'envio_costo', 'total', 'pagado', 'credito', 'vence_el', 'estado', 'notas',
         'lleva_envio', 'envio_nombre', 'envio_telefono', 'envio_direccion', 'envio_referencias', 'envio_lat', 'envio_lng', 'envio_km', 'envio_costo_manual',
-        'repartidor_id', 'token', 'datos_at', 'datos_por', 'entregada_at', 'cancelada_at', 'factura_solicitada_at', 'razon_id'];
+        'repartidor_id', 'token', 'datos_at', 'datos_por', 'entregada_at', 'cancelada_at', 'factura_solicitada_at', 'razon_id', 'metodo_pago', 'uso_cfdi', 'global_id'];
 
     protected $casts = ['fecha' => 'date', 'vence_el' => 'date', 'subtotal' => 'float', 'descuento' => 'float', 'con_iva' => 'boolean', 'iva_porcentaje' => 'float',
         'iva' => 'float', 'envio_costo' => 'float', 'total' => 'float', 'pagado' => 'float', 'credito' => 'boolean', 'lleva_envio' => 'boolean',

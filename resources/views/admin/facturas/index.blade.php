@@ -33,10 +33,17 @@
 @section('contenido')
 <div class="page-head">
     <div><h1>Facturas</h1><p class="sub">Sube o genera la factura de cada venta y mándala al cliente por correo o WhatsApp sin buscarla.</p></div>
-    @if(auth()->user()->puede('configuracion'))
-        <a href="{{ route('admin.facturacion') }}" class="btn btn-borde"><i class="bi bi-gear me-1"></i> {{ $timbrar ? 'Facturación' : 'Generar facturas aquí' }}</a>
-    @endif
+    <div class="d-flex flex-wrap gap-2">
+        @if(auth()->user()->puede('configuracion'))
+            <a href="{{ route('admin.facturacion') }}" class="btn btn-borde"><i class="bi bi-gear me-1"></i> {{ $timbrar ? 'Facturación' : 'Generar facturas aquí' }}</a>
+        @endif
+        @if($timbrar)<a href="{{ route('admin.facturas.crear') }}" class="btn btn-primario"><i class="bi bi-plus-lg me-1"></i> Nueva factura</a>@endif
+    </div>
 </div>
+@include('admin.facturas._tabs')
+@if($timbres && $timbres['disponibles'] <= \App\Support\Facturas\Timbres::AVISO)
+    <div class="aviso mb-3" style="background: var(--amber-soft); color: #7A4A00"><i class="bi bi-exclamation-triangle"></i> {{ $timbres['disponibles'] ? 'Te quedan ' . $timbres['disponibles'] . ' timbres.' : 'Ya no te quedan timbres.' }} <a href="{{ route('admin.facturacion') }}#timbres">Comprar más</a></div>
+@endif
 
 <div class="mb-3">
     <nav class="segmento" aria-label="Facturas">
@@ -154,6 +161,8 @@
                         <select name="forma_pago" class="form-select form-select-sm">@foreach($formas as $k => $t)<option value="{{ $k }}" @selected($k === $doc->formaSat())>{{ $k }} · {{ $t }}</option>@endforeach</select></div>
                     <div><label class="form-label small mb-1">Método</label>
                         <select name="metodo_pago" class="form-select form-select-sm"><option value="PUE">PUE · ya pagó</option><option value="PPD" @selected(($doc->m->saldo ?? 0) > 0.5)>PPD · pagará después</option></select></div>
+                    @if($series->count() > 1)<div><label class="form-label small mb-1">Serie</label>
+                        <select name="serie_id" class="form-select form-select-sm">@foreach($series as $s)<option value="{{ $s->id }}">{{ $s->serie }}{{ $s->descripcion ? ' · ' . $s->descripcion : '' }}</option>@endforeach</select></div>@endif
                     <div><label class="form-label small mb-1">Uso</label>
                         <select name="uso_cfdi" class="form-select form-select-sm">@foreach($usos as $k => $t)<option value="{{ $k }}" @selected($k === $fis['uso'])>{{ $k }} · {{ $t }}</option>@endforeach</select></div>
                     <div>

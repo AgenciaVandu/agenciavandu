@@ -123,7 +123,10 @@ class Documento
 
     public function url(): string
     {
-        return $this->m instanceof Venta ? route('admin.pedidos.show', $this->m) : route('admin.presupuestos.edit', [$this->m, 'ver' => 'factura']);
+        if ($this->m instanceof Venta) {
+            return \App\Support\Cuentas::actual()?->tiene('stock') && ! $this->m->metodo_pago ? route('admin.pedidos.show', $this->m) : route('admin.facturas.venta', $this->m);
+        }
+        return route('admin.presupuestos.edit', [$this->m, 'ver' => 'factura']);
     }
 
     /** Enlace público para que el cliente descargue un archivo */

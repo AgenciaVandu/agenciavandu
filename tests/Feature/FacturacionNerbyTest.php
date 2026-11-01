@@ -67,6 +67,7 @@ class FacturacionNerbyTest extends TestCase
 
     protected function tearDown(): void
     {
+        \App\Support\Licencias\Estado::olvidar();
         Carbon::setTestNow();
         parent::tearDown();
     }
@@ -114,9 +115,13 @@ class FacturacionNerbyTest extends TestCase
         foreach (['MiClave123', 'sk_live_lupe', 'sk_test_lupe'] as $secreto) $this->assertStringNotContainsString($secreto, $guardado);
         $this->get(route('admin.facturacion'))->assertSee('Lista para facturar')->assertSee('LUPE800101AB1')->assertDontSee('MiClave123')->assertDontSee('sk_live_lupe');
 
-        // Timbrar con la clave real de su organización
+        // Sin timbres no deja timbrar; con timbres sí, y gasta uno
         $v = $this->venta();
+        $this->post(route('admin.facturas.timbrar', ['venta', $v->id]), ['forma_pago' => '01', 'metodo_pago' => 'PUE'])->assertSessionHas('error', fn ($m) => str_contains($m, 'no te quedan timbres'));
+        \App\Support\Facturas\Timbres::cargar($this->tienda, 'regalo', 3);
         $this->post(route('admin.facturas.timbrar', ['venta', $v->id]), ['forma_pago' => '01', 'metodo_pago' => 'PUE'])->assertSessionHas('ok');
+        $this->assertSame(2, \App\Support\Facturas\Timbres::disponibles($this->tienda));
+        $this->assertSame(['A', 1], [VentaFactura::value('serie'), VentaFactura::value('folio')]);
         Http::assertSent(fn ($r) => $r->method() === 'POST' && str_ends_with($r->url(), '/v2/invoices') && $r->hasHeader('Authorization', 'Bearer sk_live_lupe'));
         $this->assertSame(1, Timbrado::timbradasEsteMes($this->tienda));
 

@@ -10,7 +10,7 @@ class Plan extends Model
 {
     protected $table = 'planes';
 
-    protected $fillable = ['clave', 'tipo', 'nombre', 'descripcion', 'precio_mensual', 'precio_anual', 'usuarios', 'sucursales', 'incluye', 'activo', 'orden'];
+    protected $fillable = ['clave', 'tipo', 'nombre', 'descripcion', 'precio_mensual', 'precio_anual', 'usuarios', 'sucursales', 'incluye', 'activo', 'orden', 'timbres_mes'];
 
     protected $casts = ['precio_mensual' => 'float', 'precio_anual' => 'float', 'usuarios' => 'integer', 'sucursales' => 'integer', 'incluye' => 'array', 'activo' => 'boolean'];
 

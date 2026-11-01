@@ -29,6 +29,7 @@ class Giros
         'sin_proyectos' => ['texto' => 'Sin Proyectos', 'icono' => 'bi-eye-slash', 'ayuda' => 'Oculta la sección de Proyectos (etapas y entregas) para negocios que no la usan.'],
         'ia' => ['texto' => 'Lectura de documentos con IA', 'icono' => 'bi-stars', 'ayuda' => 'Lee fotos de la Constancia de Situación Fiscal y listas de precios de proveedores (PDF o foto) para actualizar costos. El PDF de la constancia del SAT se lee siempre, sin IA.'],
         'gastos' => ['texto' => 'Gastos con lectura de tickets', 'icono' => 'bi-receipt', 'ayuda' => 'Registrar gastos sueltos con foto del ticket (la IA lo lee), XML de factura o a mano. Se suman en Finanzas.'],
+        'facturacion' => ['texto' => 'Facturación', 'icono' => 'bi-receipt-cutoff', 'ayuda' => 'Facturar directo (sin venta ni cotización), series, complementos de pago, notas de crédito, factura global y reportes de facturación.'],
         'redes' => ['texto' => 'Redes sociales', 'icono' => 'bi-grid-3x3-gap', 'ayuda' => 'Calendario de contenido y aprobaciones de sus clientes.'],
     ];
 

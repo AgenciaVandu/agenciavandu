@@ -45,6 +45,32 @@ class Enviar
         return [true, "{$doc->folio()}: enviada a {$para}."];
     }
 
+    /** Complemento de pago o nota de crédito por correo, con su PDF y XML */
+    public static function cfdi(Documento $doc, $archivos, string $que): array
+    {
+        $para = trim((string) $doc->correo());
+        if (! filter_var($para, FILTER_VALIDATE_EMAIL)) return [false, 'El cliente no tiene correo para facturas.'];
+        $f = $archivos->first();
+        $folio = trim(($f->serie ?? '') . '-' . ($f->folio ?? ''), '-');
+        $nombre = Correos::primerNombre((string) ($doc->cliente()?->nombre ?: $doc->quien()));
+        $cuerpo = "Hola {$nombre}, te enviamos tu " . mb_strtolower($que) . " {$folio}"
+            . ($f->tipo === 'complemento' ? ' por tu pago de $' . number_format((float) $f->monto, 2) . " a la compra {$doc->folio()}." : " de la compra {$doc->folio()} por $" . number_format((float) $f->monto, 2) . '.')
+            . "\n\nVa adjunto en PDF y XML. Gracias.";
+        $correo = new CorreoVandu(asunto: "$que $folio", titulo: "Tu " . mb_strtolower($que), cuerpo: $cuerpo, codigo: null, boton: null, url: null, resumen: [], banco: [],
+            archivos: $archivos->map(fn ($x) => ['data' => (string) $x->contenido(), 'nombre' => $x->nombre, 'mime' => $x->mime ?: 'application/octet-stream'])->all(),
+            miniaturas: [], mas: 0, vistaPrevia: false);
+        try {
+            Mail::to($para)->send($correo);
+        } catch (\Throwable $e) {
+            report($e);
+            return [false, 'No se pudo enviar (' . Str::limit($e->getMessage(), 80) . ').'];
+        }
+        Correo::create(['cliente_id' => $doc->cliente()?->id, 'plantilla' => 'factura', 'para' => $para, 'asunto' => "$que $folio", 'cuerpo' => $cuerpo,
+            'adjuntos' => $archivos->pluck('nombre')->all(), 'estado' => 'enviado']);
+        $doc->relacionArchivos()->whereIn('id', $archivos->pluck('id'))->update(['enviada_at' => now()]);
+        return [true, "$que enviado a $para."];
+    }
+
     /** Enlace de WhatsApp con los enlaces de descarga (WhatsApp no adjunta archivos desde un enlace) */
     public static function whatsapp(Documento $doc): ?string
     {

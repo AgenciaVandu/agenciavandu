@@ -325,6 +325,22 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::get('cobrar', [Admin\CobrarController::class, 'index'])->name('cobrar');
     // Bandeja de facturas (cotizaciones y ventas directas)
     Route::get('facturas', [Admin\FacturasController::class, 'index'])->name('facturas');
+    Route::get('facturas/nueva', [Admin\FacturasController::class, 'crear'])->name('facturas.crear');
+    Route::post('facturas/nueva', [Admin\FacturasController::class, 'guardar'])->middleware('throttle:20,1,factura-nueva')->name('facturas.guardar');
+    Route::get('facturas/venta/{venta}', [Admin\FacturasController::class, 'venta'])->whereNumber('venta')->name('facturas.venta');
+    Route::get('facturas/venta/{venta}/archivo/{factura}', [Admin\FacturasController::class, 'archivo'])->whereNumber(['venta', 'factura'])->name('facturas.venta.archivo');
+    Route::post('facturas/venta/{venta}/pago', [Admin\FacturasController::class, 'pago'])->whereNumber('venta')->name('facturas.venta.pago');
+    Route::post('facturas/venta/{venta}/pago/{pago}/complemento', [Admin\FacturasController::class, 'complemento'])->whereNumber(['venta', 'pago'])->name('facturas.venta.complemento');
+    Route::post('facturas/venta/{venta}/nota-credito', [Admin\FacturasController::class, 'notaCredito'])->whereNumber('venta')->name('facturas.venta.nota');
+    Route::post('facturas/venta/{venta}/cfdi/{factura}/cancelar', [Admin\FacturasController::class, 'cancelarCfdi'])->whereNumber(['venta', 'factura'])->name('facturas.venta.cancelar-cfdi');
+    Route::post('facturas/venta/{venta}/cfdi/{factura}/enviar', [Admin\FacturasController::class, 'enviarCfdi'])->whereNumber(['venta', 'factura'])->name('facturas.venta.enviar-cfdi');
+    Route::get('facturas/global', [Admin\FacturasController::class, 'global'])->name('facturas.global');
+    Route::post('facturas/global', [Admin\FacturasController::class, 'emitirGlobal'])->name('facturas.global.emitir');
+    Route::get('facturas/global/{global}/{ext}', [Admin\FacturasController::class, 'archivoGlobal'])->whereNumber('global')->whereIn('ext', ['pdf', 'xml'])->name('facturas.global.archivo');
+    Route::post('facturas/global/{global}/cancelar', [Admin\FacturasController::class, 'cancelarGlobal'])->whereNumber('global')->name('facturas.global.cancelar');
+    Route::get('facturas/reportes', [Admin\FacturasController::class, 'reportes'])->name('facturas.reportes');
+    Route::get('facturas/reportes/excel', [Admin\FacturasController::class, 'excel'])->name('facturas.reportes.excel');
+    Route::get('facturas/reportes/xml', [Admin\FacturasController::class, 'zip'])->name('facturas.reportes.zip');
     Route::post('facturas/enviar-varias', [Admin\FacturasController::class, 'enviarVarias'])->name('facturas.enviar-varias');
     Route::post('facturas/{tipo}/{id}/subir', [Admin\FacturasController::class, 'subir'])->whereIn('tipo', ['presupuesto', 'venta'])->whereNumber('id')->name('facturas.subir');
     Route::post('facturas/{tipo}/{id}/enviar', [Admin\FacturasController::class, 'enviar'])->whereIn('tipo', ['presupuesto', 'venta'])->whereNumber('id')->name('facturas.enviar');
@@ -338,6 +354,9 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::put('configuracion/facturacion', [Admin\FacturacionController::class, 'guardar'])->name('facturacion.guardar');
     Route::post('configuracion/facturacion/emisor', [Admin\FacturacionController::class, 'emisor'])->middleware('throttle:10,1,facturacion')->name('facturacion.emisor');
     Route::post('configuracion/facturacion/sello', [Admin\FacturacionController::class, 'sello'])->middleware('throttle:6,1,facturacion-sello')->name('facturacion.sello');
+    Route::post('configuracion/facturacion/series', [Admin\FacturacionController::class, 'nuevaSerie'])->name('facturacion.series.store');
+    Route::put('configuracion/facturacion/series/{serie}', [Admin\FacturacionController::class, 'serie'])->whereNumber('serie')->name('facturacion.series.update');
+    Route::post('configuracion/facturacion/timbres', [Admin\FacturacionController::class, 'comprar'])->middleware('throttle:6,1,timbres')->name('facturacion.comprar');
     Route::put('configuracion/facturacion/modo', [Admin\FacturacionController::class, 'modo'])->name('facturacion.modo');
     Route::post('ejemplos', [Admin\EjemplosController::class, 'cargar'])->name('ejemplos');
     Route::delete('ejemplos', [Admin\EjemplosController::class, 'quitar'])->name('ejemplos.quitar');
@@ -362,6 +381,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::get('plataforma/planes', [Admin\LicenciasController::class, 'planes'])->name('plataforma.planes');
     Route::put('plataforma/planes', [Admin\LicenciasController::class, 'guardarPlanes'])->name('plataforma.planes.update');
     Route::post('plataforma/planes', [Admin\LicenciasController::class, 'nuevoPlan'])->name('plataforma.planes.store');
+    Route::put('plataforma/timbres', [Admin\LicenciasController::class, 'guardarTimbres'])->name('plataforma.timbres');
+    Route::post('plataforma/{cuenta}/timbres', [Admin\LicenciasController::class, 'timbres'])->whereNumber('cuenta')->name('plataforma.licencia.timbres');
     Route::put('plataforma/planes/pago', [Admin\LicenciasController::class, 'datosPago'])->name('plataforma.planes.pago');
     Route::get('plataforma/{cuenta}/licencia', [Admin\LicenciasController::class, 'ficha'])->whereNumber('cuenta')->name('plataforma.licencia');
     Route::put('plataforma/{cuenta}/licencia', [Admin\LicenciasController::class, 'guardar'])->whereNumber('cuenta')->name('plataforma.licencia.update');

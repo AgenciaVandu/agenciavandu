@@ -23,14 +23,15 @@ class Archivos
     }
 
     /** Guarda un archivo de factura; si ya había uno con el mismo nombre, lo reemplaza */
-    public static function guardar(Documento $doc, string $nombre, string $contenido, string $mime, string $origen, ?string $facturapiId = null)
+    public static function guardar(Documento $doc, string $nombre, string $contenido, string $mime, string $origen, ?string $facturapiId = null, array $extra = [])
     {
         $ext = Str::lower(pathinfo($nombre, PATHINFO_EXTENSION));
         $doc->relacionArchivos()->where('nombre', $nombre)->get()->each->delete();
         $ruta = $doc->carpeta() . '/' . Str::uuid() . '.' . $ext;
         Storage::disk('local')->put($ruta, $contenido);
         $datos = ['tipo' => 'factura', 'nombre' => $nombre, 'ruta' => $ruta, 'mime' => $mime, 'peso' => strlen($contenido), 'origen' => $origen, 'facturapi_id' => $facturapiId];
-        if ($ext === 'xml' && ($x = self::leerXml($contenido))) $datos += $x;
+        if ($ext === 'xml' && ($x = self::leerXml($contenido))) $datos = $x + $datos;
+        $datos = array_filter($extra, fn ($v) => $v !== null) + $datos;
         return $doc->relacionArchivos()->create($datos);
     }
 

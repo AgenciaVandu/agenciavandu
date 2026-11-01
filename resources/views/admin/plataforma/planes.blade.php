@@ -32,7 +32,7 @@
             <div class="panel-head"><div><h2>{{ $titulo }}</h2><span class="ayuda">{{ $ayuda }}</span></div></div>
             <div class="table-responsive">
                 <table class="tabla pl-tabla">
-                    <thead><tr><th>Nombre</th><th>Mensual</th>@if($tipo === 'plan')<th>Anual</th>@endif<th>{{ $colUsu }}</th><th>Sucursales</th><th>Prende</th><th>Activo</th>@if($tipo === 'plan')<th class="text-end">Negocios</th>@endif</tr></thead>
+                    <thead><tr><th>Nombre</th><th>Mensual</th>@if($tipo === 'plan')<th>Anual</th>@endif<th>{{ $colUsu }}</th><th>Sucursales</th>@if($tipo === 'plan')<th>Timbres/mes</th>@endif<th>Prende</th><th>Activo</th>@if($tipo === 'plan')<th class="text-end">Negocios</th>@endif</tr></thead>
                     <tbody>
                     @foreach($lista as $p)
                         <tr>
@@ -46,6 +46,7 @@
                             @endif
                             <td><input type="number" min="1" name="p[{{ $p->id }}][usuarios]" value="{{ $p->usuarios }}" placeholder="{{ $tipo === 'plan' ? '∞' : '—' }}" class="form-control form-control-sm num w-mini" aria-label="Usuarios"></td>
                             <td><input type="number" min="0" name="p[{{ $p->id }}][sucursales]" value="{{ $p->sucursales }}" placeholder="—" class="form-control form-control-sm num w-mini" aria-label="Sucursales"></td>
+                            @if($tipo === 'plan')<td><input type="number" min="0" max="100000" name="p[{{ $p->id }}][timbres_mes]" value="{{ $p->timbres_mes ?: '' }}" placeholder="0" class="form-control form-control-sm num w-mini" aria-label="Timbres incluidos al mes"></td>@endif
                             <td><div class="pl-incluye">
                                 @foreach($extrasMod as $m)
                                     <label class="form-check m-0"><input type="checkbox" name="p[{{ $p->id }}][incluye][]" value="{{ $m }}" class="form-check-input" @checked(in_array($m, (array) $p->incluye, true))> <span class="form-check-label">{{ $mods[$m]['texto'] ?? $m }}</span></label>
@@ -70,6 +71,36 @@
     <div><input id="pl-n" name="nombre" class="form-control" placeholder="Nombre" required maxlength="80"></div>
     <button class="btn btn-borde"><i class="bi bi-plus-lg me-1"></i> Agregar</button>
 </form>
+
+<section class="panel mb-4" id="timbres">
+    <div class="panel-head"><div><h2>Paquetes de timbres</h2><span class="ayuda">Lo que cada negocio puede comprar para facturar con tu cuenta de Facturapi. Cada factura, complemento o nota de crédito gasta uno.</span></div></div>
+    <form method="post" action="{{ route('admin.plataforma.timbres') }}">
+        @csrf @method('PUT')
+        <div class="table-responsive">
+            <table class="tabla pl-tabla">
+                <thead><tr><th>Nombre</th><th>Timbres</th><th>Precio</th><th class="text-end">Por timbre</th><th>Activo</th></tr></thead>
+                <tbody>
+                @foreach($paquetes as $pq)
+                    <tr>
+                        <td style="min-width: 220px"><input name="q[{{ $pq->id }}][nombre]" value="{{ $pq->nombre }}" class="form-control form-control-sm fw-semibold" required maxlength="80" aria-label="Nombre del paquete"></td>
+                        <td><input type="number" min="1" max="1000000" name="q[{{ $pq->id }}][timbres]" value="{{ $pq->timbres }}" class="form-control form-control-sm num w-num" required aria-label="Timbres"></td>
+                        <td><input type="number" step="0.01" min="0" name="q[{{ $pq->id }}][precio]" value="{{ $pq->precio + 0 }}" class="form-control form-control-sm num w-num" required aria-label="Precio"></td>
+                        <td class="text-end num secundario">${{ number_format($pq->por_timbre, 2) }}</td>
+                        <td><input type="hidden" name="q[{{ $pq->id }}][activo]" value="0"><input type="checkbox" name="q[{{ $pq->id }}][activo]" value="1" class="form-check-input" @checked($pq->activo) aria-label="Activo"></td>
+                    </tr>
+                @endforeach
+                    <tr>
+                        <td><input name="nuevo[nombre]" class="form-control form-control-sm" maxlength="80" placeholder="Nuevo: Paquete 100" aria-label="Nombre del nuevo paquete"></td>
+                        <td><input type="number" min="1" name="nuevo[timbres]" class="form-control form-control-sm num w-num" placeholder="100" aria-label="Timbres del nuevo paquete"></td>
+                        <td><input type="number" step="0.01" min="0" name="nuevo[precio]" class="form-control form-control-sm num w-num" placeholder="450" aria-label="Precio del nuevo paquete"></td>
+                        <td></td><td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="panel-body pt-0"><button class="btn btn-primario"><i class="bi bi-check2 me-1"></i> Guardar paquetes</button></div>
+    </form>
+</section>
 
 <section class="panel">
     <div class="panel-head"><div><h2>Datos para que te paguen</h2><span class="ayuda">Salen en el aviso de vencimiento del panel, en la pantalla de suspensión y en los correos</span></div></div>

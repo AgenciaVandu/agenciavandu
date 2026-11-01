@@ -30,7 +30,26 @@ class LicenciasController extends Controller
             'extras' => Plan::extras()->get(),
             'usoPlan' => Licencia::selectRaw('plan_id, count(*) as n')->groupBy('plan_id')->pluck('n', 'plan_id'),
             'pago'   => Estado::datosPago(),
+            'paquetes' => \App\Models\TimbrePaquete::orderBy('orden')->orderBy('timbres')->get(),
         ]);
+    }
+
+    /** Paquetes de timbres que venden: editar los que hay y agregar uno */
+    public function guardarTimbres(Request $request)
+    {
+        $d = $request->validate([
+            'q' => 'nullable|array', 'q.*.nombre' => 'required|string|max:80', 'q.*.timbres' => 'required|integer|min:1|max:1000000',
+            'q.*.precio' => 'required|numeric|min:0|max:9999999', 'q.*.activo' => 'nullable|boolean',
+            'nuevo.nombre' => 'nullable|required_with:nuevo.timbres|string|max:80', 'nuevo.timbres' => 'nullable|required_with:nuevo.nombre|integer|min:1|max:1000000',
+            'nuevo.precio' => 'nullable|required_with:nuevo.nombre|numeric|min:0|max:9999999',
+        ], ['nuevo.timbres.required_with' => 'Pon cuántos timbres trae el paquete nuevo.', 'nuevo.precio.required_with' => 'Pon el precio del paquete nuevo.']);
+        foreach ($d['q'] ?? [] as $id => $x) {
+            \App\Models\TimbrePaquete::whereKey($id)->update(['nombre' => $x['nombre'], 'timbres' => $x['timbres'], 'precio' => $x['precio'], 'activo' => (bool) ($x['activo'] ?? false)]);
+        }
+        if (! empty($d['nuevo']['nombre'])) {
+            \App\Models\TimbrePaquete::create($d['nuevo'] + ['orden' => (int) \App\Models\TimbrePaquete::max('orden') + 1]);
+        }
+        return redirect(route('admin.plataforma.planes') . '#timbres')->with('ok', 'Paquetes de timbres guardados.');
     }
 
     public function guardarPlanes(Request $request)
@@ -43,6 +62,7 @@ class LicenciasController extends Controller
             'p.*.precio_anual'   => 'nullable|numeric|min:0|max:9999999',
             'p.*.usuarios'       => 'nullable|integer|min:1|max:9999',
             'p.*.sucursales'     => 'nullable|integer|min:0|max:99',
+            'p.*.timbres_mes'    => 'nullable|integer|min:0|max:100000',
             'p.*.incluye'        => 'nullable|array',
             'p.*.incluye.*'      => Rule::in(PlataformaController::EXTRAS),
             'p.*.activo'         => 'nullable|boolean',
@@ -54,6 +74,7 @@ class LicenciasController extends Controller
                 'nombre' => $x['nombre'], 'descripcion' => $x['descripcion'] ?? null, 'precio_mensual' => $x['precio_mensual'],
                 'precio_anual' => $plan->tipo === 'plan' ? ($x['precio_anual'] ?? null) : null,
                 'usuarios' => $x['usuarios'] ?? null, 'sucursales' => $x['sucursales'] ?? null,
+                'timbres_mes' => $plan->tipo === 'plan' ? (int) ($x['timbres_mes'] ?? 0) : 0,
                 'incluye' => array_values($x['incluye'] ?? []), 'activo' => (bool) ($x['activo'] ?? false),
             ]);
         }
@@ -105,7 +126,38 @@ class LicenciasController extends Controller
                 'sucursales' => \App\Models\Sucursal::sinCuenta()->where('cuenta_id', $cuenta->id)->count(),
                 'ia'         => \App\Support\IA\Anthropic::usadasEsteMes($cuenta),
             ],
+            'timbres' => \App\Support\Facturas\Timbres::resumen($cuenta),
+            'movTimbres' => \App\Models\TimbreMovimiento::with('paquete')->where('cuenta_id', $cuenta->id)->where('tipo', '!=', 'uso_plan')->latest('id')->take(12)->get(),
+            'paquetes' => \App\Models\TimbrePaquete::orderBy('orden')->orderBy('timbres')->get(),
         ]);
+    }
+
+    /** Cargar timbres a un negocio: compra de un paquete (se registra su pago y recibo), regalo o ajuste */
+    public function timbres(Request $request, Cuenta $cuenta)
+    {
+        $d = $request->validate([
+            'tipo' => 'required|in:compra,regalo,ajuste',
+            'paquete_id' => 'nullable|required_if:tipo,compra|exists:timbre_paquetes,id',
+            'cantidad' => 'nullable|required_unless:tipo,compra|integer|min:-100000|max:100000|not_in:0',
+            'monto' => 'nullable|numeric|min:0|max:9999999',
+            'forma' => ['nullable', Rule::in(array_keys(LicenciaPago::FORMAS))],
+            'referencia' => 'nullable|string|max:120',
+            'nota' => 'nullable|string|max:200',
+        ], ['paquete_id.required_if' => 'Elige el paquete que compró.', 'cantidad.required_unless' => 'Pon cuántos timbres.']);
+        $paq = ! empty($d['paquete_id']) ? \App\Models\TimbrePaquete::find($d['paquete_id']) : null;
+        $cantidad = $d['tipo'] === 'compra' ? $paq->timbres : (int) $d['cantidad'];
+        if ($d['tipo'] === 'regalo' && $cantidad < 0) return back()->withErrors(['cantidad' => 'Un regalo suma timbres; para quitar usa Ajuste.']);
+        $pago = null;
+        if ($d['tipo'] === 'compra') {
+            $l = Licencia::where('cuenta_id', $cuenta->id)->first();
+            $monto = (float) ($d['monto'] ?? $paq->precio);
+            if ($l && $monto > 0) {
+                $pago = Licencias::pagar($l, ['fecha' => $this->hoy(), 'concepto' => 'timbres', 'monto' => $monto, 'periodos' => 0,
+                    'forma' => $d['forma'] ?? 'transferencia', 'referencia' => $d['referencia'] ?? null], $request->user());
+            }
+        }
+        \App\Support\Facturas\Timbres::cargar($cuenta, $d['tipo'], $cantidad, $paq, $pago?->monto ?? ($d['monto'] ?? null), $pago?->id, $d['nota'] ?? $d['referencia'] ?? null, $request->user());
+        return back()->with('ok', ($cantidad > 0 ? "Cargamos $cantidad timbres" : 'Quitamos ' . abs($cantidad) . ' timbres') . " a {$cuenta->nombre}." . ($pago ? ' El pago quedó registrado con su recibo.' : ''));
     }
 
     public function guardar(Request $request, Cuenta $cuenta)
@@ -182,6 +234,12 @@ class LicenciasController extends Controller
         $d['periodos'] = in_array($d['concepto'], ['periodo', 'mantenimiento'], true) ? max(1, (int) ($d['periodos'] ?? 1)) : 0;
         $p = Licencias::pagar($l, $d + ['fecha' => $comprobante->fecha->toDateString(), 'referencia' => $comprobante->referencia, 'forma' => $d['forma'] ?? 'transferencia'], $request->user());
         $comprobante->update(['estado' => 'aprobado', 'licencia_pago_id' => $p->id]);
+        // Pidió un paquete de timbres: se cargan al confirmar
+        if ($d['concepto'] === 'timbres' && $comprobante->paquete_id && ($paq = \App\Models\TimbrePaquete::find($comprobante->paquete_id))) {
+            \App\Support\Facturas\Timbres::cargar($cuenta, 'compra', $paq->timbres, $paq, $p->monto, $p->id, $comprobante->referencia, $request->user());
+            $this->avisar($cuenta, $comprobante, 'Tus timbres ya están cargados', "Confirmamos tu pago de $" . number_format($p->monto, 2) . " y cargamos {$paq->timbres} timbres. Ya puedes seguir facturando.");
+            return back()->with('ok', "Pago confirmado y {$paq->timbres} timbres cargados.");
+        }
         $this->avisar($cuenta, $comprobante, 'Tu pago quedó registrado', 'Confirmamos tu pago de $' . number_format($p->monto, 2) . '.'
             . ($p->cubre_hasta ? ' Tu plan queda pagado hasta el ' . $p->cubre_hasta->locale('es')->isoFormat('D [de] MMMM [de] YYYY') . '.' : '') . ' Tu recibo está en Mi plan.');
         return back()->with('ok', 'Comprobante confirmado y pago registrado.');

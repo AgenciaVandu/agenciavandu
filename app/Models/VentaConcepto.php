@@ -9,7 +9,7 @@ class VentaConcepto extends Model
 {
     public $timestamps = false;
 
-    protected $fillable = ['venta_id', 'producto_id', 'descripcion', 'unidad', 'cantidad', 'precio', 'importe', 'orden'];
+    protected $fillable = ['venta_id', 'producto_id', 'descripcion', 'unidad', 'cantidad', 'precio', 'importe', 'orden', 'clave_sat', 'unidad_sat'];
 
     protected $casts = ['cantidad' => 'float', 'precio' => 'float', 'importe' => 'float'];
 

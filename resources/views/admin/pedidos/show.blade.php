@@ -207,6 +207,7 @@
                     @elseif(\App\Support\Facturas\Timbrado::activo())
                         <a href="{{ route('admin.facturas', ['ver' => 'por_facturar']) }}" class="small">Generarla desde Facturas</a>
                     @endif
+                    @if($fdoc->facturapiId())<a href="{{ route('admin.facturas.venta', $v) }}" class="small">Complementos de pago y notas de crédito</a>@endif
                 </div>
             </section>
         @endunless

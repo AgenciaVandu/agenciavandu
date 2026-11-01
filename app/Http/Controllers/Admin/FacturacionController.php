@@ -22,6 +22,12 @@ class FacturacionController extends Controller
         return view('admin.facturacion', [
             'a' => $a, 'activo' => Timbrado::activo(), 'nerby' => Organizacion::disponible() && ! filled($a['key']),
             'timbradas' => Timbrado::timbradasEsteMes(Cuentas::actual()),
+            'series' => \App\Models\FacturaSerie::orderBy('tipo')->orderByDesc('predeterminada')->orderBy('serie')->get(),
+            'timbres' => Organizacion::disponible() && ! filled($a['key']) ? \App\Support\Facturas\Timbres::resumen(Cuentas::actual()) : null,
+            'paquetes' => \App\Support\Facturas\Timbres::paquetes(),
+            'pagoNerby' => \App\Support\Licencias\Estado::datosPago(),
+            'licencia' => \App\Support\Licencias\Estado::de(Cuentas::actual())->licencia,
+            'pedidos' => \App\Models\LicenciaComprobante::where('cuenta_id', Cuentas::id())->whereNotNull('paquete_id')->where('estado', 'pendiente')->get(),
         ]);
     }
 
@@ -95,5 +101,68 @@ class FacturacionController extends Controller
             return back()->with($ok ? 'ok' : 'error', $msg);
         }
         return back()->with('ok', ! empty($d['quitar']) ? 'Desconectamos Facturapi.' : 'Ajustes de facturación guardados.');
+    }
+
+    /* ---------------- Series ---------------- */
+
+    public function nuevaSerie(Request $request)
+    {
+        $request->merge(['serie' => mb_strtoupper(trim((string) $request->input('serie')))]);
+        $d = $request->validate([
+            'serie' => ['required', 'alpha_num', 'max:10', Rule::unique('factura_series', 'serie')->where('cuenta_id', Cuentas::id())],
+            'tipo' => ['required', Rule::in(array_keys(\App\Models\FacturaSerie::TIPOS))],
+            'descripcion' => 'nullable|string|max:120',
+            'siguiente' => 'nullable|integer|min:1|max:99999999',
+        ], ['serie.unique' => 'Ya tienes una serie con ese nombre.', 'serie.alpha_num' => 'La serie lleva solo letras y números.']);
+        $s = \App\Models\FacturaSerie::create($d + ['siguiente' => $d['siguiente'] ?? 1, 'activa' => true,
+            'predeterminada' => ! \App\Models\FacturaSerie::where('tipo', $d['tipo'])->where('activa', true)->exists()]);
+        return redirect(route('admin.facturacion') . '#series')->with('ok', "Serie {$s->serie} creada para " . mb_strtolower($s->tipo_texto) . '.');
+    }
+
+    public function serie(Request $request, \App\Models\FacturaSerie $serie)
+    {
+        $d = $request->validate([
+            'descripcion' => 'nullable|string|max:120',
+            'siguiente' => 'required|integer|min:1|max:99999999',
+            'activa' => 'nullable|boolean', 'predeterminada' => 'nullable|boolean',
+        ]);
+        $serie->update(['descripcion' => $d['descripcion'] ?? null, 'siguiente' => $d['siguiente'], 'activa' => $request->boolean('activa') || $request->boolean('predeterminada')]);
+        if ($request->boolean('predeterminada')) \App\Support\Facturas\Series::predeterminar($serie);
+        return redirect(route('admin.facturacion') . '#series')->with('ok', "Serie {$serie->serie} guardada.");
+    }
+
+    /* ---------------- Comprar timbres ---------------- */
+
+    /** Pide un paquete: sube su comprobante y a la plataforma le llega para confirmarlo (al confirmar se cargan) */
+    public function comprar(Request $request)
+    {
+        $c = Cuentas::actual();
+        $l = \App\Support\Licencias\Estado::de($c)->licencia;
+        if (! $l) return back()->with('error', 'Escríbenos para comprar timbres: tu cuenta aún no tiene licencia.');
+        $d = $request->validate([
+            'paquete_id' => ['required', Rule::exists('timbre_paquetes', 'id')->where('activo', true)],
+            'fecha' => 'required|date|before_or_equal:' . now(config('vandu.zona_horaria'))->addDay()->toDateString(),
+            'referencia' => 'nullable|string|max:120',
+            'archivo' => 'required|file|mimes:jpg,jpeg,png,webp,pdf|max:8192',
+        ], ['paquete_id.required' => 'Elige el paquete.', 'archivo.required' => 'Sube la foto o el PDF de tu comprobante.', 'archivo.mimes' => 'El comprobante tiene que ser foto (JPG, PNG) o PDF.']);
+        $paq = \App\Models\TimbrePaquete::find($d['paquete_id']);
+        if (\App\Models\LicenciaComprobante::where('cuenta_id', $c->id)->where('estado', 'pendiente')->count() >= 3) {
+            return back()->with('error', 'Ya tienes comprobantes por revisar. En cuanto los confirmemos te avisamos.');
+        }
+        $ruta = $request->file('archivo')->store('licencias/' . $c->id);
+        $comp = \App\Models\LicenciaComprobante::create(['cuenta_id' => $c->id, 'licencia_id' => $l->id, 'user_id' => $request->user()->id, 'fecha' => $d['fecha'],
+            'monto' => $paq->precio, 'referencia' => $d['referencia'] ?? null, 'nota' => "Paquete de timbres: {$paq->nombre} ({$paq->timbres})", 'archivo' => $ruta, 'paquete_id' => $paq->id]);
+        $url = rtrim(config('app.url'), '/') . route('admin.plataforma.licencia', $c, false);
+        foreach (\App\Models\User::sinCuenta()->where('plataforma', true)->where('activo', true)->get() as $u) {
+            try {
+                \Illuminate\Support\Facades\Mail::to($u->email, $u->name)->send(new \App\Mail\CorreoVandu(
+                    asunto: "Compra de timbres · {$c->nombre}", titulo: "{$c->nombre} compró {$paq->timbres} timbres",
+                    cuerpo: "{$request->user()->name} subió su comprobante por $" . number_format($paq->precio, 2) . " del paquete {$paq->nombre}.\n\nConfírmalo y los timbres se cargan solos.",
+                    boton: 'Revisar comprobante', url: $url));
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+        return back()->with('ok', "Recibimos tu comprobante del paquete {$paq->nombre}. En cuanto lo confirmemos, tus timbres se cargan y te avisamos.");
     }
 }

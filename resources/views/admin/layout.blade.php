@@ -10,8 +10,8 @@
     $cuentaNav = \App\Support\Cuentas::actual();
     // Lote de autos: clientes con letras vencidas
     try { $atrasoNav = $cuentaNav?->tiene('autos') && $usuario?->puede('cobranza') ? \App\Models\Credito::conCobranza()->with('letras')->get()->filter(fn ($c) => $c->atrasadas()->isNotEmpty())->count() : 0; } catch (\Throwable $e) { $atrasoNav = 0; }
-    $facturasModNav = $cuentaNav && ($cuentaNav->tiene('cotizaciones') || $cuentaNav->tiene('stock'));
-    $facturasNav = $facturasModNav && $usuario && ($usuario->puede('finanzas') || $usuario->puede('vender') || $usuario->puede('cotizaciones')) ? \App\Support\Facturas\Bandeja::pendientes() : 0;
+    $facturasModNav = $cuentaNav && ($cuentaNav->tiene('cotizaciones') || $cuentaNav->tiene('stock') || $cuentaNav->tiene('facturacion'));
+    $facturasNav = $facturasModNav && $usuario && ($usuario->puede('facturas') || $usuario->puede('finanzas') || $usuario->puede('vender') || $usuario->puede('cotizaciones')) ? \App\Support\Facturas\Bandeja::pendientes() : 0;
     // Productos en su mínimo: solo le importa a quien administra el inventario
     try { $bajosNav = $cuentaNav?->tiene('stock') && $usuario?->puede('productos') ? \App\Models\Producto::activos()->bajos()->count() : 0; } catch (\Throwable $e) { $bajosNav = 0; }
     $viendoOtra = $usuario?->plataforma && $cuentaNav && $cuentaNav->id !== $usuario->cuenta_id;
@@ -46,7 +46,7 @@
         ['ruta' => 'admin.productos.index',     'activo' => 'admin.productos.*',      'icono' => 'bi-box-seam',        'texto' => 'Productos', 'cuenta' => $bajosNav, 'seccion' => ['productos', 'cotizaciones'], 'modulo' => 'stock', 'grupo' => 'Operación'],
         ['ruta' => 'admin.proveedores.index',   'activo' => ['admin.proveedores.*', 'admin.ordenes.*'], 'icono' => 'bi-truck', 'texto' => 'Proveedores', 'seccion' => 'proveedores', 'modulo' => 'proveedores', 'grupo' => 'Operación'],
         ['ruta' => 'admin.archivos',            'activo' => 'admin.archivos*',        'icono' => 'bi-folder2-open',    'texto' => 'Archivos', 'seccion' => 'archivos', 'modulo' => 'archivos', 'grupo' => 'Operación'],
-        $facturasModNav ? ['ruta' => 'admin.facturas', 'activo' => 'admin.facturas*', 'icono' => 'bi-receipt-cutoff', 'texto' => 'Facturas', 'cuenta' => $facturasNav, 'seccion' => ['finanzas', 'vender', 'cotizaciones'], 'grupo' => 'Dinero'] : null,
+        $facturasModNav ? ['ruta' => 'admin.facturas', 'activo' => 'admin.facturas*', 'icono' => 'bi-receipt-cutoff', 'texto' => 'Facturas', 'cuenta' => $facturasNav, 'seccion' => ['facturas', 'finanzas', 'vender', 'cotizaciones'], 'grupo' => 'Dinero'] : null,
         ['ruta' => 'admin.finanzas',            'activo' => 'admin.finanzas*',        'icono' => 'bi-graph-up-arrow',  'texto' => 'Finanzas', 'seccion' => 'finanzas', 'grupo' => 'Dinero'],
         ['ruta' => 'admin.gastos',              'activo' => 'admin.gastos*',          'icono' => 'bi-receipt',         'texto' => $puede('finanzas') ? 'Gastos' : 'Mis gastos', 'seccion' => ['gastos', 'finanzas'], 'modulo' => 'gastos', 'grupo' => 'Dinero'],
         ['ruta' => 'admin.fitness-reportes',    'activo' => 'admin.fitness-reportes*', 'icono' => 'bi-bar-chart-line', 'texto' => 'Reportes', 'seccion' => ['clases', 'finanzas'], 'modulo' => 'fitness', 'grupo' => 'Dinero'],
@@ -317,6 +317,8 @@
 
         .pagination { --bs-pagination-color: var(--text); --bs-pagination-active-bg: var(--ink); --bs-pagination-active-border-color: var(--ink); --bs-pagination-border-color: var(--line); }
         [x-cloak] { display: none !important; }
+        /* x-show oculta con style="display: none"; las clases de Bootstrap (d-flex, d-grid…) usan !important y lo ganarían */
+        [style*="display: none"].d-flex, [style*="display: none"].d-grid, [style*="display: none"].d-block, [style*="display: none"].d-inline-flex, [style*="display: none"].row { display: none !important; }
         main.page.cambiando { opacity: .55; transition: opacity .15s ease .12s; pointer-events: none; }
         main.page.entrando { animation: entrar .22s ease-out; }
         @keyframes entrar { from { opacity: .4; transform: translateY(4px); } to { opacity: 1; transform: none; } }

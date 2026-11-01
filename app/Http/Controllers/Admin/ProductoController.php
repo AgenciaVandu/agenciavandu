@@ -146,6 +146,7 @@ class ProductoController extends Controller
             'controla' => $p->controla_existencia, 'existencia' => $p->existencia, 'existencia_texto' => $p->existencia_texto,
             'agotado' => $p->agotado, 'bajo' => $p->bajo_minimo, 'miniatura' => $p->miniatura_url,
             'costo' => $costos ? $p->costo : null,
+            'clave_sat' => $p->clave_sat, 'unidad_sat' => $p->unidad_sat,
         ], fn ($v) => $v !== null)));
     }
 

@@ -14,9 +14,9 @@ class PresupuestoFactura extends Model
 
     protected $table = 'presupuesto_facturas';
 
-    protected $fillable = ['tipo', 'lote', 'pago_id', 'fecha_pago', 'nombre', 'ruta', 'mime', 'peso', 'enviada_at', 'uuid', 'rfc_receptor', 'total_cfdi', 'origen', 'facturapi_id', 'cancelacion', 'cancelada_at'];
+    protected $fillable = ['tipo', 'lote', 'pago_id', 'fecha_pago', 'nombre', 'ruta', 'mime', 'peso', 'enviada_at', 'uuid', 'rfc_receptor', 'total_cfdi', 'origen', 'facturapi_id', 'cancelacion', 'cancelada_at', 'serie', 'folio'];
 
-    protected $casts = ['peso' => 'integer', 'enviada_at' => 'datetime', 'fecha_pago' => 'date', 'total_cfdi' => 'float'];
+    protected $casts = ['peso' => 'integer', 'enviada_at' => 'datetime', 'fecha_pago' => 'date', 'total_cfdi' => 'float', 'cancelada_at' => 'datetime'];
 
     protected static function booted(): void
     {

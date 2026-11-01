@@ -18,7 +18,7 @@ class Producto extends Model
     use \App\Models\Concerns\DeCuenta;
 
     protected $fillable = ['categoria_id', 'proveedor_id', 'clave', 'nombre', 'descripcion', 'unidad', 'precio', 'costo',
-                           'controla_existencia', 'minimo', 'foto', 'publico', 'mostrar_precio', 'activo', 'ejemplo'];
+                           'controla_existencia', 'minimo', 'foto', 'publico', 'mostrar_precio', 'activo', 'ejemplo', 'clave_sat', 'unidad_sat'];
 
     protected $attributes = ['unidad' => 'pieza', 'precio' => 0, 'existencia' => 0, 'controla_existencia' => true, 'publico' => true, 'activo' => true];
 

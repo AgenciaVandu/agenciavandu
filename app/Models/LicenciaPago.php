@@ -12,7 +12,7 @@ class LicenciaPago extends Model
 
     protected $casts = ['fecha' => 'date', 'monto' => 'float', 'iva' => 'float', 'periodos' => 'integer', 'cubre_desde' => 'date', 'cubre_hasta' => 'date'];
 
-    public const CONCEPTOS = ['periodo' => 'Mensualidad o anualidad', 'implementacion' => 'Implementación', 'mantenimiento' => 'Mantenimiento anual', 'otro' => 'Otro'];
+    public const CONCEPTOS = ['periodo' => 'Mensualidad o anualidad', 'implementacion' => 'Implementación', 'mantenimiento' => 'Mantenimiento anual', 'timbres' => 'Paquete de timbres', 'otro' => 'Otro'];
     public const FORMAS = ['transferencia' => 'Transferencia', 'efectivo' => 'Efectivo', 'tarjeta' => 'Tarjeta', 'deposito' => 'Depósito', 'otro' => 'Otro'];
 
     public function licencia(): BelongsTo { return $this->belongsTo(Licencia::class); }

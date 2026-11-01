@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /** El dueño avisa "Ya pagué" con su comprobante; la plataforma lo confirma (se vuelve un pago) o lo rechaza */
 class LicenciaComprobante extends Model
 {
-    protected $fillable = ['cuenta_id', 'licencia_id', 'user_id', 'fecha', 'monto', 'referencia', 'nota', 'archivo', 'estado', 'motivo', 'licencia_pago_id'];
+    protected $fillable = ['cuenta_id', 'licencia_id', 'user_id', 'fecha', 'monto', 'referencia', 'nota', 'archivo', 'estado', 'motivo', 'licencia_pago_id', 'paquete_id'];
 
     protected $casts = ['fecha' => 'date', 'monto' => 'float'];
 
