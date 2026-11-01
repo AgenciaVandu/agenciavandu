@@ -17,6 +17,14 @@
     .fx-fila .m { font-weight: 700; white-space: nowrap; text-align: right; }
     .fx-acc { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
     .fx-acc form { display: contents; }
+    /* Todo el renglón de acciones a la misma altura */
+    .fx-acc .btn, .fx-acc .fx-arch { height: 34px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; padding-top: 0; padding-bottom: 0; line-height: 1; }
+    .fx-acc .btn i, .fx-acc .fx-arch i { margin: 0 !important; font-size: 14px; }
+    .fx-acc .fx-der { margin-left: auto; }
+    .fx-correo { display: flex !important; align-items: stretch; width: 320px; max-width: 100%; }
+    .fx-correo input { height: 34px; flex: 1; min-width: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; font-size: 13.5px; }
+    .fx-correo .btn { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+    @media (max-width: 575.98px) { .fx-acc .fx-der { margin-left: 0; } }
     .fx-b { font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 99px; background: var(--sunken); color: var(--muted); white-space: nowrap; }
     .fx-b.pide { background: var(--marca-soft); color: var(--marca-2); } .fx-b.ok { background: var(--green-soft); color: var(--green-ink); } .fx-b.mal { background: var(--amber-soft); color: var(--amber); }
     .fx-arch { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 8px; color: inherit; text-decoration: none; background: var(--surface); }
@@ -124,10 +132,10 @@
                             <button class="btn {{ $ver === 'por_enviar' ? 'btn-primario' : 'btn-borde' }} btn-sm"><i class="bi bi-envelope me-1"></i> {{ $ver === 'enviadas' ? 'Reenviar' : 'Enviar' }} a {{ $correo }}</button>
                         </form>
                     @else
-                        <form method="post" action="{{ route('admin.facturas.enviar', [$doc->tipo(), $doc->m->id]) }}" class="d-flex gap-2">
+                        <form method="post" action="{{ route('admin.facturas.enviar', [$doc->tipo(), $doc->m->id]) }}" class="fx-correo">
                             @csrf
-                            <input type="email" name="para" class="form-control form-control-sm" style="max-width: 230px" placeholder="correo@cliente.com" required>
-                            <button class="btn btn-primario btn-sm"><i class="bi bi-envelope me-1"></i> Enviar</button>
+                            <input type="email" name="para" class="form-control" placeholder="correo@cliente.com" required aria-label="Correo del cliente">
+                            <button class="btn btn-primario btn-sm"><i class="bi bi-envelope"></i> Enviar</button>
                         </form>
                     @endif
                     @if($doc->whatsapp())
@@ -135,10 +143,10 @@
                     @endif
                     @if($doc->facturapiId())
                         @if($doc->cancelacion() === 'pendiente')
-                            <span class="fx-b mal">Cancelación esperando al cliente</span>
+                            <span class="fx-b mal fx-der">Cancelación esperando al cliente</span>
                             <form method="post" action="{{ route('admin.facturas.revisar', [$doc->tipo(), $doc->m->id]) }}">@csrf<button class="btn btn-fantasma btn-sm">Revisar</button></form>
                         @else
-                            <button type="button" class="btn btn-fantasma btn-sm text-danger" @click="cancelar = ! cancelar">Cancelar factura</button>
+                            <button type="button" class="btn btn-fantasma btn-sm text-danger fx-der" @click="cancelar = ! cancelar">Cancelar factura</button>
                         @endif
                     @endif
                 @endif
