@@ -66,12 +66,21 @@ class Constancia
     /** @return array{ok: bool, datos?: array, origen?: string, motivo?: string, mensaje?: string} */
     public static function leer(string $bytes, string $mime, Cuenta $c, ?User $u): array
     {
-        if (str_contains($mime, 'pdf') && ($texto = self::texto($bytes)) && ($d = self::deTexto($texto))) {
+        $texto = str_contains($mime, 'pdf') ? self::texto($bytes) : null;
+        if ($texto && ($d = self::deTexto($texto))) {
             return ['ok' => true, 'datos' => $d, 'origen' => 'texto'];
+        }
+        if (str_contains($mime, 'pdf')) {
+            // Para revisar en el log por qué no se leyó (sin datos personales: solo si hubo texto y cuánto)
+            \Illuminate\Support\Facades\Log::info('Constancia PDF sin leer', ['texto' => $texto !== null, 'largo' => strlen((string) $texto),
+                'pdftotext' => self::hayPdftotext(), 'es_constancia' => $texto ? str_contains(Str::upper(Str::ascii($texto)), 'SITUACION FISCAL') || str_contains(Str::upper(Str::ascii($texto)), 'IDENTIFICACION FISCAL') : null]);
         }
         if (! $c->tiene('ia')) {
             return ['ok' => false, 'motivo' => 'sin_ia', 'mensaje' => str_contains($mime, 'pdf')
-                ? 'No pudimos leer este PDF. Usa el que se descarga del SAT (no escaneado) o captura los datos.'
+                ? (! self::hayPdftotext()
+                    ? 'El servidor todavía no puede leer PDFs (falta instalar pdftotext). Mientras, captura los datos.'
+                    : ($texto === null ? 'Este PDF parece escaneado (es una imagen). Usa el que se descarga del SAT o captura los datos.'
+                                       : 'No reconocimos los datos de este PDF. Usa la constancia que se descarga del SAT o captura los datos.'))
                 : 'Para leer fotos de la constancia hace falta la lectura con IA. Sube el PDF del SAT o captura los datos.'];
         }
         if (! str_contains($mime, 'pdf')) {
@@ -84,6 +93,21 @@ class Constancia
         if (($e['es_constancia'] ?? true) === false) return ['ok' => false, 'motivo' => 'no_es', 'mensaje' => 'Ese documento no parece una Constancia de Situación Fiscal.'];
         $d = self::limpiar($e);
         return $d['rfc'] ? ['ok' => true, 'datos' => $d, 'origen' => 'ia'] : ['ok' => false, 'motivo' => 'ilegible', 'mensaje' => 'No se alcanza a leer el RFC. Toma la foto otra vez, completa y con buena luz.'];
+    }
+
+    public static function hayPdftotext(): bool
+    {
+        static $hay = null;
+        if ($hay === null) {
+            try {
+                $p = new Process(['pdftotext', '-v']);
+                $p->run();
+                $hay = $p->getExitCode() === 0 || str_contains($p->getErrorOutput() . $p->getOutput(), 'pdftotext');
+            } catch (Throwable) {
+                $hay = false;
+            }
+        }
+        return $hay;
     }
 
     /** Texto del PDF con pdftotext (si el servidor lo tiene). null si no se puede */
@@ -113,15 +137,20 @@ class Constancia
             }
             return null;
         };
+        $valido = fn (?string $r) => $r && preg_match('/^[A-Z&Ñ]{3,4}\d{6}[A-Z0-9]{3}$/u', $r);
         $rfc = $campo('RFC');
         $rfc = $rfc ? Str::upper(preg_replace('/[^A-Za-z0-9&Ññ]/u', '', $rfc)) : null;
-        if (! $rfc || ! preg_match('/^[A-Z&Ñ]{3,4}\d{6}[A-Z0-9]{3}$/u', $rfc)) return null;
+        // La cédula (CIF) trae el RFC arriba, sin etiqueta "RFC:"; se busca el primero con forma de RFC
+        if (! $valido($rfc) && preg_match('/\b([A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3})\b/u', Str::upper($t), $m)) $rfc = $m[1];
+        if (! $valido($rfc)) return null;
 
         $razon = $campo('Denominaci[oó]n\s*\/?\s*Raz[oó]n\s+Social');
         if (! $razon) {
             $partes = array_filter([$campo('Nombre\s*\(s\)'), $campo('Primer\s+Apellido'), $campo('Segundo\s+Apellido')]);
             $razon = $partes ? implode(' ', $partes) : null;
         }
+        // En la cédula el nombre va en la línea de arriba de "Nombre, denominación o razón social"
+        if (! $razon && preg_match('/^\s*(\S[^\n]*?)\s*\n\s*Nombre,\s*denominaci[oó]n\s+o\s+raz[oó]n\s+social/imu', $t, $m)) $razon = trim($m[1]);
         $cp = preg_match('/C[oó]digo\s+Postal\s*:?\s*(\d{5})/iu', $t, $m) ? $m[1] : null;
 
         // Régimen: el primero vigente de la tabla "Regímenes" (sin fecha de fin)

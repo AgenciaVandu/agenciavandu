@@ -80,6 +80,14 @@ class LecturaDocumentosTest extends TestCase
         $this->get(route('admin.proveedores.create'))->assertOk()->assertSee('Llenar con su Constancia');
     }
 
+    public function test_la_cedula_cif_sin_etiqueta_rfc_tambien_se_lee(): void
+    {
+        $t = "                CÉDULA DE IDENTIFICACIÓN FISCAL\n\n     BUVA900817N95\n     Registro Federal de Contribuyentes\n\n     ALVARO BUENFIL UC\n     Nombre, denominación o razón social\n     idCIF: 19010012345\n"
+            . "     CURP: BUVA900817HYNNCL09\n     Código Postal:97130      Tipo de Vialidad: CALLE\n     Régimen Simplificado de Confianza      01/01/2022\n";
+        $d = Constancia::deTexto($t);
+        $this->assertSame(['BUVA900817N95', 'ALVARO BUENFIL UC', '97130', '626', 'fisica'], [$d['rfc'], $d['razon_social'], $d['cp_fiscal'], $d['regimen_fiscal'], $d['persona']]);
+    }
+
     public function test_la_foto_de_la_constancia_la_lee_la_ia(): void
     {
         $foto = UploadedFile::fake()->image('constancia.jpg', 800, 1100);
