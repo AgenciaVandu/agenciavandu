@@ -96,4 +96,34 @@ class FacturasController extends Controller
         }
         return back()->with('ok', "Factura de {$doc->folio()} generada (folio fiscal {$doc->uuid()}). Ya la puedes enviar.");
     }
+
+    /** Cancela ante el SAT la factura que se timbró en Nerby */
+    public function cancelar(Request $request, string $tipo, int $id)
+    {
+        $d = $request->validate(['motivo' => ['required', \Illuminate\Validation\Rule::in(array_keys(Timbrado::MOTIVOS))]], ['motivo.required' => 'Elige el motivo de la cancelación.']);
+        $doc = $this->doc($tipo, $id);
+        try {
+            $estado = Timbrado::cancelar($doc, $d['motivo']);
+        } catch (\App\Support\Facturas\TimbradoError $e) {
+            return back()->with('error', "No se pudo cancelar la factura de {$doc->folio()}: " . $e->getMessage());
+        }
+        return back()->with('ok', $estado === 'cancelada'
+            ? "Factura de {$doc->folio()} cancelada ante el SAT. La venta regresó a «Por facturar»."
+            : "Pedimos la cancelación de la factura de {$doc->folio()}. El cliente tiene que aceptarla en el buzón del SAT (tiene 3 días hábiles); revísala después.");
+    }
+
+    public function revisar(string $tipo, int $id)
+    {
+        $doc = $this->doc($tipo, $id);
+        try {
+            $estado = Timbrado::revisarCancelacion($doc);
+        } catch (\App\Support\Facturas\TimbradoError $e) {
+            return back()->with('error', $e->getMessage());
+        }
+        return back()->with($estado === 'rechazada' ? 'error' : 'ok', match ($estado) {
+            'cancelada' => "La factura de {$doc->folio()} ya quedó cancelada.",
+            'rechazada' => "El cliente rechazó la cancelación de la factura de {$doc->folio()}: sigue vigente.",
+            default => "La cancelación de {$doc->folio()} sigue esperando que el cliente la acepte.",
+        });
+    }
 }

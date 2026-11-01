@@ -29,7 +29,7 @@ class Bandeja
                 ->each(fn ($p) => $r->push(new Documento($p)));
         }
         if (self::ventas()) {
-            Venta::with(['cliente', 'facturas', 'razon'])->vigentes()->whereNull('presupuesto_id')->whereDoesntHave('facturas')
+            Venta::with(['cliente', 'facturas', 'razon'])->vigentes()->whereNull('presupuesto_id')->whereDoesntHave('facturas', fn ($q) => $q->where('tipo', 'factura'))
                 ->where(fn ($q) => $q->whereNotNull('factura_solicitada_at')->orWhereHas('cliente', fn ($c) => $c->whereNotNull('rfc')->where('rfc', '!=', '')))
                 ->latest('id')->take(150)->get()
                 ->each(fn ($v) => $r->push(new Documento($v)));
@@ -70,7 +70,7 @@ class Bandeja
                 $n += Presupuesto::whereHas('facturas', fn ($f) => $f->where('tipo', 'factura')->whereNull('enviada_at'))->count();
             }
             if (self::ventas()) {
-                $n += Venta::vigentes()->whereNotNull('factura_solicitada_at')->whereDoesntHave('facturas')->count();
+                $n += Venta::vigentes()->whereNotNull('factura_solicitada_at')->whereDoesntHave('facturas', fn ($q) => $q->where('tipo', 'factura'))->count();
                 $n += Venta::whereHas('facturas', fn ($f) => $f->where('tipo', 'factura')->whereNull('enviada_at'))->count();
             }
             return $n;

@@ -39,6 +39,12 @@ return [
 
 
     // Lectura de tickets (Gastos). Sin llave, los gastos se capturan a mano o con el XML de la factura.
+    // Facturación: la clave de usuario de la cuenta de Facturapi de Nerby (sk_user_…). Con ella cada negocio
+    // tiene su propia organización y sube su sello digital desde el panel. Solo vive en el .env del servidor.
+    'facturapi' => [
+        'user_key' => env('FACTURAPI_USER_KEY'),
+    ],
+
     'anthropic' => [
         'key'            => env('ANTHROPIC_API_KEY'),
         'modelo_tickets' => env('ANTHROPIC_MODELO_TICKETS', 'claude-haiku-5-5'),

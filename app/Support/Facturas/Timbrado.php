@@ -9,9 +9,11 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 /**
- * Genera (timbra) la factura con Facturapi: el negocio da de alta su certificado (CSD) en Facturapi
- * y pega aquí su clave secreta. Nerby manda cliente y conceptos, y guarda el PDF y el XML que regresa.
- * La clave se guarda cifrada y nunca se vuelve a mostrar.
+ * Genera (timbra) la factura con Facturapi. Dos formas:
+ *  - Nerby (recomendada): con la clave de usuario de Nerby en el .env, cada negocio tiene su organización en Facturapi
+ *    y sube su sello digital (CSD) desde el panel; ver Organizacion.
+ *  - Propia: el negocio pega la clave secreta de su cuenta de Facturapi.
+ * Nerby manda cliente y conceptos y guarda el PDF y el XML. Las claves se guardan cifradas y nunca se muestran.
  */
 class Timbrado
 {
@@ -28,18 +30,45 @@ class Timbrado
     public static function ajustes(): array
     {
         $i = rescue(fn () => Integracion::de('facturapi'), null, false);
-        return ($i?->datos ?? []) + ['key' => null, 'clave_prod' => '01010101', 'clave_unidad' => 'H87', 'clave_servicio' => 'E48', 'serie' => ''];
+        return ($i?->datos ?? []) + ['key' => null, 'clave_prod' => '01010101', 'clave_unidad' => 'H87', 'clave_servicio' => 'E48', 'serie' => '',
+            'org_id' => null, 'live_key' => null, 'test_key' => null, 'pruebas' => false, 'certificado' => null, 'emisor' => null];
     }
 
+    /** La clave con la que se timbra: la de su organización en Nerby (real o de pruebas) o la que pegó el negocio */
+    public static function clave(): ?string
+    {
+        $a = self::ajustes();
+        if ($a['org_id']) return ($a['pruebas'] ? $a['test_key'] : $a['live_key']) ?: null;
+        return $a['key'] ?: null;
+    }
+
+    /** Se puede timbrar: con su organización necesita el sello digital (en pruebas basta con los datos fiscales) */
     public static function activo(): bool
     {
-        return filled(self::ajustes()['key']);
+        $a = self::ajustes();
+        if ($a['org_id']) return filled(self::clave()) && ($a['pruebas'] || ! empty($a['certificado']['tiene']));
+        return filled($a['key']);
+    }
+
+    public static function enPruebas(): bool
+    {
+        $a = self::ajustes();
+        return $a['org_id'] ? (bool) $a['pruebas'] : str_starts_with((string) $a['key'], 'sk_test_');
+    }
+
+    /** Facturas timbradas por Nerby en el mes (para cobrar los timbres). Cuenta las canceladas: el timbre ya se usó */
+    public static function timbradasEsteMes(\App\Models\Cuenta $c): int
+    {
+        $desde = now(config('vandu.zona_horaria'))->startOfMonth()->utc();
+        $ids = fn ($t) => \Illuminate\Support\Facades\DB::table($t)->where('cuenta_id', $c->id)->where('origen', 'nerby')->whereNotNull('facturapi_id')->where('created_at', '>=', $desde)->distinct()->pluck('facturapi_id');
+        return $ids('venta_facturas')->merge($ids('presupuesto_facturas'))->unique()->count();
     }
 
     public static function guardarAjustes(array $d): void
     {
         $i = Integracion::de('facturapi') ?? new Integracion(['proveedor' => 'facturapi']);
         $actual = $i->datos ?? [];
+        foreach (['org_id', 'live_key', 'test_key', 'pruebas', 'certificado', 'emisor'] as $k) if (array_key_exists($k, $d)) $actual[$k] = $d[$k];
         // La clave solo se cambia si escriben una nueva (el campo llega vacío para no mostrarla)
         if (! empty($d['key'])) $actual['key'] = trim($d['key']);
         if (! empty($d['quitar'])) unset($actual['key']);
@@ -60,15 +89,15 @@ class Timbrado
         }
     }
 
-    private static function http()
+    public static function http()
     {
-        return Http::withBasicAuth((string) self::ajustes()['key'], '')->acceptJson()->timeout(40);
+        return Http::withToken((string) self::clave())->acceptJson()->timeout(40);
     }
 
     /** Arma la factura, la timbra y guarda su PDF y XML en el documento */
     public static function timbrar(Documento $doc, string $formaSat, string $metodo, ?string $uso = null): void
     {
-        if (! self::activo()) throw new TimbradoError('Conecta Facturapi en Configuración › Facturación.');
+        if (! self::activo()) throw new TimbradoError('Activa la facturación en Configuración › Facturación.');
         if ($doc->uuid()) throw new TimbradoError('Ya tiene factura.');
         if (! $doc->fiscalesCompletos()) throw new TimbradoError('Faltan datos fiscales del cliente (RFC, razón social, régimen y código postal).');
         $f = $doc->fiscales();
@@ -100,6 +129,50 @@ class Timbrado
             if (! $a->successful()) throw new TimbradoError("La factura se generó (folio fiscal {$r->json('uuid')}), pero no se pudo descargar su " . strtoupper($ext) . '. Descárgala desde Facturapi.');
             Archivos::guardar($doc, "{$nombre}.{$ext}", $a->body(), $mime, 'nerby', $id);
         }
+    }
+
+    public const MOTIVOS = ['02' => 'Tiene errores (se hará otra)', '03' => 'La venta no se realizó'];
+
+    /**
+     * Cancela ante el SAT la factura que timbró Nerby. Si el SAT la cancela, el documento vuelve a "Por facturar";
+     * si el cliente debe aceptarla, queda pendiente hasta que se revise otra vez.
+     * @return string 'cancelada' | 'pendiente'
+     */
+    public static function cancelar(Documento $doc, string $motivo): string
+    {
+        $id = $doc->facturapiId();
+        if (! $id) throw new TimbradoError('Solo se pueden cancelar aquí las facturas generadas en Nerby. Las demás cancélalas donde las hiciste.');
+        if (! array_key_exists($motivo, self::MOTIVOS)) throw new TimbradoError('Elige el motivo de la cancelación.');
+        if (! filled(self::clave())) throw new TimbradoError('La facturación no está activa.');
+        try {
+            $r = self::http()->delete(self::API . "/invoices/$id?" . http_build_query(['motive' => $motivo]));
+        } catch (\Throwable) {
+            throw new TimbradoError('Facturapi no respondió. Intenta de nuevo en un momento.');
+        }
+        if (! $r->successful()) throw new TimbradoError((string) ($r->json('message') ?: 'No se pudo cancelar (' . $r->status() . ').'));
+        return self::marcarCancelacion($doc, $r->json());
+    }
+
+    /** Pregunta otra vez si el cliente ya aceptó la cancelación */
+    public static function revisarCancelacion(Documento $doc): string
+    {
+        $id = $doc->facturapiId();
+        if (! $id) throw new TimbradoError('Esta factura no se generó en Nerby.');
+        $r = self::http()->get(self::API . "/invoices/$id");
+        if (! $r->successful()) throw new TimbradoError((string) ($r->json('message') ?: 'No se pudo revisar (' . $r->status() . ').'));
+        return self::marcarCancelacion($doc, $r->json());
+    }
+
+    private static function marcarCancelacion(Documento $doc, ?array $inv): string
+    {
+        $estado = ($inv['status'] ?? null) === 'canceled' ? 'cancelada'
+            : (in_array($inv['cancellation_status'] ?? null, ['pending', 'verifying'], true) ? 'pendiente'
+            : (($inv['cancellation_status'] ?? null) === 'rejected' ? 'rechazada' : 'pendiente'));
+        foreach ($doc->archivos() as $f) {
+            if ($estado === 'cancelada') $f->update(['tipo' => 'cancelada', 'cancelacion' => 'cancelada', 'cancelada_at' => now()]);
+            else $f->update(['cancelacion' => $estado === 'rechazada' ? null : 'pendiente']);
+        }
+        return $estado;
     }
 
     /** Conceptos para Facturapi: precio sin IVA, con el IVA del documento */

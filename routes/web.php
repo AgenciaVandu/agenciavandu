@@ -329,11 +329,16 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::post('facturas/{tipo}/{id}/subir', [Admin\FacturasController::class, 'subir'])->whereIn('tipo', ['presupuesto', 'venta'])->whereNumber('id')->name('facturas.subir');
     Route::post('facturas/{tipo}/{id}/enviar', [Admin\FacturasController::class, 'enviar'])->whereIn('tipo', ['presupuesto', 'venta'])->whereNumber('id')->name('facturas.enviar');
     Route::get('facturas/{tipo}/{id}/whatsapp', [Admin\FacturasController::class, 'whatsapp'])->whereIn('tipo', ['presupuesto', 'venta'])->whereNumber('id')->name('facturas.whatsapp');
+    Route::post('facturas/{tipo}/{id}/cancelar', [Admin\FacturasController::class, 'cancelar'])->whereIn('tipo', ['presupuesto', 'venta'])->whereNumber('id')->name('facturas.cancelar');
+    Route::post('facturas/{tipo}/{id}/revisar', [Admin\FacturasController::class, 'revisar'])->whereIn('tipo', ['presupuesto', 'venta'])->whereNumber('id')->name('facturas.revisar');
     Route::post('facturas/{tipo}/{id}/timbrar', [Admin\FacturasController::class, 'timbrar'])->whereIn('tipo', ['presupuesto', 'venta'])->whereNumber('id')->name('facturas.timbrar');
     Route::get('pedidos/{venta}/facturas/{factura}', [Admin\PedidosController::class, 'verFactura'])->whereNumber('venta')->name('pedidos.factura.ver');
     Route::delete('pedidos/{venta}/facturas/{factura}', [Admin\PedidosController::class, 'borrarFactura'])->whereNumber('venta')->name('pedidos.factura.borrar');
     Route::get('configuracion/facturacion', [Admin\FacturacionController::class, 'index'])->name('facturacion');
     Route::put('configuracion/facturacion', [Admin\FacturacionController::class, 'guardar'])->name('facturacion.guardar');
+    Route::post('configuracion/facturacion/emisor', [Admin\FacturacionController::class, 'emisor'])->middleware('throttle:10,1,facturacion')->name('facturacion.emisor');
+    Route::post('configuracion/facturacion/sello', [Admin\FacturacionController::class, 'sello'])->middleware('throttle:6,1,facturacion-sello')->name('facturacion.sello');
+    Route::put('configuracion/facturacion/modo', [Admin\FacturacionController::class, 'modo'])->name('facturacion.modo');
     Route::post('ejemplos', [Admin\EjemplosController::class, 'cargar'])->name('ejemplos');
     Route::delete('ejemplos', [Admin\EjemplosController::class, 'quitar'])->name('ejemplos.quitar');
     Route::get('configuracion/funciones', [Admin\FuncionesController::class, 'index'])->name('funciones');

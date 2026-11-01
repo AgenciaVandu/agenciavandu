@@ -18,12 +18,20 @@ class RedesTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function tearDown(): void
+    {
+        \Illuminate\Support\Carbon::setTestNow();
+        parent::tearDown();
+    }
+
     private Cliente $c;
     private User $u;
 
     protected function setUp(): void
     {
         parent::setUp();
+        // A mitad de mes: los posts de "dentro de 2 días" caen en el mismo mes (fallaba los últimos días de cada mes)
+        \Illuminate\Support\Carbon::setTestNow(\Illuminate\Support\Carbon::parse('2026-10-14 10:00:00', 'America/Merida'));
         config(['vandu.dropbox.simulado' => false, 'vandu.dropbox.app_key' => null]);
         \App\Support\Dropbox\Dropbox::usar(null);
         Storage::fake('local');

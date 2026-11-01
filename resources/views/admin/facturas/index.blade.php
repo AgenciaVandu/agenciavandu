@@ -67,7 +67,7 @@
             $dif = $doc->diferencias();
             $fis = $doc->fiscales();
         @endphp
-        <div class="fx-fila" x-data="{ generar: false }">
+        <div class="fx-fila" x-data="{ generar: false, cancelar: false }">
             <div>
                 @if($ver === 'por_enviar')
                     <input type="checkbox" class="form-check-input" name="docs[]" value="{{ $doc->clave() }}" form="varias" x-model="marcadas" @disabled(! $correo) aria-label="Elegir {{ $doc->folio() }}">
@@ -126,8 +126,26 @@
                     @if($doc->whatsapp())
                         <a href="{{ route('admin.facturas.whatsapp', [$doc->tipo(), $doc->m->id]) }}" target="_blank" rel="noopener" class="btn btn-borde btn-sm"><i class="bi bi-whatsapp me-1"></i> WhatsApp</a>
                     @endif
+                    @if($doc->facturapiId())
+                        @if($doc->cancelacion() === 'pendiente')
+                            <span class="fx-b mal">Cancelación esperando al cliente</span>
+                            <form method="post" action="{{ route('admin.facturas.revisar', [$doc->tipo(), $doc->m->id]) }}">@csrf<button class="btn btn-fantasma btn-sm">Revisar</button></form>
+                        @else
+                            <button type="button" class="btn btn-fantasma btn-sm text-danger" @click="cancelar = ! cancelar">Cancelar factura</button>
+                        @endif
+                    @endif
                 @endif
             </div>
+
+            @if($ver !== 'por_facturar' && $doc->facturapiId() && $doc->cancelacion() !== 'pendiente')
+                <form method="post" action="{{ route('admin.facturas.cancelar', [$doc->tipo(), $doc->m->id]) }}" class="fx-timbrar" x-show="cancelar" x-cloak
+                      onsubmit="return confirm('Se cancelará la factura ante el SAT. Según el monto y el tiempo que tiene, el SAT puede pedir que el cliente la acepte. ¿Continuar?')">
+                    @csrf
+                    <div style="grid-column: span 2"><label class="form-label small mb-1">Motivo</label>
+                        <select name="motivo" class="form-select form-select-sm">@foreach(\App\Support\Facturas\Timbrado::MOTIVOS as $k => $t)<option value="{{ $k }}">{{ $k }} · {{ $t }}</option>@endforeach</select></div>
+                    <div><button class="btn btn-sm w-100" style="background: var(--red); color: #fff">Cancelar ante el SAT</button></div>
+                </form>
+            @endif
 
             @if($ver === 'por_facturar' && $timbrar && $doc->fiscalesCompletos())
                 <form method="post" action="{{ route('admin.facturas.timbrar', [$doc->tipo(), $doc->m->id]) }}" class="fx-timbrar" x-show="generar" x-cloak>

@@ -101,6 +101,12 @@ class Documento
         return $a->isNotEmpty() && $a->every(fn ($f) => $f->enviada_at) ? $a->max('enviada_at') : null;
     }
 
+    /** La factura que timbró Nerby (se puede cancelar desde aquí) */
+    public function facturapiId(): ?string { return $this->archivos()->firstWhere('facturapi_id')?->facturapi_id; }
+
+    /** null, 'pendiente' (el cliente debe aceptar la cancelación) */
+    public function cancelacion(): ?string { return $this->archivos()->firstWhere('cancelacion')?->cancelacion; }
+
     public function uuid(): ?string { return $this->archivos()->firstWhere('uuid')?->uuid; }
 
     /** El XML dice otro total o RFC: se avisa antes de enviarla */

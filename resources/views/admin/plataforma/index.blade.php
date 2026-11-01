@@ -166,6 +166,8 @@
                             <input id="tope-{{ $c->id }}" type="number" name="gastos_tope" min="0" max="5000" class="form-control form-control-sm num" style="width: 90px" value="{{ $c->ajuste('gastos_tope', \App\Support\IA\Anthropic::TOPE) }}">
                             <span class="secundario small">{{ \App\Support\IA\Anthropic::usadasEsteMes($c) }} usadas este mes</span>
                         </div>
+                        @php $timbresC = \App\Support\Facturas\Timbrado::timbradasEsteMes($c); @endphp
+                        @if($timbresC)<div class="small mt-1"><i class="bi bi-receipt-cutoff"></i> {{ $timbresC }} {{ $timbresC === 1 ? 'factura timbrada' : 'facturas timbradas' }} este mes</div>@endif
                     </div>
                     <input type="hidden" name="_secciones" value="1">
                     <div class="rounded-3 p-2" style="background: var(--sunken)">
