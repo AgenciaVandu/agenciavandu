@@ -25,8 +25,14 @@
     @media (max-width: 1099.98px) { .nf { grid-template-columns: minmax(0, 1fr); } }
     .nf-cli { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 6px 16px; background: var(--sunken); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; }
     .nf-cli .k { display: block; color: var(--muted); font-size: 12px; }
-    .nf-con { display: grid; grid-template-columns: minmax(0, 1fr) 96px 70px 84px 104px 96px 36px; gap: 8px; align-items: start; padding: 12px 16px; }
-    .nf-con + .nf-con { border-top: 1px solid var(--line); }
+    .nf-con { display: grid; grid-template-columns: minmax(0, 1fr) 90px 120px 100px 36px; gap: 8px; align-items: start; padding: 12px 16px 6px; }
+    .nf-linea + .nf-linea { border-top: 1px solid var(--line); }
+    .nf-cab { padding: 8px 16px; }
+    .nf-sat { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1.5fr); gap: 8px 10px; align-items: end; padding: 4px 16px 14px; }
+    .nf-sat .form-label { color: var(--muted); font-size: 12px; }
+    .nf-sat .sat-lista { min-width: 340px; }
+    .nf-guardar { grid-column: 1 / -1; }
+    @media (max-width: 991.98px) { .nf-sat { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
     .nf-con .imp { font-weight: 700; text-align: right; padding-top: 7px; }
     .nf-cab { padding: 8px 16px; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--line); }
     .nf-sug { position: absolute; z-index: 20; left: 0; right: 0; top: 100%; background: var(--surface, #fff); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 24px rgba(16,24,40,.12); max-height: 260px; overflow: auto; }
@@ -36,11 +42,12 @@
     .nf-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .nf-seg button { padding: 9px 6px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface, #fff); font-size: 13.5px; color: inherit; }
     .nf-seg button.on { border-color: var(--marca); background: var(--marca-soft); color: var(--marca); font-weight: 600; }
-    @media (max-width: 767.98px) { .nf-con { grid-template-columns: 1fr 1fr 1fr; } .nf-con > :first-child { grid-column: 1 / -1; } .nf-cab { display: none; } }
+    @media (max-width: 767.98px) { .nf-con { grid-template-columns: 1fr 1fr 1fr 36px; } .nf-con > :first-child { grid-column: 1 / -1; } .nf-cab { display: none; } .nf-sat { grid-template-columns: minmax(0, 1fr); } }
 </style>
 @endpush
 
 @section('contenido')
+@include('admin._sat-js')
 <div class="migas"><a href="{{ route('admin.facturas') }}">Facturas</a> <i class="bi bi-chevron-right small"></i> <span>Nueva factura</span></div>
 <div class="page-head"><div><h1>Nueva factura</h1><p class="sub">Elige al cliente, agrega lo que le vendiste y timbra. Se guarda con sus pagos para llevar los complementos.</p></div></div>
 
@@ -88,25 +95,55 @@
 
         <section class="panel">
             <div class="panel-head"><h2>Conceptos</h2><button type="button" class="btn btn-borde btn-sm" @click="agregar()"><i class="bi bi-plus-lg me-1"></i> Agregar concepto</button></div>
-            <div class="nf-con nf-cab"><span>Descripción</span><span>Clave SAT</span><span>Unidad</span><span>Cantidad</span><span>Precio sin IVA</span><span class="text-end">Importe</span><span></span></div>
+            <div class="nf-con nf-cab"><span>Descripción</span><span>Cantidad</span><span>Precio sin IVA</span><span class="text-end">Importe</span><span></span></div>
             <template x-for="(l, i) in lineas" :key="l.k">
-                <div class="nf-con">
-                    <div style="position: relative">
-                        <input class="form-control form-control-sm" x-model="l.descripcion" :name="`conceptos[${i}][descripcion]`" maxlength="1000" required placeholder="Busca en tu catálogo o escribe el concepto"
-                               @input="l.producto_id = null" @input.debounce.250ms="buscar(l)" @focus="buscar(l)" @keydown.escape="l.sug = []" @blur="setTimeout(() => l.sug = [], 200)" aria-label="Descripción">
-                        <div class="nf-sug" x-show="l.sug.length" x-cloak>
-                            <template x-for="p in l.sug" :key="p.id"><button type="button" @mousedown.prevent="elegir(l, p)"><b x-text="p.nombre"></b> <span class="secundario" x-text="'· ' + dinero(p.precio) + (p.clave_sat ? ' · ' + p.clave_sat : '')"></span></button></template>
+                <div class="nf-linea">
+                    <div class="nf-con">
+                        <div style="position: relative">
+                            <input class="form-control form-control-sm" x-model="l.descripcion" :name="`conceptos[${i}][descripcion]`" maxlength="1000" required placeholder="Busca en tu catálogo o escribe el concepto"
+                                   @input="l.producto_id = null" @input.debounce.250ms="buscar(l)" @focus="buscar(l)" @keydown.escape="l.sug = []" @blur="setTimeout(() => l.sug = [], 200)" aria-label="Descripción">
+                            <div class="nf-sug" x-show="l.sug.length" x-cloak>
+                                <template x-for="p in l.sug" :key="p.id"><button type="button" @mousedown.prevent="elegir(l, p)"><b x-text="p.nombre"></b> <span class="secundario" x-text="'· ' + dinero(p.precio) + (p.clave_sat ? ' · ' + p.clave_sat : '')"></span></button></template>
+                            </div>
+                            <input type="hidden" :name="`conceptos[${i}][producto_id]`" :value="l.producto_id || ''">
                         </div>
-                        <input type="hidden" :name="`conceptos[${i}][producto_id]`" :value="l.producto_id || ''">
-                        <label class="form-check small m-0 mt-1" x-show="! l.producto_id"><input type="checkbox" :name="`conceptos[${i}][guardar]`" value="1" class="form-check-input" x-model="l.guardar"> <span class="form-check-label">Guardar en mi catálogo</span></label>
-                        <div class="small secundario mt-1" x-show="l.producto_id"><i class="bi bi-box-seam"></i> De tu catálogo</div>
+                        <input type="number" step="any" min="0.0001" class="form-control form-control-sm num" x-model.number="l.cantidad" :name="`conceptos[${i}][cantidad]`" required aria-label="Cantidad">
+                        <input type="number" step="0.01" min="0" class="form-control form-control-sm num" x-model.number="l.precio" :name="`conceptos[${i}][precio]`" required aria-label="Precio">
+                        <div class="imp num" x-text="dinero(l.cantidad * l.precio)"></div>
+                        <button type="button" class="btn btn-fantasma btn-sm text-danger" @click="lineas.splice(i, 1)" :disabled="lineas.length === 1" aria-label="Quitar concepto"><i class="bi bi-x-lg"></i></button>
                     </div>
-                    <input class="form-control form-control-sm num" x-model="l.clave_sat" :name="`conceptos[${i}][clave_sat]`" maxlength="8" inputmode="numeric" :placeholder="cfg.claveProd" aria-label="Clave SAT">
-                    <input class="form-control form-control-sm text-uppercase" x-model="l.unidad_sat" :name="`conceptos[${i}][unidad_sat]`" maxlength="3" :placeholder="cfg.claveUnidad" aria-label="Unidad SAT">
-                    <input type="number" step="any" min="0.0001" class="form-control form-control-sm num" x-model.number="l.cantidad" :name="`conceptos[${i}][cantidad]`" required aria-label="Cantidad">
-                    <input type="number" step="0.01" min="0" class="form-control form-control-sm num" x-model.number="l.precio" :name="`conceptos[${i}][precio]`" required aria-label="Precio">
-                    <div class="imp num" x-text="dinero(l.cantidad * l.precio)"></div>
-                    <button type="button" class="btn btn-fantasma btn-sm text-danger" @click="lineas.splice(i, 1)" :disabled="lineas.length === 1" aria-label="Quitar concepto"><i class="bi bi-x-lg"></i></button>
+                    <div class="nf-sat">
+                        <div class="sat" @click.outside="l.satP.abierto = false">
+                            <label class="form-label small mb-1">Clave de producto o servicio</label>
+                            <input class="form-control form-control-sm" x-model="l.satP.q" @input.debounce.300ms="satBuscarEn(l, 'satP', 'productos')" @focus="satBuscarEn(l, 'satP', 'productos')" @keydown="satTecla($event, l, 'satP')"
+                                   autocomplete="off" :placeholder="'Escribe: asesoría, playera… (sin elegir: ' + cfg.claveProd + ')'" aria-label="Clave de producto o servicio SAT">
+                            <input type="hidden" :name="`conceptos[${i}][clave_sat]`" :value="l.clave_sat">
+                            <div class="sat-lista" x-show="l.satP.abierto" x-cloak>
+                                <template x-for="(o, n) in l.satP.ops" :key="o.clave"><button type="button" :class="n === l.satP.i && 'on'" @mousedown.prevent="satElegir(l, 'satP', o)"><span class="k" x-text="o.clave"></span><span x-text="o.texto"></span></button></template>
+                                <div class="sat-vacio" x-show="! l.satP.ops.length">Sin resultados. Prueba con otra palabra o escribe la clave de 8 números.</div>
+                            </div>
+                        </div>
+                        <div class="sat" @click.outside="l.satU.abierto = false">
+                            <label class="form-label small mb-1">Clave de unidad</label>
+                            <input class="form-control form-control-sm" x-model="l.satU.q" @input.debounce.300ms="satBuscarEn(l, 'satU', 'unidades')" @focus="satBuscarEn(l, 'satU', 'unidades')" @keydown="satTecla($event, l, 'satU')"
+                                   autocomplete="off" :placeholder="'pieza, servicio… (' + cfg.claveUnidad + ')'" aria-label="Clave de unidad SAT">
+                            <input type="hidden" :name="`conceptos[${i}][unidad_sat]`" :value="l.unidad_sat">
+                            <div class="sat-lista" x-show="l.satU.abierto" x-cloak>
+                                <template x-for="(o, n) in l.satU.ops" :key="o.clave"><button type="button" :class="n === l.satU.i && 'on'" @mousedown.prevent="satElegir(l, 'satU', o)"><span class="k" x-text="o.clave"></span><span x-text="o.texto"></span></button></template>
+                                <div class="sat-vacio" x-show="! l.satU.ops.length">Sin resultados.</div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="form-label small mb-1">Objeto de impuesto</label>
+                            <select class="form-select form-select-sm" x-model="l.objeto_imp" :name="`conceptos[${i}][objeto_imp]`" aria-label="Objeto de impuesto">
+                                @foreach(\App\Support\Facturas\CatalogoSat::OBJETOS as $k => $t)<option value="{{ $k }}">{{ $k }} - {{ $t }}</option>@endforeach
+                            </select>
+                        </div>
+                        <div class="nf-guardar">
+                            <label class="form-check small m-0" x-show="! l.producto_id"><input type="checkbox" :name="`conceptos[${i}][guardar]`" value="1" class="form-check-input" x-model="l.guardar"> <span class="form-check-label">Guardar en mi catálogo</span></label>
+                            <span class="small secundario" x-show="l.producto_id"><i class="bi bi-box-seam"></i> De tu catálogo</span>
+                        </div>
+                    </div>
                 </div>
             </template>
             <div class="panel-body border-top small secundario">Si no pones clave SAT ni unidad se usan las de Configuración ({{ $aj['clave_prod'] }} · {{ $aj['clave_unidad'] }}). Lo que escribas aquí se guarda en el producto para la próxima.</div>
@@ -157,7 +194,9 @@
 <script>
 window.nuevaFactura = function (cfg) {
     let k = 1;
+    const caja = (clave, texto) => ({ q: clave ? clave + (texto ? ' · ' + texto : '') : '', ops: [], abierto: false, i: 0 });
     const linea = (x = {}) => ({ k: k++, producto_id: x.producto_id || null, descripcion: x.descripcion || '', clave_sat: x.clave_sat || '', unidad_sat: x.unidad_sat || '',
+        objeto_imp: x.objeto_imp || '02', satP: caja(x.clave_sat), satU: caja(x.unidad_sat),
         cantidad: x.cantidad !== undefined ? +x.cantidad : 1, precio: x.precio !== undefined && x.precio !== '' ? +x.precio : null, guardar: !!x.guardar, sug: [] });
     return {
         cfg, cliente: cfg.cliente ? String(cfg.cliente) : '', razon: cfg.razon ? String(cfg.razon) : '', metodo: cfg.metodo, uso: cfg.uso || 'G03',
@@ -172,7 +211,29 @@ window.nuevaFactura = function (cfg) {
             if (l.producto_id) return;
             try { const r = await fetch(cfg.buscar + '?q=' + encodeURIComponent(l.descripcion || ''), { headers: { Accept: 'application/json' } }); l.sug = (await r.json()).slice(0, 8); } catch (e) { l.sug = []; }
         },
-        elegir(l, p) { Object.assign(l, { producto_id: p.id, descripcion: p.nombre, precio: +p.precio, clave_sat: p.clave_sat || l.clave_sat, unidad_sat: p.unidad_sat || l.unidad_sat, guardar: false, sug: [] }); },
+        elegir(l, p) {
+            Object.assign(l, { producto_id: p.id, descripcion: p.nombre, precio: +p.precio, clave_sat: p.clave_sat || l.clave_sat, unidad_sat: p.unidad_sat || l.unidad_sat,
+                objeto_imp: p.objeto_imp || l.objeto_imp, guardar: false, sug: [] });
+            if (p.clave_sat) l.satP = caja(p.clave_sat, p.clave_sat_texto);
+            if (p.unidad_sat) l.satU = caja(p.unidad_sat, p.unidad_sat_texto);
+        },
+        // Catálogo del SAT: busca mientras escribe; una clave tecleada completa también vale
+        async satBuscarEn(l, c, tipo) {
+            const q = (l[c].q || '').split(' · ')[0];
+            l[c].ops = await window.satBuscar(tipo, q); l[c].i = 0; l[c].abierto = true;
+            const campo = c === 'satP' ? 'clave_sat' : 'unidad_sat';
+            const limpio = q.trim().toUpperCase();
+            if ((tipo === 'unidades' ? /^[A-Z0-9]{1,3}$/ : /^\d{8}$/).test(limpio)) l[campo] = limpio;
+            else if (! q.trim()) l[campo] = '';
+        },
+        satElegir(l, c, o) { l[c].q = o.clave + ' · ' + o.texto; l[c].abierto = false; l[c === 'satP' ? 'clave_sat' : 'unidad_sat'] = o.clave; },
+        satTecla(e, l, c) {
+            const s = l[c]; if (! s.abierto) return;
+            if (e.key === 'ArrowDown') { e.preventDefault(); s.i = Math.min(s.i + 1, s.ops.length - 1); }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); s.i = Math.max(s.i - 1, 0); }
+            else if (e.key === 'Enter' && s.ops[s.i]) { e.preventDefault(); this.satElegir(l, c, s.ops[s.i]); }
+            else if (e.key === 'Escape') s.abierto = false;
+        },
         subtotal() { return this.lineas.reduce((s, l) => s + (+l.cantidad || 0) * (+l.precio || 0), 0); },
         base() { return Math.max(0, this.subtotal() - (+this.descuento || 0)); },
         iva() { return this.conIva ? Math.round(this.base() * cfg.iva) / 100 : 0; },

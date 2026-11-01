@@ -69,8 +69,7 @@ class User extends Authenticatable
     public function puede(string $seccion): bool
     {
         // Secciones que dependen del giro (p. ej. Redes sociales solo en agencias)
-        $modulo = \App\Support\Permisos::MODULOS[$seccion] ?? null;
-        if ($modulo && ! \App\Support\Cuentas::actual()?->tiene($modulo)) return false;
+        if (! \App\Support\Permisos::seccionDisponible($seccion, \App\Support\Cuentas::actual())) return false;
         return $this->esSuperAdmin() || (bool) $this->rol?->puede($seccion);
     }
 

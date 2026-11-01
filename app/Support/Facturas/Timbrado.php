@@ -306,7 +306,7 @@ class Timbrado
             $tasa = $m->modo_iva === 'sin_iva' ? null : round($m->iva_porcentaje / 100, 4);
             foreach ($m->conceptos as $c) {
                 $items[] = self::item($c->resumen ?: 'Servicio', (float) $c->cantidad, (float) $c->precio,
-                    $c->producto?->unidad_sat ?: ($c->producto_id ? $aj['clave_unidad'] : $aj['clave_servicio']), $c->producto?->clave_sat ?: $aj['clave_prod'], $tasa);
+                    $c->producto?->unidad_sat ?: ($c->producto_id ? $aj['clave_unidad'] : $aj['clave_servicio']), $c->producto?->clave_sat ?: $aj['clave_prod'], $tasa, $c->producto?->objeto_imp);
             }
         } elseif ($m instanceof Venta) {
             $m->loadMissing('conceptos.producto');
@@ -314,23 +314,27 @@ class Timbrado
             $base = max(0.01, (float) $m->subtotal);
             foreach ($m->conceptos as $c) {
                 $it = self::item($c->descripcion ?: 'Producto', (float) $c->cantidad, (float) $c->precio,
-                    $c->unidad_sat ?: $c->producto?->unidad_sat ?: $aj['clave_unidad'], $c->clave_sat ?: $c->producto?->clave_sat ?: $aj['clave_prod'], $tasa);
+                    $c->unidad_sat ?: $c->producto?->unidad_sat ?: $aj['clave_unidad'], $c->clave_sat ?: $c->producto?->clave_sat ?: $aj['clave_prod'], $tasa,
+                    $c->objeto_imp ?: $c->producto?->objeto_imp);
                 // El descuento de la venta se reparte en proporción al importe de cada concepto
                 if ($m->descuento > 0) $it['discount'] = round($m->descuento * ((float) $c->importe / $base), 2);
                 $items[] = $it;
             }
             // En Nerby el envío no lleva IVA (así suma igual que la venta)
-            if ($m->envio_costo > 0) $items[] = self::item('Envío', 1, (float) $m->envio_costo, $aj['clave_servicio'], '78102203', null);
+            if ($m->envio_costo > 0) $items[] = self::item('Envío', 1, (float) $m->envio_costo, $aj['clave_servicio'], '78102203', null, '01');
         }
         if (! $items) throw new TimbradoError('No tiene conceptos para facturar.');
         return $items;
     }
 
-    private static function item(string $desc, float $cant, float $precio, string $unidad, string $clave, ?float $tasa): array
+    /** Un concepto. Objeto de impuesto (c_ObjetoImp): solo el 02 lleva traslados; 01, 03 y 04 van sin IVA desglosado */
+    private static function item(string $desc, float $cant, float $precio, string $unidad, string $clave, ?float $tasa, ?string $objeto = null): array
     {
+        $objeto = array_key_exists((string) $objeto, CatalogoSat::OBJETOS) ? $objeto : ($tasa !== null ? '02' : '01');
+        $conIva = $objeto === '02' && $tasa !== null;
         return ['quantity' => $cant, 'product' => [
             'description' => Str::limit(trim($desc), 1000, ''), 'product_key' => $clave, 'unit_key' => $unidad,
-            'price' => round($precio, 6), 'tax_included' => false, 'taxes' => $tasa !== null ? [['type' => 'IVA', 'rate' => $tasa]] : [],
+            'price' => round($precio, 6), 'tax_included' => false, 'taxability' => $objeto, 'taxes' => $conIva ? [['type' => 'IVA', 'rate' => $tasa]] : [],
         ]];
     }
 }

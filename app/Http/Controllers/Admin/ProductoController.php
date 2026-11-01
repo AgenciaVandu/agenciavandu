@@ -23,7 +23,7 @@ class ProductoController extends Controller
     {
         // Solo los negocios con inventario (giro de comercio o módulo activado)
         $this->middleware(function ($request, $next) {
-            abort_unless(Inventario::activo(), 404);
+            abort_unless(Inventario::activo() || Cuentas::actual()?->tiene('facturacion'), 404);
             return $next($request);
         });
     }
@@ -146,7 +146,7 @@ class ProductoController extends Controller
             'controla' => $p->controla_existencia, 'existencia' => $p->existencia, 'existencia_texto' => $p->existencia_texto,
             'agotado' => $p->agotado, 'bajo' => $p->bajo_minimo, 'miniatura' => $p->miniatura_url,
             'costo' => $costos ? $p->costo : null,
-            'clave_sat' => $p->clave_sat, 'unidad_sat' => $p->unidad_sat,
+            'clave_sat' => $p->clave_sat, 'unidad_sat' => $p->unidad_sat, 'clave_sat_texto' => $p->clave_sat_texto, 'unidad_sat_texto' => $p->unidad_sat_texto, 'objeto_imp' => $p->objeto_imp,
         ], fn ($v) => $v !== null)));
     }
 
@@ -203,7 +203,14 @@ class ProductoController extends Controller
             'publico'             => 'boolean',
             'mostrar_precio'      => 'nullable|in:0,1',
             'activo'              => 'boolean',
+            'clave_sat'           => ['nullable', 'regex:/^\d{8}$/'],
+            'clave_sat_texto'     => 'nullable|string|max:200',
+            'unidad_sat'          => ['nullable', 'regex:/^[A-Za-z0-9]{1,3}$/'],
+            'unidad_sat_texto'    => 'nullable|string|max:80',
+            'objeto_imp'          => ['nullable', Rule::in(array_keys(\App\Support\Facturas\CatalogoSat::OBJETOS))],
         ], [
+            'clave_sat.regex' => 'La clave de producto o servicio del SAT tiene 8 números.',
+            'unidad_sat.regex' => 'La clave de unidad del SAT es corta, por ejemplo H87 o E48.',
             'nombre.required' => 'Escribe el nombre del producto.',
             'precio.required' => 'Escribe el precio de venta.',
             'clave.unique'    => 'Ya tienes otro producto con esa clave.',
@@ -224,6 +231,11 @@ class ProductoController extends Controller
             'publico'             => $request->boolean('publico'),
             'mostrar_precio'      => isset($d['mostrar_precio']) && $d['mostrar_precio'] !== '' ? (bool) $d['mostrar_precio'] : null,
             'activo'              => $p ? $request->boolean('activo') : true,
+            'clave_sat'           => $d['clave_sat'] ?? null,
+            'clave_sat_texto'     => filled($d['clave_sat'] ?? null) ? ($d['clave_sat_texto'] ?? null) : null,
+            'unidad_sat'          => filled($d['unidad_sat'] ?? null) ? strtoupper($d['unidad_sat']) : null,
+            'unidad_sat_texto'    => filled($d['unidad_sat'] ?? null) ? ($d['unidad_sat_texto'] ?? null) : null,
+            'objeto_imp'          => $d['objeto_imp'] ?? '02',
         ];
         // El costo solo lo cambia quien lo ve
         if (Inventario::veCostos()) $datos['costo'] = isset($d['costo']) && $d['costo'] !== '' ? round((float) $d['costo'], 2) : null;

@@ -326,6 +326,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     // Bandeja de facturas (cotizaciones y ventas directas)
     Route::get('facturas', [Admin\FacturasController::class, 'index'])->name('facturas');
     Route::get('facturas/nueva', [Admin\FacturasController::class, 'crear'])->name('facturas.crear');
+    Route::get('sat/{tipo}', [Admin\SatController::class, 'buscar'])->whereIn('tipo', ['productos', 'unidades'])->middleware('throttle:120,1,sat')->name('sat.buscar');
     Route::post('facturas/nueva', [Admin\FacturasController::class, 'guardar'])->middleware('throttle:20,1,factura-nueva')->name('facturas.guardar');
     Route::get('facturas/venta/{venta}', [Admin\FacturasController::class, 'venta'])->whereNumber('venta')->name('facturas.venta');
     Route::get('facturas/venta/{venta}/archivo/{factura}', [Admin\FacturasController::class, 'archivo'])->whereNumber(['venta', 'factura'])->name('facturas.venta.archivo');

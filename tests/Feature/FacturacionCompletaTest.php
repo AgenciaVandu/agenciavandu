@@ -67,6 +67,8 @@ class FacturacionCompletaTest extends TestCase
                 return $x[2] === 'pdf' ? Http::response('%PDF-1.4 ' . $x[1]) : Http::response('<?xml version="1.0"?><cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" TipoDeComprobante="P"/>');
             }
             if ($m === 'DELETE') return Http::response(['status' => 'canceled', 'cancellation_status' => 'accepted']);
+            if (str_contains($u, '/catalogs/products')) return Http::response(['data' => [['key' => '84111500', 'description' => 'Servicios contables'], ['key' => '84111502', 'description' => 'Servicios de contabilidad financiera']]]);
+            if (str_contains($u, '/catalogs/units')) return Http::response(['data' => [['key' => 'E48', 'description' => 'Unidad de servicio']]]);
             return Http::response(['message' => "no esperado $m $u"], 500);
         });
     }
@@ -245,5 +247,34 @@ class FacturacionCompletaTest extends TestCase
         $this->actingAs($this->dueno);
         Timbres::gastar('prueba');
         $this->assertSame(['plan_restantes' => 9, 'comprados' => 102], array_intersect_key(Timbres::resumen($this->despacho), ['plan_restantes' => 1, 'comprados' => 1]));
+    }
+
+    public function test_catalogo_sat_y_objeto_de_impuesto(): void
+    {
+        // Busca en el catálogo del SAT mientras se escribe
+        $this->getJson(route('admin.sat.buscar', 'productos') . '?q=contable')->assertOk()->assertJson([['clave' => '84111500', 'texto' => 'Servicios contables']]);
+        $this->getJson(route('admin.sat.buscar', 'unidades') . '?q=servicio')->assertOk()->assertJson([['clave' => 'E48']]);
+        $this->getJson(route('admin.sat.buscar', 'otra') . '?q=x')->assertNotFound();
+        // Sin conexión con Facturapi: las más usadas
+        $this->assertSame('H87', \App\Support\Facturas\CatalogoSat::buscar('unidades', 'p')[0]['clave'] ?? null);
+
+        // El producto guarda su información SAT
+        $this->post(route('admin.productos.store'), ['nombre' => 'Asesoría fiscal', 'precio' => 800, 'clave_sat' => '84111500', 'clave_sat_texto' => 'Servicios contables',
+            'unidad_sat' => 'e48', 'unidad_sat_texto' => 'Unidad de servicio', 'objeto_imp' => '02'])->assertSessionHasNoErrors();
+        $p = Producto::where('nombre', 'Asesoría fiscal')->first();
+        $this->assertSame(['84111500', 'Servicios contables', 'E48', '02'], [$p->clave_sat, $p->clave_sat_texto, $p->unidad_sat, $p->objeto_imp]);
+        $this->get(route('admin.productos.edit', $p))->assertOk()->assertSee('Información SAT')->assertSee('Objeto de impuesto');
+        $this->post(route('admin.productos.store'), ['nombre' => 'Mal', 'precio' => 1, 'clave_sat' => '123'])->assertSessionHasErrors('clave_sat');
+
+        // En la factura: del catálogo toma sus claves; un concepto "no objeto" va sin IVA
+        $c = $this->cliente();
+        $this->nueva($c, ['conceptos' => [
+            ['producto_id' => $p->id, 'descripcion' => 'Asesoría fiscal', 'cantidad' => 1, 'precio' => 800, 'objeto_imp' => '02'],
+            ['descripcion' => 'Viáticos', 'clave_sat' => '01010101', 'unidad_sat' => 'ACT', 'cantidad' => 1, 'precio' => 200, 'objeto_imp' => '01'],
+        ]])->assertSessionHas('ok');
+        [$a, $b] = $this->enviados[0]['items'];
+        $this->assertSame(['84111500', 'E48', '02', 0.16], [$a['product']['product_key'], $a['product']['unit_key'], $a['product']['taxability'], $a['product']['taxes'][0]['rate']]);
+        $this->assertSame(['01', []], [$b['product']['taxability'], $b['product']['taxes']]);
+        $this->get(route('admin.facturas.crear'))->assertOk()->assertSee('Clave de producto o servicio')->assertSee('Objeto de impuesto');
     }
 }

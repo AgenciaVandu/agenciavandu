@@ -169,6 +169,7 @@ class FacturasController extends Controller
             'conceptos.*.cantidad' => 'required|numeric|min:0.0001|max:9999999',
             'conceptos.*.precio' => 'required|numeric|min:0|max:999999999',
             'conceptos.*.guardar' => 'nullable|boolean',
+            'conceptos.*.objeto_imp' => ['nullable', \Illuminate\Validation\Rule::in(array_keys(\App\Support\Facturas\CatalogoSat::OBJETOS))],
         ], [
             'cliente_id.required' => 'Elige a quién le facturas.', 'conceptos.required' => 'Agrega al menos un concepto.',
             'conceptos.*.descripcion.required' => 'Escribe la descripción de cada concepto.', 'conceptos.*.clave_sat.regex' => 'La clave SAT tiene 8 números.',
@@ -194,7 +195,7 @@ class FacturasController extends Controller
             $pid = ! empty($x['producto_id']) && \App\Models\Producto::whereKey($x['producto_id'])->exists() ? (int) $x['producto_id'] : null;
             if (! $pid && ! empty($x['guardar'])) {
                 $pid = \App\Models\Producto::create(['nombre' => \Illuminate\Support\Str::limit(trim($x['descripcion']), 150, ''), 'precio' => $x['precio'], 'controla_existencia' => false,
-                    'clave_sat' => $x['clave_sat'] ?? null, 'unidad_sat' => $x['unidad_sat'] ?? null])->id;
+                    'clave_sat' => $x['clave_sat'] ?? null, 'unidad_sat' => $x['unidad_sat'] ?? null, 'objeto_imp' => $x['objeto_imp'] ?? '02'])->id;
             } elseif ($pid && (! empty($x['clave_sat']) || ! empty($x['unidad_sat']))) {
                 // Lo que se escribió aquí se queda en el producto para la próxima
                 $pr = \App\Models\Producto::find($pid);
@@ -211,7 +212,7 @@ class FacturasController extends Controller
         $v->forceFill(['razon_id' => $razon?->id, 'uso_cfdi' => $d['uso_cfdi']])->save();
         foreach ($v->conceptos()->orderBy('orden')->get() as $i => $con) {
             $x = array_values($d['conceptos'])[$i] ?? [];
-            $con->update(['clave_sat' => $x['clave_sat'] ?? null, 'unidad_sat' => $x['unidad_sat'] ?? null]);
+            $con->update(['clave_sat' => $x['clave_sat'] ?? null, 'unidad_sat' => $x['unidad_sat'] ?? null, 'objeto_imp' => $x['objeto_imp'] ?? null]);
         }
         $v->load('conceptos.producto', 'cliente', 'razon', 'facturas');
         try {

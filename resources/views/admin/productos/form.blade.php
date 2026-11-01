@@ -117,6 +117,31 @@
     </div>
 
     <div class="seccion">
+        <div><h2>Información SAT</h2><p>Para facturar este producto. Escribe y elige del catálogo del SAT; si no sabes cuál, pregúntale a tu contador.</p></div>
+        <div class="panel panel-body row g-3 mx-0">
+            <div class="col-12">
+                <label class="form-label" for="clave_sat">Clave de producto o servicio</label>
+                @include('admin._sat', ['tipo' => 'productos', 'name' => 'clave_sat', 'nameTexto' => 'clave_sat_texto', 'id' => 'clave_sat',
+                    'valor' => old('clave_sat', $producto->clave_sat), 'texto' => old('clave_sat_texto', $producto->clave_sat_texto), 'clase' => $errors->has('clave_sat') ? 'is-invalid' : ''])
+                @error('clave_sat')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="unidad_sat">Clave de unidad</label>
+                @include('admin._sat', ['tipo' => 'unidades', 'name' => 'unidad_sat', 'nameTexto' => 'unidad_sat_texto', 'id' => 'unidad_sat',
+                    'valor' => old('unidad_sat', $producto->unidad_sat), 'texto' => old('unidad_sat_texto', $producto->unidad_sat_texto), 'clase' => $errors->has('unidad_sat') ? 'is-invalid' : ''])
+                @error('unidad_sat')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="objeto_imp">Objeto de impuesto</label>
+                <select name="objeto_imp" id="objeto_imp" class="form-select">
+                    @foreach(\App\Support\Facturas\CatalogoSat::OBJETOS as $k => $t)<option value="{{ $k }}" @selected(old('objeto_imp', $producto->objeto_imp ?: '02') === $k)>{{ $k }} - {{ $t }}</option>@endforeach
+                </select>
+            </div>
+        </div>
+    </div>
+
+@if(\App\Support\Inventario::activo())
+    <div class="seccion">
         <div><h2>Inventario</h2><p>Las existencias bajan solas cuando una cotización se acepta, y regresan si se cancela.</p></div>
         <div class="panel panel-body">
             <label class="interruptor">
@@ -145,6 +170,7 @@
         </div>
     </div>
 
+@endif
     <div class="seccion">
         <div><h2>Foto</h2><p>Se ve al cotizar y en su página. La reducimos para que cargue rápido.</p></div>
         <div class="panel panel-body">

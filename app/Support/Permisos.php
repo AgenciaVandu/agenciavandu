@@ -43,11 +43,23 @@ class Permisos
                                'clases' => 'fitness', 'asistencia' => 'fitness', 'membresias' => 'fitness', 'cotizaciones' => 'cotizaciones', 'proveedores' => 'proveedores', 'archivos' => 'archivos', 'tareas' => 'tareas',
                                'clientes' => 'clientes', 'ventas' => 'ventas', 'finanzas' => 'finanzas', 'lealtad' => 'lealtad', 'canjes' => 'lealtad', 'comensales' => 'lealtad', 'gastos' => 'gastos', 'vender' => 'stock', 'facturas' => 'facturacion'];
 
+    /** Secciones que también vienen con otro módulo (Solo facturación administra su catálogo de productos y servicios) */
+    public const MODULOS_TAMBIEN = ['productos' => ['facturacion']];
+
+    /** La cuenta tiene el módulo de esa sección (o uno que también la trae) */
+    public static function seccionDisponible(string $seccion, ?\App\Models\Cuenta $c): bool
+    {
+        if (! isset(self::MODULOS[$seccion])) return true;
+        if (! $c) return false;
+        foreach ([self::MODULOS[$seccion], ...(self::MODULOS_TAMBIEN[$seccion] ?? [])] as $m) if ($c->tiene($m)) return true;
+        return false;
+    }
+
     /** Secciones disponibles para la cuenta activa (para armar roles) */
     public static function disponibles(): array
     {
         $c = Cuentas::actual();
-        return array_filter(self::SECCIONES, fn ($s, $k) => ! isset(self::MODULOS[$k]) || ($c && $c->tiene(self::MODULOS[$k])), ARRAY_FILTER_USE_BOTH);
+        return array_filter(self::SECCIONES, fn ($s, $k) => self::seccionDisponible($k, $c), ARRAY_FILTER_USE_BOTH);
     }
 
     /**
@@ -83,6 +95,7 @@ class Permisos
         ['admin.ejemplos*', 'configuracion'],
         ['admin.cobrar', ['finanzas', 'vender', 'proyectos', 'cobranza']],
         ['admin.facturas*', ['facturas', 'finanzas', 'vender', 'cotizaciones']],
+        ['admin.sat.*', ['facturas', 'productos', 'cotizaciones', 'vender', 'finanzas']],
         ['admin.facturacion*', 'configuracion'],
         ['admin.credito-ajustes*', 'configuracion'],
         // Gimnasio: el entrenador ve la agenda y sus clases; programarlas y cambiar cupos es de "clases"
@@ -147,7 +160,7 @@ class Permisos
             if (Str::is($patron, $nombre) && ! $c?->tiene($modulo)) return true;
         }
         $s = self::deRuta($nombre);
-        return $s !== null && $s !== ['*'] && $s !== ['@plataforma'] && ! array_filter($s, fn ($x) => ! isset(self::MODULOS[$x]) || $c?->tiene(self::MODULOS[$x]));
+        return $s !== null && $s !== ['*'] && $s !== ['@plataforma'] && ! array_filter($s, fn ($x) => self::seccionDisponible($x, $c));
     }
 
     /** Si la ruta es de una función que el negocio apagó, su nombre ("Tareas") */
