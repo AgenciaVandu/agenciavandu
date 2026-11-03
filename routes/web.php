@@ -382,7 +382,11 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::get('plataforma/planes', [Admin\LicenciasController::class, 'planes'])->name('plataforma.planes');
     Route::put('plataforma/planes', [Admin\LicenciasController::class, 'guardarPlanes'])->name('plataforma.planes.update');
     Route::post('plataforma/planes', [Admin\LicenciasController::class, 'nuevoPlan'])->name('plataforma.planes.store');
-    Route::put('plataforma/timbres', [Admin\LicenciasController::class, 'guardarTimbres'])->name('plataforma.timbres');
+    Route::get('plataforma/timbres', [Admin\TimbresController::class, 'index'])->name('plataforma.timbres');
+    Route::post('plataforma/timbres/paquetes', [Admin\TimbresController::class, 'store'])->name('plataforma.timbres.paquetes.store');
+    Route::put('plataforma/timbres/paquetes/{paquete}', [Admin\TimbresController::class, 'update'])->whereNumber('paquete')->name('plataforma.timbres.paquetes.update');
+    Route::delete('plataforma/timbres/paquetes/{paquete}', [Admin\TimbresController::class, 'destroy'])->whereNumber('paquete')->name('plataforma.timbres.paquetes.destroy');
+    Route::post('plataforma/timbres/asignar', [Admin\TimbresController::class, 'asignar'])->name('plataforma.timbres.asignar');
     Route::post('plataforma/{cuenta}/timbres', [Admin\LicenciasController::class, 'timbres'])->whereNumber('cuenta')->name('plataforma.licencia.timbres');
     Route::put('plataforma/planes/pago', [Admin\LicenciasController::class, 'datosPago'])->name('plataforma.planes.pago');
     Route::get('plataforma/{cuenta}/licencia', [Admin\LicenciasController::class, 'ficha'])->whereNumber('cuenta')->name('plataforma.licencia');

@@ -90,6 +90,31 @@ class Timbres
             'monto' => $monto, 'licencia_pago_id' => $pagoId, 'nota' => $nota, 'user_id' => $u?->id]);
     }
 
+    /**
+     * Asignar un paquete a un negocio desde Plataforma › Timbres.
+     * Cobrado: registra el pago en su licencia (con recibo) si tiene licencia y el monto es mayor a cero. Regalo: solo carga.
+     */
+    public static function asignar(Cuenta $c, TimbrePaquete $p, bool $cobrado, ?float $monto = null, ?string $forma = null, ?string $nota = null, ?User $u = null): array
+    {
+        return DB::transaction(function () use ($c, $p, $cobrado, $monto, $forma, $nota, $u) {
+            $pago = null;
+            $monto = $cobrado ? ($monto ?? $p->precio) : null;
+            if ($cobrado && $monto > 0 && ($l = \App\Models\Licencia::where('cuenta_id', $c->id)->first())) {
+                $pago = \App\Support\Licencias\Licencias::pagar($l, ['fecha' => now(config('vandu.zona_horaria'))->toDateString(), 'concepto' => 'timbres',
+                    'monto' => $monto, 'periodos' => 0, 'forma' => $forma ?: 'transferencia', 'referencia' => $nota], $u);
+            }
+            $mov = self::cargar($c, $cobrado ? 'compra' : 'regalo', $p->timbres, $p, $monto, $pago?->id, $nota, $u);
+            return [$mov, $pago];
+        });
+    }
+
+    /** Usados este mes por negocio (del plan y comprados), para la tabla de Plataforma */
+    public static function usadosMes(): \Illuminate\Support\Collection
+    {
+        return TimbreMovimiento::whereIn('tipo', ['uso', 'uso_plan'])->where('created_at', '>=', self::inicioMes())
+            ->selectRaw('cuenta_id, count(*) as n')->groupBy('cuenta_id')->pluck('n', 'cuenta_id');
+    }
+
     public static function paquetes()
     {
         return TimbrePaquete::where('activo', true)->orderBy('orden')->orderBy('timbres')->get();

@@ -210,10 +210,10 @@ class FacturacionCompletaTest extends TestCase
     {
         $alvar = User::factory()->create(['plataforma' => true]);
         Cuentas::activar(Cuentas::principalId());
-        $this->actingAs($alvar)->put(route('admin.plataforma.timbres'), ['nuevo' => ['nombre' => 'Paquete 100', 'timbres' => 100, 'precio' => 450]])->assertSessionHas('ok');
+        $this->actingAs($alvar)->post(route('admin.plataforma.timbres.paquetes.store'), ['nombre' => 'Paquete 100', 'timbres' => 100, 'precio' => 450])->assertSessionHas('ok');
         $paq = TimbrePaquete::first();
         $plan = Plan::where('tipo', 'plan')->first();
-        $this->get(route('admin.plataforma.planes'))->assertOk()->assertSee('Paquetes de timbres')->assertSee('$4.50');
+        $this->get(route('admin.plataforma.timbres'))->assertOk()->assertSee('Paquete 100')->assertSee('$4.50');
         // Plan con 10 timbres al mes y licencia para el despacho
         $plan->update(['timbres_mes' => 10]);
         $this->put(route('admin.plataforma.licencia.update', $this->despacho), ['tipo' => 'suscripcion', 'plan_id' => $plan->id, 'periodo' => 'mensual',
@@ -247,6 +247,46 @@ class FacturacionCompletaTest extends TestCase
         $this->actingAs($this->dueno);
         Timbres::gastar('prueba');
         $this->assertSame(['plan_restantes' => 9, 'comprados' => 102], array_intersect_key(Timbres::resumen($this->despacho), ['plan_restantes' => 1, 'comprados' => 1]));
+    }
+
+    public function test_plataforma_crea_paquetes_y_los_asigna(): void
+    {
+        // Solo la plataforma entra
+        $this->actingAs($this->dueno)->get(route('admin.plataforma.timbres'))->assertForbidden();
+        $alvar = User::factory()->create(['plataforma' => true]);
+        Cuentas::activar(Cuentas::principalId());
+        $this->actingAs($alvar)->get(route('admin.plataforma.timbres'))->assertOk()->assertSee('Nuevo paquete')->assertSee($this->despacho->nombre);
+        // Crear, editar
+        $this->post(route('admin.plataforma.timbres.paquetes.store'), ['nombre' => 'Paquete 50', 'timbres' => 50])->assertSessionHasErrorsIn('nuevo', 'precio');
+        $this->post(route('admin.plataforma.timbres.paquetes.store'), ['nombre' => 'Paquete 50', 'timbres' => 50, 'precio' => 300])->assertSessionHas('ok');
+        $paq = TimbrePaquete::firstOrFail();
+        $this->put(route('admin.plataforma.timbres.paquetes.update', $paq), ['nombre' => 'Paquete 50', 'timbres' => 50, 'precio' => 250, 'activo' => 1])->assertSessionHas('ok');
+        $this->assertEquals(5, $paq->fresh()->por_timbre);
+
+        // Asignar cobrado (con licencia: queda el pago) y de regalo
+        $plan = Plan::where('tipo', 'plan')->first();
+        $this->put(route('admin.plataforma.licencia.update', $this->despacho), ['tipo' => 'suscripcion', 'plan_id' => $plan->id, 'periodo' => 'mensual',
+            'inicio' => '2026-10-01', 'dias_gracia' => 5, 'dias_lectura' => 10])->assertSessionHasNoErrors();
+        \App\Models\TimbreMovimiento::where('cuenta_id', $this->despacho->id)->delete();
+        Estado::olvidar();
+        $antes = Timbres::disponibles($this->despacho);
+        $this->post(route('admin.plataforma.timbres.asignar'), ['cuenta_id' => $this->despacho->id, 'paquete_id' => $paq->id, 'como' => 'cobrado', 'forma' => 'efectivo'])
+            ->assertSessionHas('ok', fn ($m) => str_contains($m, 'pago quedó registrado'));
+        $this->assertEquals(250, \App\Models\LicenciaPago::latest('id')->value('monto'));
+        $this->post(route('admin.plataforma.timbres.asignar'), ['cuenta_id' => $this->despacho->id, 'paquete_id' => $paq->id, 'como' => 'regalo'])
+            ->assertSessionHas('ok', fn ($m) => str_starts_with($m, 'Regalaste'));
+        $this->assertSame($antes + 100, Timbres::disponibles($this->despacho));
+        $this->assertSame(1, \App\Models\LicenciaPago::where('concepto', 'timbres')->count());
+        $this->get(route('admin.plataforma.timbres'))->assertOk()->assertSee('Últimas asignaciones')->assertSee('Regalo · Paquete 50');
+        // A la cuenta de la plataforma no se le asigna
+        $this->post(route('admin.plataforma.timbres.asignar'), ['cuenta_id' => Cuentas::principalId(), 'paquete_id' => $paq->id, 'como' => 'regalo'])->assertSessionHasErrors('cuenta_id');
+
+        // Ya asignado: eliminar lo oculta
+        $this->delete(route('admin.plataforma.timbres.paquetes.destroy', $paq))->assertSessionHas('ok', fn ($m) => str_contains($m, 'ocultamos'));
+        $this->assertFalse($paq->fresh()->activo);
+        $otro = TimbrePaquete::create(['nombre' => 'Sin usar', 'timbres' => 10, 'precio' => 60, 'activo' => true]);
+        $this->delete(route('admin.plataforma.timbres.paquetes.destroy', $otro));
+        $this->assertNull($otro->fresh());
     }
 
     public function test_catalogo_sat_y_objeto_de_impuesto(): void

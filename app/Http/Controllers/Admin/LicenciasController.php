@@ -30,26 +30,7 @@ class LicenciasController extends Controller
             'extras' => Plan::extras()->get(),
             'usoPlan' => Licencia::selectRaw('plan_id, count(*) as n')->groupBy('plan_id')->pluck('n', 'plan_id'),
             'pago'   => Estado::datosPago(),
-            'paquetes' => \App\Models\TimbrePaquete::orderBy('orden')->orderBy('timbres')->get(),
         ]);
-    }
-
-    /** Paquetes de timbres que venden: editar los que hay y agregar uno */
-    public function guardarTimbres(Request $request)
-    {
-        $d = $request->validate([
-            'q' => 'nullable|array', 'q.*.nombre' => 'required|string|max:80', 'q.*.timbres' => 'required|integer|min:1|max:1000000',
-            'q.*.precio' => 'required|numeric|min:0|max:9999999', 'q.*.activo' => 'nullable|boolean',
-            'nuevo.nombre' => 'nullable|required_with:nuevo.timbres|string|max:80', 'nuevo.timbres' => 'nullable|required_with:nuevo.nombre|integer|min:1|max:1000000',
-            'nuevo.precio' => 'nullable|required_with:nuevo.nombre|numeric|min:0|max:9999999',
-        ], ['nuevo.timbres.required_with' => 'Pon cuántos timbres trae el paquete nuevo.', 'nuevo.precio.required_with' => 'Pon el precio del paquete nuevo.']);
-        foreach ($d['q'] ?? [] as $id => $x) {
-            \App\Models\TimbrePaquete::whereKey($id)->update(['nombre' => $x['nombre'], 'timbres' => $x['timbres'], 'precio' => $x['precio'], 'activo' => (bool) ($x['activo'] ?? false)]);
-        }
-        if (! empty($d['nuevo']['nombre'])) {
-            \App\Models\TimbrePaquete::create($d['nuevo'] + ['orden' => (int) \App\Models\TimbrePaquete::max('orden') + 1]);
-        }
-        return redirect(route('admin.plataforma.planes') . '#timbres')->with('ok', 'Paquetes de timbres guardados.');
     }
 
     public function guardarPlanes(Request $request)
@@ -128,7 +109,7 @@ class LicenciasController extends Controller
             ],
             'timbres' => \App\Support\Facturas\Timbres::resumen($cuenta),
             'movTimbres' => \App\Models\TimbreMovimiento::with('paquete')->where('cuenta_id', $cuenta->id)->where('tipo', '!=', 'uso_plan')->latest('id')->take(12)->get(),
-            'paquetes' => \App\Models\TimbrePaquete::orderBy('orden')->orderBy('timbres')->get(),
+            'paquetes' => \App\Models\TimbrePaquete::where('activo', true)->orderBy('orden')->orderBy('timbres')->get(),
         ]);
     }
 

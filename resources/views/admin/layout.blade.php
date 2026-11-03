@@ -571,8 +571,11 @@
         </a>
         @endif
         @if($usuario?->plataforma)
-        <a href="{{ route('admin.plataforma') }}" class="{{ request()->routeIs('admin.plataforma*') ? 'activo' : '' }}">
+        <a href="{{ route('admin.plataforma') }}" class="{{ request()->routeIs('admin.plataforma*') && ! request()->routeIs('admin.plataforma.timbres*') ? 'activo' : '' }}">
             <i class="bi bi-buildings"></i> Plataforma
+        </a>
+        <a href="{{ route('admin.plataforma.timbres') }}" class="{{ request()->routeIs('admin.plataforma.timbres*') ? 'activo' : '' }}">
+            <i class="bi bi-receipt-cutoff"></i> Timbres
         </a>
         @endif
         <a href="{{ route('admin.notificaciones') }}" class="{{ request()->routeIs('admin.notificaciones*') ? 'activo' : '' }}">

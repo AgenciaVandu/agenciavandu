@@ -39,6 +39,7 @@
     </div>
     <div class="d-flex gap-2 flex-wrap">
         <a href="{{ route('admin.plataforma.numeros') }}" class="btn btn-borde"><i class="bi bi-bar-chart-line me-1"></i> Números</a>
+        <a href="{{ route('admin.plataforma.timbres') }}" class="btn btn-borde"><i class="bi bi-receipt-cutoff me-1"></i> Timbres</a>
         <a href="{{ route('admin.plataforma.planes') }}" class="btn btn-borde"><i class="bi bi-tags me-1"></i> Planes y precios</a>
         <button type="button" class="btn btn-primario" @click="nuevo = true" x-show="!nuevo"><i class="bi bi-plus-lg me-1"></i> Nueva cuenta</button>
     </div>

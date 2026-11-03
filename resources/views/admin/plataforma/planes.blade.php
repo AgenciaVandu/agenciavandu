@@ -72,35 +72,11 @@
     <button class="btn btn-borde"><i class="bi bi-plus-lg me-1"></i> Agregar</button>
 </form>
 
-<section class="panel mb-4" id="timbres">
-    <div class="panel-head"><div><h2>Paquetes de timbres</h2><span class="ayuda">Lo que cada negocio puede comprar para facturar con tu cuenta de Facturapi. Cada factura, complemento o nota de crédito gasta uno.</span></div></div>
-    <form method="post" action="{{ route('admin.plataforma.timbres') }}">
-        @csrf @method('PUT')
-        <div class="table-responsive">
-            <table class="tabla pl-tabla">
-                <thead><tr><th>Nombre</th><th>Timbres</th><th>Precio</th><th class="text-end">Por timbre</th><th>Activo</th></tr></thead>
-                <tbody>
-                @foreach($paquetes as $pq)
-                    <tr>
-                        <td style="min-width: 220px"><input name="q[{{ $pq->id }}][nombre]" value="{{ $pq->nombre }}" class="form-control form-control-sm fw-semibold" required maxlength="80" aria-label="Nombre del paquete"></td>
-                        <td><input type="number" min="1" max="1000000" name="q[{{ $pq->id }}][timbres]" value="{{ $pq->timbres }}" class="form-control form-control-sm num w-num" required aria-label="Timbres"></td>
-                        <td><input type="number" step="0.01" min="0" name="q[{{ $pq->id }}][precio]" value="{{ $pq->precio + 0 }}" class="form-control form-control-sm num w-num" required aria-label="Precio"></td>
-                        <td class="text-end num secundario">${{ number_format($pq->por_timbre, 2) }}</td>
-                        <td><input type="hidden" name="q[{{ $pq->id }}][activo]" value="0"><input type="checkbox" name="q[{{ $pq->id }}][activo]" value="1" class="form-check-input" @checked($pq->activo) aria-label="Activo"></td>
-                    </tr>
-                @endforeach
-                    <tr>
-                        <td><input name="nuevo[nombre]" class="form-control form-control-sm" maxlength="80" placeholder="Nuevo: Paquete 100" aria-label="Nombre del nuevo paquete"></td>
-                        <td><input type="number" min="1" name="nuevo[timbres]" class="form-control form-control-sm num w-num" placeholder="100" aria-label="Timbres del nuevo paquete"></td>
-                        <td><input type="number" step="0.01" min="0" name="nuevo[precio]" class="form-control form-control-sm num w-num" placeholder="450" aria-label="Precio del nuevo paquete"></td>
-                        <td></td><td></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="panel-body pt-0"><button class="btn btn-primario"><i class="bi bi-check2 me-1"></i> Guardar paquetes</button></div>
-    </form>
-</section>
+<a href="{{ route('admin.plataforma.timbres') }}" class="panel mb-4 d-flex align-items-center gap-3 p-3 text-decoration-none" id="timbres" style="color: inherit">
+    <i class="bi bi-receipt-cutoff" style="font-size: 22px; color: var(--marca)"></i>
+    <div><b>Paquetes de timbres</b><div class="secundario small">Créalos y asígnalos a cada negocio desde Plataforma › Timbres.</div></div>
+    <i class="bi bi-chevron-right ms-auto secundario"></i>
+</a>
 
 <section class="panel">
     <div class="panel-head"><div><h2>Datos para que te paguen</h2><span class="ayuda">Salen en el aviso de vencimiento del panel, en la pantalla de suspensión y en los correos</span></div></div>

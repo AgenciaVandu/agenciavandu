@@ -50,7 +50,10 @@
         <h1>{{ $cuenta->nombre }}</h1>
         <p class="sub">Licencia, pagos y límites. <span class="estado estado-{{ $e->clase }}">{{ $e->texto }}</span></p>
     </div>
-    <a href="{{ route('admin.plataforma.planes') }}" class="btn btn-borde"><i class="bi bi-tags me-1"></i> Planes y precios</a>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ route('admin.plataforma.timbres') }}" class="btn btn-borde"><i class="bi bi-receipt-cutoff me-1"></i> Timbres</a>
+        <a href="{{ route('admin.plataforma.planes') }}" class="btn btn-borde"><i class="bi bi-tags me-1"></i> Planes y precios</a>
+    </div>
 </div>
 
 <div class="lic-grid">
@@ -149,7 +152,7 @@
             <div><label class="form-label small">Movimiento</label>
                 <select name="tipo" class="form-select" x-model="tipo"><option value="compra">Compra de paquete</option><option value="regalo">Regalo</option><option value="ajuste">Ajuste (+ o −)</option></select></div>
             <div x-show="tipo === 'compra'"><label class="form-label small">Paquete</label>
-                <select name="paquete_id" class="form-select">@forelse($paquetes as $pq)<option value="{{ $pq->id }}">{{ $pq->nombre }} · {{ number_format($pq->timbres) }} · {{ $d2($pq->precio) }}</option>@empty<option value="">Crea paquetes en Planes y precios</option>@endforelse</select></div>
+                <select name="paquete_id" class="form-select">@forelse($paquetes as $pq)<option value="{{ $pq->id }}">{{ $pq->nombre }} · {{ number_format($pq->timbres) }} · {{ $d2($pq->precio) }}</option>@empty<option value="">Crea paquetes en Plataforma › Timbres</option>@endforelse</select></div>
             <div x-show="tipo !== 'compra'" x-cloak><label class="form-label small">Timbres</label><input type="number" name="cantidad" min="-100000" max="100000" class="form-control num" placeholder="20"></div>
             <div x-show="tipo === 'compra'"><label class="form-label small">Monto cobrado <span class="secundario">(vacío = precio)</span></label><input type="number" step="0.01" min="0" name="monto" class="form-control num"></div>
             <div x-show="tipo === 'compra'"><label class="form-label small">Forma</label><select name="forma" class="form-select">@foreach(LicenciaPago::FORMAS as $k => $t)<option value="{{ $k }}">{{ $t }}</option>@endforeach</select></div>
