@@ -44,6 +44,7 @@ class NegocioController extends Controller
             'dropbox_carpeta'     => ['nullable', 'string', 'max:60', 'regex:/^[^\\\\\/<>:"|?*]+$/'],
             'logo'                => 'nullable|file|mimes:png,jpg,jpeg,svg|max:2048',
             'logo_claro'          => 'nullable|file|mimes:png,jpg,jpeg,svg|max:2048',
+            'logo_factura'        => 'nullable|file|mimes:png,jpg,jpeg|max:2048',
             'icono'               => 'nullable|image|mimes:png,jpg,jpeg,webp|max:4096|dimensions:min_width=192,min_height=192',
             'icono_fondo'         => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ], [
@@ -53,6 +54,7 @@ class NegocioController extends Controller
             'dropbox_carpeta.regex' => 'El nombre de la carpeta no puede llevar / ni caracteres especiales.',
             'logo.mimes'            => 'El logo debe ser PNG, JPG o SVG.',
             'logo_claro.mimes'      => 'El logo debe ser PNG, JPG o SVG.',
+            'logo_factura.mimes'    => 'El logo de las facturas debe ser PNG o JPG (el SAT y Facturapi no aceptan SVG).',
         ]);
 
         $a = $c->ajustes ?? [];
@@ -71,9 +73,12 @@ class NegocioController extends Controller
         $a['correo_nombre'] = $d['nombre'];
 
         // Dos versiones: la que va sobre fondo oscuro (marca.logo_oscuro) y la que va sobre blanco (marca.logo)
-        foreach (['logo' => ['logo_oscuro', 'logo'], 'logo_claro' => ['logo', 'claro']] as $campo => [$clave, $archivo]) {
-            $quitar = $request->boolean($campo === 'logo' ? 'quitar_logo' : 'quitar_logo_claro');
+        // Y el de las facturas (marca.logo_factura): PNG o JPG, porque Facturapi no acepta SVG
+        $cambioLogo = false;
+        foreach (['logo' => ['logo_oscuro', 'logo', 'quitar_logo'], 'logo_claro' => ['logo', 'claro', 'quitar_logo_claro'], 'logo_factura' => ['logo_factura', 'factura', 'quitar_logo_factura']] as $campo => [$clave, $archivo, $quitarCampo]) {
+            $quitar = $request->boolean($quitarCampo);
             if (! $request->hasFile($campo) && ! $quitar) continue;
+            $cambioLogo = true;
             if (! empty($a['marca'][$clave])) Storage::disk('local')->delete($a['marca'][$clave]);
             unset($a['marca'][$clave]);
             if ($request->hasFile($campo)) {
@@ -98,6 +103,7 @@ class NegocioController extends Controller
 
         $c->update(['nombre' => $d['nombre'], 'ajustes' => $a]);
         Cuentas::activar($c->fresh());
+        if ($cambioLogo) \App\Support\Facturas\Organizacion::actualizarLogo($c->fresh());
         return redirect()->route('admin.negocio')->with('ok', 'Datos del negocio guardados. Así aparecen en tus cotizaciones y correos.');
     }
 }

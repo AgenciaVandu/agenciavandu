@@ -89,10 +89,9 @@ class Organizacion
     public static function imagen(string $org, Cuenta $c): void
     {
         try {
-            $ruta = collect(['logo', 'logo_oscuro'])->map(fn ($k) => $c->ajuste("marca.$k"))
-                ->first(fn ($r) => $r && preg_match('/\.(png|jpe?g)$/i', $r) && is_file(storage_path('app/' . $r)));
-            if ($ruta) {
-                self::http()->attach('file', file_get_contents(storage_path('app/' . $ruta)), basename($ruta))
+            $archivo = self::archivoLogo($c);
+            if ($archivo) {
+                self::http()->attach('file', file_get_contents($archivo), basename($archivo))
                     ->put(Timbrado::API . "/organizations/$org/logo");
             }
             $color = ltrim((string) ($c->ajuste('documento.color') ?: $c->ajuste('icono_fondo') ?: '#5B3DF5'), '#');
@@ -100,6 +99,25 @@ class Organizacion
         } catch (\Throwable $e) {
             report($e);
         }
+    }
+
+    /**
+     * El logo que va en la factura: el de facturas de Mi negocio, si no el de fondo blanco o el de fondo oscuro
+     * (Facturapi solo acepta PNG o JPG). La cuenta de la plataforma usa el de Vandu si no ha subido uno.
+     */
+    public static function archivoLogo(Cuenta $c): ?string
+    {
+        $ruta = collect(['logo_factura', 'logo', 'logo_oscuro'])->map(fn ($k) => $c->ajuste("marca.$k"))
+            ->first(fn ($r) => $r && preg_match('/\.(png|jpe?g)$/i', $r) && is_file(\Illuminate\Support\Facades\Storage::disk('local')->path($r)));
+        if ($ruta) return \Illuminate\Support\Facades\Storage::disk('local')->path($ruta);
+        return $c->id === Cuentas::principalId() ? resource_path('pdf/logo-vandu-negro.png') : null;
+    }
+
+    /** Al cambiar el logo en Mi negocio: si ya tiene organización en Facturapi, se actualiza ahí también */
+    public static function actualizarLogo(Cuenta $c): void
+    {
+        $org = Timbrado::ajustes()['org_id'] ?? null;
+        if ($org && self::disponible()) self::imagen($org, $c);
     }
 
     /**

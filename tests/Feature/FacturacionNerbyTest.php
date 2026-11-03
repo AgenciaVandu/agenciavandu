@@ -148,4 +148,24 @@ class FacturacionNerbyTest extends TestCase
         $this->get(route('admin.facturacion'))->assertOk()->assertSee('Clave secreta')->assertDontSee('Tus datos fiscales')->assertDontSee('e.firma o CSD');
         $this->post(route('admin.facturacion.emisor'), ['razon_social' => 'X', 'regimen' => '626', 'cp' => '97000'])->assertNotFound();
     }
+
+    public function test_logo_de_las_facturas_se_sube_y_se_actualiza_en_facturapi(): void
+    {
+        Timbrado::guardarAjustes(['org_id' => 'org_lupe', 'test_key' => 'sk_test_lupe', 'pruebas' => true]);
+        $datos = ['nombre' => 'Paletas Lupe'];
+        // SVG no: Facturapi no lo acepta
+        $this->post(route('admin.negocio.update'), $datos + ['logo_factura' => UploadedFile::fake()->create('logo.svg', 4, 'image/svg+xml')])->assertSessionHasErrors('logo_factura');
+        Http::assertNotSent(fn ($r) => str_ends_with($r->url(), '/logo'));
+        // PNG sí: se guarda y se manda a su organización
+        $this->post(route('admin.negocio.update'), $datos + ['logo_factura' => UploadedFile::fake()->image('logo.png', 400, 120)])->assertSessionHas('ok');
+        $ruta = $this->tienda->fresh()->ajuste('marca.logo_factura');
+        $this->assertStringEndsWith('.png', $ruta);
+        Http::assertSent(fn ($r) => $r->method() === 'PUT' && str_ends_with($r->url(), '/organizations/org_lupe/logo'));
+        $this->assertStringEndsWith($ruta, \App\Support\Facturas\Organizacion::archivoLogo($this->tienda->fresh()));
+        $this->get(route('admin.negocio'))->assertOk()->assertSee('Logo para tus facturas');
+
+        // La cuenta de la plataforma: sin logo propio usa el de Vandu, y también puede subir el suyo
+        $principal = Cuenta::find(Cuentas::principalId());
+        $this->assertStringEndsWith('logo-vandu-negro.png', \App\Support\Facturas\Organizacion::archivoLogo($principal));
+    }
 }

@@ -45,7 +45,7 @@
                 <div class="ancho">
                     <label class="form-label" for="ng-logo">Logo para fondo oscuro <span class="secundario fw-normal">(versión blanca o clara)</span></label>
                     @if($principal)
-                        <p class="secundario m-0" style="font-size:13.5px">La cuenta principal usa el logo de Vandu.</p>
+                        <p class="secundario m-0" style="font-size:13.5px">La cuenta principal usa el logo de Vandu en el panel, cotizaciones y correos. El de tus facturas lo cambias abajo.</p>
                     @else
                         <input id="ng-logo" type="file" name="logo" class="form-control" accept=".png,.jpg,.jpeg,.svg">
                         <div class="form-text">PNG con fondo transparente o SVG, hasta 2 MB. Si no subes uno, se muestra el nombre del negocio.</div>
@@ -61,6 +61,18 @@
                         @if($logoClaro)<label class="form-check mt-2"><input type="checkbox" class="form-check-input" name="quitar_logo_claro" value="1"> <span class="form-check-label">Quitar este logo</span></label>@endif
                     </div>
                 @endunless
+                {{-- Logo de las facturas (PNG o JPG) --}}
+                @php
+                    $logoFact = \App\Support\Facturas\Organizacion::archivoLogo($c);
+                    $logoFactPropio = $c->ajuste('marca.logo_factura');
+                @endphp
+                <div class="ancho">
+                    <label class="form-label d-block" for="ng-logo-factura">Logo para tus facturas <span class="secundario fw-normal">(PNG o JPG, sobre fondo blanco)</span></label>
+                    @if($logoFact)<div class="mb-2 p-3 d-inline-flex" style="background:#fff; border:1px solid var(--line); border-radius:12px"><img src="data:{{ str_ends_with($logoFact, '.png') ? 'image/png' : 'image/jpeg' }};base64,{{ base64_encode(file_get_contents($logoFact)) }}" alt="Logo de tus facturas" style="max-height:48px; max-width:220px; object-fit:contain"></div>@endif
+                    <input id="ng-logo-factura" type="file" name="logo_factura" class="form-control" accept=".png,.jpg,.jpeg">
+                    <div class="form-text">Sale en el PDF de tus facturas. El SAT y Facturapi no aceptan SVG.{{ $logoFactPropio ? '' : ($logoFact ? ($principal ? ' Ahora se usa el logo de Vandu.' : ' Ahora se usa tu logo de arriba.') : ' Si no lo subes, se usa tu logo de arriba cuando es PNG o JPG.') }} Al guardar se actualiza en tus facturas.</div>
+                    @if($logoFactPropio)<label class="form-check mt-2"><input type="checkbox" class="form-check-input" name="quitar_logo_factura" value="1"> <span class="form-check-label">Quitar este logo</span></label>@endif
+                </div>
                 {{-- Ícono de la app --}}
                 <div class="ancho" x-data="{ fondo: '{{ old('icono_fondo', $c->ajuste('app.fondo') ?? '#FFFFFF') }}', vista: null }">
                     <label class="form-label" for="ng-icono">Ícono de la app <span class="secundario fw-normal">(al instalar el panel{{ $c->tiene('fitness') ? ' y el portal de tus atletas' : '' }})</span></label>

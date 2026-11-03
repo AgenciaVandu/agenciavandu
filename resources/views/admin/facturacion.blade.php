@@ -139,7 +139,7 @@
             </div>
             <div class="col-12 d-flex gap-2 align-items-center">
                 <button class="btn btn-primario"><i class="bi bi-check2 me-1"></i> {{ $a['org_id'] ? 'Guardar cambios' : 'Guardar y seguir' }}</button>
-                <span class="secundario small">Tu logo de Mi negocio sale en el PDF de tus facturas.</span>
+                <span class="secundario small">El logo de tus facturas se cambia en <a href="{{ route('admin.negocio') }}">Mi negocio</a>.</span>
             </div>
         </div>
     </form>
