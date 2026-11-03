@@ -1027,15 +1027,19 @@
 
         document.addEventListener('submit', async (e) => {
             const f = e.target;
+            const b = e.submitter;
             if (e.defaultPrevented || f.hasAttribute('data-recargar') || (f.getAttribute('method') || 'get').toLowerCase() !== 'post') return;
-            if (f.target && f.target !== '_self') return;
+            // El botón puede mandar a otra dirección u otra pestaña (formaction / formtarget): se respeta y lo hace el navegador
+            const destino = b && b.hasAttribute('formtarget') ? b.getAttribute('formtarget') : f.target;
+            if (destino && destino !== '_self') return;
+            const accion = b && b.hasAttribute('formaction') ? b.formAction : f.action;
             e.preventDefault();
             if (f.classList.contains('enviando')) return;
 
             const datos = new FormData(f, e.submitter || undefined);
             f.classList.add('enviando'); progreso(true);
             try {
-                const r = await fetch(f.action, { method: 'POST', body: datos, credentials: 'same-origin',
+                const r = await fetch(accion, { method: 'POST', body: datos, credentials: 'same-origin',
                     headers: { 'X-Requested-With': 'fetch', 'Accept': 'text/html' } });
                 if (r.status === 419) { location.reload(); return; }          // sesión vencida
                 if (!r.ok && r.status !== 422) throw new Error(r.status);

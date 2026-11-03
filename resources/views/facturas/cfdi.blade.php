@@ -231,7 +231,6 @@
         <td style="width: 56%; padding-right: 28pt">
             <div class="etq">Importe con letra</div>
             <div class="letra">{{ $d['letra'] }}</div>
-            @if($marca['nota'] && ! $esPago)<div class="nota">{{ $marca['nota'] }}</div>@endif
         </td>
         <td style="width: 44%">
             <table class="totales">

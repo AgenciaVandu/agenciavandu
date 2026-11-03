@@ -112,7 +112,6 @@ class Representacion
             'telefono' => $c?->ajuste('emisor.telefono'),
             'email' => $c?->ajuste('emisor.email'),
             'sitio' => $c?->ajuste('marca.sitio'),
-            'nota' => $c?->ajuste('pago.nota_factura'),
         ];
     }
 
