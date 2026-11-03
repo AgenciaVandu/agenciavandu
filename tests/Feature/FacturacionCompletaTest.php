@@ -168,11 +168,21 @@ class FacturacionCompletaTest extends TestCase
         $this->nueva($c)->assertSessionHas('error', fn ($m) => str_contains($m, 'no te quedan timbres'));
         $this->assertSame([$antes, 1], [Venta::count(), count($this->enviados)]);
 
+        // La cuenta de la plataforma factura sin timbres
+        config(['vandu.cuenta_principal' => $this->despacho->id]);
+        $this->assertFalse(Timbres::aplica());
+        $this->nueva($c)->assertSessionHas('ok');
+        $this->assertSame([$antes + 1, 0], [Venta::count(), (int) \App\Models\TimbreMovimiento::where('cuenta_id', $this->despacho->id)->count()]);
+        $this->get(route('admin.facturacion'))->assertOk()->assertDontSee('Tus timbres');
+        config(['vandu.cuenta_principal' => 1]);
+        $antes = Venta::count();
+        $sig = $b->fresh()->siguiente;
+
         // Facturapi la rechaza: tampoco se queda la venta y el folio no avanza
         Timbres::cargar($this->despacho, 'regalo', 5);
         $this->rechazo = 'El RFC del receptor no existe en la lista del SAT';
         $this->nueva($c, ['serie_id' => $b->id])->assertSessionHas('error', fn ($m) => str_contains($m, 'El RFC del receptor'));
-        $this->assertSame([$antes, 101, 5], [Venta::count(), $b->fresh()->siguiente, Timbres::disponibles($this->despacho)]);
+        $this->assertSame([$antes, $sig, 5], [Venta::count(), $b->fresh()->siguiente, Timbres::disponibles($this->despacho)]);
     }
 
     public function test_factura_global_y_reportes(): void

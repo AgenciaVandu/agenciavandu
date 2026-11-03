@@ -23,7 +23,7 @@ class FacturacionController extends Controller
             'a' => $a, 'activo' => Timbrado::activo(), 'nerby' => Organizacion::disponible() && ! filled($a['key']),
             'timbradas' => Timbrado::timbradasEsteMes(Cuentas::actual()),
             'series' => \App\Models\FacturaSerie::orderBy('tipo')->orderByDesc('predeterminada')->orderBy('serie')->get(),
-            'timbres' => Organizacion::disponible() && ! filled($a['key']) ? \App\Support\Facturas\Timbres::resumen(Cuentas::actual()) : null,
+            'timbres' => Organizacion::disponible() && ! filled($a['key']) && ! Cuentas::esPrincipal() ? \App\Support\Facturas\Timbres::resumen(Cuentas::actual()) : null,
             'paquetes' => \App\Support\Facturas\Timbres::paquetes(),
             'pagoNerby' => \App\Support\Licencias\Estado::datosPago(),
             'licencia' => \App\Support\Licencias\Estado::de(Cuentas::actual())->licencia,

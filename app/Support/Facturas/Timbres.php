@@ -19,9 +19,10 @@ class Timbres
 {
     public const AVISO = 5;
 
-    /** Solo cuenta con la organización que Nerby le creó y en modo real */
+    /** Solo cuenta con la organización que Nerby le creó y en modo real. La cuenta de la plataforma factura sin límite. */
     public static function aplica(): bool
     {
+        if (Cuentas::esPrincipal()) return false;
         $a = Timbrado::ajustes();
         return (bool) $a['org_id'] && ! $a['pruebas'];
     }
