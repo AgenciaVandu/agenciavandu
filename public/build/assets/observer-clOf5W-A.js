@@ -1,0 +1,1 @@
+let o=new IntersectionObserver(t,{}),e=document.querySelector(".base");function t(i){let s=i[0];s.isIntersecting?(console.log("visible"),e.classList.add("activo"),o.unobserve(s.target)):(console.log("no es visible"),e.classList.remove("activo"))}o.observe(e);

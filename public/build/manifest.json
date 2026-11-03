@@ -1,0 +1,148 @@
+{
+  "public/img/carrusel/cabecera.jpg": {
+    "file": "assets/cabecera-CmNsgfGv.jpg",
+    "src": "public/img/carrusel/cabecera.jpg"
+  },
+  "public/img/check.svg": {
+    "file": "assets/check-xLwO_54V.svg",
+    "src": "public/img/check.svg"
+  },
+  "public/img/cursor1.svg": {
+    "file": "assets/cursor1-D3wmGA9z.svg",
+    "src": "public/img/cursor1.svg"
+  },
+  "public/img/cursor2.svg": {
+    "file": "assets/cursor2-g0emxe3G.svg",
+    "src": "public/img/cursor2.svg"
+  },
+  "public/img/webp/cosas.gif": {
+    "file": "assets/cosas-XjpMckvD.gif",
+    "src": "public/img/webp/cosas.gif"
+  },
+  "public/img/webp/d-digital.jpg": {
+    "file": "assets/d-digital-OndMtKUe.jpg",
+    "src": "public/img/webp/d-digital.jpg"
+  },
+  "public/img/webp/dweb.webp": {
+    "file": "assets/dweb-A8Wql8Nr.webp",
+    "src": "public/img/webp/dweb.webp"
+  },
+  "public/img/webp/tarjetas.jpg": {
+    "file": "assets/tarjetas-rcHrt4Ga.jpg",
+    "src": "public/img/webp/tarjetas.jpg"
+  },
+  "resources/fonts/Geist-Medium.woff2": {
+    "file": "assets/Geist-Medium-aEd7IB2p.woff2",
+    "src": "resources/fonts/Geist-Medium.woff2"
+  },
+  "resources/fonts/Geist-Regular.woff2": {
+    "file": "assets/Geist-Regular-h-7oo1rs.woff2",
+    "src": "resources/fonts/Geist-Regular.woff2"
+  },
+  "resources/fonts/Geist-SemiBold.woff2": {
+    "file": "assets/Geist-SemiBold-xXnXUu5O.woff2",
+    "src": "resources/fonts/Geist-SemiBold.woff2"
+  },
+  "resources/fonts/Geist-UltraBlack.woff2": {
+    "file": "assets/Geist-UltraBlack-aNElH5NN.woff2",
+    "src": "resources/fonts/Geist-UltraBlack.woff2"
+  },
+  "resources/js/app.js": {
+    "css": [
+      "assets/app-bzk8lnhv.css"
+    ],
+    "file": "assets/app-_4rt1TkY.js",
+    "isEntry": true,
+    "src": "resources/js/app.js"
+  },
+  "resources/js/bg.js": {
+    "file": "assets/bg-Pm6JWc7a.js",
+    "isEntry": true,
+    "src": "resources/js/bg.js"
+  },
+  "resources/js/bguno.js": {
+    "file": "assets/bguno-48DGzy_s.js",
+    "isEntry": true,
+    "src": "resources/js/bguno.js"
+  },
+  "resources/js/diseno.js": {
+    "file": "assets/diseno-w40geAFS.js",
+    "isEntry": true,
+    "src": "resources/js/diseno.js"
+  },
+  "resources/js/hero.js": {
+    "file": "assets/hero-2WJhMixS.js",
+    "isEntry": true,
+    "src": "resources/js/hero.js"
+  },
+  "resources/js/observer.js": {
+    "file": "assets/observer-clOf5W-A.js",
+    "isEntry": true,
+    "src": "resources/js/observer.js"
+  },
+  "resources/js/portafolio.js": {
+    "file": "assets/portafolio-w40geAFS.js",
+    "isEntry": true,
+    "src": "resources/js/portafolio.js"
+  },
+  "resources/scss/app.scss": {
+    "file": "assets/app-bzk8lnhv.css",
+    "isEntry": true,
+    "src": "resources/scss/app.scss"
+  },
+  "resources/scss/branding.scss": {
+    "file": "assets/branding-TD_ND6-8.css",
+    "isEntry": true,
+    "src": "resources/scss/branding.scss"
+  },
+  "resources/scss/construccion.scss": {
+    "file": "assets/construccion-2UyD-ZXE.css",
+    "isEntry": true,
+    "src": "resources/scss/construccion.scss"
+  },
+  "resources/scss/contacto.scss": {
+    "file": "assets/contacto-OZ2PzocB.css",
+    "isEntry": true,
+    "src": "resources/scss/contacto.scss"
+  },
+  "resources/scss/editorial.scss": {
+    "file": "assets/editorial-P07plWUb.css",
+    "isEntry": true,
+    "src": "resources/scss/editorial.scss"
+  },
+  "resources/scss/global.scss": {
+    "file": "assets/global-_hLIbvsu.css",
+    "isEntry": true,
+    "src": "resources/scss/global.scss"
+  },
+  "resources/scss/hero.scss": {
+    "file": "assets/hero-Y2vId3UH.css",
+    "isEntry": true,
+    "src": "resources/scss/hero.scss"
+  },
+  "resources/scss/index.scss": {
+    "file": "assets/index-A1kBSVEG.css",
+    "isEntry": true,
+    "src": "resources/scss/index.scss"
+  },
+  "resources/scss/inicio.scss": {
+    "file": "assets/inicio-mIph0vxR.css",
+    "isEntry": true,
+    "src": "resources/scss/inicio.scss"
+  },
+  "resources/scss/multimedia.scss": {
+    "file": "assets/multimedia-Wjjscwu0.css",
+    "isEntry": true,
+    "src": "resources/scss/multimedia.scss"
+  },
+  "resources/scss/privacidad.scss": {
+    "file": "assets/privacidad-saG9enPw.css",
+    "isEntry": true,
+    "src": "resources/scss/privacidad.scss"
+  },
+  "resources/scss/servicios.scss": {
+    "file": "assets/servicios-BZ6icqHd.css",
+    "isEntry": true,
+    "src": "resources/scss/servicios.scss"
+  }
+}

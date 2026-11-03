@@ -1,0 +1,1 @@
+window.addEventListener("scroll",function(){var t=document.querySelector("body");t.classList.toggle("bgdark",window.scrollY>1600,{passive:!0});var e=document.querySelector(".darktxt");e.classList.toggle("txtdark",window.scrollY>1500,{passive:!0})});

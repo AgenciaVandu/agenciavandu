@@ -1,0 +1,1 @@
+.header{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100vh;text-align:center}.header .cta{display:flex;gap:20px}.header .cta a{background-color:#13161d;padding:.5em 1.5em;border-radius:1em;color:#00f385;text-decoration:none}.header .cta a:hover{background-color:#00f385;color:#13161d}
