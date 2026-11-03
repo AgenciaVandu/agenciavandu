@@ -51,7 +51,7 @@
     "css": [
       "assets/app-bzk8lnhv.css"
     ],
-    "file": "assets/app-_4rt1TkY.js",
+    "file": "assets/app-SMMii5My.js",
     "isEntry": true,
     "src": "resources/js/app.js"
   },
@@ -106,7 +106,7 @@
     "src": "resources/scss/contacto.scss"
   },
   "resources/scss/editorial.scss": {
-    "file": "assets/editorial-P07plWUb.css",
+    "file": "assets/editorial-_xkIl0IL.css",
     "isEntry": true,
     "src": "resources/scss/editorial.scss"
   },
