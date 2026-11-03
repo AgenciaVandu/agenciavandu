@@ -1,3 +1,5 @@
+// Con JS cargado se permite la animación de entrada; sin él, todo se ve.
+document.documentElement.classList.add('js-ok');
 import './bootstrap';
 import './whatsapp';
 import './cookies';

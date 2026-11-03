@@ -46,9 +46,8 @@ body.ed {
         }
     }
 
-    // La aparición suave de las secciones, más corta
-    section { transform: translateY(16px); transition: opacity .7s ease, transform .7s ease; }
-    section.show { transform: none; }
+    // Contenido siempre visible; la aparición suave solo si el JavaScript cargó
+    section { opacity: 1; transform: none; transition: opacity .7s ease, transform .7s ease; }
 }
 
 .ed {
@@ -325,3 +324,5 @@ body.ed {
         .copy { font-size: 13px; color: $gris-osc; justify-content: flex-start; border-top: 1px solid $linea-osc; padding-top: 24px; img { width: 14px; } }
         .legales { justify-content: flex-start; } }
 }
+
+html.js-ok body.ed section:not(.show) { opacity: 0; transform: translateY(16px); }
