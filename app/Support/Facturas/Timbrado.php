@@ -132,6 +132,8 @@ class Timbrado
                 $a = self::http()->withHeaders(['Accept' => '*/*'])->get(self::API . "/invoices/{$id}/{$ext}");
                 $archivos[$ext] = $a->successful() ? $a->body() : null;
             }
+            // El PDF con el diseño de Nerby (marca del negocio); si algo falla se queda el de Facturapi
+            if ($archivos['xml']) $archivos['pdf'] = Representacion::pdf($archivos['xml']) ?? $archivos['pdf'];
             return ['json' => (array) $r->json(), 'id' => $id, 'serie' => $s->serie, 'folio' => $folio, 'pdf' => $archivos['pdf'], 'xml' => $archivos['xml']];
         });
     }
