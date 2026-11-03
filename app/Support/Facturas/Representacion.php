@@ -45,6 +45,56 @@ class Representacion
         }
     }
 
+    /**
+     * Vista previa antes de timbrar: el mismo diseño, armado con lo que se mandaría a Facturapi.
+     * Sin folio fiscal, sellos ni QR (los pone el SAT al timbrar) y con la marca "Vista previa".
+     */
+    public static function borrador(array $payload, string $serie, int $folio, ?Cuenta $c = null): string
+    {
+        $c ??= Cuentas::actual();
+        $aj = Timbrado::ajustes();
+        $em = (array) ($aj['emisor'] ?? []);
+        $conceptos = [];
+        $subtotal = 0.0; $descuento = 0.0; $porTasa = [];
+        foreach ($payload['items'] as $it) {
+            $p = $it['product'];
+            $cant = (float) $it['quantity'];
+            $importe = round($cant * (float) $p['price'], 2);
+            $desc = round((float) ($it['discount'] ?? 0), 2);
+            $base = round($importe - $desc, 2);
+            $imp = [];
+            foreach ($p['taxes'] ?? [] as $t) {
+                $rate = (float) $t['rate'];
+                $monto = round($base * $rate, 2);
+                $imp[] = ['tipo' => 'Traslado', 'impuesto' => $t['type'] ?? 'IVA', 'factor' => 'Tasa', 'tasa' => number_format($rate, 6, '.', ''), 'base' => $base, 'importe' => $monto];
+                $k = number_format($rate, 6, '.', '');
+                $porTasa[$k] = ($porTasa[$k] ?? 0) + $monto;
+            }
+            $conceptos[] = ['clave' => $p['product_key'], 'sku' => null, 'cantidad' => $cant, 'clave_unidad' => $p['unit_key'], 'unidad' => null,
+                'descripcion' => $p['description'], 'unitario' => (float) $p['price'], 'importe' => $importe, 'descuento' => $desc,
+                'objeto' => $p['taxability'] ?? '02', 'impuestos' => $imp];
+            $subtotal += $importe; $descuento += $desc;
+        }
+        $traslados = [];
+        foreach ($porTasa as $tasa => $monto) $traslados[] = ['impuesto' => 'IVA', 'tasa' => $tasa, 'factor' => 'Tasa', 'importe' => round($monto, 2)];
+        $total = round($subtotal - $descuento + array_sum(array_column($traslados, 'importe')), 2);
+        $cu = (array) $payload['customer'];
+        $d = [
+            'borrador' => true, 'tipo' => 'I', 'titulo' => 'Factura', 'serie' => $serie, 'folio' => (string) $folio,
+            'fecha' => now(config('vandu.zona_horaria'))->toDateTimeString(), 'lugar' => $em['cp'] ?? '—', 'moneda' => 'MXN', 'tipo_cambio' => null,
+            'forma' => $payload['payment_form'], 'metodo' => $payload['payment_method'], 'condiciones' => null, 'exportacion' => '01',
+            'subtotal' => round($subtotal, 2), 'descuento' => round($descuento, 2), 'total' => $total, 'cert_emisor' => $aj['certificado']['serie'] ?? null,
+            'sello' => '', 'version' => '4.0',
+            'emisor' => ['rfc' => $aj['certificado']['rfc'] ?? '—', 'nombre' => $em['razon_social'] ?? ($c?->nombre ?? '—'), 'regimen' => $em['regimen'] ?? null],
+            'receptor' => ['rfc' => $cu['tax_id'] ?? '—', 'nombre' => $cu['legal_name'] ?? '—', 'cp' => $cu['address']['zip'] ?? '—', 'regimen' => $cu['tax_system'] ?? null, 'uso' => $payload['use'] ?? null],
+            'global' => null, 'conceptos' => $conceptos, 'traslados' => $traslados, 'retenciones' => [],
+            'total_traslados' => array_sum(array_column($traslados, 'importe')), 'total_retenciones' => 0,
+            'relacionados' => [], 'pagos' => [], 'uuid' => null, 'timbrado' => null, 'pac' => null, 'cert_sat' => null,
+            'sello_cfd' => null, 'sello_sat' => null, 'cadena' => null, 'qr_url' => null, 'letra' => self::conLetra($total),
+        ];
+        return Pdf::loadView('facturas.cfdi', ['d' => $d, 'marca' => self::marca($c)])->setPaper('letter')->output();
+    }
+
     /** Color, logo y contacto del negocio para el encabezado */
     public static function marca(?Cuenta $c): array
     {

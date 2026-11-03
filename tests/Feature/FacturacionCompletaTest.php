@@ -299,6 +299,34 @@ class FacturacionCompletaTest extends TestCase
         $this->assertNull($otro->fresh());
     }
 
+    public function test_vista_previa_antes_de_timbrar(): void
+    {
+        $c = $this->cliente();
+        $antes = [count($this->enviados), Venta::count(), Timbres::disponibles($this->despacho)];
+        $datos = ['cliente_id' => $c->id, 'uso_cfdi' => 'G03', 'metodo_pago' => 'PUE', 'forma_pago' => '03', 'con_iva' => 1, 'descuento' => 100,
+            'conceptos' => [['descripcion' => 'Asesoría contable de octubre', 'clave_sat' => '84111500', 'unidad_sat' => 'E48', 'cantidad' => 2, 'precio' => 1000]]];
+        // Factura directa: el PDF con el diseño, sin timbrar, sin crear la venta ni gastar timbre
+        $r = $this->post(route('admin.facturas.previsualizar-nueva'), $datos)->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF', $r->getContent());
+        $this->assertSame($antes, [count($this->enviados), Venta::count(), Timbres::disponibles($this->despacho)]);
+        $this->assertSame(1, \App\Models\FacturaSerie::where('tipo', 'I')->first()->siguiente);
+        // Lo que se previsualiza es lo mismo que se timbraría
+        $this->post(route('admin.facturas.guardar'), $datos)->assertSessionHas('ok');
+        $this->assertSame(['84111500', 'E48', 1000.0, 2.0, 100.0], [$this->enviados[0]['items'][0]['product']['product_key'], $this->enviados[0]['items'][0]['product']['unit_key'],
+            (float) $this->enviados[0]['items'][0]['product']['price'], (float) $this->enviados[0]['items'][0]['quantity'], (float) $this->enviados[0]['items'][0]['discount']]);
+
+        // Desde la bandeja (una venta por facturar)
+        $v = \App\Support\Ventas\Registrar::crear(['productos' => [['descripcion' => 'Paleta', 'cantidad' => 3, 'precio' => 25]], 'cliente_id' => $c->id, 'con_iva' => true,
+            'pago' => 'contado', 'forma' => 'efectivo', 'entrega' => 'ahora'], $this->dueno);
+        $this->get(route('admin.facturas', ['ver' => 'por_facturar']))->assertSee('Previsualizar factura');
+        $r = $this->post(route('admin.facturas.previsualizar', ['venta', $v->id]), ['forma_pago' => '01', 'metodo_pago' => 'PUE', 'uso_cfdi' => 'G03'])->assertOk();
+        $this->assertStringStartsWith('%PDF', $r->getContent());
+        $this->assertNull($v->fresh()->facturas()->first());
+        // Sin datos fiscales no hay vista previa
+        $sin = Cliente::create(['nombre' => 'Sin RFC']);
+        $this->post(route('admin.facturas.previsualizar-nueva'), ['cliente_id' => $sin->id] + $datos)->assertSessionHas('error');
+    }
+
     public function test_catalogo_sat_y_objeto_de_impuesto(): void
     {
         // Busca en el catálogo del SAT mientras se escribe

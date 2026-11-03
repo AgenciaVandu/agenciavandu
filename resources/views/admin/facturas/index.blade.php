@@ -176,6 +176,7 @@
                     <div>
                         <label class="d-flex gap-2 align-items-center small mb-2"><input type="checkbox" name="enviar" value="1" class="form-check-input mt-0" @checked((bool) $correo) @disabled(! $correo)> Enviarla al cliente</label>
                         <button class="btn btn-primario btn-sm w-100" onclick="return confirm({{ Js::from('Se timbrará la factura de ' . $d($doc->total()) . ' para ' . $fis['razon_social'] . ' (' . mb_strtoupper($fis['rfc']) . '). Ya no se puede deshacer, solo cancelar ante el SAT.') }})">Timbrar factura</button>
+                        <button type="submit" class="btn btn-borde btn-sm w-100 mt-2" formaction="{{ route('admin.facturas.previsualizar', [$doc->tipo(), $doc->m->id]) }}" formtarget="_blank"><i class="bi bi-eye me-1"></i> Previsualizar factura</button>
                     </div>
                 </form>
             @endif

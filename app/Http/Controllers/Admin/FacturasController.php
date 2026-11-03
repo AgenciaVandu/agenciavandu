@@ -78,6 +78,57 @@ class FacturasController extends Controller
     }
 
     /** Genera (timbra) la factura en Nerby y guarda su PDF y XML */
+    /** Vista previa en PDF de cómo saldrá la factura, sin timbrarla */
+    public function previsualizar(Request $request, string $tipo, int $id)
+    {
+        $doc = $this->doc($tipo, $id);
+        $d = $request->validate([
+            'forma_pago' => ['required', \Illuminate\Validation\Rule::in(array_keys(Timbrado::FORMAS_SAT))],
+            'metodo_pago' => 'required|in:PUE,PPD',
+            'uso_cfdi' => 'nullable|string|max:4',
+            'serie_id' => 'nullable|integer',
+        ]);
+        try {
+            $pdf = Timbrado::vistaPrevia($doc, $d['forma_pago'], $d['metodo_pago'], $d['uso_cfdi'] ?? null, isset($d['serie_id']) ? (int) $d['serie_id'] : null);
+        } catch (\App\Support\Facturas\TimbradoError $e) {
+            return back()->with('error', 'No se pudo armar la vista previa: ' . $e->getMessage());
+        }
+        return $this->pdfPrevio($pdf, $doc->folio());
+    }
+
+    /** Vista previa de la factura directa con lo capturado en el formulario (no crea la venta) */
+    public function previsualizarNueva(Request $request)
+    {
+        $d = $request->validate(...$this->reglasNueva());
+        $cliente = \App\Models\Cliente::findOrFail($d['cliente_id']);
+        $razon = ! empty($d['razon_id']) ? \App\Models\ClienteRazon::where('cliente_id', $cliente->id)->find($d['razon_id']) : null;
+        $conceptos = collect(array_values($d['conceptos']))->map(function ($x) {
+            $pid = ! empty($x['producto_id']) ? (int) $x['producto_id'] : null;
+            $c = new \App\Models\VentaConcepto(['producto_id' => $pid, 'descripcion' => trim($x['descripcion']), 'cantidad' => $x['cantidad'], 'precio' => $x['precio'],
+                'importe' => round($x['cantidad'] * $x['precio'], 2), 'clave_sat' => $x['clave_sat'] ?? null, 'unidad_sat' => $x['unidad_sat'] ?? null, 'objeto_imp' => $x['objeto_imp'] ?? null]);
+            return $c->setRelation('producto', $pid ? \App\Models\Producto::find($pid) : null);
+        });
+        $v = new \App\Models\Venta(['cliente_id' => $cliente->id, 'subtotal' => $conceptos->sum('importe'), 'descuento' => $d['descuento'] ?? 0,
+            'con_iva' => $request->boolean('con_iva'), 'iva_porcentaje' => (float) config('vandu.iva_porcentaje', 16), 'envio_costo' => 0]);
+        $v->setRelation('cliente', $cliente)->setRelation('razon', $razon)->setRelation('conceptos', $conceptos);
+        $doc = new Documento($v);
+        if (! $doc->fiscalesCompletos()) {
+            return back()->withInput()->with('error', 'A ' . ($cliente->empresa ?: $cliente->nombre) . ' le faltan datos fiscales (RFC, razón social, régimen o C.P.). Complétalos en su ficha o sube su constancia.');
+        }
+        try {
+            $pdf = Timbrado::vistaPrevia($doc, $d['forma_pago'] ?? '99', $d['metodo_pago'], $d['uso_cfdi'], isset($d['serie_id']) ? (int) $d['serie_id'] : null);
+        } catch (\App\Support\Facturas\TimbradoError $e) {
+            return back()->withInput()->with('error', 'No se pudo armar la vista previa: ' . $e->getMessage());
+        }
+        return $this->pdfPrevio($pdf, 'nueva');
+    }
+
+    private function pdfPrevio(string $pdf, string $nombre)
+    {
+        return response($pdf, 200, ['Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="Vista previa ' . str_replace(['"', '/', '\\'], '', $nombre) . '.pdf"', 'Cache-Control' => 'no-store']);
+    }
+
     public function timbrar(Request $request, string $tipo, int $id)
     {
         $doc = $this->doc($tipo, $id);
@@ -148,9 +199,10 @@ class FacturasController extends Controller
         ]);
     }
 
-    public function guardar(Request $request)
+    /** Reglas de la factura directa (timbrar y vista previa) */
+    private function reglasNueva(): array
     {
-        $d = $request->validate([
+        return [[
             'cliente_id' => 'required|integer|exists:clientes,id',
             'razon_id' => 'nullable|integer',
             'serie_id' => 'nullable|integer',
@@ -174,7 +226,12 @@ class FacturasController extends Controller
             'cliente_id.required' => 'Elige a quién le facturas.', 'conceptos.required' => 'Agrega al menos un concepto.',
             'conceptos.*.descripcion.required' => 'Escribe la descripción de cada concepto.', 'conceptos.*.clave_sat.regex' => 'La clave SAT tiene 8 números.',
             'conceptos.*.unidad_sat.regex' => 'La unidad SAT es una clave corta, por ejemplo H87 o E48.', 'forma_pago.required_if' => 'Elige cómo te pagó.',
-        ]);
+        ]];
+    }
+
+    public function guardar(Request $request)
+    {
+        $d = $request->validate(...$this->reglasNueva());
         if (! Timbrado::activo()) return back()->withInput()->with('error', 'Activa la facturación en Configuración › Facturación.');
         $cliente = \App\Models\Cliente::findOrFail($d['cliente_id']);
         $razon = ! empty($d['razon_id']) ? \App\Models\ClienteRazon::where('cliente_id', $cliente->id)->find($d['razon_id']) : null;

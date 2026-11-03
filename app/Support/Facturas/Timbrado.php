@@ -150,22 +150,34 @@ class Timbrado
         if ($falta) throw new TimbradoIncompleto("Se timbró ({$nombre}, folio fiscal " . ($e['json']['uuid'] ?? '—') . '), pero no se pudo descargar su ' . implode(' y ', $falta) . '. Descárgalo desde Facturapi.');
     }
 
+    /** Lo que se manda a Facturapi para la factura de ingreso de una cotización o venta (también para la vista previa) */
+    public static function payload(Documento $doc, string $formaSat, string $metodo, ?string $uso = null): array
+    {
+        if (! $doc->fiscalesCompletos()) throw new TimbradoError('Faltan datos fiscales del cliente (RFC, razón social, régimen y código postal).');
+        $f = $doc->fiscales();
+        return [
+            'customer' => self::cliente($f),
+            'items' => self::conceptos($doc, self::ajustes()),
+            'payment_form' => $metodo === 'PPD' ? '99' : $formaSat,
+            'payment_method' => $metodo,
+            'use' => $uso ?: $f['uso'] ?: 'G03',
+            'external_id' => $doc->clave(),
+        ];
+    }
+
+    /** PDF de cómo saldrá la factura, sin timbrarla (no gasta timbre ni avanza el folio) */
+    public static function vistaPrevia(Documento $doc, string $formaSat, string $metodo, ?string $uso = null, ?int $serieId = null): string
+    {
+        $s = Series::elegir('I', $serieId);
+        return Representacion::borrador(self::payload($doc, $formaSat, $metodo, $uso), $s->serie, (int) $s->siguiente);
+    }
+
     /** Factura de ingreso de una cotización o venta */
     public static function timbrar(Documento $doc, string $formaSat, string $metodo, ?string $uso = null, ?int $serieId = null): void
     {
         if ($doc->uuid()) throw new TimbradoError('Ya tiene factura.');
-        if (! $doc->fiscalesCompletos()) throw new TimbradoError('Faltan datos fiscales del cliente (RFC, razón social, régimen y código postal).');
-        $f = $doc->fiscales();
-        $aj = self::ajustes();
-        $uso = $uso ?: $f['uso'] ?: 'G03';
-        $payload = [
-            'customer' => self::cliente($f),
-            'items' => self::conceptos($doc, $aj),
-            'payment_form' => $metodo === 'PPD' ? '99' : $formaSat,
-            'payment_method' => $metodo,
-            'use' => $uso,
-            'external_id' => $doc->clave(),
-        ];
+        $payload = self::payload($doc, $formaSat, $metodo, $uso);
+        $uso = $payload['use'];
         $e = self::emitir($payload, 'I', $serieId, $doc->folio());
         if ($doc->m instanceof Venta) $doc->m->forceFill(['metodo_pago' => $metodo, 'uso_cfdi' => $uso])->save();
         self::guardarArchivos($doc, $e, 'Factura');

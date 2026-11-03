@@ -327,6 +327,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::get('facturas', [Admin\FacturasController::class, 'index'])->name('facturas');
     Route::get('facturas/nueva', [Admin\FacturasController::class, 'crear'])->name('facturas.crear');
     Route::get('sat/{tipo}', [Admin\SatController::class, 'buscar'])->whereIn('tipo', ['productos', 'unidades'])->middleware('throttle:120,1,sat')->name('sat.buscar');
+    Route::post('facturas/nueva/vista-previa', [Admin\FacturasController::class, 'previsualizarNueva'])->middleware('throttle:30,1,factura-previa')->name('facturas.previsualizar-nueva');
     Route::post('facturas/nueva', [Admin\FacturasController::class, 'guardar'])->middleware('throttle:20,1,factura-nueva')->name('facturas.guardar');
     Route::get('facturas/venta/{venta}', [Admin\FacturasController::class, 'venta'])->whereNumber('venta')->name('facturas.venta');
     Route::get('facturas/venta/{venta}/archivo/{factura}', [Admin\FacturasController::class, 'archivo'])->whereNumber(['venta', 'factura'])->name('facturas.venta.archivo');
@@ -348,6 +349,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.vandu')->group(functio
     Route::get('facturas/{tipo}/{id}/whatsapp', [Admin\FacturasController::class, 'whatsapp'])->whereIn('tipo', ['presupuesto', 'venta'])->whereNumber('id')->name('facturas.whatsapp');
     Route::post('facturas/{tipo}/{id}/cancelar', [Admin\FacturasController::class, 'cancelar'])->whereIn('tipo', ['presupuesto', 'venta'])->whereNumber('id')->name('facturas.cancelar');
     Route::post('facturas/{tipo}/{id}/revisar', [Admin\FacturasController::class, 'revisar'])->whereIn('tipo', ['presupuesto', 'venta'])->whereNumber('id')->name('facturas.revisar');
+    Route::post('facturas/{tipo}/{id}/vista-previa', [Admin\FacturasController::class, 'previsualizar'])->whereIn('tipo', ['presupuesto', 'venta'])->whereNumber('id')->middleware('throttle:30,1,factura-previa')->name('facturas.previsualizar');
     Route::post('facturas/{tipo}/{id}/timbrar', [Admin\FacturasController::class, 'timbrar'])->whereIn('tipo', ['presupuesto', 'venta'])->whereNumber('id')->name('facturas.timbrar');
     Route::get('pedidos/{venta}/facturas/{factura}', [Admin\PedidosController::class, 'verFactura'])->whereNumber('venta')->name('pedidos.factura.ver');
     Route::delete('pedidos/{venta}/facturas/{factura}', [Admin\PedidosController::class, 'borrarFactura'])->whereNumber('venta')->name('pedidos.factura.borrar');

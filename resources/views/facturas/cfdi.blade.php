@@ -15,7 +15,8 @@
     $cortar = fn (?string $s, int $n = 172) => $s ? implode('<br>', array_map('e', str_split($s, $n))) : '—';
     $folio = trim(($d['serie'] ?? '') . '-' . ($d['folio'] ?? ''), '-') ?: '—';
     $esPago = $d['tipo'] === 'P';
-    $qr = \App\Support\Facturas\Qr::png($d['qr_url'], 6, 2);
+    $borrador = ! empty($d['borrador']);
+    $qr = $borrador ? null : \App\Support\Facturas\Qr::png($d['qr_url'], 6, 2);
 @endphp
 <!DOCTYPE html>
 <html lang="es">
@@ -81,15 +82,18 @@
     .sellos .etq { margin: 4pt 0 1pt; }
     .sello { font-family: 'DejaVu Sans Mono', monospace; font-size: 4.9pt; color: #5E6472; line-height: 1.12; }
 
+    .marca-agua { position: fixed; top: 300pt; left: 0; right: 0; text-align: center; font-size: 58pt; font-weight: bold; color: rgba(180, 35, 24, .09); letter-spacing: 4pt; transform: rotate(-24deg); }
+    .aviso-previa { margin-top: 14pt; padding: 12pt 14pt; border: 1pt dashed #E5A39C; background: #FDF3F2; color: #8A2A20; line-height: 1.35; }
     .pie { position: fixed; left: 42pt; right: 42pt; bottom: 26pt; font-size: 6.8pt; color: #8A90A0; border-top: .6pt solid #E6E8EC; padding-top: 7pt; }
     .avoid { page-break-inside: avoid; }
 </style>
 </head>
 <body>
 <div class="franja"></div>
+@if($borrador)<div class="marca-agua">VISTA PREVIA</div>@endif
 <div class="pie">
     <table><tr>
-        <td>Este documento es una representación impresa de un CFDI {{ $d['version'] ?? '4.0' }}</td>
+        <td>{{ $borrador ? 'Vista previa · Este documento no tiene validez fiscal hasta que se timbre' : 'Este documento es una representación impresa de un CFDI ' . ($d['version'] ?? '4.0') }}</td>
         <td class="num">{{ collect([$marca['sitio'], $marca['email'], $marca['telefono']])->filter()->implode('  ·  ') }}</td>
     </tr></table>
 </div>
@@ -103,6 +107,7 @@
         <td style="width: 40%; text-align: right">
             <div class="titulo">{{ $d['titulo'] }}</div>
             <div class="folio">{{ $folio }}</div>
+            @if($borrador)<div class="fecha" style="color:#B42318">Folio provisional</div>@endif
             <div class="fecha">{{ $fecha($d['fecha']) }}</div>
         </td>
     </tr></table>
@@ -245,6 +250,11 @@
         </td>
     </tr></table>
 
+    @if($borrador)
+        <div class="aviso-previa avoid">
+            <b>Vista previa sin validez fiscal.</b> Al timbrarla, el SAT le asigna el folio fiscal (UUID), los sellos digitales, la cadena original y el código QR, que aparecerán en este espacio. El folio y la fecha pueden cambiar si se emite otra factura antes.
+        </div>
+    @else
     {{-- Timbre fiscal digital --}}
     <div class="timbre">
         <table class="avoid"><tr>
@@ -269,6 +279,7 @@
             <div class="sello">{!! $cortar($d['cadena']) !!}</div>
         </div>
     </div>
+    @endif
 </div>
 </body>
 </html>

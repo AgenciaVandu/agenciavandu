@@ -59,7 +59,7 @@
 @endif
 @if($errors->any())<div class="aviso aviso-error mb-3" role="alert"><i class="bi bi-exclamation-circle-fill"></i> {{ $errors->first() }}</div>@endif
 
-<form method="post" action="{{ route('admin.facturas.guardar') }}" class="nf" x-data="nuevaFactura({{ Js::from($ini) }})" @submit="enviando = true">
+<form method="post" action="{{ route('admin.facturas.guardar') }}" class="nf" x-data="nuevaFactura({{ Js::from($ini) }})" @submit="if (! $event.submitter || ! $event.submitter.hasAttribute('formtarget')) enviando = true">
     @csrf
     <div class="d-grid gap-4">
         <section class="panel panel-body d-grid gap-3">
@@ -185,6 +185,7 @@
         <label class="form-check small m-0"><input type="checkbox" name="enviar" value="1" class="form-check-input" checked> <span class="form-check-label">Enviársela por correo al timbrar</span></label>
         <button class="btn btn-primario btn-lg" :disabled="enviando || ! completo() || lineas.length === 0" @if(! $timbrar) disabled @endif>
             <i class="bi bi-receipt me-1"></i> <span x-text="enviando ? 'Timbrando…' : 'Timbrar factura'"></span></button>
+        <button type="submit" class="btn btn-borde" formaction="{{ route('admin.facturas.previsualizar-nueva') }}" formtarget="_blank" :disabled="! completo() || lineas.length === 0"><i class="bi bi-eye me-1"></i> Previsualizar factura</button>
         @if($timbres)<div class="small secundario text-center">Te quedan {{ number_format($timbres['disponibles']) }} timbres</div>@endif
     </aside>
 </form>
