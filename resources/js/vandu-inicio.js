@@ -45,8 +45,15 @@ const iniciar = () => {
     const escapar = (t) => t.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
     const encabezados = [...document.querySelectorAll('[data-lineas]')];
     encabezados.forEach((el) => {
-        const palabras = el.textContent.trim().split(/\s+/);
-        el.innerHTML = palabras.map((w, i) => `<span class="vx-linea"><span style="transition-delay:${Math.min(i, 14) * 0.035}s">${escapar(w)}</span></span>`).join(' ');
+        // Solo se parte el texto; lo que va dentro del título (como el video pequeño) se queda donde está
+        let i = 0;
+        [...el.childNodes].forEach((n) => {
+            if (n.nodeType !== 3) return;
+            const partes = n.textContent.split(/(\s+)/).filter((x) => x !== '');
+            const frag = document.createElement('span');
+            frag.innerHTML = partes.map((w) => /^\s+$/.test(w) ? ' ' : `<span class="vx-linea"><span style="transition-delay:${Math.min(i++, 14) * 0.035}s">${escapar(w)}</span></span>`).join('');
+            n.replaceWith(...frag.childNodes);
+        });
     });
 
     // ---------- Apariciones ----------
@@ -67,6 +74,20 @@ const iniciar = () => {
         observar.observe(el);
     });
     encabezados.forEach((h) => observar.observe(h));
+    // Tarjetas del título que se turnan
+    const cartas = [...document.querySelectorAll('[data-cartas] .vx-carta')];
+    if (cartas.length > 1 && !reducir) {
+        let actual = 0;
+        setInterval(() => {
+            if (document.hidden) return;
+            const antes = cartas[actual];
+            actual = (actual + 1) % cartas.length;
+            cartas.forEach((c) => c.classList.remove('vx-sale'));
+            antes.classList.remove('vx-actual');
+            antes.classList.add('vx-sale');
+            cartas[actual].classList.add('vx-actual');
+        }, 1800);
+    }
     if (titular) setTimeout(() => titular.classList.add('vx-dentro'), html.classList.contains('vx-telon-on') ? 700 : 80);
 
     // ---------- Contadores ----------

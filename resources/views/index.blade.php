@@ -90,11 +90,18 @@
     {{-- Portada --}}
     <section class="vx-oscuro vx-portada">
         <div class="vx-caja">
+            {{-- Dos columnas: la tarjeta queda en el hueco entre ellas, en los dos renglones --}}
             <h1 class="vx-titular" data-palabras>
-                <span class="vx-p"><i>Que a tu negocio</i></span>
-                <span class="vx-foto"><img src="{{ asset('img/hero/sesion-tokyo-tyger-mayo-1-6.webp') }}" alt=""></span>
-                <br class="vx-br">
-                <span class="vx-p">lo encuentren</span> <span class="vx-p">y lo elijan.</span>
+                <span class="vx-col vx-izq" aria-hidden="true"><span class="vx-p"><i>Que a tu negocio</i></span><span class="vx-p">encuentren</span></span>
+                <span class="vx-hueco" aria-hidden="true">
+                    <span class="vx-cartas" data-cartas>
+                        @foreach (['hero/sesion-tokyo-tyger-mayo-1-6.webp', 'inicio/web-maxispace.webp', 'hero/kuro-23.webp', 'inicio/web-stev.webp', 'hero/impresos-tarjetas.webp', 'inicio/redes-tokio07.webp'] as $k => $img)
+                            <span @class(['vx-carta', 'vx-actual' => $k === 0])><img src="{{ asset('img/' . $img) }}" alt="" @if ($k > 1) loading="lazy" @endif></span>
+                        @endforeach
+                    </span>
+                </span>
+                <span class="vx-col vx-der" aria-hidden="true"><span class="vx-p">lo</span><span class="vx-p">y lo elijan.</span></span>
+                <span class="vx-solo-lector">Que a tu negocio lo encuentren y lo elijan.</span>
             </h1>
             <p class="vx-entrada" data-aparece>Sitios web, sistemas que hablan WhatsApp, video con IA, fotografía y producción. Un solo equipo en Mérida para negocios de todo México.</p>
             <div class="vx-acciones" data-aparece>
@@ -119,7 +126,7 @@
         <div class="vx-caja vx-cabeza-lado">
             <div>
                 <p class="vx-etiqueta" data-aparece><span></span>Servicios</p>
-                <h2 data-lineas>Diseñamos, programamos y producimos. Todo en un solo lugar.</h2>
+                <h2 data-lineas>Diseñamos, <span class="vx-ranura" aria-hidden="true"><video muted loop playsinline preload="none" poster="{{ asset('img/inicio/video-reel.webp') }}" data-src="{{ asset('img/inicio/video-reel.mp4') }}"></video></span> programamos y producimos. Todo en un solo lugar.</h2>
             </div>
             <div data-aparece>
                 <p>Desde tu sitio y tus sistemas hasta tus fotos, videos y lonas. Un equipo que entiende tu negocio y se encarga de todo.</p>
