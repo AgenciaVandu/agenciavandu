@@ -15,6 +15,8 @@
     @vite(['resources/scss/barra.scss', 'resources/js/barra.js'])
 @endonce
 
+{{-- Solo uno por página aunque el componente esté en el layout y también en la vista --}}
+@once
 @if ($espacio)
     <div class="vx-cab-espacio" aria-hidden="true"></div>
 @endif
@@ -75,3 +77,4 @@
         <p class="vx-paleta-pie"><span><span class="vx-kbd">↑</span> <span class="vx-kbd">↓</span> moverte</span><span><span class="vx-kbd">Enter</span> abrir</span><span><span class="vx-kbd">Esc</span> cerrar</span></p>
     </div>
 </div>
+@endonce

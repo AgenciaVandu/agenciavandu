@@ -2,10 +2,9 @@
 // y se hace a un lado cuando se ve la sección #contacto. Los enlaces los atiende whatsapp.js (formulario).
 import { mouse, descifrar, olvidar, SIGNOS_MAY, iniciarRelojes, alCargar } from './inicio/util';
 
-alCargar(() => {
-    const wa = document.querySelector('[data-wa]');
-    if (!wa) return;
-    iniciarRelojes();
+const iniciar = (wa) => {
+    if (wa.dataset.vxListo) return;   // ya estaba conectado
+    wa.dataset.vxListo = '1';
     const btn = wa.querySelector('[data-wa-btn]');
     const texto = wa.querySelector('[data-wa-texto]');
     let contactoVisible = false;
@@ -53,4 +52,11 @@ alCargar(() => {
         contactoVisible = e.isIntersecting;
         if (!wa.classList.contains('vx-abierto')) wa.classList.toggle('vx-escondido', contactoVisible);
     }, { threshold: 0.3 }).observe(contacto);
+};
+
+alCargar(() => {
+    const botones = document.querySelectorAll('[data-wa]');
+    if (!botones.length) return;
+    iniciarRelojes();
+    botones.forEach(iniciar);
 });

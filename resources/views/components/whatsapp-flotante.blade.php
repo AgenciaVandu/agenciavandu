@@ -10,6 +10,8 @@
     @vite(['resources/scss/whatsapp-flotante.scss', 'resources/js/whatsapp-flotante.js'])
 @endonce
 
+{{-- Solo uno por página aunque el componente esté en el layout y también en la vista --}}
+@once
 <div class="vx-wa" data-wa>
     <div class="vx-wa-panel" id="vx-wa-panel" data-wa-panel>
         <div class="vx-wa-cab">
@@ -31,3 +33,4 @@
         <span class="vx-psst" aria-hidden="true">psst</span>
     </button>
 </div>
+@endonce
