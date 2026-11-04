@@ -1,0 +1,290 @@
+// Inicio de agenciavandu.com: oscuro, verde Vandu como acento y animaciones al hacer scroll.
+// Todo vive bajo body.vx (solo la página de inicio).
+@use 'colores';
+
+$oscuro: #111316;
+$negro: #050607;
+$verde: colores.$green;          // #00F385
+$verde-hover: #3BFFA4;
+$papel: #FFFFFF;
+$gris: #F5F6F7;
+$tinta: #0E1014;
+$texto-osc: #A7ACB6;
+$texto-cla: #5B606B;
+$linea-osc: rgba(255, 255, 255, .1);
+$linea-cla: #E7E9EC;
+$reg: 'Geist-regular', system-ui, sans-serif;
+$med: 'Geist-medium', system-ui, sans-serif;
+$semi: 'Geist-semibold', system-ui, sans-serif;
+$curva: cubic-bezier(.22, 1, .36, 1);
+
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+
+body.vx {
+    background: $oscuro;
+    color: #fff;
+    cursor: auto;
+    a { cursor: pointer; }
+    :where(p, li, span, small, a, button, summary, blockquote, figcaption, label, input, select, em) { font-family: $reg; }
+    :where(h1, h2, h3, h4, b, strong) { font-family: $semi; font-weight: 400; }
+    // Los pedazos que crea la animación heredan la letra de su título
+    .vx-linea, .vx-linea span, .vx-palabra, .vx-p, .vx-titular i { font-family: inherit; }
+
+    // Las secciones siempre visibles (la animación la pone vandu-inicio.js)
+    section { opacity: 1 !important; transform: none !important; transition: none; }
+
+    .flotante .mensaje, .flotante .notificacion { display: none; }
+
+    // Barra: píldora flotante
+    .navbar {
+        position: absolute; top: 0; left: 0; right: 0; z-index: 30;
+        .container {
+            position: static; transform: none; width: calc(100% - 32px); max-width: 1180px; margin: 18px auto 0;
+            background: rgba(17, 19, 22, .72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            border: 1px solid $linea-osc; border-radius: 999px; padding: 10px 12px 10px 24px;
+        }
+        .nav-link { color: rgba(255, 255, 255, .78); font-family: $med; font-size: 14.5px; padding: 6px 0;
+            &:hover, &:focus { color: #fff; } }
+        .navbar-nav { gap: 30px; }
+        @media (max-width: 991.98px) {
+            .container { border-radius: 22px; padding: 10px 16px; }
+            .navbar-collapse { padding: 10px 4px 6px; }
+            .navbar-nav { gap: 4px; }
+            .nav-link { font-size: 18px; padding: 8px 0; }
+        }
+    }
+}
+
+.vx {
+    .vx-caja { max-width: 1240px; margin: 0 auto; padding: 0 32px;
+        @media (max-width: 767.98px) { padding: 0 20px; } }
+    .vx-oscuro { background: $oscuro; color: #fff; }
+    .vx-negro { background: $negro; color: #fff; }
+    .vx-claro { background: $papel; color: $tinta; }
+    .vx-gris { background: $gris; color: $tinta; }
+    .vx-centro { text-align: center; }
+    .vx-centro-flex { display: flex; justify-content: center; }
+
+    h2 { font-family: $semi; font-size: clamp(34px, 4.6vw, 64px); line-height: 1.04; letter-spacing: -.035em; margin: 0; }
+    h3 { font-family: $semi; letter-spacing: -.015em; margin: 0; }
+    .vx-sub { font-size: 18px; line-height: 1.6; color: $texto-osc; max-width: 560px; margin: 18px auto 0; }
+    .vx-claro .vx-sub, .vx-gris .vx-sub { color: $texto-cla; }
+
+    .vx-etiqueta { display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px 8px 12px; border-radius: 999px;
+        background: rgba(255, 255, 255, .07); border: 1px solid $linea-osc; font-family: $med; font-size: 14px; color: #fff; margin: 0 0 22px;
+        span { width: 9px; height: 9px; border-radius: 50%; background: $verde; box-shadow: 0 0 0 4px rgba(0, 243, 133, .15); } }
+    .vx-etiqueta-clara { background: $gris; border-color: $linea-cla; color: $tinta; }
+    .vx-etiqueta-verde { text-align: center; font-family: $med; font-size: 13px; letter-spacing: .16em; text-transform: uppercase; color: $verde; margin: 0 0 34px; }
+
+    // Botones
+    .vx-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 16px 28px; border-radius: 999px;
+        font-family: $semi; font-size: 16px; text-decoration: none; transition: transform .3s $curva, background .2s, color .2s, border-color .2s;
+        &:hover { transform: translateY(-2px); } }
+    .vx-btn-verde { background: $verde; color: $tinta; &:hover { background: $verde-hover; color: $tinta; } }
+    .vx-btn-linea { border: 1px solid rgba(255, 255, 255, .28); color: #fff; &:hover { border-color: #fff; color: #fff; } }
+    .vx-btn-oscuro { background: $tinta; color: #fff; &:hover { background: #000; color: #fff; } }
+
+    // ---------- Telón de entrada ----------
+    .vx-telon { position: fixed; inset: 0; z-index: 200; background: $negro; display: grid; place-items: center; pointer-events: none;
+        transform: translateY(-110%); transition: transform .9s $curva;
+        img { width: 150px; opacity: 0; } }
+    @keyframes vx-logo { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+    // ---------- Cursor "Ver" ----------
+    .vx-cursor { position: fixed; left: 0; top: 0; z-index: 120; width: 110px; height: 110px; margin: -55px 0 0 -55px; border-radius: 50%;
+        background: $verde; color: $tinta; display: grid; place-items: center; pointer-events: none; transform: scale(0); transition: transform .35s $curva;
+        span { font-family: $semi; font-size: 15px; }
+        &.vx-visible { transform: scale(1); }
+        @media (hover: none) { display: none; } }
+
+    // ---------- Portada ----------
+    .vx-portada { padding: 190px 0 70px; text-align: center; position: relative; overflow: hidden;
+        &::before { content: ''; position: absolute; left: 50%; top: -280px; width: 900px; height: 600px; transform: translateX(-50%);
+            background: radial-gradient(closest-side, rgba(0, 243, 133, .14), transparent); pointer-events: none; }
+        @media (max-width: 767.98px) { padding: 140px 0 48px; } }
+    .vx-titular { font-family: $semi; font-size: clamp(44px, 7.4vw, 108px); line-height: 1.02; letter-spacing: -.045em; margin: 0 auto; max-width: 1150px; position: relative;
+        i { font-family: $semi; font-style: italic; }
+        .vx-p { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: .06em; }
+        .vx-p > * , .vx-p { }
+        .vx-palabra { display: inline-block; }
+        .vx-foto { display: inline-block; vertical-align: middle; width: 1.6em; height: .82em; margin: 0 .12em; border-radius: .2em; overflow: hidden;
+            transform: rotate(-4deg); box-shadow: 0 20px 40px rgba(0, 0, 0, .35);
+            img { width: 100%; height: 100%; object-fit: cover; display: block; } }
+        @media (max-width: 767.98px) { .vx-br { display: none; } }
+        @media (max-width: 575.98px) { .vx-foto { display: none; } } }
+    .vx-entrada { font-size: 19px; line-height: 1.6; color: $texto-osc; max-width: 640px; margin: 30px auto 0; }
+    .vx-acciones { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 36px; }
+
+    // ---------- Reel que crece ----------
+    .vx-reel-zona { height: 210vh; position: relative; }
+    .vx-reel-fijo { position: sticky; top: 0; height: 100vh; display: grid; place-items: center; overflow: hidden; }
+    .vx-reel { --p: 0; margin: 0; position: relative; overflow: hidden; background: #000;
+        width: calc(min(1176px, 100vw - 64px) + (100vw - min(1176px, 100vw - 64px)) * var(--p));
+        height: calc(min(620px, 62vh) + (100vh - min(620px, 62vh)) * var(--p));
+        border-radius: calc(28px * (1 - var(--p)));
+        video { width: 100%; height: 100%; object-fit: cover; display: block; }
+        figcaption { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; padding: 22px 28px;
+            font-family: $med; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: rgba(255, 255, 255, .9);
+            background: linear-gradient(transparent, rgba(0, 0, 0, .55)); span { font-family: $med; white-space: nowrap; }
+            @media (max-width: 575.98px) { font-size: 10.5px; padding: 14px 16px; gap: 10px; } } }
+
+    // ---------- Servicios ----------
+    .vx-servicios { padding: 120px 0 0; }
+    .vx-cabeza-lado { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 56px; align-items: end; margin-bottom: 64px;
+        p { font-size: 17.5px; line-height: 1.65; color: $texto-osc; margin: 0 0 26px; }
+        @media (max-width: 991.98px) { grid-template-columns: minmax(0, 1fr); gap: 24px; margin-bottom: 40px; } }
+    .vx-carril { position: relative; }
+    .vx-carril-fijo { position: sticky; top: 0; height: 100vh; display: flex; align-items: center; overflow: hidden; }
+    .vx-pista { display: flex; gap: 20px; padding: 0 max(32px, calc((100vw - 1176px) / 2)); will-change: transform; }
+    .vx-tarjeta { position: relative; flex: none; width: min(380px, 78vw); height: min(520px, 70vh); border-radius: 26px; overflow: hidden; color: #fff; text-decoration: none; background: #1B1E23;
+        img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .9s $curva; }
+        .vx-tarjeta-velo { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, .05) 30%, rgba(0, 0, 0, .78)); transition: background .4s; }
+        .vx-tarjeta-flecha { position: absolute; top: 18px; right: 18px; width: 46px; height: 46px; border-radius: 50%; background: $verde; color: $tinta;
+            display: grid; place-items: center; font-size: 20px; transform: scale(0) rotate(-45deg); transition: transform .45s $curva; }
+        .vx-tarjeta-texto { position: absolute; left: 0; right: 0; bottom: 0; padding: 26px; }
+        .vx-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; opacity: 0; transform: translateY(10px); transition: .45s $curva;
+            em { font-style: normal; font-family: $med; font-size: 12px; padding: 5px 10px; border-radius: 999px; background: rgba(255, 255, 255, .16); backdrop-filter: blur(6px); } }
+        b { display: block; font-family: $semi; font-size: 27px; line-height: 1.1; letter-spacing: -.02em; }
+        small { display: block; font-size: 15px; line-height: 1.5; color: rgba(255, 255, 255, .78); max-height: 0; overflow: hidden; opacity: 0; transition: .5s $curva; }
+        &:hover, &:focus-visible {
+            color: #fff; img { transform: scale(1.06); } .vx-tarjeta-velo { background: linear-gradient(180deg, rgba(0, 0, 0, .2), rgba(0, 0, 0, .86)); }
+            .vx-tarjeta-flecha { transform: scale(1) rotate(0); } .vx-chips { opacity: 1; transform: none; }
+            small { max-height: 120px; opacity: 1; margin-top: 10px; } } }
+    // Sin animación horizontal (celular o movimiento reducido): carrusel deslizable
+    .vx-sin-carril { .vx-carril-fijo { position: static; height: auto; padding-bottom: 20px; } .vx-carril { height: auto !important; }
+        .vx-pista { overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; transform: none !important; scrollbar-width: none;
+            &::-webkit-scrollbar { display: none; } }
+        .vx-tarjeta { scroll-snap-align: start; } }
+
+    // ---------- Marcas ----------
+    .vx-marcas { padding: 110px 0 120px; overflow: hidden; }
+    .vx-marquesina { overflow: hidden; padding: 16px 0; mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
+    .vx-cinta { display: flex; align-items: center; gap: 72px; width: max-content; animation: vx-desliza 42s linear infinite;
+        img { height: 40px; width: auto; filter: grayscale(1); opacity: .8; transition: .3s; &.vx-cuadrado { height: 54px; } &:hover { filter: none; opacity: 1; } } }
+    .vx-reversa .vx-cinta { animation-direction: reverse; animation-duration: 50s; }
+    @keyframes vx-desliza { to { transform: translateX(-50%); } }
+
+    // ---------- Trabajo ----------
+    .vx-trabajo { padding: 140px 0; border-radius: 40px 40px 0 0; position: relative; z-index: 2;
+        @media (max-width: 767.98px) { padding: 90px 0; border-radius: 28px 28px 0 0; } }
+    .vx-proyectos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin-top: 60px;
+        @media (max-width: 767.98px) { grid-template-columns: minmax(0, 1fr); } }
+    .vx-proyecto { border-radius: 28px; overflow: hidden; background: #0E1014; color: #fff; cursor: none;
+        &.vx-grande { grid-column: 1 / -1; .vx-proyecto-media { aspect-ratio: 16 / 7.5; } }
+        .vx-proyecto-media { aspect-ratio: 16 / 10; overflow: hidden;
+            video { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; transition: transform 1s $curva; } }
+        &:hover video { transform: scale(1.03); }
+        .vx-proyecto-pie { padding: 22px 26px 26px; }
+        h3 { font-size: 24px; margin: 12px 0 6px; }
+        p { margin: 0; color: $texto-osc; font-size: 15.5px; line-height: 1.55; }
+        @media (hover: none) { cursor: auto; } }
+    .vx-chip-claro { display: inline-block; font-family: $med; font-size: 12.5px; padding: 6px 12px; border-radius: 999px; background: rgba(0, 243, 133, .14); color: $verde; }
+    .vx-galeria { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 22px 0 56px;
+        @media (max-width: 991.98px) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .vx-foto-pieza { position: relative; aspect-ratio: 3 / 4; border-radius: 22px; overflow: hidden; display: block; color: #fff; text-decoration: none; cursor: none;
+        img, video { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 1s $curva; }
+        &:hover img, &:hover video { transform: scale(1.05); }
+        span { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 16px 14px; font-size: 13px; color: rgba(255, 255, 255, .85); background: linear-gradient(transparent, rgba(0, 0, 0, .6));
+            b { display: block; font-family: $semi; font-size: 16px; color: #fff; } }
+        @media (hover: none) { cursor: auto; } }
+
+    // ---------- Números ----------
+    .vx-numeros { padding: 140px 0 60px; }
+    .vx-numeros h2 { max-width: 880px; margin: 0 auto; }
+    .vx-cifras { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 64px;
+        @media (max-width: 767.98px) { grid-template-columns: minmax(0, 1fr); } }
+    .vx-cifra { border-radius: 24px; padding: 34px; background: #0E1014; border: 1px solid $linea-osc;
+        strong { display: block; font-family: $semi; font-size: clamp(54px, 6vw, 84px); letter-spacing: -.04em; line-height: 1; color: #fff;
+            span { font-family: $semi; } }
+        p { margin: 14px 0 0; color: $texto-osc; font-size: 16px; } }
+
+    // ---------- Proceso que se apila ----------
+    .vx-proceso { padding: 100px 0 140px; }
+    .vx-proceso-grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 64px; align-items: start;
+        @media (max-width: 991.98px) { grid-template-columns: minmax(0, 1fr); gap: 40px; } }
+    .vx-proceso-fijo { position: sticky; top: 120px;
+        .vx-sub { margin: 18px 0 30px; }
+        @media (max-width: 991.98px) { position: static; } }
+    .vx-pasos { list-style: none; margin: 0; padding: 0; }
+    .vx-paso { position: sticky; top: calc(110px + var(--i) * 22px); display: grid; grid-template-columns: minmax(0, 1fr) 180px; gap: 24px; align-items: center;
+        background: #14171B; border: 1px solid $linea-osc; border-radius: 26px; padding: 30px; margin-bottom: 26px; min-height: 260px;
+        box-shadow: 0 -20px 40px rgba(0, 0, 0, .45);
+        .vx-paso-num { font-family: $med; font-size: 14px; color: $verde; letter-spacing: .1em; }
+        h3 { font-size: 28px; margin: 18px 0 10px; }
+        p { margin: 0; color: $texto-osc; font-size: 16px; line-height: 1.6; }
+        img { width: 180px; height: 180px; object-fit: cover; border-radius: 18px; }
+        @media (max-width: 575.98px) { grid-template-columns: minmax(0, 1fr); img { width: 100%; height: 160px; } } }
+
+    // ---------- Testimonio ----------
+    .vx-testimonio { padding: 130px 0; text-align: center;
+        figure { margin: 0 auto; max-width: 980px; }
+        svg { color: $verde; margin-bottom: 26px; filter: drop-shadow(0 0 0 #000); }
+        blockquote { font-family: $semi; font-size: clamp(28px, 3.4vw, 46px); line-height: 1.2; letter-spacing: -.025em; margin: 0 0 30px; color: $tinta; }
+        figcaption { font-size: 16px; color: $texto-cla; b { display: block; font-family: $semi; color: $tinta; font-size: 18px; margin-bottom: 2px; } } }
+
+    // ---------- Preguntas ----------
+    .vx-preguntas { padding: 140px 0; }
+    .vx-preguntas-grid { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 64px; align-items: start;
+        @media (max-width: 991.98px) { grid-template-columns: minmax(0, 1fr); gap: 36px; } }
+    .vx-preguntas-fijo { position: sticky; top: 120px; h2 { margin-bottom: 30px; } @media (max-width: 991.98px) { position: static; } }
+    .vx-acordeon { display: grid; gap: 12px;
+        details { border: 1px solid $linea-cla; border-radius: 20px; background: $gris; transition: background .3s;
+            &[open] { background: #fff; box-shadow: 0 14px 40px rgba(14, 16, 20, .07); } }
+        summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; gap: 20px; padding: 22px 24px; font-family: $semi; font-size: 18.5px; color: $tinta;
+            &::-webkit-details-marker { display: none; }
+            span { flex: 0 0 30px; height: 30px; border-radius: 50%; background: $tinta; position: relative;
+                &::before, &::after { content: ''; position: absolute; left: 9px; right: 9px; top: 14px; height: 2px; background: #fff; transition: transform .3s $curva; }
+                &::after { transform: rotate(90deg); } } }
+        details[open] summary span { background: $verde; &::before, &::after { background: $tinta; } &::after { transform: rotate(0); } }
+        p { margin: 0; padding: 0 64px 24px 24px; color: $texto-cla; font-size: 16.5px; line-height: 1.65; } }
+
+    // ---------- Contacto ----------
+    .vx-contacto { padding: 120px 0 140px; }
+    .vx-contacto-tarjeta { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); background: #fff; color: $tinta; border-radius: 32px; overflow: hidden;
+        @media (max-width: 991.98px) { grid-template-columns: minmax(0, 1fr); } }
+    .vx-contacto-lado { padding: 52px; background: $gris;
+        .vx-etiqueta { background: #fff; border-color: $linea-cla; color: $tinta; }
+        h2 { font-size: clamp(34px, 3.8vw, 52px); margin-bottom: 18px; }
+        > p { color: $texto-cla; font-size: 17px; line-height: 1.6; margin: 0 0 30px; }
+        @media (max-width: 575.98px) { padding: 32px 22px; } }
+    .vx-correo { display: flex; align-items: center; gap: 8px; margin-top: 26px; color: $texto-cla; font-size: 15px; flex-wrap: wrap;
+        input { background: none; border: 0; border-bottom: 1px solid $linea-cla; color: $tinta; font-size: 15px; padding: 2px 0; width: 230px; outline: 0; }
+        button { background: none; border: 0; padding: 4px; cursor: pointer; }
+        #message { color: #0B8A4F; } }
+    .vx-formulario { padding: 52px;
+        > p { color: $texto-cla; margin-bottom: 18px; }
+        label { color: $texto-cla; font-size: 13px; font-family: $med; }
+        .form-control { border: 1px solid $linea-cla; border-radius: 12px; padding: 12px 14px; background: $gris; color: $tinta; box-shadow: none;
+            &:focus { border-color: $verde; background: #fff; } }
+        .form-group { margin-bottom: 14px; }
+        .btn-primary { width: 100%; margin-top: 18px; padding: 16px; border-radius: 999px !important; font-family: $semi !important; }
+        @media (max-width: 575.98px) { padding: 32px 22px; } }
+
+    // Pie
+    .footer { border-top: 1px solid $linea-osc; background: $negro; }
+}
+
+// Telón visible desde el primer instante de la visita; al quitar la clase sube
+html.vx-telon-on .vx .vx-telon { transform: none; img { animation: vx-logo .8s $curva forwards; } }
+
+// ---------- Apariciones al hacer scroll (solo si el JS cargó) ----------
+html.vx-js body.vx {
+    [data-aparece] { opacity: 0; transform: translateY(34px); transition: opacity .9s $curva, transform .9s $curva; }
+    [data-aparece].vx-dentro { opacity: 1; transform: none; }
+    .vx-linea { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .1em; margin-bottom: -.1em; }
+    .vx-linea > span { display: inline-block; transform: translateY(105%); transition: transform 1s $curva; }
+    .vx-dentro .vx-linea > span, .vx-linea.vx-dentro > span { transform: none; }
+    .vx-titular .vx-palabra { transform: translateY(110%); transition: transform 1s $curva; }
+    .vx-titular .vx-foto { transform: scale(0) rotate(-12deg); transition: transform 1s $curva .45s; }
+    .vx-titular.vx-dentro .vx-palabra { transform: none; }
+    .vx-titular.vx-dentro .vx-foto { transform: rotate(-4deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.vx-js body.vx [data-aparece], html.vx-js body.vx .vx-linea > span, html.vx-js body.vx .vx-titular .vx-palabra { opacity: 1 !important; transform: none !important; transition: none !important; }
+    .vx .vx-cinta { animation: none; }
+    .vx .vx-reel-zona { height: auto; padding: 40px 0; }
+    .vx .vx-reel-fijo { position: static; height: auto; }
+    .vx .vx-reel { width: min(1176px, calc(100vw - 40px)); height: auto; aspect-ratio: 16 / 9; border-radius: 28px; }
+}

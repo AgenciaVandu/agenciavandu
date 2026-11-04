@@ -121,7 +121,7 @@
     @stack('estilos')
 </head>
 
-<body class="body{{ ($tema ?? null) === 'editorial' ? ' ed' : '' }}">
+<body class="body{{ ($tema ?? null) ? ' ' . $tema : '' }}">
 
     <div class="flotante">
         <div class="mensaje">Cotizar por whatsapp 👉🏻</div>
