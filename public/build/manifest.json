@@ -1,4 +1,8 @@
 {
+  "_util-_yM3xtuT.js": {
+    "file": "assets/util-_yM3xtuT.js",
+    "name": "util"
+  },
   "public/img/carrusel/cabecera.jpg": {
     "file": "assets/cabecera-KY2yB8a_.jpg",
     "src": "public/img/carrusel/cabecera.jpg"
@@ -56,6 +60,15 @@
       "assets/app-DO7xzeOB.css"
     ]
   },
+  "resources/js/barra.js": {
+    "file": "assets/barra-Q55xTewn.js",
+    "name": "barra",
+    "src": "resources/js/barra.js",
+    "isEntry": true,
+    "imports": [
+      "_util-_yM3xtuT.js"
+    ]
+  },
   "resources/js/bg.js": {
     "file": "assets/bg-CttoCaNT.js",
     "name": "bg",
@@ -93,14 +106,31 @@
     "isEntry": true
   },
   "resources/js/vandu-inicio.js": {
-    "file": "assets/vandu-inicio-CpudSW-_.js",
+    "file": "assets/vandu-inicio-DF_OsrhP.js",
     "name": "vandu-inicio",
     "src": "resources/js/vandu-inicio.js",
-    "isEntry": true
+    "isEntry": true,
+    "imports": [
+      "_util-_yM3xtuT.js"
+    ]
+  },
+  "resources/js/whatsapp-flotante.js": {
+    "file": "assets/whatsapp-flotante-DJVfpHv_.js",
+    "name": "whatsapp-flotante",
+    "src": "resources/js/whatsapp-flotante.js",
+    "isEntry": true,
+    "imports": [
+      "_util-_yM3xtuT.js"
+    ]
   },
   "resources/scss/app.scss": {
     "file": "assets/app-DO7xzeOB.css",
     "src": "resources/scss/app.scss",
+    "isEntry": true
+  },
+  "resources/scss/barra.scss": {
+    "file": "assets/barra-CGOaRmTZ.css",
+    "src": "resources/scss/barra.scss",
     "isEntry": true
   },
   "resources/scss/branding.scss": {
@@ -154,8 +184,13 @@
     "isEntry": true
   },
   "resources/scss/vandu-inicio.scss": {
-    "file": "assets/vandu-inicio-DgkUSdog.css",
+    "file": "assets/vandu-inicio-CDa_IxhB.css",
     "src": "resources/scss/vandu-inicio.scss",
+    "isEntry": true
+  },
+  "resources/scss/whatsapp-flotante.scss": {
+    "file": "assets/whatsapp-flotante-C_aUBN1t.css",
+    "src": "resources/scss/whatsapp-flotante.scss",
     "isEntry": true
   }
 }
