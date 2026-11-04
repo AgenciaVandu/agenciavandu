@@ -1,148 +1,155 @@
 {
   "public/img/carrusel/cabecera.jpg": {
-    "file": "assets/cabecera-CmNsgfGv.jpg",
+    "file": "assets/cabecera-KY2yB8a_.jpg",
     "src": "public/img/carrusel/cabecera.jpg"
   },
   "public/img/check.svg": {
-    "file": "assets/check-xLwO_54V.svg",
+    "file": "assets/check-DEvA7_nh.svg",
     "src": "public/img/check.svg"
   },
   "public/img/cursor1.svg": {
-    "file": "assets/cursor1-D3wmGA9z.svg",
+    "file": "assets/cursor1-PfCYYD3O.svg",
     "src": "public/img/cursor1.svg"
   },
   "public/img/cursor2.svg": {
-    "file": "assets/cursor2-g0emxe3G.svg",
+    "file": "assets/cursor2-CDR6bF7c.svg",
     "src": "public/img/cursor2.svg"
   },
   "public/img/webp/cosas.gif": {
-    "file": "assets/cosas-XjpMckvD.gif",
+    "file": "assets/cosas-BeOkxyS8.gif",
     "src": "public/img/webp/cosas.gif"
   },
   "public/img/webp/d-digital.jpg": {
-    "file": "assets/d-digital-OndMtKUe.jpg",
+    "file": "assets/d-digital-6d0y0pR7.jpg",
     "src": "public/img/webp/d-digital.jpg"
   },
   "public/img/webp/dweb.webp": {
-    "file": "assets/dweb-A8Wql8Nr.webp",
+    "file": "assets/dweb-DxaqXw2t.webp",
     "src": "public/img/webp/dweb.webp"
   },
   "public/img/webp/tarjetas.jpg": {
-    "file": "assets/tarjetas-rcHrt4Ga.jpg",
+    "file": "assets/tarjetas-Ctweu3gZ.jpg",
     "src": "public/img/webp/tarjetas.jpg"
   },
   "resources/fonts/Geist-Medium.woff2": {
-    "file": "assets/Geist-Medium-aEd7IB2p.woff2",
+    "file": "assets/Geist-Medium-BoR3sgHa.woff2",
     "src": "resources/fonts/Geist-Medium.woff2"
   },
   "resources/fonts/Geist-Regular.woff2": {
-    "file": "assets/Geist-Regular-h-7oo1rs.woff2",
+    "file": "assets/Geist-Regular-CH7uijWu.woff2",
     "src": "resources/fonts/Geist-Regular.woff2"
   },
   "resources/fonts/Geist-SemiBold.woff2": {
-    "file": "assets/Geist-SemiBold-xXnXUu5O.woff2",
+    "file": "assets/Geist-SemiBold-DFeddS7k.woff2",
     "src": "resources/fonts/Geist-SemiBold.woff2"
   },
   "resources/fonts/Geist-UltraBlack.woff2": {
-    "file": "assets/Geist-UltraBlack-aNElH5NN.woff2",
+    "file": "assets/Geist-UltraBlack-Bo0SUfk0.woff2",
     "src": "resources/fonts/Geist-UltraBlack.woff2"
   },
   "resources/js/app.js": {
-    "css": [
-      "assets/app-bzk8lnhv.css"
-    ],
-    "file": "assets/app-SMMii5My.js",
+    "file": "assets/app-SJTwxT0M.js",
+    "name": "app",
+    "src": "resources/js/app.js",
     "isEntry": true,
-    "src": "resources/js/app.js"
+    "css": [
+      "assets/app-DO7xzeOB.css"
+    ]
   },
   "resources/js/bg.js": {
-    "file": "assets/bg-Pm6JWc7a.js",
-    "isEntry": true,
-    "src": "resources/js/bg.js"
+    "file": "assets/bg-CttoCaNT.js",
+    "name": "bg",
+    "src": "resources/js/bg.js",
+    "isEntry": true
   },
   "resources/js/bguno.js": {
-    "file": "assets/bguno-48DGzy_s.js",
-    "isEntry": true,
-    "src": "resources/js/bguno.js"
+    "file": "assets/bguno-DXrBSlVf.js",
+    "name": "bguno",
+    "src": "resources/js/bguno.js",
+    "isEntry": true
   },
   "resources/js/diseno.js": {
-    "file": "assets/diseno-w40geAFS.js",
-    "isEntry": true,
-    "src": "resources/js/diseno.js"
+    "file": "assets/diseno-l0sNRNKZ.js",
+    "name": "diseno",
+    "src": "resources/js/diseno.js",
+    "isEntry": true
   },
   "resources/js/hero.js": {
-    "file": "assets/hero-2WJhMixS.js",
-    "isEntry": true,
-    "src": "resources/js/hero.js"
+    "file": "assets/hero-qhBin3cl.js",
+    "name": "hero",
+    "src": "resources/js/hero.js",
+    "isEntry": true
   },
   "resources/js/observer.js": {
-    "file": "assets/observer-clOf5W-A.js",
-    "isEntry": true,
-    "src": "resources/js/observer.js"
+    "file": "assets/observer-Cx59Bq6k.js",
+    "name": "observer",
+    "src": "resources/js/observer.js",
+    "isEntry": true
   },
   "resources/js/portafolio.js": {
-    "file": "assets/portafolio-w40geAFS.js",
-    "isEntry": true,
-    "src": "resources/js/portafolio.js"
+    "file": "assets/portafolio-l0sNRNKZ.js",
+    "name": "portafolio",
+    "src": "resources/js/portafolio.js",
+    "isEntry": true
   },
   "resources/scss/app.scss": {
-    "file": "assets/app-bzk8lnhv.css",
-    "isEntry": true,
-    "src": "resources/scss/app.scss"
+    "file": "assets/app-DO7xzeOB.css",
+    "src": "resources/scss/app.scss",
+    "isEntry": true
   },
   "resources/scss/branding.scss": {
-    "file": "assets/branding-TD_ND6-8.css",
-    "isEntry": true,
-    "src": "resources/scss/branding.scss"
+    "file": "assets/branding-kvLtxFiv.css",
+    "src": "resources/scss/branding.scss",
+    "isEntry": true
   },
   "resources/scss/construccion.scss": {
-    "file": "assets/construccion-2UyD-ZXE.css",
-    "isEntry": true,
-    "src": "resources/scss/construccion.scss"
+    "file": "assets/construccion-C6WNY_Tu.css",
+    "src": "resources/scss/construccion.scss",
+    "isEntry": true
   },
   "resources/scss/contacto.scss": {
-    "file": "assets/contacto-OZ2PzocB.css",
-    "isEntry": true,
-    "src": "resources/scss/contacto.scss"
+    "file": "assets/contacto-QxoGU-oT.css",
+    "src": "resources/scss/contacto.scss",
+    "isEntry": true
   },
   "resources/scss/editorial.scss": {
-    "file": "assets/editorial-_xkIl0IL.css",
-    "isEntry": true,
-    "src": "resources/scss/editorial.scss"
+    "file": "assets/editorial-BXL7vaBr.css",
+    "src": "resources/scss/editorial.scss",
+    "isEntry": true
   },
   "resources/scss/global.scss": {
-    "file": "assets/global-_hLIbvsu.css",
-    "isEntry": true,
-    "src": "resources/scss/global.scss"
+    "file": "assets/global-Dzd4_aeH.css",
+    "src": "resources/scss/global.scss",
+    "isEntry": true
   },
   "resources/scss/hero.scss": {
-    "file": "assets/hero-Y2vId3UH.css",
-    "isEntry": true,
-    "src": "resources/scss/hero.scss"
+    "file": "assets/hero-BMq9Dq0j.css",
+    "src": "resources/scss/hero.scss",
+    "isEntry": true
   },
   "resources/scss/index.scss": {
-    "file": "assets/index-A1kBSVEG.css",
-    "isEntry": true,
-    "src": "resources/scss/index.scss"
+    "file": "assets/index-BkFmxsg1.css",
+    "src": "resources/scss/index.scss",
+    "isEntry": true
   },
   "resources/scss/inicio.scss": {
-    "file": "assets/inicio-mIph0vxR.css",
-    "isEntry": true,
-    "src": "resources/scss/inicio.scss"
+    "file": "assets/inicio-jYrgsIhT.css",
+    "src": "resources/scss/inicio.scss",
+    "isEntry": true
   },
   "resources/scss/multimedia.scss": {
-    "file": "assets/multimedia-Wjjscwu0.css",
-    "isEntry": true,
-    "src": "resources/scss/multimedia.scss"
+    "file": "assets/multimedia-DgQs7ftJ.css",
+    "src": "resources/scss/multimedia.scss",
+    "isEntry": true
   },
   "resources/scss/privacidad.scss": {
-    "file": "assets/privacidad-saG9enPw.css",
-    "isEntry": true,
-    "src": "resources/scss/privacidad.scss"
+    "file": "assets/privacidad-B5g0VqcQ.css",
+    "src": "resources/scss/privacidad.scss",
+    "isEntry": true
   },
   "resources/scss/servicios.scss": {
-    "file": "assets/servicios-BZ6icqHd.css",
-    "isEntry": true,
-    "src": "resources/scss/servicios.scss"
+    "file": "assets/servicios-DeVxBtL2.css",
+    "src": "resources/scss/servicios.scss",
+    "isEntry": true
   }
 }
