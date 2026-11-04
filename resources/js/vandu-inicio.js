@@ -123,6 +123,39 @@ const iniciar = () => {
         caja.addEventListener('mouseleave', () => v.pause());
     });
 
+    // ---------- La pantalla pasa los sitios uno tras otro ----------
+    document.querySelectorAll('video[data-lista]').forEach((v) => {
+        let lista = [];
+        try { lista = JSON.parse(v.dataset.lista); } catch (e) {}
+        if (lista.length < 2) { v.loop = true; return; }
+        const url = v.closest('figure')?.querySelector('[data-url]');
+        const contador = v.closest('figure')?.querySelector('[data-contador]');
+        const total = String(lista.length).padStart(2, '0');
+        let i = 0;
+        v.addEventListener('ended', () => {
+            i = (i + 1) % lista.length;
+            v.style.opacity = '0';
+            setTimeout(() => {
+                v.poster = lista[i].poster;
+                v.src = lista[i].src;
+                v.play().catch(() => {});
+                if (url) url.textContent = lista[i].url;
+                if (contador) contador.textContent = String(i + 1).padStart(2, '0') + ' / ' + total;
+                v.style.opacity = '1';
+            }, 300);
+        });
+    });
+
+    // ---------- Brillo verde que sigue al cursor en la portada ----------
+    const portada = document.querySelector('[data-brillo]');
+    if (portada && !tactil && !reducir) {
+        portada.addEventListener('mousemove', (e) => {
+            const r = portada.getBoundingClientRect();
+            portada.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+            portada.style.setProperty('--my', (e.clientY - r.top) + 'px');
+        });
+    }
+
     // ---------- Cursor "Ver" ----------
     const cursor = document.querySelector('.vx-cursor');
     if (cursor && !tactil) {
@@ -160,8 +193,8 @@ const iniciar = () => {
     const alMover = () => {
         if (reel && zonaReel && !reducir) {
             const r = zonaReel.getBoundingClientRect();
-            const p = limitar(-r.top / (window.innerHeight * 0.85));
-            reel.style.setProperty('--p', p.toFixed(4));
+            const p = limitar(-r.top / (window.innerHeight * 0.6));
+            zonaReel.style.setProperty('--p', p.toFixed(4));
         }
         if (recorrido > 0) {
             const r = carril.getBoundingClientRect();

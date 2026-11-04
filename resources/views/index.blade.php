@@ -7,6 +7,9 @@
             setTimeout(function () { if (!window.vxListo) d.classList.remove('vx-js', 'vx-telon-on'); }, 3000);
         })(document.documentElement);
     </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap">
     @vite(['resources/scss/app.scss', 'resources/scss/global.scss', 'resources/scss/vandu-inicio.scss', 'resources/js/app.js', 'resources/js/vandu-inicio.js'])
 @endpush
 @php
@@ -88,14 +91,17 @@
     <div class="vx-cursor" aria-hidden="true"><span>Ver</span></div>
 
     {{-- Portada --}}
-    <section class="vx-oscuro vx-portada">
+    <section class="vx-oscuro vx-portada" data-brillo>
+        <div class="vx-rejilla" aria-hidden="true"></div>
+        <div class="vx-brillo" aria-hidden="true"></div>
         <div class="vx-caja">
+            <p class="vx-estado" data-aparece><span></span>Agencia digital · Mérida, México</p>
             {{-- Dos columnas: la tarjeta queda en el hueco entre ellas, en los dos renglones --}}
             <h1 class="vx-titular" data-palabras>
                 <span class="vx-col vx-izq" aria-hidden="true"><span class="vx-p"><i>Que a tu negocio</i></span><span class="vx-p">encuentren</span></span>
                 <span class="vx-hueco" aria-hidden="true">
                     <span class="vx-cartas" data-cartas>
-                        @foreach (['hero/sesion-tokyo-tyger-mayo-1-6.webp', 'inicio/web-maxispace.webp', 'hero/kuro-23.webp', 'inicio/web-stev.webp', 'hero/impresos-tarjetas.webp', 'inicio/redes-tokio07.webp'] as $k => $img)
+                        @foreach (['inicio/panel-movil.webp', 'inicio/web-maxispace.webp', 'inicio/panel-sistema.webp', 'inicio/web-stev.webp', 'inicio/web-nicxa1.webp', 'inicio/web-rewear.webp'] as $k => $img)
                             <span @class(['vx-carta', 'vx-actual' => $k === 0])><img src="{{ asset('img/' . $img) }}" alt="" @if ($k > 1) loading="lazy" @endif></span>
                         @endforeach
                     </span>
@@ -111,12 +117,28 @@
         </div>
     </section>
 
-    {{-- El reel crece con el scroll --}}
-    <section class="vx-oscuro vx-reel-zona" aria-label="Demo reel">
+    {{-- La pantalla: crece con el scroll y pasa los sitios que hemos hecho --}}
+    @php
+        $clips = collect(['web-stev' => 'Stev Seguridad Privada', 'web-maxispace' => 'Maxispace', 'web-nicxa1' => 'Grupo Nicxa', 'web-osorio' => 'Grupo Osorio', 'web-rewear' => 'Rewear'])
+            ->filter(fn ($u, $c) => file_exists(public_path("img/inicio/$c.mp4")));
+        $listaClips = $clips->map(fn ($u, $c) => ['src' => asset("img/inicio/$c.mp4"), 'poster' => asset("img/inicio/$c.webp"), 'url' => $u])->values()->all();
+    @endphp
+    <section class="vx-oscuro vx-reel-zona" aria-label="Sitios que hemos hecho" data-zona-reel>
         <div class="vx-reel-fijo">
-            <figure class="vx-reel" data-reel>
-                <video muted loop playsinline preload="none" poster="{{ asset('img/inicio/video-reel.webp') }}" data-src="{{ asset('img/inicio/video-reel.mp4') }}"></video>
-                <figcaption><span>Demo reel</span><span>Video corporativo y dron</span></figcaption>
+            <div class="vx-rejilla" aria-hidden="true"></div>
+            <ul class="vx-flotantes" aria-hidden="true">
+                <li style="--x: -1; --y: -1"><span class="vx-punto"></span>En línea</li>
+                <li style="--x: 1; --y: -.8"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>SEO + GEO</li>
+                <li style="--x: -1.1; --y: .55"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>Código a la medida</li>
+                <li style="--x: 1.05; --y: .7"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 01-12.6 7.4L3 21l1.6-5.2A8.5 8.5 0 1121 12z"/></svg>WhatsApp conectado</li>
+                <li style="--x: 0; --y: 1.15"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 9h18M8 21h8"/></svg>Panel en tiempo real</li>
+            </ul>
+            <figure class="vx-reel vx-pantalla" data-reel>
+                <div class="vx-barra" aria-hidden="true"><i></i><i></i><i></i><span class="vx-url" data-url>{{ $clips->first() }}</span></div>
+                <video muted playsinline preload="none" poster="{{ asset('img/inicio/' . $clips->keys()->first() . '.webp') }}"
+                    data-src="{{ asset('img/inicio/' . $clips->keys()->first() . '.mp4') }}"
+                    data-lista="{{ json_encode($listaClips, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}"></video>
+                <figcaption><span>Sitios que hemos hecho</span><span data-contador>01 / {{ str_pad($clips->count(), 2, '0', STR_PAD_LEFT) }}</span></figcaption>
             </figure>
         </div>
     </section>
@@ -126,7 +148,7 @@
         <div class="vx-caja vx-cabeza-lado">
             <div>
                 <p class="vx-etiqueta" data-aparece><span></span>Servicios</p>
-                <h2 data-lineas>Diseñamos, <span class="vx-ranura" aria-hidden="true"><video muted loop playsinline preload="none" poster="{{ asset('img/inicio/video-reel.webp') }}" data-src="{{ asset('img/inicio/video-reel.mp4') }}"></video></span> programamos y producimos. Todo en un solo lugar.</h2>
+                <h2 data-lineas>Diseñamos, <span class="vx-ranura" aria-hidden="true"><video muted loop playsinline preload="none" poster="{{ asset('img/inicio/web-maxispace.webp') }}" data-src="{{ asset('img/inicio/web-maxispace.mp4') }}"></video></span> programamos y producimos. Todo en un solo lugar.</h2>
             </div>
             <div data-aparece>
                 <p>Desde tu sitio y tus sistemas hasta tus fotos, videos y lonas. Un equipo que entiende tu negocio y se encarga de todo.</p>
