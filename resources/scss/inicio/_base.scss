@@ -1,0 +1,29 @@
+// Colores, letras y curvas compartidos por el inicio, la barra y el botón de WhatsApp.
+@use '../colores';
+
+
+$fondo: #0B0C0E;
+$panel: #111316;
+$panel-2: #0E1013;
+$linea: #22252A;
+$linea-2: #2A2E34;
+$linea-3: #33373D;
+$claro: #F5F6F7;
+$claro-2: #ECEEF0;
+$texto: #A9AFB8;
+$texto-2: #C3C8CF;
+$gris: #8A9099;
+$gris-2: #5A6068;
+$gris-cla: #4A5059;
+$verde: colores.$green;          // #00F385
+$verde-osc: #00A35A;
+$morado: #6450FF;
+$morado-fondo: #120D29;
+$morado-linea: #2A2350;
+$morado-texto: #A9A2D6;
+$reg: 'Geist-regular', system-ui, sans-serif;
+$med: 'Geist-medium', system-ui, sans-serif;
+$semi: 'Geist-semibold', system-ui, sans-serif;
+$black: 'Geist-bold', system-ui, sans-serif;   // Geist Black
+$curva: cubic-bezier(.22, 1, .36, 1);
+$curva-2: cubic-bezier(.3, .7, .1, 1);

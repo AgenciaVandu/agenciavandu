@@ -1,0 +1,61 @@
+// Nerby: pestañas y demo de lectura de tickets.
+@use 'base' as *;
+
+.vx {
+    // ---------- Nerby ----------
+    .vx-nerby { background: $morado-fondo; border-top: 1px solid $morado-linea; padding: 112px 0 120px;
+        .vx-intro { color: #CFC9F2; max-width: 420px; } }
+    .vx-nerby-sello { display: flex; align-items: center; gap: 18px; margin-bottom: 40px; font-size: 13px; color: $morado-texto; flex-wrap: wrap;
+        img { width: auto; display: block; }
+        img:first-child { height: 22px; }
+        img:nth-child(3) { height: 26px; }
+        .vx-por { font-size: 18px; color: $morado; } }
+    .vx-nerby-aliados { margin-left: 8px; padding-left: 18px; border-left: 1px solid $morado-linea; }
+    .vx-nerby-grid { display: grid; grid-template-columns: 400px 1fr; gap: 32px; align-items: start;
+        @media (max-width: 991.98px) { grid-template-columns: 1fr; } }
+    .vx-nerby-tabs { display: grid; gap: 6px; }
+    .vx-ntab { all: unset; box-sizing: border-box; cursor: pointer; display: grid; grid-template-columns: 44px 1fr; gap: 4px 16px; padding: 22px 20px; border-radius: 10px; border: 1px solid transparent; transition: background-color .3s, border-color .3s;
+        &:hover { background: rgba(255, 255, 255, .03); }
+        &:focus-visible { outline: 2px solid $morado; outline-offset: 2px; }
+        &.vx-on { background: rgba(100, 80, 255, .12); border-color: rgba(100, 80, 255, .45); } }
+    .vx-ntab-n { font-size: 13px; color: $morado-texto; padding-top: 3px; }
+    .vx-ntab-t { font-family: $semi; font-size: 20px; letter-spacing: -.02em; color: $claro; }
+    .vx-ntab-d { font-size: 15px; line-height: 1.5; color: $morado-texto; }
+    .vx-ia { font-family: $semi; font-size: 11px; padding: 3px 7px; border-radius: 4px; background: $morado; color: #fff; vertical-align: 3px; margin-left: 6px; }
+    .vx-nbtn { all: unset; cursor: pointer; box-sizing: border-box; display: inline-flex; align-items: center; gap: 10px; font-family: $semi; font-size: 15px; padding: 13px 18px; border-radius: 8px; background: $morado; color: #fff !important; text-decoration: none; transition: background-color .25s;
+        &:hover { background: #7A69FF; }
+        &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+        &[disabled] { opacity: .6; cursor: default; } }
+    .vx-nbtn-linea { background: transparent; border: 1px solid #3A3170; &:hover { background: rgba(255, 255, 255, .05); } }
+    .vx-nerby-cta { display: flex; gap: 10px; margin-top: 28px; align-items: center;
+        img { height: 64px; width: auto; margin-left: auto; } }
+    .vx-nerby-ventana { margin: 0; border: 1px solid $morado-linea; border-radius: 12px; overflow: hidden; background: #17113A; min-height: 560px;
+        @media (max-width: 767.98px) { min-height: 0; } }
+    .vx-nerby-barra { height: 44px; border-bottom: 1px solid $morado-linea; display: flex; align-items: center; gap: 12px; padding: 0 16px; font-size: 13px; color: $morado-texto;
+        img { height: 16px; width: auto; } }
+    .vx-nerby-ej { margin-left: auto; }
+    .vx-npanel { animation: vx-aparece .35s ease both;
+        > img { display: block; width: 100%; height: auto; } }
+    .vx-npanel-movil { display: flex; justify-content: center; padding: 40px 32px 0;
+        img { width: 250px; height: auto; border-radius: 24px 24px 0 0; display: block; border: 1px solid $morado-linea; border-bottom: 0; } }
+    .vx-npanel[hidden] { display: none; }
+    .vx-ticket-grid { display: grid; grid-template-columns: 260px 1fr; gap: 32px; padding: 32px;
+        @media (max-width: 767.98px) { grid-template-columns: 1fr; padding: 20px; } }
+    .vx-ticket { position: relative; background: #F7F5EF; color: #2B2B2B; border-radius: 4px; padding: 22px 20px; font-size: 13px; line-height: 1.6; align-self: start; overflow: hidden;
+        p { margin: 0; display: flex; justify-content: space-between; gap: 10px; color: #2B2B2B; span, b { color: inherit; } }
+        b { font-family: $semi; }
+        .vx-ticket-c { justify-content: center; text-align: center; b { font-size: 15px; } }
+        .vx-ticket-gris { color: #6A6A6A; margin-bottom: 12px; }
+        .vx-ticket-sep { margin-top: 10px; border-top: 1px dashed #BDBDBD; padding-top: 10px; }
+        .vx-ticket-borroso { margin-top: 10px; color: #B5B0A6; filter: blur(1.2px); } }
+    .vx-escaneo { position: absolute; left: 0; right: 0; top: 0; height: 2px; background: $morado; box-shadow: 0 0 0 1px rgba(100, 80, 255, .25); opacity: 0; }
+    .vx-leyendo .vx-escaneo { opacity: 1; animation: vx-escanea 2.6s linear forwards; }
+    .vx-nerby-gris { margin: 0 0 6px; font-size: 13px; color: $morado-texto; }
+    .vx-campo { display: grid; grid-template-columns: 130px 1fr; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid $morado-linea; font-size: 15px;
+        > span:first-child { color: $morado-texto; } }
+    .vx-campo-val { height: 34px; border-radius: 6px; background: #1E1842; display: flex; align-items: center; padding: 0 12px; color: $claro; transition: background-color .4s, box-shadow .4s;
+        &.vx-lleno { background: #251E52; box-shadow: inset 0 0 0 1px rgba(100, 80, 255, .6); }
+        &.vx-duda { background: #2A2112; box-shadow: inset 0 0 0 1px #E8A33D; } }
+    .vx-aviso { margin: 14px 0 0; font-size: 13px; color: #E8A33D; min-height: 20px; }
+    .vx-ticket-botones { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+}

@@ -1,0 +1,13 @@
+// Cinta de marcas.
+@use 'base' as *;
+
+.vx {
+    // ---------- Marcas ----------
+    .vx-marcas { display: flex; align-items: center; height: 120px; border-top: 1px solid $linea; border-bottom: 1px solid $linea; overflow: hidden; }
+    .vx-marcas-titulo { flex: 0 0 auto; margin: 0; padding: 0 40px; height: 100%; display: flex; align-items: center; font-size: 13px; color: $gris; white-space: nowrap; border-right: 1px solid $linea; background: $fondo; position: relative; z-index: 1;
+        @media (max-width: 575.98px) { display: none; } }
+    .vx-marcas-pista { overflow: hidden; flex: 1; }
+    .vx-cinta { display: flex; gap: 72px; align-items: center; width: max-content; padding-left: 72px; animation: vx-cinta 38s linear infinite;
+        img { width: auto; opacity: .5; filter: grayscale(1); transition: opacity .3s; &:hover { opacity: 1; } } }
+    .vx-marcas:hover .vx-cinta { animation-play-state: paused; }
+}

@@ -1,0 +1,28 @@
+// Animaciones y apariciones al hacer scroll (solo si el JS del inicio cargó).
+@use 'base' as *;
+
+// ---------- Animaciones ----------
+@keyframes vx-celda { 0%, 100% { opacity: 0; } 12%, 30% { opacity: 1; } 45% { opacity: 0; } }
+@keyframes vx-cinta { to { transform: translateX(-50%); } }
+@keyframes vx-aparece { from { opacity: 0; } }
+@keyframes vx-escanea { from { top: 0; } to { top: calc(100% - 2px); } }
+
+// Apariciones al hacer scroll (solo si el JS cargó)
+html.vx-js body.vx {
+    [data-aparece] { opacity: 0; transform: translateY(28px); transition: opacity .9s $curva, transform .9s $curva; }
+    [data-aparece].vx-dentro { opacity: 1; transform: none; }
+    .vx-raya[data-aparece] { opacity: 1; transform: scaleX(0); transition: transform 1.2s $curva; }
+    .vx-raya[data-aparece].vx-dentro { transform: none; }
+    .vx-ventana[data-aparece], .vx-galeria figure[data-aparece], .vx-nerby-ventana[data-aparece] { opacity: 1; transform: none; clip-path: inset(0 0 97% 0); transition: clip-path 1.1s $curva; }
+    .vx-ventana[data-aparece].vx-dentro, .vx-galeria figure[data-aparece].vx-dentro, .vx-nerby-ventana[data-aparece].vx-dentro { clip-path: inset(0 0 0 0); }
+    // Los titulares esperan a verse para descifrarse
+    [data-descifra]:not(.vx-listo) { visibility: hidden; }
+    .vx-entra { animation: vx-aparece .9s ease both .9s; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.vx-js body.vx [data-aparece], html.vx-js body.vx [data-aparece].vx-dentro { opacity: 1 !important; transform: none !important; clip-path: none !important; transition: none !important; }
+    html.vx-js body.vx [data-descifra] { visibility: visible !important; }
+    .vx .vx-cinta, .vx .vx-celdas span, .vx .vx-entra { animation: none !important; }
+    .vx .vx-plano *, .vx .vx-fila, .vx .vx-fila * { transition: none !important; }
+}

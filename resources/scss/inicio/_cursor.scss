@@ -1,0 +1,16 @@
+// Cursor propio, solo con mouse.
+@use 'base' as *;
+
+// Cursor propio solo con mouse
+@media (hover: hover) and (pointer: fine) {
+    html.vx-mira-on body.vx, html.vx-mira-on body.vx :is(a, button, summary, label, [data-cur]) { cursor: none; }
+    html.vx-mira-on body.vx :is(input[type="text"], input[type="email"], input[type="tel"], textarea, select) { cursor: text; }
+    html.vx-mira-on .vx .vx-mira { display: block; position: fixed; left: 0; top: 0; z-index: 100; pointer-events: none; width: 0; height: 0; opacity: 0; transition: opacity .2s;
+        &.vx-visible { opacity: 1; } }
+    .vx .vx-mira-anillo { position: absolute; left: -14px; top: -14px; width: 28px; height: 28px; border: 1px solid rgba(245, 246, 247, .7); border-radius: 50%; box-sizing: border-box; transition: transform .25s $curva-2, border-color .2s, background-color .2s; }
+    .vx .vx-mira-punto { position: absolute; left: -2px; top: -2px; width: 4px; height: 4px; background: $verde; border-radius: 50%; }
+    .vx .vx-mira.vx-grande .vx-mira-anillo { transform: scale(1.6); border-color: $verde; }
+    .vx .vx-mira-etq { position: absolute; left: 20px; top: 14px; padding: 5px 9px; border-radius: 5px; background: $claro; color: $fondo; font-family: $semi; font-size: 12px; white-space: nowrap; opacity: 0; transform: translateY(4px); transition: opacity .2s, transform .2s; }
+    .vx .vx-mira.vx-con-etq { .vx-mira-etq { opacity: 1; transform: none; } .vx-mira-anillo { transform: scale(.5); background: $verde; border-color: $verde; } }
+    .vx .vx-mira.vx-en-claro .vx-mira-anillo { border-color: rgba(11, 12, 14, .6); }
+}

@@ -1,0 +1,16 @@
+// Foto y video.
+@use 'base' as *;
+
+.vx {
+    // ---------- Foto y video ----------
+    .vx-foto { padding: 120px 0; border-top: 1px solid $linea; }
+    .vx-galeria { display: grid; grid-template-columns: 1.5fr 1fr 1fr; grid-template-rows: 280px 280px; gap: 12px;
+        figure { margin: 0; position: relative; border-radius: 8px; overflow: hidden; background: $panel;
+            a { display: block; height: 100%; }
+            img, video { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 1.2s $curva-2; }
+            &:hover img, &:hover video { transform: scale(1.04); }
+            figcaption { position: absolute; left: 12px; bottom: 10px; font-size: 13px; color: #fff; text-shadow: 0 1px 8px rgba(0, 0, 0, .5); }
+            .vx-oscuro-txt { color: $fondo; text-shadow: none; } }
+        .vx-g-grande { grid-row: span 2; }
+        @media (max-width: 767.98px) { grid-template-columns: 1fr 1fr; grid-template-rows: 300px repeat(2, 200px); .vx-g-grande { grid-row: auto; grid-column: span 2; } } }
+}

@@ -1,0 +1,31 @@
+// Base de la página de inicio (body.vx). Va primero para que cada sección pueda ajustar sus títulos.
+@use 'base' as *;
+
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+
+body.vx {
+    background: $fondo;
+    color: $claro;
+    font-variant-numeric: tabular-nums;
+    overflow-x: clip;
+    a { cursor: pointer; color: inherit; }
+    :where(p, li, span, small, a, button, summary, blockquote, figcaption, label, input, select, dt, dd, time) { font-family: $reg; }
+    :where(h1, h2, h3, h4, h5, h6, b, strong) { font-family: $semi; font-weight: 400; }
+    ::selection { background: $verde; color: $fondo; }
+    // Las secciones siempre visibles (la animación la pone vandu-inicio.js)
+    section { opacity: 1 !important; transform: none !important; transition: none; }
+    main { position: relative; }
+    // Pie del sitio con el mismo aire y la misma letra que el inicio
+    .footer { border-top: 1px solid $linea; background: $fondo; padding: 72px 0 32px;
+        .container { max-width: none; width: 100%; padding: 0 80px;
+            @media (max-width: 1199.98px) { padding: 0 40px; }
+            @media (max-width: 767.98px) { padding: 0 20px; } }
+        h6 { font-family: $reg; font-size: 18px; line-height: 1.5; color: $texto; margin: 0 0 32px; span { font-family: $reg; color: $verde; } }
+        h5 { font-family: $med; font-size: 13px; color: $gris; letter-spacing: 0; margin: 0 0 12px; padding: 0 !important; }
+        li { list-style: none; font-size: 16px; a { color: $claro; text-decoration: none; &:hover { color: $verde; } } }
+        .redes { display: flex; gap: 14px; padding: 0; li a img { opacity: .8; transition: opacity .2s; } li a:hover img { opacity: 1; } }
+        .copy { display: flex; align-items: center; justify-content: flex-start; gap: 10px; margin-top: 40px; padding-top: 24px; border-top: 1px solid $linea; font-size: 13px; color: $gris; text-align: left;
+            img { height: 16px; width: auto; } }
+        .copy.legales { margin-top: 0; padding-top: 12px; border-top: 0; a, button { font-size: 13px; color: $gris; &:hover { color: $claro; } } } }
+}

@@ -1,0 +1,87 @@
+// Barra flotante del sitio y buscador (tecla /). No depende del inicio: se usa con <x-barra /> en cualquier página.
+@use 'inicio/base' as *;
+
+.vx-cab-espacio { height: 92px; }
+.vx-cab, .vx-paleta {
+    font-family: $reg;
+    color: $claro;
+    a { color: inherit; }
+    small, span, time, b, i, p, input { font-family: inherit; }
+    b { font-family: $semi; font-weight: 400; }
+    .vx-kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 5px; border: 1px solid $linea-3; border-radius: 4px; font-size: 12px; color: $gris; box-sizing: border-box; }
+    .vx-cuadro { width: 6px; height: 6px; background: $verde; display: inline-block; flex: 0 0 auto; }
+}
+.vx-cab { position: fixed; left: 0; right: 0; top: 16px; z-index: 50; padding: 0 24px; pointer-events: none;
+    @media (max-width: 575.98px) { top: 10px; padding: 0 12px; } }
+.vx-capsula { pointer-events: auto; position: relative; max-width: 1040px; margin: 0 auto; height: 60px; display: flex; align-items: center; gap: 16px; padding: 0 8px 0 20px; box-sizing: border-box;
+    background: rgba(17, 19, 22, .74); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid $linea-2; border-radius: 14px;
+    &::before, &::after { content: ""; position: absolute; width: 7px; height: 7px; border-color: $verde; border-style: solid; }
+    &::before { left: -4px; top: -4px; border-width: 1px 0 0 1px; }
+    &::after { right: -4px; bottom: -4px; border-width: 0 1px 1px 0; } }
+.vx-cab-logo { flex: 0 0 auto; display: flex; img { height: 24px; width: auto; display: block; } }
+.vx-menu { position: relative; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); height: 44px; flex: 1 1 480px; max-width: 480px; min-width: 0; margin: 0 auto;
+    a { position: relative; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; font-family: $med; font-size: 15px; color: $texto; white-space: pre; transition: color .2s;
+        span { font-family: $med; }
+        small { font-size: 11px; color: $gris-2; transition: color .2s; }
+        &:hover, &:focus-visible { color: $claro; small { color: $verde; } } } }
+.vx-menu-luz { position: absolute; top: 0; left: 0; width: 25%; height: 44px; border-radius: 9px; background: #1F2227; opacity: 0; transform: translateX(var(--luz, 0%)); transition: transform .35s $curva-2, opacity .25s; }
+.vx-menu.vx-con-luz .vx-menu-luz { opacity: 1; }
+.vx-buscar { all: unset; box-sizing: border-box; cursor: pointer; flex: 0 0 auto; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 10px; border-radius: 9px; color: $texto; transition: background-color .2s, color .2s;
+    &:hover, &:focus-visible { background: #1F2227; color: $claro; } }
+.vx-reloj { flex: 0 0 auto; font-size: 13px; color: $gris; display: flex; align-items: center; gap: 8px; white-space: nowrap; time { font-family: $reg; } }
+.vx-cotizar { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 12px; height: 44px; padding: 0 6px 0 16px; border-radius: 9px; background: $claro; color: $fondo !important; font-family: $semi; font-size: 15px; text-decoration: none; white-space: nowrap; transition: background-color .25s;
+    &:hover { background: $verde; } }
+.vx-cotizar-caja { width: 32px; height: 32px; border-radius: 6px; background: $fondo; color: $verde; display: flex; align-items: center; justify-content: center; transition: transform .3s $curva; }
+.vx-cotizar:hover .vx-cotizar-caja { transform: translateX(2px); }
+.vx-hamburguesa { all: unset; cursor: pointer; display: none; flex-direction: column; justify-content: center; gap: 6px; width: 44px; height: 44px; align-items: center;
+    span { display: block; width: 20px; height: 1.5px; background: $claro; transition: transform .3s $curva; }
+    &[aria-expanded="true"] span:first-child { transform: translateY(3.75px) rotate(45deg); }
+    &[aria-expanded="true"] span:last-child { transform: translateY(-3.75px) rotate(-45deg); } }
+.vx-avance-pag { position: absolute; left: 14px; right: 14px; bottom: -1px; height: 1px; background: $verde; transform-origin: left; transform: scaleX(var(--avance, 0)); }
+
+.vx-mega { pointer-events: none; position: absolute; left: 24px; right: 24px; top: 68px; max-width: 1040px; margin: 0 auto; box-sizing: border-box;
+    background: rgba(17, 19, 22, .94); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid $linea-2; border-radius: 14px;
+    display: grid; grid-template-columns: 1fr 1fr 300px; overflow: hidden; clip-path: inset(0 0 100% 0 round 14px); opacity: 0; transition: clip-path .45s $curva-2, opacity .2s;
+    &.vx-abierto { pointer-events: auto; clip-path: inset(0 0 0 0 round 14px); opacity: 1; }
+    a { display: grid; grid-template-columns: 32px 1fr 16px; gap: 4px 10px; padding: 16px 20px; text-decoration: none; border-bottom: 1px solid #1A1D22; transition: background-color .2s;
+        &:hover, &:focus-visible { background: #1A1D22; small, i { color: $verde; } i { transform: translate(2px, -2px); } }
+        small { font-size: 12px; color: $gris-2; padding-top: 3px; transition: color .2s; }
+        b { font-size: 15px; }
+        i { font-style: normal; color: $gris-2; transition: transform .25s, color .25s; }
+        span { grid-column: 2; font-size: 13px; color: $gris; } } }
+.vx-mega-col { border-right: 1px solid #1A1D22; a:last-child { border-bottom: 0; } }
+.vx-mega-gris { color: $gris; }
+.vx-mega-cta { padding: 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 16px; background: $panel-2;
+    p { margin: 0; font-size: 13px; }
+    .vx-mega-frase { font-family: $semi; font-size: 20px; letter-spacing: -.02em; line-height: 1.25; color: $claro; }
+    a { display: inline; padding: 0; border: 0; color: $verde; font-family: $semi; font-size: 15px; &:hover { background: none; } } }
+.vx-movil { display: none; }
+
+@media (max-width: 1180px) { .vx-reloj { display: none; } }
+@media (max-width: 899.98px) {
+    .vx-menu, .vx-mega, .vx-buscar { display: none; }
+    .vx-capsula { justify-content: space-between; }
+    .vx-cab-logo { margin-right: auto; }
+    .vx-hamburguesa { display: flex; }
+    .vx-movil { pointer-events: auto; display: grid; margin: 8px auto 0; max-width: 1040px; background: rgba(17, 19, 22, .96); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid $linea-2; border-radius: 14px; overflow: hidden;
+        clip-path: inset(0 0 100% 0 round 14px); visibility: hidden; transition: clip-path .45s $curva-2, visibility 0s .45s;
+        &.vx-abierto { clip-path: inset(0 0 0 0 round 14px); visibility: visible; transition: clip-path .45s $curva-2; }
+        a { display: flex; gap: 14px; align-items: baseline; padding: 16px 20px; border-bottom: 1px solid #1A1D22; font-family: $semi; font-size: 20px; text-decoration: none; color: $claro;
+            small { font-size: 12px; color: $gris-2; }
+            &:last-child { border-bottom: 0; } } }
+}
+@media (max-width: 420px) { .vx-cotizar { padding-left: 12px; gap: 8px; } }
+
+.vx-paleta { position: fixed; inset: 0; z-index: 90; display: flex; align-items: flex-start; justify-content: center; padding-top: 14vh; background: rgba(5, 6, 7, .6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    &[hidden] { display: none; } }
+.vx-paleta-caja { width: min(620px, calc(100% - 32px)); background: $panel; border: 1px solid $linea-2; border-radius: 14px; overflow: hidden; animation: vx-aparece-barra .2s ease both;
+    input { all: unset; box-sizing: border-box; width: 100%; padding: 20px 22px; font-family: $reg; font-size: 18px; color: $claro; caret-color: $verde; border-bottom: 1px solid $linea; &::placeholder { color: $gris-2; } } }
+.vx-paleta-res { max-height: 360px; overflow: auto; padding: 8px;
+    a { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 8px; text-decoration: none; font-size: 15px; color: $texto-2;
+        small { font-size: 12px; color: $gris-2; }
+        &:hover, &.vx-on { background: #1F2227; color: $claro; small { color: $verde; } }
+        &[hidden] { display: none; } } }
+.vx-paleta-nada { margin: 0; padding: 14px; font-size: 15px; color: $gris; }
+.vx-paleta-pie { margin: 0; padding: 10px 16px; border-top: 1px solid $linea; font-size: 12px; color: $gris-2; display: flex; gap: 16px; flex-wrap: wrap; }
+
+@keyframes vx-aparece-barra { from { opacity: 0; } }

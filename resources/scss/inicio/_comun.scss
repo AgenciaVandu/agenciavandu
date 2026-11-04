@@ -1,0 +1,31 @@
+// Piezas comunes del inicio: caja con márgenes, etiquetas numeradas, títulos y botones.
+@use 'base' as *;
+
+.vx {
+    // Al llegar a una sección desde un enlace, la barra no la tapa
+    section[id], [id="trabajo"] { scroll-margin-top: 90px; }
+    .vx-caja { max-width: none; margin: 0 auto; padding: 0 80px; box-sizing: border-box; position: relative;
+        @media (max-width: 1199.98px) { padding: 0 40px; }
+        @media (max-width: 767.98px) { padding: 0 20px; } }
+    .vx-verde { color: $verde; }
+    .vx-morado { color: $morado; }
+    .vx-gris { color: $gris; }
+    .vx-cuadro { width: 6px; height: 6px; background: $verde; display: inline-block; flex: 0 0 auto; }
+    .vx-kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 5px; border: 1px solid $linea-3; border-radius: 4px; font-size: 12px; color: $gris; box-sizing: border-box; }
+    .vx-fl { display: inline-block; transition: transform .3s $curva; }
+    a:hover .vx-fl { transform: translateX(5px); }
+    .vx-etiqueta { display: flex; gap: 14px; justify-content: space-between; flex-wrap: wrap; font-family: $med; font-size: 13px; color: $gris; margin: 0 0 40px; }
+    .vx-num { display: flex; gap: 14px; align-items: baseline; font-family: $med; font-size: 13px; color: $gris; margin: 0 0 28px;
+        b { font-family: $med; color: $claro; } }
+    h2 { font-family: $black; font-size: clamp(38px, 4.6vw, 64px); line-height: .98; letter-spacing: -.045em; margin: 0; }
+    .vx-intro { font-size: 18px; line-height: 1.55; color: $texto; margin: 0; max-width: 400px; }
+    .vx-encabezado { display: flex; flex-wrap: wrap; gap: 32px 40px; justify-content: space-between; align-items: flex-end; margin-bottom: 56px;
+        h2 { max-width: 780px; } }
+
+    // ---------- Botones ----------
+    .vx-btn { display: inline-flex; align-items: center; gap: 10px; font-family: $semi; font-size: 16px; padding: 16px 22px; border-radius: 6px; text-decoration: none; transition: background-color .25s, color .25s, border-color .25s; }
+    .vx-btn-verde { background: $verde; color: $fondo; &:hover { background: $claro; color: $fondo; } }
+    .vx-btn-linea { border: 1px solid $linea-3; color: $claro; &:hover { border-color: $claro; color: $claro; } }
+    .vx-botones { display: flex; gap: 12px; flex-wrap: wrap; }
+    .vx-enlace { font-family: $semi; font-size: 16px; text-decoration: none; border-bottom: 1px solid $verde; padding-bottom: 4px; color: $claro; &:hover { color: $verde; } }
+}

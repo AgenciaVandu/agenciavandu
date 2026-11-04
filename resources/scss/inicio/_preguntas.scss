@@ -1,0 +1,19 @@
+// Preguntas frecuentes.
+@use 'base' as *;
+
+.vx {
+    // ---------- Preguntas ----------
+    .vx-preguntas { padding: 24px 0 120px; }
+    .vx-preguntas-grid { display: grid; grid-template-columns: 1fr 1.6fr; gap: 64px;
+        h2 { font-size: 48px; }
+        @media (max-width: 991.98px) { grid-template-columns: 1fr; gap: 32px; } }
+    .vx-faq { border-top: 1px solid $linea;
+        details { border-bottom: 1px solid $linea; padding: 24px 0; }
+        summary { list-style: none; display: flex; justify-content: space-between; gap: 20px; font-family: $semi; font-size: 20px; cursor: pointer;
+            &::-webkit-details-marker { display: none; }
+            span { flex: 0 0 auto; width: 14px; height: 14px; position: relative; margin-top: 6px;
+                &::before, &::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: $gris; transition: transform .3s $curva; }
+                &::after { transform: rotate(90deg); } } }
+        details[open] summary span::after { transform: rotate(0); }
+        p { margin: 14px 0 0; font-size: 16px; line-height: 1.55; color: $texto; } }
+}

@@ -1,0 +1,20 @@
+// Cómo trabajamos.
+@use 'base' as *;
+
+.vx {
+    // ---------- Proceso ----------
+    .vx-proceso { padding: 120px 0;
+        .vx-num { color: #6B717A; b { color: $fondo; } }
+        h2 { max-width: 760px; margin-bottom: 64px; } }
+    .vx-proceso-linea { height: 1px; background: #D5D8DC; span { display: block; height: 1px; background: $fondo; transform-origin: left; transform: scaleX(var(--p, 0)); } }
+    .vx-pasos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+        li { padding: 28px 28px 0; border-left: 1px solid #D5D8DC;
+            &:first-child { padding-left: 0; border-left: 0; }
+            &:last-child { padding-right: 0; .vx-paso-n { color: $verde-osc; } } }
+        h3 { font-family: $semi; font-size: 22px; margin: 0 0 10px; color: $fondo; }
+        p { font-size: 16px; line-height: 1.55; color: $gris-cla; margin: 0; }
+        @media (max-width: 991.98px) { grid-template-columns: 1fr 1fr; gap: 0 0;
+            li { padding: 28px 20px 28px 0; border-left: 0; border-bottom: 1px solid #D5D8DC; } } }
+    .vx-paso-n { display: block; margin: 0 0 48px; font-family: $black; font-size: 56px; letter-spacing: -.05em; line-height: 1; color: $fondo;
+        @media (max-width: 991.98px) { margin-bottom: 24px; font-size: 44px; } }
+}

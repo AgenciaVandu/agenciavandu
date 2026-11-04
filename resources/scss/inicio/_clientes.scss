@@ -1,0 +1,17 @@
+// Testimonio y datos.
+@use 'base' as *;
+
+.vx {
+    // ---------- Testimonio y datos ----------
+    .vx-clientes { padding: 120px 0 96px;
+        blockquote { margin: 0; max-width: 1080px;
+            p { margin: 0; font-family: $semi; font-size: clamp(28px, 3.4vw, 46px); line-height: 1.15; letter-spacing: -.03em; color: $claro; }
+            footer { margin-top: 32px; display: flex; gap: 16px; align-items: center; font-size: 15px; color: $texto; b { color: $claro; } } } }
+    .vx-guion { width: 28px; height: 1px; background: $claro; display: block; }
+    .vx-raya-clara { background: $claro; margin-top: 88px; }
+    .vx-datos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid $linea; margin: 0;
+        div { padding: 28px; border-left: 1px solid $linea; &:first-child { padding-left: 0; border-left: 0; } }
+        dt { margin: 0 0 6px; font-size: 13px; color: $gris; font-weight: 400; }
+        dd { margin: 0; font-family: $semi; font-size: 24px; }
+        @media (max-width: 767.98px) { grid-template-columns: 1fr; div { padding: 20px 0; border-left: 0; border-bottom: 1px solid $linea; } } }
+}

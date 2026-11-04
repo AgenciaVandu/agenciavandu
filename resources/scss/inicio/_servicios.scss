@@ -1,0 +1,26 @@
+// Servicios: filas que se rellenan al pasar el cursor.
+@use 'base' as *;
+
+.vx {
+    // ---------- Servicios ----------
+    .vx-claro { background: $claro; color: $fondo; }
+    .vx-servicios { padding: 120px 0;
+        .vx-num { color: #6B717A; b { color: $fondo; } }
+        .vx-intro { color: $gris-cla; } }
+    .vx-raya { height: 1px; background: $fondo; transform-origin: left; }
+    .vx-fila { display: grid; grid-template-columns: 70px 1.1fr 1.4fr 220px 32px; gap: 24px; align-items: center; padding: 26px 16px; margin: 0 -16px; border-bottom: 1px solid #E3E5E8; text-decoration: none; color: $fondo;
+        background: linear-gradient($fondo, $fondo) no-repeat 0 0 / 0% 100%; transition: background-size .5s cubic-bezier(.7, 0, .2, 1), color .3s;
+        b { font-size: 26px; letter-spacing: -.02em; transition: transform .45s $curva-2; }
+        .vx-fila-n { font-size: 14px; color: #6B717A; }
+        .vx-fila-d { color: $gris-cla; font-size: 16px; transition: color .3s; }
+        .vx-fila-t { display: flex; gap: 6px; flex-wrap: wrap; }
+        .vx-fila-f { transition: transform .35s; justify-self: end; }
+        &:hover, &:focus-visible { background-size: 100% 100%; color: $claro;
+            b { transform: translateX(10px); }
+            .vx-fila-d { color: $texto; }
+            .vx-fila-n { color: $verde; }
+            .vx-tag { border-color: $linea-3; color: $texto-2; }
+            .vx-fila-f { transform: rotate(45deg); } }
+        @media (max-width: 991.98px) { grid-template-columns: 44px 1fr 24px; .vx-fila-d, .vx-fila-t { display: none; } b { font-size: 22px; } } }
+    .vx-tag { font-size: 12.5px; padding: 5px 10px; border: 1px solid #D5D8DC; border-radius: 4px; color: #3A3F46; white-space: nowrap; transition: border-color .3s, color .3s; }
+}
