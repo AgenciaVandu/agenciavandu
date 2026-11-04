@@ -71,7 +71,7 @@ const iniciarWhatsapp = () => {
     };
 
     // ---- abrir y cerrar ----
-    const abrir = (servicioInicial) => {
+    const abrir = (servicioInicial, extra = {}) => {
         error.hidden = true;
         recuperar();
         form.elements.pagina.value = window.location.pathname;
@@ -79,6 +79,9 @@ const iniciarWhatsapp = () => {
             const op = [...form.querySelectorAll('input[name="servicio"]')].find((r) => r.value === servicioInicial);
             if (op) op.checked = true;
         }
+        // Un enlace puede traer el negocio y el mensaje ya escritos (data-empresa, data-mensaje)
+        if (extra.empresa) form.elements.empresa.value = extra.empresa;
+        if (extra.mensaje) form.elements.mensaje.value = extra.mensaje;
         actualizarVista();
         modal.showModal();
         document.documentElement.classList.add('wa-abierto');
@@ -95,7 +98,7 @@ const iniciarWhatsapp = () => {
         const enlace = e.target.closest('a[href*="wa.me/"]');
         if (!enlace || enlace.hasAttribute('data-wa-directo') || e.metaKey || e.ctrlKey || e.shiftKey) return;
         e.preventDefault();
-        abrir(enlace.dataset.servicio);
+        abrir(enlace.dataset.servicio, { empresa: enlace.dataset.empresa, mensaje: enlace.dataset.mensaje });
     });
 
     // ---- enviar ----

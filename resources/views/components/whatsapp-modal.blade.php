@@ -1,7 +1,8 @@
 {{--
     Formulario que aparece al dar clic en cualquier enlace a wa.me del sitio.
     Guarda al prospecto en Ventas, avisa al equipo y abre WhatsApp con el mensaje ya escrito.
-    Un enlace puede preseleccionar el servicio con data-servicio="Página web".
+    Un enlace puede preseleccionar el servicio con data-servicio="Página web" y traer escritos
+    el negocio y el mensaje con data-empresa y data-mensaje.
 --}}
 @php
     $opciones = ['Página web', 'Sistema con WhatsApp', 'Video con IA', 'Fotografía', 'Video', 'Redes sociales', 'Impresión y rotulación', 'Otro'];

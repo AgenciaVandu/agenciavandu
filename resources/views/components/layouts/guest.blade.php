@@ -123,6 +123,8 @@
 
 <body class="body{{ ($tema ?? null) ? ' ' . $tema : '' }}">
 
+    {{-- El inicio trae su propia barra y su botón de WhatsApp --}}
+    @unless ($propio ?? false)
     <div class="flotante">
         <div class="mensaje">Cotizar por whatsapp 👉🏻</div>
         <div class="notificacion">
@@ -133,6 +135,7 @@
         </a>
     </div>
     <x-nav />
+    @endunless
     <main>
         {{ $slot }}
     </main>
