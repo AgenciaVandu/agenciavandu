@@ -125,23 +125,15 @@
 
     {{-- El inicio trae su propia barra y su botón de WhatsApp --}}
     @unless ($propio ?? false)
-    <div class="flotante">
-        <div class="mensaje">Cotizar por whatsapp 👉🏻</div>
-        <div class="notificacion">
-            <img src="{{ asset('/img/bell-solid.svg') }}" class="imagen" alt="">
-        </div>
-        <a href="https://wa.me/+529991460310" class="btn-contacto">
-            <img src="{{ asset('/img/whatsapp.svg') }}" width="40" alt="mensaje">
-        </a>
-    </div>
-    <x-nav />
+    
+    <x-barra />
     @endunless
     <main>
         {{ $slot }}
     </main>
 
     <x-footer />
-
+    <x-whatsapp-flotante />
     <x-whatsapp-modal />
     <x-cookies />
 
