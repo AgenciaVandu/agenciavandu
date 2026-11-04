@@ -48,7 +48,7 @@
     "src": "resources/fonts/Geist-UltraBlack.woff2"
   },
   "resources/js/app.js": {
-    "file": "assets/app-SJTwxT0M.js",
+    "file": "assets/app-yqCbOliG.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -93,7 +93,7 @@
     "isEntry": true
   },
   "resources/js/vandu-inicio.js": {
-    "file": "assets/vandu-inicio-CWBTQjtL.js",
+    "file": "assets/vandu-inicio-CpudSW-_.js",
     "name": "vandu-inicio",
     "src": "resources/js/vandu-inicio.js",
     "isEntry": true
@@ -154,7 +154,7 @@
     "isEntry": true
   },
   "resources/scss/vandu-inicio.scss": {
-    "file": "assets/vandu-inicio-CPTpYpZ2.css",
+    "file": "assets/vandu-inicio-BPIaP7Xc.css",
     "src": "resources/scss/vandu-inicio.scss",
     "isEntry": true
   }
