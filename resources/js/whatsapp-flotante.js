@@ -28,6 +28,25 @@ alCargar(() => {
     document.addEventListener('click', (e) => { if (!wa.contains(e.target) && wa.classList.contains('vx-abierto')) abrir(false); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && wa.classList.contains('vx-abierto')) { abrir(false); btn.focus(); } });
 
+    // Si el aviso de cookies está abierto y le queda encima, el botón sube para no taparlo
+    const cookies = document.getElementById('ck-barra');
+    if (cookies) {
+        const acomodar = () => {
+            let sube = 0;
+            if (!cookies.hidden) {
+                const c = cookies.getBoundingClientRect();
+                const b = btn.getBoundingClientRect();
+                const base = window.innerWidth < 576 ? 14 : 24;   // el mismo margen de abajo que en los estilos
+                if (c.right > b.left - 8) sube = (window.innerHeight - c.top) + 12 - base;
+            }
+            wa.style.setProperty('--vx-wa-sube', Math.max(0, Math.round(sube)) + 'px');
+        };
+        new MutationObserver(acomodar).observe(cookies, { attributes: true, attributeFilter: ['hidden'] });
+        window.addEventListener('resize', acomodar);
+        acomodar();
+        setTimeout(acomodar, 400);   // después de su animación de entrada
+    }
+
     // En la sección de contacto ya está WhatsApp: el botón se hace a un lado
     const contacto = document.querySelector('#contacto');
     if (contacto) new IntersectionObserver(([e]) => {
