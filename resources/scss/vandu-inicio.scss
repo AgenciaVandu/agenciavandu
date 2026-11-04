@@ -43,11 +43,23 @@ body.vx {
     // Las secciones siempre visibles (la animación la pone vandu-inicio.js)
     section { opacity: 1 !important; transform: none !important; transition: none; }
     main { position: relative; }
-    .footer { border-top: 1px solid $linea; background: $fondo; }
+    // Pie del sitio con el mismo aire y la misma letra que el inicio
+    .footer { border-top: 1px solid $linea; background: $fondo; padding: 72px 0 32px;
+        .container { max-width: none; width: 100%; padding: 0 80px;
+            @media (max-width: 1199.98px) { padding: 0 40px; }
+            @media (max-width: 767.98px) { padding: 0 20px; } }
+        h6 { font-family: $reg; font-size: 18px; line-height: 1.5; color: $texto; margin: 0 0 32px; span { font-family: $reg; color: $verde; } }
+        h5 { font-family: $med; font-size: 13px; color: $gris; letter-spacing: 0; margin: 0 0 12px; padding: 0 !important; }
+        li { list-style: none; font-size: 16px; a { color: $claro; text-decoration: none; &:hover { color: $verde; } } }
+        .redes { display: flex; gap: 14px; padding: 0; li a img { opacity: .8; transition: opacity .2s; } li a:hover img { opacity: 1; } }
+        .copy { display: flex; align-items: center; justify-content: flex-start; gap: 10px; margin-top: 40px; padding-top: 24px; border-top: 1px solid $linea; font-size: 13px; color: $gris; text-align: left;
+            img { height: 16px; width: auto; } }
+        .copy.legales { margin-top: 0; padding-top: 12px; border-top: 0; a, button { font-size: 13px; color: $gris; &:hover { color: $claro; } } } }
 }
 
 .vx {
-    .vx-caja { max-width: 1280px; margin: 0 auto; padding: 0 40px; box-sizing: border-box; position: relative;
+    .vx-caja { max-width: none; margin: 0 auto; padding: 0 80px; box-sizing: border-box; position: relative;
+        @media (max-width: 1199.98px) { padding: 0 40px; }
         @media (max-width: 767.98px) { padding: 0 20px; } }
     .vx-verde { color: $verde; }
     .vx-morado { color: $morado; }
@@ -334,9 +346,9 @@ body.vx {
 
     // ---------- Contacto paso a paso ----------
     .vx-contacto { background: $verde; color: $fondo; padding: 112px 0;
-        h2 { font-size: clamp(56px, 7.6vw, 112px); line-height: .9; letter-spacing: -.055em; color: $fondo; } }
+        h2 { font-size: clamp(52px, 6.2vw, 112px); white-space: nowrap; line-height: .9; letter-spacing: -.055em; color: $fondo; } }
     .vx-contacto-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 520px); gap: 64px; align-items: center;
-        @media (max-width: 991.98px) { grid-template-columns: 1fr; gap: 40px; } }
+        @media (max-width: 1199.98px) { grid-template-columns: 1fr; gap: 40px; } }
     .vx-contacto-txt { margin: 28px 0 0; font-size: 20px; line-height: 1.5; max-width: 480px; color: $fondo; }
     .vx-conv { background: $fondo; color: $claro; border-radius: 16px; padding: 28px; min-height: 420px; display: flex; flex-direction: column; box-sizing: border-box;
         @media (max-width: 575.98px) { padding: 22px; } }
@@ -374,7 +386,7 @@ body.vx {
         #message { color: $verde; } }
 
     // ---------- Mapa de la página ----------
-    .vx-riel { position: fixed; left: 20px; top: 50%; transform: translateY(-50%); z-index: 40; display: flex; flex-direction: column; gap: 2px; padding: 10px 8px; border-radius: 12px; transition: background-color .3s, opacity .3s;
+    .vx-riel { position: fixed; left: 12px; top: 50%; transform: translateY(-50%); z-index: 40; display: flex; flex-direction: column; gap: 2px; padding: 10px 8px; border-radius: 12px; transition: background-color .3s, opacity .3s;
         &:hover, &:focus-within { background: rgba(17, 19, 22, .84); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
         a { display: flex; align-items: center; gap: 10px; height: 26px; text-decoration: none; font-size: 12px; color: $gris-2;
             b { font-family: $med; font-weight: 400; }
