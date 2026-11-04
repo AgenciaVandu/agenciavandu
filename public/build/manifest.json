@@ -92,6 +92,12 @@
     "src": "resources/js/portafolio.js",
     "isEntry": true
   },
+  "resources/js/vandu-inicio.js": {
+    "file": "assets/vandu-inicio-C_cYAJk2.js",
+    "name": "vandu-inicio",
+    "src": "resources/js/vandu-inicio.js",
+    "isEntry": true
+  },
   "resources/scss/app.scss": {
     "file": "assets/app-DO7xzeOB.css",
     "src": "resources/scss/app.scss",
@@ -110,11 +116,6 @@
   "resources/scss/contacto.scss": {
     "file": "assets/contacto-QxoGU-oT.css",
     "src": "resources/scss/contacto.scss",
-    "isEntry": true
-  },
-  "resources/scss/editorial.scss": {
-    "file": "assets/editorial-BXL7vaBr.css",
-    "src": "resources/scss/editorial.scss",
     "isEntry": true
   },
   "resources/scss/global.scss": {
@@ -150,6 +151,11 @@
   "resources/scss/servicios.scss": {
     "file": "assets/servicios-DeVxBtL2.css",
     "src": "resources/scss/servicios.scss",
+    "isEntry": true
+  },
+  "resources/scss/vandu-inicio.scss": {
+    "file": "assets/vandu-inicio-CjDT5llg.css",
+    "src": "resources/scss/vandu-inicio.scss",
     "isEntry": true
   }
 }
